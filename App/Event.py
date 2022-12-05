@@ -290,7 +290,7 @@ async def Master(bot, message, config):
                 logger.info("SETTING:BOT OFF")
 
             if command == "/config":
-                path = str(pathlib.Path().cwd()) + "/" + "Data/config.json"
+                path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
                 if pathlib.Path(path).exists():
                     doc = open(path, 'rb')
                     await bot.send_document(message.chat.id, doc)
