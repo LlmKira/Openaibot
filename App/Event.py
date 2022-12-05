@@ -215,37 +215,41 @@ async def Master(bot, message, config):
                 await bot.reply_to(message, "OFF:BOT")
                 save_csonfig()
                 logger.info("Off")
-            if command == "/usercold":
+            if command.startwith("/usercold"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["usercold_time"] = int(_len_)
-                await bot.reply_to(message, f"user cooltime:{_len_}")
-                save_csonfig()
-                logger.info(f"reset user cold time limit to{_len_}")
+                if _len_:
+                    _csonfig["usercold_time"] = int(_len_)
+                    await bot.reply_to(message, f"user cooltime:{_len_}")
+                    save_csonfig()
+                    logger.info(f"reset user cold time limit to{_len_}")
 
-            if command == "/groupcold":
+            if command.startwith("/groupcold"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["groupcold_time"] = int(_len_)
-                await bot.reply_to(message, f"group cooltime:{_len_}")
-                save_csonfig()
-                logger.info(f"reset group cold time limit to{_len_}")
+                if _len_:
+                    _csonfig["groupcold_time"] = int(_len_)
+                    await bot.reply_to(message, f"group cooltime:{_len_}")
+                    save_csonfig()
+                    logger.info(f"reset group cold time limit to{_len_}")
 
-            if command == "/tokenlimit":
+            if command.startwith("/tokenlimit"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["token_limit"] = int(_len_)
-                await bot.reply_to(message, f"tokenlimit:{_len_}")
-                save_csonfig()
-                logger.info(f"reset tokenlimit limit to{_len_}")
+                if _len_:
+                    _csonfig["token_limit"] = int(_len_)
+                    await bot.reply_to(message, f"tokenlimit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"reset tokenlimit limit to{_len_}")
 
-            if command == "/inputlimit":
+            if command.startwith("/inputlimit"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["input_limit"] = int(_len_)
-                await bot.reply_to(message, f"inputlimit:{_len_}")
-                save_csonfig()
-                logger.info(f"reset input limit to{_len_}")
+                if _len_:
+                    _csonfig["input_limit"] = int(_len_)
+                    await bot.reply_to(message, f"inputlimit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"reset input limit to{_len_}")
 
             if "/addw" in command:
                 for group in extract_arg(command):
