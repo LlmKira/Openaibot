@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import json
+import pathlib
 import time
 
 from loguru import logger
@@ -122,7 +123,7 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
 
     # 内容审计
     if ContentDfa.exists(str(prompt)):
-       return "I am a robot and not fit to answer dangerous content."
+        return "I am a robot and not fit to answer dangerous content."
 
     # 洪水防御攻击
     if WaitFlood(user=user, group=group):
@@ -207,19 +208,28 @@ async def Master(bot, message, config):
                 _csonfig["whiteGroupSwitch"] = False
                 await bot.reply_to(message, "SETTING:whiteGroup OFF")
                 save_csonfig()
-                logger.info("On:whiteGroup")
+                logger.info("SETTING:whiteGroup OFF")
 
             if command == "/open":
                 _csonfig["statu"] = True
                 await bot.reply_to(message, "SETTING:BOT ON")
                 save_csonfig()
-                logger.info("On")
+                logger.info("SETTING:BOT ON")
 
             if command == "/close":
                 _csonfig["statu"] = False
                 await bot.reply_to(message, "SETTING:BOT OFF")
                 save_csonfig()
-                logger.info("Off")
+                logger.info("SETTING:BOT OFF")
+
+            if command == "/config":
+                path = str(pathlib.Path().cwd()) + "/" + "Data/config.json"
+                if pathlib.Path(path).exists():
+                    doc = open(path, 'rb')
+                    await bot.send_document(message.chat.id, doc)
+                else:
+                    await bot.reply_to(message, "没有找到配置文件")
+
             if command.startswith("/usercold"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))

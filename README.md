@@ -114,6 +114,7 @@ tokenlimit Api 的回复限制
 inputlimit 输入prompt的限制
 addw  加入白名单，/addw 111 222
 delw  取消白名单，/delw 111 222
+config See Config
 ```
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
