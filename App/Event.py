@@ -205,7 +205,7 @@ async def WhiteGroupCheck(bot, message, config):
                 logger.error(e)
             finally:
                 logger.info(f"RUN:non-whitelisted groups:{abs(message.chat.id)}")
-                return await bot.leave_chat(message.chat.id)
+                return True  # await bot.leave_chat(message.chat.id)
     else:
         if _csonfig.get("whiteUserSwitch") is None:
             return True
