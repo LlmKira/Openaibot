@@ -150,7 +150,7 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
     except Exception as e:
         logger.error(f"RUN:Api Error:{e}")
         _usage = 0
-        _deal = f"Api Outline {prompt}"
+        _deal = f"Api Outline \n {prompt}"
     # 限额
     Usage.renewUsage(user=user, father=_Usage, usage=_usage)
     return _deal
