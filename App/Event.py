@@ -8,10 +8,13 @@ import time
 
 from loguru import logger
 from utils.Data import DataWorker
+from utils.Detect import DFA
 
 logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", rotation="500 MB", enqueue=True)
 
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
+
+ContentDfa = DFA(path="./Data/AntiSpam.bin")
 
 
 # IO
@@ -113,10 +116,13 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
     if not key:
         logger.error("API key missing")
         raise Exception("API key missing")
-
     # 长度限定
     if _csonfig["input_limit"] < len(str(prompt)) / 4:
         return "TOO LONG"
+
+    # 内容审计
+    if ContentDfa.exists(prompt):
+        return "I am a robot and not fit to answer dangerous content."
 
     # 洪水防御攻击
     if WaitFlood(user=user, group=group):
