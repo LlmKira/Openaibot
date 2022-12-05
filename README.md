@@ -2,6 +2,19 @@
 
 OpenAI Chat Bot
 
+## 初始化
+
+* 拉取/更新程序
+
+安装脚本会自动备份恢复配置，在根目录运行(不要在程序目录内)
+，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``
+
+```shell
+curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && sh setup.sh
+```
+
+`cd Openaibot`
+
 ## 配置
 
 ### 配置 Redis
