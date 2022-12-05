@@ -201,7 +201,7 @@ async def WhiteGroupCheck(bot, message, config):
         if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
             try:
                 await bot.send_message(message.chat.id,
-                                       f"The group is not whitelisted!...\n{config.WHITE}")
+                                       f"The group is not whitelisted!...\n\n{config.WHITE}")
             except Exception as e:
                 logger.error(e)
             finally:
