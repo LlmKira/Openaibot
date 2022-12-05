@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 import ast
 import json
+
 # 这里是数据基本类
 
 redis_installed = True
@@ -67,8 +68,34 @@ class DataWorker(object):
             listGet = []
         return listGet
 
-    def getPuffix(self, fix):
-        connection = Redis(connection_pool=self.redis)
-        listGet = connection.scan_iter(f"{fix}*")
-        connection.close()
-        return listGet
+
+class DictUpdate(object):
+    @staticmethod
+    def dict_update(raw, new):
+        DictUpdate.dict_update_iter(raw, new)
+        DictUpdate.dict_add(raw, new)
+
+    @staticmethod
+    def dict_update_iter(raw, new):
+        for key in raw:
+            if key not in new.keys():
+                continue
+            if isinstance(raw[key], dict) and isinstance(new[key], dict):
+                DictUpdate.dict_update(raw[key], new[key])
+            else:
+                raw[key] = new[key]
+
+    @staticmethod
+    def dict_add(raw, new):
+        update_dict = {}
+        for key in new:
+            if key not in raw.keys():
+                update_dict[key] = new[key]
+        raw.update(update_dict)
+
+
+def getPuffix(self, fix):
+    connection = Redis(connection_pool=self.redis)
+    listGet = connection.scan_iter(f"{fix}*")
+    connection.close()
+    return listGet

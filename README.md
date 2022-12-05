@@ -115,6 +115,10 @@ inputlimit 输入prompt的限制
 addw  加入白名单，/addw 111 222
 delw  取消白名单，/delw 111 222
 config See Config
+userwon 用户白名单 开
+userwoff 用户白名单 关
+adduser 加入用户白名单
+deluser 取消用户白名单
 ```
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot

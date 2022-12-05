@@ -8,7 +8,7 @@ import pathlib
 import time
 
 from loguru import logger
-from utils.Data import DataWorker
+from utils.Data import DataWorker, DictUpdate
 from utils.Detect import DFA
 
 logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", rotation="500 MB", enqueue=True)
@@ -17,12 +17,31 @@ DataUtils = DataWorker(prefix="Open_Ai_bot_")
 
 ContentDfa = DFA(path="./Data/Danger.form")
 
+default_table = {
+    "statu": True,
+    "input_limit": 200,
+    "token_limit": 100,
+    "usercold_time": 5,
+    "groupcold_time": 1,
+    "whiteUserSwitch": True,
+    "whiteGroupSwitch": False,
+    "whiteGroup": [
+        "-1001662266151",
+    ],
+    "whiteUser": [
+    ],
+    "Model": {
+        "-1001561314417": ""
+    }
+}
+
 
 # IO
 def load_csonfig():
     global _csonfig
     with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
+        DictUpdate.dict_update(_csonfig, default_table)
         return _csonfig
 
 
@@ -96,24 +115,28 @@ class Usage(object):
         return True
 
 
-def WaitFlood(user, group):
-    if DataUtils.getKey(f"flood_{user}"):
+def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None):
+    if usercold_time is None:
+        usercold_time = _csonfig["usercold_time"]
+    if groupcold_time is None:
+        groupcold_time = _csonfig["groupcold_time"]
+    if DataUtils.getKey(f"flood_user_{user}"):
         # double req in 3 seconds
         return True
     else:
         if _csonfig["usercold_time"] > 1:
-            DataUtils.setKey(f"flood_{user}", "FAST", exN=_csonfig["usercold_time"])
+            DataUtils.setKey(f"flood_{user}", "FAST", exN=usercold_time)
     # User
-    if DataUtils.getKey(f"flood_{group}"):
+    if DataUtils.getKey(f"flood_group_{group}"):
         # double req in 3 seconds
         return True
     else:
         if _csonfig["groupcold_time"] > 1:
-            DataUtils.setKey(f"flood_{group}", "FAST", exN=_csonfig["groupcold_time"])
+            DataUtils.setKey(f"flood_{group}", "FAST", exN=groupcold_time)
     return False
 
 
-async def load_response(user, group, key: str = "", prompt: str = "Say this is a test"):
+async def load_response(user, group, key: str = "", prompt: str = "Say this is a test", userlimit: int = None):
     if not key:
         logger.error("SETTING:API key missing")
         raise Exception("API key missing")
@@ -126,7 +149,7 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
         return "I am a robot and not fit to answer dangerous content."
 
     # 洪水防御攻击
-    if WaitFlood(user=user, group=group):
+    if WaitFlood(user=user, group=group, usercold_time=userlimit):
         return "TOO FAST"
 
     # 用量检测
@@ -157,6 +180,37 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
     return _deal
 
 
+async def WhiteUserCheck(bot, message):
+    if _csonfig.get("whiteUserSwitch"):
+        if not str(abs(message.from_user.id)) in _csonfig.get("whiteUser"):
+            try:
+                await bot.send_message(message.chat.id,
+                                       "Check the settings to find that you is not whitelisted!...")
+            except Exception as e:
+                logger.error(e)
+            finally:
+                return True
+    else:
+        if _csonfig.get("whiteUserSwitch") is None:
+            return True
+
+
+async def WhiteGroupCheck(bot, message, config):
+    if _csonfig.get("whiteGroupSwitch"):
+        if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
+            try:
+                await bot.send_message(message.chat.id,
+                                       f"The group is not whitelisted!...\n{config.WHITE}")
+            except Exception as e:
+                logger.error(e)
+            finally:
+                logger.info(f"RUN:non-whitelisted groups:{abs(message.chat.id)}")
+                return await bot.leave_chat(message.chat.id)
+    else:
+        if _csonfig.get("whiteUserSwitch") is None:
+            return True
+
+
 async def Text(bot, message, config):
     load_csonfig()
     if not _csonfig.get("statu"):
@@ -164,16 +218,7 @@ async def Text(bot, message, config):
         return
 
     # 群组白名单检查
-    if _csonfig.get("whiteGroupSwitch"):
-        if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
-            try:
-                await bot.send_message(message.chat.id,
-                                       "Check the settings to find that the group is not whitelisted!...")
-            except Exception as e:
-                logger.error(e)
-            finally:
-                logger.info(f"RUN:non-whitelisted groups:{abs(message.chat.id)}")
-                await bot.leave_chat(message.chat.id)
+    await WhiteGroupCheck(bot, message, config=config)
     _prompt = message.text.split(" ", 1)
     try:
         if len(_prompt) > 1:
@@ -185,8 +230,28 @@ async def Text(bot, message, config):
         await bot.reply_to(message, f"Wait！:Trigger Api request rate limit")
 
 
+async def Chat_P(bot, message, config):
+    load_csonfig()
+    if not _csonfig.get("statu"):
+        await bot.reply_to(message, "BOT:Under Maintenance")
+        return
+    # 白名单检查
+    if await WhiteUserCheck(bot, message):
+        return
+    # 处理
+    _prompt = message.text
+    try:
+        if len(_prompt) > 1:
+            _req = await load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
+                                       prompt=_prompt[1])
+            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+    except Exception as e:
+        logger.error(e)
+        await bot.reply_to(message, f"Wait:Trigger Api request rate limit")
+
+
 async def Start(bot, message, config):
-    pass
+    await bot.reply_to(message, f"Ping，Use Chat")
 
 
 async def About(bot, message, config):
@@ -285,5 +350,37 @@ async def Master(bot, message, config):
                     _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                 save_csonfig()
 
+            if command == "/userwon":
+                _csonfig["whiteUserSwitch"] = True
+                await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
+                save_csonfig()
+                logger.info("SETTING:whiteUser ON")
+
+            if command == "/userwoff":
+                _csonfig["whiteUserSwitch"] = False
+                await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
+                save_csonfig()
+                logger.info("SETTING:whiteUser OFF")
+
+            if "/adduser" in command:
+                for group in extract_arg(command):
+                    groupId = "".join(list(filter(str.isdigit, group)))
+                    _csonfig["whiteUser"].append(str(groupId))
+                    await bot.reply_to(message, 'White User Added' + str(groupId))
+                    logger.info(f"SETTING:White User Added {group}")
+                save_csonfig()
+
+            if "/deluser" in command:
+                for group in extract_arg(command):
+                    groupId = "".join(list(filter(str.isdigit, group)))
+                    if int(groupId) in _csonfig["whiteUser"]:
+                        _csonfig["whiteUser"].remove(str(groupId))
+                        await bot.reply_to(message, 'White User Removed ' + str(groupId))
+                        logger.info(f"SETTING:White User Removed {group}")
+                if isinstance(_csonfig["whiteUser"], list):
+                    _csonfig["whiteUser"] = list(set(_csonfig["whiteUser"]))
+                save_csonfig()
+            if not command.startswith("/"):
+                await Chat_P(bot, message, config)
         except Exception as e:
             logger.error(e)
