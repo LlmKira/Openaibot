@@ -54,7 +54,7 @@ class DFA:
         self.ban_words_list = list()
         self.ban_words_dict = dict()
         if not path:
-            self.path = 'Danger.bin'
+            self.path = 'Data/Danger.form'
         else:
             self.path = path
         self.get_words()

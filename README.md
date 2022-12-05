@@ -8,15 +8,16 @@ OpenAI Chat Telegram Bot
 
 *目前只支持了文本对话*
 
-*目前(20221205)依赖库不支持异步，大量请求会阻塞*
-
-见 https://github.com/sudoskys/Openaibot/issues/1
+*自制依赖库*
 
 ## 特性
 
 * 支持速率限制
 * 支持白名单系统
 * 支持内容过滤
+* (20221205)依赖库不支持异步，大量请求会阻塞,替换为自己的异步库
+
+见 https://github.com/sudoskys/Openaibot/issues/1
 
 ## 初始化
 

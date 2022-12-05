@@ -1,0 +1,8 @@
+{
+  "v1": {
+    "completions": {
+      "desc": "write",
+      "url": "https://api.openai.com/v1/completions"
+    }
+  }
+}

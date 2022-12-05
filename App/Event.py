@@ -14,7 +14,7 @@ logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", 
 
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
 
-ContentDfa = DFA(path="./Data/Danger.bin")
+ContentDfa = DFA(path="./Data/Danger.form")
 
 
 # IO
@@ -112,7 +112,7 @@ def WaitFlood(user, group):
     return False
 
 
-def load_response(user, group, key: str = "", prompt: str = "Say this is a test"):
+async def load_response(user, group, key: str = "", prompt: str = "Say this is a test"):
     if not key:
         logger.error("API key missing")
         raise Exception("API key missing")
@@ -121,8 +121,8 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
         return "TOO LONG"
 
     # 内容审计
-    # if ContentDfa.exists(str(prompt)):
-    #    return "I am a robot and not fit to answer dangerous content."
+    if ContentDfa.exists(str(prompt)):
+       return "I am a robot and not fit to answer dangerous content."
 
     # 洪水防御攻击
     if WaitFlood(user=user, group=group):
@@ -134,10 +134,14 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
         return "OUT OF USAGE"
     # 请求
     try:
-        import openai
-        openai.api_key = key
-        response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
-                                            max_tokens=int(_csonfig["token_limit"]))
+        # import openai
+        # openai.api_key = key
+        # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
+        #                                     max_tokens=int(_csonfig["token_limit"]))
+        import openai_sync
+        response = await openai_sync.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
+                                                                    temperature=0,
+                                                                    max_tokens=int(_csonfig["token_limit"]))
         _deal_rq = rqParser.get_response_text(response)
         # print(_deal_rq)
         _deal = _deal_rq[0]
@@ -146,7 +150,7 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
     except Exception as e:
         logger.error(f"Api Error:{e}")
         _usage = 0
-        _deal = "Api Outline"
+        _deal = f"Api Outline {prompt}"
     # 限额
     Usage.renewUsage(user=user, father=_Usage, usage=_usage)
     return _deal
@@ -172,8 +176,8 @@ async def Text(bot, message, config):
     _prompt = message.text.split(" ", 1)
     try:
         if len(_prompt) > 1:
-            _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
-                                 prompt=_prompt[1])
+            _req = await load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
+                                       prompt=_prompt[1])
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
