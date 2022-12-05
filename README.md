@@ -10,7 +10,9 @@ OpenAI Chat Bot
 ，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``
 
 ```shell
+
 curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && sh setup.sh
+
 ```
 
 `cd Openaibot`

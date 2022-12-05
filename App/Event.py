@@ -139,6 +139,7 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
         response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
                                             max_tokens=int(_csonfig["token_limit"]))
         _deal_rq = rqParser.get_response_text(response)
+        # print(_deal_rq)
         _deal = _deal_rq[0]
         _usage = rqParser.get_response_usage(response)
         logger.info(f"{user}:{group} --prompt: {prompt} --req: {_deal} ")
@@ -169,8 +170,13 @@ async def Text(bot, message, config):
                 logger.info(f"QUIT:non-whitelisted groups:{abs(message.chat.id)}")
                 await bot.leave_chat(message.chat.id)
     _prompt = message.text.split(" ", 1)
-    _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY, prompt=_prompt)
-    await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+    try:
+        _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
+                             prompt=_prompt)
+        await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+    except Exception as e:
+        logger.error(e)
+        await bot.reply_to(message, f"Wait！:Trigger Api request rate limit")
 
 
 async def Start(bot, message, config):
@@ -212,7 +218,7 @@ async def Master(bot, message, config):
             if command == "/usercold":
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["usercold_time"] = _len_
+                _csonfig["usercold_time"] = int(_len_)
                 await bot.reply_to(message, f"user cooltime:{_len_}")
                 save_csonfig()
                 logger.info(f"reset user cold time limit to{_len_}")
@@ -220,7 +226,7 @@ async def Master(bot, message, config):
             if command == "/groupcold":
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["groupcold_time"] = _len_
+                _csonfig["groupcold_time"] = int(_len_)
                 await bot.reply_to(message, f"group cooltime:{_len_}")
                 save_csonfig()
                 logger.info(f"reset group cold time limit to{_len_}")
@@ -228,7 +234,7 @@ async def Master(bot, message, config):
             if command == "/tokenlimit":
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["token_limit"] = _len_
+                _csonfig["token_limit"] = int(_len_)
                 await bot.reply_to(message, f"tokenlimit:{_len_}")
                 save_csonfig()
                 logger.info(f"reset tokenlimit limit to{_len_}")
@@ -236,7 +242,7 @@ async def Master(bot, message, config):
             if command == "/inputlimit":
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
-                _csonfig["input_limit"] = _len_
+                _csonfig["input_limit"] = int(_len_)
                 await bot.reply_to(message, f"inputlimit:{_len_}")
                 save_csonfig()
                 logger.info(f"reset input limit to{_len_}")
