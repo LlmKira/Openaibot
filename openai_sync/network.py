@@ -83,9 +83,9 @@ def get_session(proxy: str = ""):
     if session is None:
         if proxy != "":
             proxies = {"sock5": proxy}
-            session = httpx.AsyncClient(proxies=proxies)
+            session = httpx.AsyncClient(timeout=60, proxies=proxies)
         else:
-            session = httpx.AsyncClient()
+            session = httpx.AsyncClient(timeout=60)
         __session_pool[loop] = session
     return session
 
