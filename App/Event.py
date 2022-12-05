@@ -171,7 +171,7 @@ async def Text(bot, message, config):
                 await bot.leave_chat(message.chat.id)
     _prompt = message.text.split(" ", 1)
     try:
-        if len(_prompt) > 2:
+        if len(_prompt) > 1:
             _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
                                  prompt=_prompt[1])
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
