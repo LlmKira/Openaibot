@@ -1,0 +1,8 @@
+[bot]
+master = 100
+botToken = 'key'
+OPENAI_API_KEY = 'key'
+
+[proxy]
+status = false
+url = "http://127.0.0.1:7890"
