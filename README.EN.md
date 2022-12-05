@@ -4,6 +4,8 @@ OpenAI Chat Telegram Bot
 
 Using OpenAi on Telegram
 
+*Only text talk is supported for NOW*
+
 *Currently (20221205) the dependency library does not support asynchrony and a large number of requests will block*.
 
 See https://github.com/sudoskys/Openaibot/issues/1

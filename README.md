@@ -4,7 +4,9 @@ OpenAI Chat Telegram Bot
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-在 Telegram 上使用 OpenAi
+在 Telegram 上使用 OpenAi 写作
+
+*目前只支持了文本对话*
 
 *目前(20221205)依赖库不支持异步，大量请求会阻塞*
 
