@@ -64,7 +64,7 @@ Danger.bin 一行一个黑名单词汇。至少要有一个。
 
 ```toml
 [bot]
-master = [100,200] # master user id &owner
+master = [100, 200] # master user id &owner
 botToken = 'key'
 OPENAI_API_KEY = 'key'
 INTRO = "POWER BY OPENAI"  # 后缀
