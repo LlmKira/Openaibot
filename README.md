@@ -59,6 +59,10 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
+[Telegram botToken申请](https://t.me/BotFather)
+
+[OPENAI_API_KEY申请](https://beta.openai.com/account/api-keys)
+
 ## 运行
 
 * 运行
@@ -95,4 +99,4 @@ addw  加入白名单，/addw 111 222
 delw  取消白名单，/delw 111 222
 ```
 
-MVC 框架 https://github.com/TelechaBot/BaseBot
+Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
