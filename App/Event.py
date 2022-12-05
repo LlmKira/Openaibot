@@ -171,9 +171,10 @@ async def Text(bot, message, config):
                 await bot.leave_chat(message.chat.id)
     _prompt = message.text.split(" ", 1)
     try:
-        _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
-                             prompt=_prompt)
-        await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+        if len(_prompt) > 2:
+            _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
+                                 prompt=_prompt[1])
+            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
         await bot.reply_to(message, f"Wait！:Trigger Api request rate limit")
