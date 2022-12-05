@@ -121,8 +121,8 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
         return "TOO LONG"
 
     # 内容审计
-    if ContentDfa.exists(prompt):
-        return "I am a robot and not fit to answer dangerous content."
+    # if ContentDfa.exists(str(prompt)):
+    #    return "I am a robot and not fit to answer dangerous content."
 
     # 洪水防御攻击
     if WaitFlood(user=user, group=group):
