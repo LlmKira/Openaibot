@@ -180,12 +180,12 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
     return _deal
 
 
-async def WhiteUserCheck(bot, message):
+async def WhiteUserCheck(bot, message, WHITE):
     if _csonfig.get("whiteUserSwitch"):
         if not str(abs(message.from_user.id)) in _csonfig.get("whiteUser"):
             try:
                 await bot.send_message(message.chat.id,
-                                       "Check the settings to find that you is not whitelisted!...")
+                                       f"Check the settings to find that you is not whitelisted!...{WHITE}")
             except Exception as e:
                 logger.error(e)
             finally:
@@ -196,12 +196,12 @@ async def WhiteUserCheck(bot, message):
     return False
 
 
-async def WhiteGroupCheck(bot, message, config):
+async def WhiteGroupCheck(bot, message, WHITE):
     if _csonfig.get("whiteGroupSwitch"):
         if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
             try:
                 await bot.send_message(message.chat.id,
-                                       f"The group is not whitelisted!...\n\n{config.WHITE}")
+                                       f"The group is not whitelisted!...\n\n{WHITE}")
             except Exception as e:
                 logger.error(e)
             finally:
@@ -220,7 +220,7 @@ async def Text(bot, message, config):
         return
 
     # 群组白名单检查
-    await WhiteGroupCheck(bot, message, config=config)
+    await WhiteGroupCheck(bot, message, config.WHITE)
     _prompt = message.text.split(" ", 1)
     try:
         if len(_prompt) > 1:
@@ -238,7 +238,7 @@ async def Chat_P(bot, message, config):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
     # 白名单检查
-    if await WhiteUserCheck(bot, message):
+    if await WhiteUserCheck(bot, message, config.WHITE):
         return
     # 处理
     _prompt = message.text
