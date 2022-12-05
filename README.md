@@ -4,7 +4,11 @@ OpenAI Chat Telegram Bot
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-在 Telegram 上使用 OpenAi 写作
+在 Telegram 上使用 OpenAi 写作.
+
+```
+This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
+```
 
 *目前只支持了文本对话*
 
@@ -51,7 +55,7 @@ pip install -r requirements.txt
 
 ### 过滤器
 
-Danger.bin 一行一个黑名单词汇。至少要有一个。
+Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 
 ### 配置 Config/app.toml
 

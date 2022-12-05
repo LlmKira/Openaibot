@@ -6,6 +6,10 @@ OpenAI Chat Telegram Bot
 
 Writing with OpenAi on Telegram
 
+```
+This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
+```
+
 *Only text conversations are currently supported*
 
 *Homebrew dependency library, no Api request rate limiting done*
@@ -51,7 +55,7 @@ pip install -r requirements.txt
 
 ### Filters
 
-Danger.bin One line of one blacklisted vocabulary. At least one.
+Data/Danger.form One line of one blacklisted vocabulary. At least one.
 
 ### Config/app.toml
 
