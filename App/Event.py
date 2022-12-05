@@ -125,14 +125,14 @@ def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None
         return True
     else:
         if _csonfig["usercold_time"] > 1:
-            DataUtils.setKey(f"flood_{user}", "FAST", exN=usercold_time)
+            DataUtils.setKey(f"flood_user_{user}", "FAST", exN=usercold_time)
     # User
     if DataUtils.getKey(f"flood_group_{group}"):
         # double req in 3 seconds
         return True
     else:
         if _csonfig["groupcold_time"] > 1:
-            DataUtils.setKey(f"flood_{group}", "FAST", exN=groupcold_time)
+            DataUtils.setKey(f"flood_group_{group}", "FAST", exN=groupcold_time)
     return False
 
 
