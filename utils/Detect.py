@@ -28,7 +28,7 @@ class Censor:
                 try:
                     response = httpx.get(i, proxies=proxy)
                     # response.encoding = response.charset_encoding
-                except:
+                except Exception:
                     print(f"初始化失败 -> {i}")
                     error.append({i})
                 else:

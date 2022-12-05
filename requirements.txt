@@ -6,3 +6,4 @@ aiohttp
 openai
 redis
 loguru
+httpx

@@ -138,10 +138,8 @@ def load_response(user, group, key: str = "", prompt: str = "Say this is a test"
         openai.api_key = key
         response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
                                             max_tokens=int(_csonfig["token_limit"]))
-        _deal = ""
         _deal_rq = rqParser.get_response_text(response)
-        for i in _deal_rq:
-            _deal = _deal + i
+        _deal = _deal_rq[0]
         _usage = rqParser.get_response_usage(response)
         logger.info(f"{user}:{group} --prompt: {prompt} --req: {_deal} ")
     except Exception as e:
