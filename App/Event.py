@@ -14,7 +14,7 @@ logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", 
 
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
 
-ContentDfa = DFA(path="./Data/AntiSpam.bin")
+ContentDfa = DFA(path="./Data/Danger.bin")
 
 
 # IO
@@ -172,7 +172,7 @@ async def Text(bot, message, config):
                 await bot.leave_chat(message.chat.id)
     _prompt = message.text.split(" ", 1)
     _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY, prompt=_prompt)
-    await bot.reply_to(message, _req)
+    await bot.reply_to(message, f"{_req}{config.INTRO}")
 
 
 async def Start(bot, message, config):
