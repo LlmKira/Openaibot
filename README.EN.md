@@ -2,6 +2,17 @@
 
 OpenAI Chat Telegram Bot
 
+Using OpenAi on Telegram
+
+*Currently (20221205) the dependency library does not support asynchrony and a large number of requests will block*.
+
+See https://github.com/sudoskys/Openaibot/issues/1
+
+## Features
+
+* Support for rate limiting
+* Support for whitelisting system
+* Support for content filtering
 
 ## Initialization
 

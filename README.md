@@ -2,7 +2,13 @@
 
 OpenAI Chat Telegram Bot
 
+[EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
+
 在 Telegram 上使用 OpenAi
+
+*目前(20221205)依赖库不支持异步，大量请求会阻塞*
+
+见 https://github.com/sudoskys/Openaibot/issues/1
 
 ## 特性
 
