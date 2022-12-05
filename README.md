@@ -1,6 +1,14 @@
 # Openaibot
 
-OpenAI Chat Bot
+OpenAI Chat Telegram Bot
+
+在 Telegram 上使用 OpenAi
+
+## 特性
+
+* 支持速率限制
+* 支持白名单系统
+* 支持内容过滤
 
 ## 初始化
 
@@ -48,10 +56,10 @@ Danger.bin 一行一个黑名单词汇。至少要有一个。
 
 ```toml
 [bot]
-master = [100]
+master = [100] # your user id
 botToken = 'key'
 OPENAI_API_KEY = 'key'
-INTRO = "POWER BY OPENAI"
+INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 
 [proxy]
