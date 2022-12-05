@@ -25,7 +25,9 @@ apt-get install redis
 
 ### 配置依赖
 
-`pip install -r requirements.txt`
+```bash
+pip install -r requirements.txt
+```
 
 `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
 
