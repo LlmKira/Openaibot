@@ -40,5 +40,19 @@ ABOUT = "Created by github.com/sudoskys/Openaibot"
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
+```
 
+## 命令
+
+```
+onw 白名单开
+offw 白名单
+open 开机器人
+close 关机器人
+usercold 用户冷却 ，1 为无限制
+groupcold 群组冷却，1 为无限制
+tokenlimit Api 的回复限制
+inputlimit 输入prompt的限制
+addw  加入白名单，/addw 111 222
+delw  取消白名单，/delw 111 222
 ```
