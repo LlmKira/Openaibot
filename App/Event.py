@@ -41,7 +41,7 @@ def load_csonfig():
     global _csonfig
     with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
-        DictUpdate.dict_update(_csonfig, default_table)
+        DictUpdate.dict_update(default_table, _csonfig)
         return _csonfig
 
 
