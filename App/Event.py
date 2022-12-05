@@ -193,6 +193,7 @@ async def WhiteUserCheck(bot, message):
     else:
         if _csonfig.get("whiteUserSwitch") is None:
             return True
+    return False
 
 
 async def WhiteGroupCheck(bot, message, config):
@@ -209,6 +210,7 @@ async def WhiteGroupCheck(bot, message, config):
     else:
         if _csonfig.get("whiteUserSwitch") is None:
             return True
+    return False
 
 
 async def Text(bot, message, config):
