@@ -215,7 +215,7 @@ async def Master(bot, message, config):
                 await bot.reply_to(message, "OFF:BOT")
                 save_csonfig()
                 logger.info("Off")
-            if command.startwith("/usercold"):
+            if command.startswith("/usercold"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -224,7 +224,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"reset user cold time limit to{_len_}")
 
-            if command.startwith("/groupcold"):
+            if command.startswith("/groupcold"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -233,7 +233,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"reset group cold time limit to{_len_}")
 
-            if command.startwith("/tokenlimit"):
+            if command.startswith("/tokenlimit"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -242,7 +242,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"reset tokenlimit limit to{_len_}")
 
-            if command.startwith("/inputlimit"):
+            if command.startswith("/inputlimit"):
                 _len = extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
