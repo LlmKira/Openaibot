@@ -3,6 +3,7 @@ master = [100]
 botToken = 'key'
 OPENAI_API_KEY = 'key'
 INTRO = "POWER BY OPENAI"
+ABOUT = "Created by github.com/sudoskys/Openaibot"
 
 [proxy]
 status = false

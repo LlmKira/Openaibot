@@ -180,7 +180,7 @@ async def Start(bot, message, config):
 
 
 async def About(bot, message, config):
-    pass
+    await bot.reply_to(message, f"{config.ABOUT}")
 
 
 async def Master(bot, message, config):
