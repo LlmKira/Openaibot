@@ -56,3 +56,5 @@ inputlimit 输入prompt的限制
 addw  加入白名单，/addw 111 222
 delw  取消白名单，/delw 111 222
 ```
+
+MVC 框架 https://github.com/TelechaBot/BaseBot
