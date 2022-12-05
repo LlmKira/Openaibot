@@ -1,0 +1,260 @@
+# -*- coding: utf-8 -*-
+# @Time    : 9/22/22 11:04 PM
+# @FileName: Event.py
+# @Software: PyCharm
+# @Github    ：sudoskys
+import json
+import time
+
+from loguru import logger
+from utils.Data import DataWorker
+
+logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", rotation="500 MB", enqueue=True)
+
+DataUtils = DataWorker(prefix="Open_Ai_bot_")
+
+
+# IO
+def load_csonfig():
+    global _csonfig
+    with open("./Config/config.json", encoding="utf-8") as f:
+        _csonfig = json.load(f)
+        return _csonfig
+
+
+def save_csonfig():
+    with open("./Config/config.json", "w", encoding="utf8") as f:
+        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+
+
+def extract_arg(arg):
+    return arg.split()[1:]
+
+
+class rqParser(object):
+    @staticmethod
+    def get_response_text(response):
+        REPLY = []
+        Choice = response.get("choices")
+        if Choice:
+            for item in Choice:
+                _text = item.get("text")
+                REPLY.append(_text)
+        if not REPLY:
+            REPLY = ["Nothing to say:response null~"]
+        return REPLY
+
+    @staticmethod
+    def get_response_usage(response):
+        usage = len("机器资源")
+        if response.get("usage"):
+            usage = response.get("usage").get("total_tokens")
+        return usage
+
+
+class Usage(object):
+    @staticmethod
+    def isOutUsage(user):
+        """
+        累计
+        :param user:
+        :return: bool
+        """
+        # 时间
+        key_time = int(time.strftime("%Y%m%d%H%M", time.localtime()))
+        GET = DataUtils.getKey(f"usage_{user}_{key_time}")
+        if GET:
+            if GET >= 60000:
+                return {"status": True, "use": GET, "uid": key_time}
+            else:
+                return {"status": False, "use": GET, "uid": key_time}
+        else:
+            GET = 0
+            DataUtils.setKey(f"usage_{user}_{key_time}", GET)
+            return {"status": False, "use": GET, "uid": key_time}
+
+    @staticmethod
+    def renewUsage(user, usage, father):
+        GET = father["use"]
+        key_time = father['uid']
+        GET = GET + usage
+        DataUtils.setKey(f"usage_{user}_{key_time}", GET)
+        # double req in 3 seconds
+        return True
+
+    @staticmethod
+    def upMsg(user, usage, father):
+        GET = father["use"]
+        key_time = father['uid']
+        GET = GET + usage
+        DataUtils.setKey(f"usage_{user}_{key_time}", GET)
+        # double req in 3 seconds
+        return True
+
+
+def WaitFlood(user, group):
+    if DataUtils.getKey(f"flood_{user}"):
+        # double req in 3 seconds
+        return True
+    else:
+        if _csonfig["usercold_time"] > 1:
+            DataUtils.setKey(f"flood_{user}", "FAST", exN=_csonfig["usercold_time"])
+    # User
+    if DataUtils.getKey(f"flood_{group}"):
+        # double req in 3 seconds
+        return True
+    else:
+        if _csonfig["groupcold_time"] > 1:
+            DataUtils.setKey(f"flood_{group}", "FAST", exN=_csonfig["groupcold_time"])
+    return False
+
+
+def load_response(user, group, key: str = "", prompt: str = "Say this is a test"):
+    if not key:
+        logger.error("API key missing")
+        raise Exception("API key missing")
+
+    # 长度限定
+    if _csonfig["input_limit"] < len(str(prompt)) / 4:
+        return "TOO LONG"
+
+    # 洪水防御攻击
+    if WaitFlood(user=user, group=group):
+        return "TOO FAST"
+
+    # 用量检测
+    _Usage = Usage.isOutUsage(user)
+    if _Usage["status"]:
+        return "OUT OF USAGE"
+    # 请求
+    try:
+        import openai
+        openai.api_key = key
+        response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
+                                            max_tokens=int(_csonfig["token_limit"]))
+        _deal = ""
+        _deal_rq = rqParser.get_response_text(response)
+        for i in _deal_rq:
+            _deal = _deal + i
+        _usage = rqParser.get_response_usage(response)
+        logger.info(f"{user}:{group} --prompt: {prompt} --req: {_deal} ")
+    except Exception as e:
+        logger.error(f"Api Error:{e}")
+        _usage = 0
+        _deal = "Api Outline"
+    # 限额
+    Usage.renewUsage(user=user, father=_Usage, usage=_usage)
+    return _deal
+
+
+async def Text(bot, message, config):
+    load_csonfig()
+    if not _csonfig.get("statu"):
+        await bot.reply_to(message, "BOT:Under Maintenance")
+        return
+
+    # 群组白名单检查
+    if _csonfig.get("whiteGroupSwitch"):
+        if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
+            try:
+                await bot.send_message(message.chat.id,
+                                       "Check the settings to find that the group is not whitelisted!...")
+            except Exception as e:
+                logger.error(e)
+            finally:
+                logger.info(f"QUIT:non-whitelisted groups:{abs(message.chat.id)}")
+                await bot.leave_chat(message.chat.id)
+    _prompt = message.text.split(" ", 1)
+    _req = load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY, prompt=_prompt)
+    await bot.reply_to(message, _req)
+
+
+async def Start(bot, message, config):
+    pass
+
+
+async def About(bot, message, config):
+    pass
+
+
+async def Master(bot, message, config):
+    load_csonfig()
+    if str(message.from_user.id) == str(config.master):
+        try:
+            command = message.text
+            if command == "/onw":
+                _csonfig["whiteGroupSwitch"] = True
+                await bot.reply_to(message, "ON:whiteGroup")
+                save_csonfig()
+                logger.info("On:whiteGroup")
+
+            if command == "/offw":
+                _csonfig["whiteGroupSwitch"] = False
+                await bot.reply_to(message, "OFF:whiteGroup")
+                save_csonfig()
+                logger.info("On:whiteGroup")
+
+            if command == "/open":
+                _csonfig["statu"] = True
+                await bot.reply_to(message, "ON:BOT")
+                save_csonfig()
+                logger.info("On")
+
+            if command == "/close":
+                _csonfig["statu"] = False
+                await bot.reply_to(message, "OFF:BOT")
+                save_csonfig()
+                logger.info("Off")
+            if command == "/usercold":
+                _len = extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                _csonfig["usercold_time"] = _len_
+                await bot.reply_to(message, f"user cooltime:{_len_}")
+                save_csonfig()
+                logger.info(f"reset user cold time limit to{_len_}")
+
+            if command == "/groupcold":
+                _len = extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                _csonfig["groupcold_time"] = _len_
+                await bot.reply_to(message, f"group cooltime:{_len_}")
+                save_csonfig()
+                logger.info(f"reset group cold time limit to{_len_}")
+
+            if command == "/tokenlimit":
+                _len = extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                _csonfig["token_limit"] = _len_
+                await bot.reply_to(message, f"tokenlimit:{_len_}")
+                save_csonfig()
+                logger.info(f"reset tokenlimit limit to{_len_}")
+
+            if command == "/inputlimit":
+                _len = extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                _csonfig["input_limit"] = _len_
+                await bot.reply_to(message, f"inputlimit:{_len_}")
+                save_csonfig()
+                logger.info(f"reset input limit to{_len_}")
+
+            if "/addw" in command:
+                for group in extract_arg(command):
+                    groupId = "".join(list(filter(str.isdigit, group)))
+                    _csonfig["whiteGroup"].append(str(groupId))
+                    await bot.reply_to(message, 'White Group Added' + str(groupId))
+                    logger.info(f"White Group Added {group}")
+                save_csonfig()
+
+            if "/delw" in command:
+                for group in extract_arg(command):
+                    groupId = "".join(list(filter(str.isdigit, group)))
+                    if int(groupId) in _csonfig["whiteGroup"]:
+                        _csonfig["whiteGroup"].remove(str(groupId))
+                        await bot.reply_to(message, 'White Group Removed ' + str(groupId))
+                        logger.info(f"White Group Removed {group}")
+                if isinstance(_csonfig["whiteGroup"], list):
+                    _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
+                save_csonfig()
+
+        except Exception as e:
+            logger.error(e)

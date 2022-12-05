@@ -1,0 +1,15 @@
+{
+  "statu": false,
+  "input_limit": 200,
+  "token_limit": 100,
+  "usercold_time": 5,
+  "groupcold_time": 1,
+  "whiteGroupSwitch": false,
+  "whiteGroup": [
+    "-1001662266151",
+    "-1001561314417"
+  ],
+  "Model": {
+    "-1001561314417": ""
+  }
+}

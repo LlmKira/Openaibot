@@ -1,0 +1,8 @@
+pyTelegramBotAPI
+rtoml
+pathlib
+rich
+aiohttp
+openai
+redis
+loguru
