@@ -114,7 +114,7 @@ def WaitFlood(user, group):
 
 async def load_response(user, group, key: str = "", prompt: str = "Say this is a test"):
     if not key:
-        logger.error("API key missing")
+        logger.error("SETTING:API key missing")
         raise Exception("API key missing")
     # 长度限定
     if _csonfig["input_limit"] < len(str(prompt)) / 4:
@@ -146,9 +146,9 @@ async def load_response(user, group, key: str = "", prompt: str = "Say this is a
         # print(_deal_rq)
         _deal = _deal_rq[0]
         _usage = rqParser.get_response_usage(response)
-        logger.info(f"{user}:{group} --prompt: {prompt} --req: {_deal} ")
+        logger.info(f"RUN:{user}:{group} --prompt: {prompt} --req: {_deal} ")
     except Exception as e:
-        logger.error(f"Api Error:{e}")
+        logger.error(f"RUN:Api Error:{e}")
         _usage = 0
         _deal = f"Api Outline {prompt}"
     # 限额
@@ -171,7 +171,7 @@ async def Text(bot, message, config):
             except Exception as e:
                 logger.error(e)
             finally:
-                logger.info(f"QUIT:non-whitelisted groups:{abs(message.chat.id)}")
+                logger.info(f"RUN:non-whitelisted groups:{abs(message.chat.id)}")
                 await bot.leave_chat(message.chat.id)
     _prompt = message.text.split(" ", 1)
     try:
@@ -201,23 +201,23 @@ async def Master(bot, message, config):
                 _csonfig["whiteGroupSwitch"] = True
                 await bot.reply_to(message, "ON:whiteGroup")
                 save_csonfig()
-                logger.info("On:whiteGroup")
+                logger.info("SETTING:whiteGroup ON")
 
             if command == "/offw":
                 _csonfig["whiteGroupSwitch"] = False
-                await bot.reply_to(message, "OFF:whiteGroup")
+                await bot.reply_to(message, "SETTING:whiteGroup OFF")
                 save_csonfig()
                 logger.info("On:whiteGroup")
 
             if command == "/open":
                 _csonfig["statu"] = True
-                await bot.reply_to(message, "ON:BOT")
+                await bot.reply_to(message, "SETTING:BOT ON")
                 save_csonfig()
                 logger.info("On")
 
             if command == "/close":
                 _csonfig["statu"] = False
-                await bot.reply_to(message, "OFF:BOT")
+                await bot.reply_to(message, "SETTING:BOT OFF")
                 save_csonfig()
                 logger.info("Off")
             if command.startswith("/usercold"):
@@ -227,7 +227,7 @@ async def Master(bot, message, config):
                     _csonfig["usercold_time"] = int(_len_)
                     await bot.reply_to(message, f"user cooltime:{_len_}")
                     save_csonfig()
-                    logger.info(f"reset user cold time limit to{_len_}")
+                    logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
             if command.startswith("/groupcold"):
                 _len = extract_arg(command)[0]
@@ -236,7 +236,7 @@ async def Master(bot, message, config):
                     _csonfig["groupcold_time"] = int(_len_)
                     await bot.reply_to(message, f"group cooltime:{_len_}")
                     save_csonfig()
-                    logger.info(f"reset group cold time limit to{_len_}")
+                    logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
             if command.startswith("/tokenlimit"):
                 _len = extract_arg(command)[0]
@@ -245,7 +245,7 @@ async def Master(bot, message, config):
                     _csonfig["token_limit"] = int(_len_)
                     await bot.reply_to(message, f"tokenlimit:{_len_}")
                     save_csonfig()
-                    logger.info(f"reset tokenlimit limit to{_len_}")
+                    logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
             if command.startswith("/inputlimit"):
                 _len = extract_arg(command)[0]
@@ -254,14 +254,14 @@ async def Master(bot, message, config):
                     _csonfig["input_limit"] = int(_len_)
                     await bot.reply_to(message, f"inputlimit:{_len_}")
                     save_csonfig()
-                    logger.info(f"reset input limit to{_len_}")
+                    logger.info(f"SETTING:reset input limit to{_len_}")
 
             if "/addw" in command:
                 for group in extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     _csonfig["whiteGroup"].append(str(groupId))
                     await bot.reply_to(message, 'White Group Added' + str(groupId))
-                    logger.info(f"White Group Added {group}")
+                    logger.info(f"SETTING:White Group Added {group}")
                 save_csonfig()
 
             if "/delw" in command:
@@ -270,7 +270,7 @@ async def Master(bot, message, config):
                     if int(groupId) in _csonfig["whiteGroup"]:
                         _csonfig["whiteGroup"].remove(str(groupId))
                         await bot.reply_to(message, 'White Group Removed ' + str(groupId))
-                        logger.info(f"White Group Removed {group}")
+                        logger.info(f"SETTING:White Group Removed {group}")
                 if isinstance(_csonfig["whiteGroup"], list):
                     _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                 save_csonfig()

@@ -5,6 +5,8 @@
 # @Github    ：sudoskys
 import asyncio
 import pathlib
+
+import loguru
 import telebot
 
 from App import Event
@@ -26,12 +28,12 @@ class BotRunner(object):
 
     def run(self):
         # print(self.bot)
-        logCreate().info("Bot Start")
+        loguru.logger.info("APP:Bot Start")
         bot, _config = self.botCreate()
         if self.proxy.status:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
-            print("正在使用隧道！")
+            print("USE PROXY！")
 
         @bot.message_handler(commands=["start", 'about'], chat_types=['private'])
         async def handle_command(message):
