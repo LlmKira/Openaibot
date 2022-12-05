@@ -57,6 +57,27 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
+## 运行
+
+* 运行
+
+```shell
+nohup python3 main.py > /dev/null 2>&1 & 
+```
+
+* 查看进程
+
+```shell
+ps -aux|grep python3
+```
+
+* 终止进程
+  后加进程号码
+
+```shell
+kill -9  
+```
+
 ## 命令
 
 ```
