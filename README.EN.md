@@ -2,34 +2,33 @@
 
 OpenAI Chat Telegram Bot
 
+[EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
+
 Writing with OpenAi on Telegram
 
 *Only text conversations are currently supported*
 
-*Self-written dependency libraries*
+*Homebrew dependency library, no Api request rate limiting done*
 
 ## Features
 
+* Support for unsensitive replies to private chats
 * Support for rate limiting
 * Support for whitelist system
 * Support for content filtering
-* (20221205) Dependency library does not support asynchronous, large number of requests will block, replace with your
-  own asynchronous library
+* (20221205) Dependency library does not support asynchronous, large number of requests will block, replace with own asynchronous library
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
 ## Initialization
 
-* Pull/update the program
+* Pull/update process
 
-The install script automatically backs up and restores the configuration, run it in the root directory (not in the
-program directory)
+The install script will automatically backup and restore the configuration, run it in the root directory (not in the program directory)
 If it's a small update you can just ``git pull``.
 
 ```shell
-
 curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && sh setup.sh
-
 ```
 
 ``cd Openaibot``
@@ -65,16 +64,16 @@ Danger.bin One line of one blacklisted vocabulary. At least one.
 
 ``toml
 [bot]
-master = [100] # your user id
-botToken = 'key'  
+master = [100,200] # master user id &owner
+botToken = 'key'
 OPENAI_API_KEY = 'key'
-INTRO = "POWER BY OPENAI" # Suffix
+INTRO = "POWER BY OPENAI"
 ABOUT = "Created by github.com/sudoskys/Openaibot"
+WHITE = "Group NOT in WHITE list"
 
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
-
 ```
 
 [Telegram botToken request](https://t.me/BotFather)
@@ -104,17 +103,32 @@ kill -9
 
 ## command
 
+**restrict group**
+
 ```
 onw whitelist on
 offw whitelist
-open turn on the bot
-close turn off the bot
-usercold user cool , 1 for unlimited
-groupcold Group cooling, 1 for unlimited
+open open bot
+close close bot
+usercold User cooldown, 1 for unlimited
+groupcold Group cooldown time, 1 for unlimited
 tokenlimit Api reply limit
 inputlimit Limit on input prompts
 addw add to whitelist, /addw 111 222
-delw to un-whitelist, /delw 111 222
+delw Remove whitelist, /delw 111 222
+config See Config
 ```
 
+**limit private chat**
+
+```
+userwon user whitelist on
+userwoff User whitelist Off
+adduser Add user to whitelist
+deluser un-whitelist users
+```
+
+## Other
+
 Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
+

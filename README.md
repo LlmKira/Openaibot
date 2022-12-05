@@ -8,10 +8,11 @@ OpenAI Chat Telegram Bot
 
 *目前只支持了文本对话*
 
-*自制依赖库*
+*自制依赖库，没有做Api请求速率限制*
 
 ## 特性
 
+* 支持私聊无感回复
 * 支持速率限制
 * 支持白名单系统
 * 支持内容过滤
@@ -27,9 +28,7 @@ OpenAI Chat Telegram Bot
 ，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``
 
 ```shell
-
 curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && sh setup.sh
-
 ```
 
 `cd Openaibot`
@@ -65,7 +64,7 @@ Danger.bin 一行一个黑名单词汇。至少要有一个。
 
 ```toml
 [bot]
-master = [100] # your user id
+master = [100,200] # master user id &owner
 botToken = 'key'
 OPENAI_API_KEY = 'key'
 INTRO = "POWER BY OPENAI"  # 后缀
@@ -103,22 +102,31 @@ kill -9
 
 ## 命令
 
+**限制群组**
+
 ```
 onw 白名单开
 offw 白名单
 open 开机器人
 close 关机器人
-usercold 用户冷却 ，1 为无限制
-groupcold 群组冷却，1 为无限制
+usercold 用户冷却时间 ，1 为无限制
+groupcold 群组冷却时间，1 为无限制
 tokenlimit Api 的回复限制
 inputlimit 输入prompt的限制
 addw  加入白名单，/addw 111 222
 delw  取消白名单，/delw 111 222
 config See Config
+```
+
+**限制私聊**
+
+```
 userwon 用户白名单 开
 userwoff 用户白名单 关
 adduser 加入用户白名单
 deluser 取消用户白名单
 ```
+
+## 其他
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
