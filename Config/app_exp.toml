@@ -1,5 +1,5 @@
 [bot]
-master = 100
+master = [100]
 botToken = 'key'
 OPENAI_API_KEY = 'key'
 

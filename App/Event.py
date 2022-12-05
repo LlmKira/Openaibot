@@ -179,7 +179,7 @@ async def About(bot, message, config):
 
 async def Master(bot, message, config):
     load_csonfig()
-    if str(message.from_user.id) == str(config.master):
+    if message.from_user.id in config.master:
         try:
             command = message.text
             if command == "/onw":
