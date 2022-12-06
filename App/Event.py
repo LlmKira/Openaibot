@@ -390,8 +390,8 @@ async def Text(bot, message, config, reset: bool = False):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
     # 群组白名单检查
-    await WhiteGroupCheck(bot, message, config.WHITE)
-
+    if await WhiteGroupCheck(bot, message, config.WHITE):
+        return
     try:
         _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
                                                    key=config.OPENAI_API_KEY,
