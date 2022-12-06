@@ -185,7 +185,7 @@ close - 设置用户冷却时间
 - 群组回复记忆为 5000
 - 用量限制为 60000/h
 - 上下文记忆力为 7
-- 触发截断的字符数为 3333 (api:max 4095)
+- 触发截断的字符数为 3333x4 (api:max 4095x4) (tokenx4 粗略估算)
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
