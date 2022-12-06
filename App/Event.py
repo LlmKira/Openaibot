@@ -459,18 +459,21 @@ async def Master(bot, message, config):
                 _info = Utils.removeList(_key, command)
                 await bot.reply_to(message, _info)
 
+            # whiteGroup
             if "/add_white_group" in command:
                 _key = "whiteGroup"
-                _info = Utils.addList(_key, command)
-                await bot.reply_to(message, _info)
-            if "/add_white_user" in command:
-                _key = "whiteUser"
                 _info = Utils.addList(_key, command)
                 await bot.reply_to(message, _info)
 
             if "/del_white_group" in command:
                 _key = "whiteGroup"
                 _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            # whiteUser
+            if "/add_white_user" in command:
+                _key = "whiteUser"
+                _info = Utils.addList(_key, command)
                 await bot.reply_to(message, _info)
 
             if "/del_white_user" in command:
