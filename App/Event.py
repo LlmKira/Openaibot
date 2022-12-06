@@ -146,7 +146,7 @@ def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None
 
 
 def Humanization(strs):
-    return strs.lstrip('?!>:')
+    return strs.lstrip('？?!！：。')
 
 
 class GroupChat(object):
