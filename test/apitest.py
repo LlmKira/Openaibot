@@ -14,7 +14,7 @@ click = openai_sync.Completion(api_key=config.bot.OPENAI_API_KEY)
 
 async def test_api():
     return await click.create(model="text-davinci-003", prompt="Say this is a test", temperature=0,
-                              max_tokens=20)
+                              max_tokens=20, user="001")
 
 
 response = asyncio.run(test_api())

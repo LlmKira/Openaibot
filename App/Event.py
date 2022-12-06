@@ -21,8 +21,8 @@ logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", 
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
 urlForm = {
     "Danger.form": [
-        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt",
-        "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
+        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt"
     ]
 }
 
