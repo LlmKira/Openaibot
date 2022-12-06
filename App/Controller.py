@@ -70,12 +70,11 @@ class BotRunner(object):
             if message.text.startswith("/chat"):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
-                return
-            if message.reply_to_message:
-                if message.reply_to_message.from_user.id == me_id:
-                    await Event.Text(bot, message, _config, reset=False)
-                    request_timestamps.append(time.time())
-                    return
+            else:
+                if message.reply_to_message:
+                    if message.reply_to_message.from_user.id == me_id:
+                        await Event.Text(bot, message, _config, reset=False)
+                        request_timestamps.append(time.time())
             return
 
         # 私聊
