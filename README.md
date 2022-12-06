@@ -175,5 +175,9 @@ close - 设置用户冷却时间
 
 ``analysis.json`` 是频率统计，60s 内的请求次数。
 
+### Config.json
+
+会自动合并缺失的键值进行修复。
+
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
