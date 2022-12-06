@@ -20,15 +20,16 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 ## 特性
 
+* 聊天(chat) 续写(write)
 * 多用户，多Api key
 * chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊无感回复
 * 支持速率限制
 * 支持白名单系统
 * 支持黑名单系统
-* 支持单续写
 * 支持内容过滤
-* (20221205)依赖库不支持异步，大量请求会阻塞,替换为自己写的异步库
+* (20221205) 依赖库不支持异步，大量请求会阻塞,替换为自己写的异步库
+* chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -89,6 +90,7 @@ botToken = 'key'
 OPENAI_API_KEY = ['key'] # 多 key 负载
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot"
+WHITE = "Group NOT in WHITE list"
 
 [proxy]
 status = false
