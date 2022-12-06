@@ -20,6 +20,7 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 ## 特性
 
+* 多用户，多Api key
 * chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊无感回复
 * 支持速率限制
