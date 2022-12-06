@@ -181,7 +181,8 @@ class GroupChat(object):
             #                                     max_tokens=int(_csonfig["token_limit"]))
             import openai_sync
             response = await openai_sync.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
-                                                                        temperature=0,
+                                                                        temperature=0.2,
+                                                                        frequency_penalty=1,
                                                                         max_tokens=int(_csonfig["token_limit"]))
             _deal_rq = rqParser.get_response_text(response)
             # print(_deal_rq)
