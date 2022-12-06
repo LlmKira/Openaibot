@@ -1,7 +1,7 @@
 {
     "statu": true,
     "input_limit": 250,
-    "token_limit": 250,
+    "token_limit": 1000,
     "usercold_time": 10,
     "groupcold_time": 1,
     "whiteUserSwitch": true,

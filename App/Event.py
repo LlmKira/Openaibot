@@ -214,21 +214,23 @@ class GroupChat(object):
             return "OUT OF USAGE"
         # 请求
         try:
-            # # 垃圾同步库
+            # Openai_python
             # import openai
             # openai.api_key = key
             # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
             #                                     max_tokens=int(_csonfig["token_limit"]))
+            # OPENAI
+            # await openai_async.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
+            #                                                         temperature=0.2,
+            #                                                         frequency_penalty=1,
+            #                                                         max_tokens=int(_csonfig["token_limit"]))
+            # CHAT
             import openai_async.Chat
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
             receiver = openai_async.Chat.Chatbot(api_key=key,
                                                  conversation_id=_cid)
             response = await receiver.get_chat_response(model="text-davinci-003", prompt=str(prompt),
                                                         max_tokens=int(_csonfig["token_limit"]))
-            # await openai_async.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
-            #                                                         temperature=0.2,
-            #                                                         frequency_penalty=1,
-            #                                                         max_tokens=int(_csonfig["token_limit"]))
             # print(response)
             _deal_rq = rqParser.get_response_text(response)
             # print(_deal_rq)
