@@ -122,32 +122,37 @@ kill -9
 
 ## 命令
 
-| 命令                        | 作用                   | 额外          |
-|---------------------------|----------------------|-------------|
-| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送     |
-| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送     |
-| `/set_token_limit`        | 设置输出限制长度             |             |
-| `/set_user_cold`          | 设置输入限制长度             |             |
-| `/config`                 | 获取/备份 config.json 文件 | 发送文件        |
-| `/add_block_group`        | 禁止                   | 直接生效        |
-| `/del_block_group`        | 解禁                   | 直接生效        |
-| `/add_block_user`         | 禁止                   | 直接生效        |
-| `/del_block_user`         | 解禁                   | 直接生效        |
-| `/add_white_group`        | 加入                   | 需要开启白名单模式生效 |
-| `/add_white_user`         | 加入                   | 需要开启白名单模式生效 |
-| `/del_white_group`        | 除名                   | 需要开启白名单模式生效 |
-| `/del_white_user`         | 除名                   | 需要开启白名单模式生效 |
-| `/update_detect`          | 更新敏感词                |             |
-| `/open_user_white_mode`   | 开用户白名单               |             |
-| `/open_group_white_mode`  | 开群组白名单               |             |
-| `/close_user_white_mode`  | 关用户白名单               |             |
-| `/close_group_white_mode` | 关群组白名单               |             |
-| `/open`                   | 设置用户冷却时间             |             |
-| `/close`                  | 设置用户冷却时间             |             |
+
+| 命令                        | 作用                   | 额外                                         |
+|---------------------------|----------------------|--------------------------------------------|
+| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送                                    |
+| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送                                    |
+| `/set_token_limit`        | 设置输出限制长度             |                                            |
+| `/set_user_cold`          | 设置输入限制长度             |                                            |
+| `/config`                 | 获取/备份 config.json 文件 | 发送文件                                       |
+| `/add_block_group`        | 禁止                   | 直接生效                                       |
+| `/del_block_group`        | 解禁                   | 直接生效                                       |
+| `/add_block_user`         | 禁止                   | 直接生效                                       |
+| `/del_block_user`         | 解禁                   | 直接生效                                       |
+| `/add_white_group`        | 加入                   | 需要开启白名单模式生效                                |
+| `/add_white_user`         | 加入                   | 需要开启白名单模式生效                                |
+| `/del_white_group`        | 除名                   | 需要开启白名单模式生效                                |
+| `/del_white_user`         | 除名                   | 需要开启白名单模式生效                                |
+| `/update_detect`          | 更新敏感词                |                                            |
+| `/open_user_white_mode`   | 开用户白名单               |                                            |
+| `/open_group_white_mode`  | 开群组白名单               |                                            |
+| `/close_user_white_mode`  | 关用户白名单               |                                            |
+| `/close_group_white_mode` | 关群组白名单               |                                            |
+| `/open`                   | 设置用户冷却时间             |                                            |
+| `/close`                  | 设置用户冷却时间             |                                            |
+| `/chat`                   | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
+| `/write`                  | 续写                   | 续写.                                        |
 
 ### 样表
 
 ```markdown
+chat - 交谈
+write - 续写
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
@@ -182,7 +187,7 @@ close - 设置用户冷却时间
 
 ### 默认参数
 
-- 群组回复记忆为 5000
+- 群组回复记忆为 24 hours
 - 用量限制为 60000/h
 - 上下文记忆力为 7
 - 触发截断的字符数为 3333x4 (api:max 4095x4) (tokenx4 粗略估算)

@@ -12,8 +12,9 @@ from typing import Union
 from utils.Base import ReadConfig
 from utils.Data import DataWorker, DictUpdate, DefaultData
 from utils.Detect import DFA, Censor
-
+from utils.Data import ExpiringDict
 from utils.Base import Logger
+from datetime import datetime, timedelta
 
 logger = Logger()
 
@@ -49,7 +50,7 @@ global Group_Msg
 
 def init_Msg():
     global Group_Msg
-    Group_Msg = {}
+    Group_Msg = ExpiringDict()
     return Group_Msg
 
 
@@ -173,20 +174,19 @@ class Utils(object):
     def checkMsg(msg_uid):
         global Group_Msg
         if Group_Msg is None:
-            Group_Msg = {}
-        if len(Group_Msg) > 5000:
-            Group_Msg = Group_Msg[5000:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
-            # print(Group_Msg)
+            Group_Msg = ExpiringDict()
+        Group_Msg.cleanup()
+        # print(Group_Msg.get(str(msg_uid)))
         return Group_Msg.get(str(msg_uid))
 
     @staticmethod
     def trackMsg(msg_uid, user_id):
         global Group_Msg
         if Group_Msg is None:
-            Group_Msg = {}
-        if len(Group_Msg) > 5000:
-            Group_Msg = Group_Msg[5000:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
+            Group_Msg = ExpiringDict()
+        Group_Msg.cleanup()
         Group_Msg[str(msg_uid)] = user_id
+        Group_Msg.set_expiration(str(msg_uid), datetime.now() + timedelta(hours=24))
         # print(Group_Msg)
 
     @staticmethod
@@ -222,7 +222,7 @@ class Utils(object):
 class GroupChat(object):
     @staticmethod
     async def load_group_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
-                                  userlimit: int = None):
+                                  userlimit: int = None, method: str = "chat"):
         if not key:
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
@@ -244,23 +244,29 @@ class GroupChat(object):
             return "OUT OF USAGE"
         # 请求
         try:
+            import openai_async
             # Openai_python
             # import openai
             # openai.api_key = key
             # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
             #                                     max_tokens=int(_csonfig["token_limit"]))
-            # OPENAI
-            # await openai_async.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
-            #                                                         temperature=0.2,
-            #                                                         frequency_penalty=1,
-            #                                                         max_tokens=int(_csonfig["token_limit"]))
-            # CHAT
-            import openai_async.Chat
-            _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
-            receiver = openai_async.Chat.Chatbot(api_key=key,
-                                                 conversation_id=_cid)
-            response = await receiver.get_chat_response(model="text-davinci-003", prompt=str(prompt),
-                                                        max_tokens=int(_csonfig["token_limit"]))
+            if method == "write":
+                # OPENAI
+                response = await openai_async.Completion(api_key=key).create(model="text-davinci-003",
+                                                                             prompt=str(prompt),
+                                                                             temperature=0.2,
+                                                                             frequency_penalty=1,
+                                                                             max_tokens=int(_csonfig["token_limit"]))
+            elif method == "chat":
+                # CHAT
+                from openai_async import Chat
+                _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
+                receiver = Chat.Chatbot(api_key=key,
+                                        conversation_id=_cid)
+                response = await receiver.get_chat_response(model="text-davinci-003", prompt=str(prompt),
+                                                            max_tokens=int(_csonfig["token_limit"]))
+            else:
+                return "NO SUPPORT METHOD"
             # print(response)
             _deal_rq = rqParser.get_response_text(response)
             # print(_deal_rq)
@@ -359,12 +365,20 @@ async def Text(bot, message, config, reset: bool = False):
     load_csonfig()
     # 拿到 prompt
     _prompt = message.text
+    types = "chat"
     if message.text.startswith("/chat"):
         await Forget(bot, message, config)
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
         _prompt = _prompt_r[1]
+        types = "chat"
+    if message.text.startswith("/write"):
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
+            return
+        _prompt = _prompt_r[1]
+        types = "write"
     # 处理是否忘记
     if reset:
         await Forget(bot, message, config)
@@ -381,7 +395,9 @@ async def Text(bot, message, config, reset: bool = False):
     try:
         _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
                                                    key=config.OPENAI_API_KEY,
-                                                   prompt=_prompt)
+                                                   prompt=_prompt,
+                                                   method=types
+                                                   )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:

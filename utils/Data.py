@@ -6,6 +6,10 @@
 import ast
 import json
 
+# 缓冲
+from collections import OrderedDict
+from datetime import datetime, timedelta
+
 # 这里是数据基本类
 
 redis_installed = True
@@ -47,6 +51,24 @@ class DefaultData(object):
                 "1005522236": "not use this key"
             }
         }
+
+
+class ExpiringDict(OrderedDict):
+    def __init__(self, *args, **kwargs):
+        self.expirations = {}
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        self.expirations[key] = datetime.now() + timedelta(seconds=value)
+        super().__setitem__(key, value)
+
+    def set_expiration(self, key, expiration_time):
+        self.expirations[key] = expiration_time
+
+    def cleanup(self):
+        for key, expiration_time in self.expirations.items():
+            if datetime.now() > expiration_time:
+                super().pop(key)
 
 
 class DataWorker(object):

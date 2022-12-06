@@ -67,7 +67,7 @@ class BotRunner(object):
         @bot.message_handler(chat_types=['supergroup', 'group'])
         async def group_msg_no_admin(message):
             global me_id
-            if message.text.startswith("/chat"):
+            if message.text.startswith("/chat") or message.text.startswith("/write"):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
             else:
