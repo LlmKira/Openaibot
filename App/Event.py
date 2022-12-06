@@ -201,7 +201,8 @@ class Utils(object):
         if isinstance(_csonfig[key], list):
             _csonfig[key] = list(set(_csonfig[key]))
         save_csonfig()
-        return '\n'.join(info)
+        _info = '\n'.join(info)
+        return f"删除了\n{_info}"
 
     @staticmethod
     def addList(key, command):
@@ -209,9 +210,13 @@ class Utils(object):
         for group in Utils.extract_arg(command):
             groupId = "".join(list(filter(str.isdigit, group)))
             _csonfig[key].append(str(groupId))
+            info.append(f'{key} Added {groupId}')
             logger.info(f"SETTING:{key} Added {group}")
+        if isinstance(_csonfig[key], list):
+            _csonfig[key] = list(set(_csonfig[key]))
         save_csonfig()
-        return '\n'.join(info)
+        _info = '\n'.join(info)
+        return f"加入了\n{_info}"
 
 
 class GroupChat(object):
