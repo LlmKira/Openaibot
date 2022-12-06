@@ -44,7 +44,11 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 ### 配置 Redis
 
 ```shell
+# 本机
 apt-get install redis
+
+# Docker + 持久化（保存在 ./redis 目录下）
+docker run --name redis -d -v $(pwd)/redis:/data -p 6379:6379 redis redis-server --save 60 1 --loglevel warning
 ```
 
 ### 配置依赖
@@ -114,7 +118,7 @@ kill -9
 
 ```
 onw 白名单开
-offw 白名单
+offw 白名单关
 open 开机器人
 close 关机器人
 usercold 用户冷却时间 ，1 为无限制
