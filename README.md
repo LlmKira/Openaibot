@@ -12,12 +12,13 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 **不对机器人生成的任何内容负责，内容由OpenAi提供**
 
-*目前只支持了文本对话*
+*自己实现的 chatGPT ，体验基本一样*
 
 *自制依赖库，没有做Api请求速率限制*
 
 ## 特性
 
+* chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊无感回复
 * 支持速率限制
 * 支持白名单系统
@@ -142,5 +143,7 @@ deluser 取消用户白名单
 ``
 
 ## 其他
+
+``analysis.json`` 是频率统计，60s 内的请求次数。
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
