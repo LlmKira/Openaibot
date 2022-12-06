@@ -16,6 +16,28 @@ except Exception:
     redis_installed = False
 
 
+class DefaultData(object):
+    @staticmethod
+    def defaultConfig():
+        return {
+            "statu": True,
+            "input_limit": 200,
+            "token_limit": 100,
+            "usercold_time": 5,
+            "groupcold_time": 1,
+            "whiteUserSwitch": True,
+            "whiteGroupSwitch": False,
+            "whiteGroup": [
+                "-1001662266151",
+            ],
+            "whiteUser": [
+            ],
+            "Model": {
+                "-1001561314417": ""
+            }
+        }
+
+
 class DataWorker(object):
     """
     Redis 数据基类

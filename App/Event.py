@@ -8,32 +8,40 @@ import pathlib
 import time
 
 from loguru import logger
-from utils.Data import DataWorker, DictUpdate
-from utils.Detect import DFA
 
+from App.chatGPT import PrivateChat
+from utils.Base import ReadConfig
+from utils.Data import DataWorker, DictUpdate, DefaultData
+from utils.Detect import DFA, Censor
+
+# 日志机器
 logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", rotation="500 MB", enqueue=True)
 
+# 工具数据类型
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
-
-ContentDfa = DFA(path="./Data/Danger.form")
-
-default_table = {
-    "statu": True,
-    "input_limit": 200,
-    "token_limit": 100,
-    "usercold_time": 5,
-    "groupcold_time": 1,
-    "whiteUserSwitch": True,
-    "whiteGroupSwitch": False,
-    "whiteGroup": [
-        "-1001662266151",
-    ],
-    "whiteUser": [
-    ],
-    "Model": {
-        "-1001561314417": ""
-    }
+urlForm = {
+    "Danger.form": [
+        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
+        "https://raw.githubusercontent.com/nonecares/-/master/ban.txt",
+    ]
 }
+
+
+def InitCensor():
+    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/app.toml")
+    if config.proxy.status:
+        proxies = {
+            'all://': config.proxy.url,
+        }  # 'http://127.0.0.1:7890'  # url
+        return Censor.InitWords(url=urlForm, home_dir="./Data/", proxy=proxies)
+    else:
+        return Censor.InitWords(url=urlForm, home_dir="./Data/")
+
+
+if not pathlib.Path("./Data/Danger.form").exists():
+    InitCensor()
+# 过滤器
+ContentDfa = DFA(path="./Data/Danger.form")
 
 
 # IO
@@ -41,8 +49,9 @@ def load_csonfig():
     global _csonfig
     with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
-        DictUpdate.dict_update(default_table, _csonfig)
-        return _csonfig
+        now_table = DefaultData.defaultConfig()
+        DictUpdate.dict_update(now_table, _csonfig)
+        return now_table
 
 
 def save_csonfig():
@@ -136,48 +145,59 @@ def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None
     return False
 
 
-async def load_response(user, group, key: str = "", prompt: str = "Say this is a test", userlimit: int = None):
-    if not key:
-        logger.error("SETTING:API key missing")
-        raise Exception("API key missing")
-    # 长度限定
-    if _csonfig["input_limit"] < len(str(prompt)) / 4:
-        return "TOO LONG"
+def Humanization(strs):
+    return strs.lstrip('?!>:')
 
-    # 内容审计
-    if ContentDfa.exists(str(prompt)):
-        return "I am a robot and not fit to answer dangerous content."
 
-    # 洪水防御攻击
-    if WaitFlood(user=user, group=group, usercold_time=userlimit):
-        return "TOO FAST"
+class GroupChat(object):
+    @staticmethod
+    async def load_group_response(user, group, key: str = "", prompt: str = "Say this is a test",
+                                  userlimit: int = None):
+        if not key:
+            logger.error("SETTING:API key missing")
+            raise Exception("API key missing")
+        # 长度限定
+        if _csonfig["input_limit"] < len(str(prompt)) / 4:
+            return "TOO LONG"
 
-    # 用量检测
-    _Usage = Usage.isOutUsage(user)
-    if _Usage["status"]:
-        return "OUT OF USAGE"
-    # 请求
-    try:
-        # import openai
-        # openai.api_key = key
-        # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
-        #                                     max_tokens=int(_csonfig["token_limit"]))
-        import openai_sync
-        response = await openai_sync.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
-                                                                    temperature=0,
-                                                                    max_tokens=int(_csonfig["token_limit"]))
-        _deal_rq = rqParser.get_response_text(response)
-        # print(_deal_rq)
-        _deal = _deal_rq[0]
-        _usage = rqParser.get_response_usage(response)
-        logger.info(f"RUN:{user}:{group} --prompt: {prompt} --req: {_deal} ")
-    except Exception as e:
-        logger.error(f"RUN:Api Error:{e}")
-        _usage = 0
-        _deal = f"Api Outline \n {prompt}"
-    # 限额
-    Usage.renewUsage(user=user, father=_Usage, usage=_usage)
-    return _deal
+        # 内容审计
+        if ContentDfa.exists(str(prompt)):
+            return "I am a robot and not fit to answer dangerous content."
+
+        # 洪水防御攻击
+        if WaitFlood(user=user, group=group, usercold_time=userlimit):
+            return "TOO FAST"
+
+        # 用量检测
+        _Usage = Usage.isOutUsage(user)
+        if _Usage["status"]:
+            return "OUT OF USAGE"
+        # 请求
+        try:
+            # # 垃圾同步库
+            # import openai
+            # openai.api_key = key
+            # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
+            #                                     max_tokens=int(_csonfig["token_limit"]))
+            import openai_sync
+            response = await openai_sync.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
+                                                                        temperature=0,
+                                                                        max_tokens=int(_csonfig["token_limit"]))
+            _deal_rq = rqParser.get_response_text(response)
+            # print(_deal_rq)
+            _deal = _deal_rq[0]
+            _usage = rqParser.get_response_usage(response)
+            logger.info(f"RUN:{user}:{group} --prompt: {prompt} --req: {_deal} ")
+        except Exception as e:
+            logger.error(f"RUN:Api Error:{e}")
+            _usage = 0
+            _deal = f"Api Outline \n {prompt}"
+        # 限额
+        Usage.renewUsage(user=user, father=_Usage, usage=_usage)
+        _deal = ContentDfa.filter_all(_deal)
+        # 人性化处理
+        _deal = Humanization(_deal)
+        return _deal
 
 
 async def WhiteUserCheck(bot, message, WHITE):
@@ -224,8 +244,9 @@ async def Text(bot, message, config):
     _prompt = message.text.split(" ", 1)
     try:
         if len(_prompt) > 1:
-            _req = await load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
-                                       prompt=_prompt[1])
+            _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
+                                                       key=config.OPENAI_API_KEY,
+                                                       prompt=_prompt[1])
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
@@ -244,8 +265,9 @@ async def Chat_P(bot, message, config):
     _prompt = message.text
     try:
         if len(_prompt) > 1:
-            _req = await load_response(user=message.from_user.id, group=message.chat.id, key=config.OPENAI_API_KEY,
-                                       prompt=_prompt[1])
+            _req = await PrivateChat.load_response(user=message.from_user.id, group=message.chat.id,
+                                                   key=config.OPENAI_API_KEY,
+                                                   prompt=_prompt[1])
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
