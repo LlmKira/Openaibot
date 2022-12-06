@@ -10,6 +10,8 @@ OpenAI Chat Telegram Bot
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
 ```
 
+**不对机器人生成的任何内容负责，内容由OpenAi提供**
+
 *目前只支持了文本对话*
 
 *自制依赖库，没有做Api请求速率限制*
