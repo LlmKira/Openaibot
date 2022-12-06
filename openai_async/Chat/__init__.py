@@ -68,7 +68,7 @@ class Chatbot(object):
         #        "today?\n"
 
         _head = f"The following is a conversation with an AI assistant. The assistant is {_character}." \
-                f"\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you?" \
+                f"\n\nHuman: 你好，你是谁？\nAI: 我是由OpenAI创造的人工智能。我怎么帮你?" \
                 "today?\n"
         _prompt = f"{_head}{_old_prompt}{_now}\n{self._start_sequence}"
         response = await Completion(api_key=self._api_key).create(
