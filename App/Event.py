@@ -266,6 +266,10 @@ async def WhiteUserCheck(bot, message, WHITE):
 
 
 async def WhiteGroupCheck(bot, message, WHITE):
+    if str(abs(message.chat.id)) in _csonfig["blockGroup"]:
+        await bot.send_message(message.chat.id,
+                               f"The group is blocked!...\n\n{WHITE}")
+        return True
     if _csonfig.get("whiteGroupSwitch"):
         if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
             try:
@@ -288,7 +292,7 @@ async def Forget(bot, message, config):
     return MsgFlow(uid=_cid).forget()
 
 
-async def Chat_P(bot, message, config):
+async def private_Chat(bot, message, config):
     load_csonfig()
     # 处理初始化
     _prompt = message.text
@@ -431,6 +435,14 @@ async def Master(bot, message, config):
                     logger.info(f"SETTING:White Group Added {group}")
                 save_csonfig()
 
+            if "/block" in command:
+                for group in Utils.extract_arg(command):
+                    groupId = "".join(list(filter(str.isdigit, group)))
+                    _csonfig["blockGroup"].append(str(groupId))
+                    await bot.reply_to(message, 'Block Group Added' + str(groupId))
+                    logger.info(f"SETTING:Block Group Added {group}")
+                save_csonfig()
+
             if "/delw" in command:
                 for group in Utils.extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
@@ -484,7 +496,7 @@ async def Master(bot, message, config):
                 if message:
                     await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
             if not command.startswith("/"):
-                await Chat_P(bot, message, config)
+                await private_Chat(bot, message, config)
         except Exception as e:
             logger.error(e)
 

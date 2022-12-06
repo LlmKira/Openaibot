@@ -31,6 +31,7 @@ class DefaultData(object):
             "groupcold_time": 1,
             "whiteUserSwitch": True,
             "whiteGroupSwitch": False,
+            "blockGroup": [],
             "whiteGroup": [
                 "-1001662266151",
             ],

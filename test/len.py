@@ -7,3 +7,5 @@ print(type(_len_))
 print(_len_)
 
 print(json.dumps(0))
+r=[1]
+print(isinstance(r,list))

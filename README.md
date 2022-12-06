@@ -4,7 +4,9 @@ OpenAI Chat Telegram Bot
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-在 Telegram 上使用 OpenAi 写作. Python > 3.7
+在 Telegram 上使用 OpenAi 写作. Python > 3.7。
+
+本程序利用 Api 认证 Token 运作，并不是 chatGPT的逆向，chatGPT 的 Python 实现由本机器人自实现。
 
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
@@ -22,6 +24,8 @@ This is not an official OpenAI product. This is a personal project and is not af
 * 支持私聊无感回复
 * 支持速率限制
 * 支持白名单系统
+* 支持黑名单系统
+* 支持单续写
 * 支持内容过滤
 * (20221205)依赖库不支持异步，大量请求会阻塞,替换为自己写的异步库
 
@@ -62,6 +66,8 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 
 如果没有，程序会自动下拉云端默认名单，后续的 updetect 也会拉云端覆盖本地。
 
+你可以通过放置一个一行的名单来关闭这个过滤器，但是我不赞成你这样做。
+
 ### 配置 Config/app.toml
 
 `cp app_exp.toml app.toml`
@@ -75,7 +81,7 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 [bot]
 master = [100, 200] # master user id &owner
 botToken = 'key'
-OPENAI_API_KEY = 'key'
+OPENAI_API_KEY = ['key'] # 多 key 负载
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 
@@ -143,6 +149,8 @@ deluser 取消用户白名单
 ``
 
 ## 其他
+
+### 统计
 
 ``analysis.json`` 是频率统计，60s 内的请求次数。
 
