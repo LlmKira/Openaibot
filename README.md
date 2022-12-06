@@ -122,7 +122,6 @@ kill -9
 
 ## 命令
 
-
 | 命令                        | 作用                   | 额外                                         |
 |---------------------------|----------------------|--------------------------------------------|
 | `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送                                    |
@@ -143,8 +142,8 @@ kill -9
 | `/open_group_white_mode`  | 开群组白名单               |                                            |
 | `/close_user_white_mode`  | 关用户白名单               |                                            |
 | `/close_group_white_mode` | 关群组白名单               |                                            |
-| `/open`                   | 设置用户冷却时间             |                                            |
-| `/close`                  | 设置用户冷却时间             |                                            |
+| `/open`                   | 开启机器人                |                                            |
+| `/close`                  | 关闭机器人                |                                            |
 | `/chat`                   | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
 | `/write`                  | 续写                   | 续写.                                        |
 
@@ -171,8 +170,8 @@ open_user_white_mode - 开用户白名单
 open_group_white_mode - 开群组白名单
 close_user_white_mode - 关用户白名单
 close_group_white_mode - 关群组白名单
-open - 设置用户冷却时间
-close - 设置用户冷却时间
+open - 开启机器人
+close - 关闭机器人
 ```
 
 ## 其他
