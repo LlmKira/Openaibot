@@ -62,7 +62,6 @@ class Chatbot(object):
         _now = f"{self._restart_sequence}{prompt}."
         # 构建 prompt 上下文，由上下文桶提供支持
         _old = self._MsgFlow.read()
-        _old_prompt = '\n'.join([f"{x['role']} {x['prompt']}" for x in _old])  # 首个不带 \n
         # _head = f"The following is a conversation with an girl. The girl is {_character}." \
         #        f"\n\nHuman: Hello, who are you?\nGirl: I am an Enthusiastic and learned girl Ai. How can I help you?" \
         #        "today?\n"
@@ -70,7 +69,21 @@ class Chatbot(object):
         _head = f"The following is a conversation with an AI assistant. The assistant is {_character}." \
                 f"\n\nHuman: 你好，你是谁？\nAI: 我是由OpenAI创造的人工智能。我怎么帮你?" \
                 "today?\n"
+        # 截断器
+        _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
+        total_length = 0
+        cutoff_index = -1
+        for i in reversed(range(len(_old_list))):
+            string_length = len(_old_list[i])
+            total_length += string_length
+            # 检查总长度是否超过了限制
+            if total_length > 3333:
+                cutoff_index = i
+                break
+        _old_list = _old_list[:cutoff_index]
+        _old_prompt = '\n'.join(_old_list)  # 首个不带 \n
         _prompt = f"{_head}{_old_prompt}{_now}\n{self._start_sequence}"
+
         response = await Completion(api_key=self._api_key).create(
             model=model,
             prompt=_prompt,
