@@ -77,13 +77,13 @@ class Chatbot(object):
             string_length = len(_old_list[i])
             total_length += string_length
             # 检查总长度是否超过了限制
-            if total_length > 3333:
+            if total_length > 3333 * 4:
                 cutoff_index = i
                 break
         _old_list = _old_list[:cutoff_index]
         _old_prompt = '\n'.join(_old_list)  # 首个不带 \n
         _prompt = f"{_head}{_old_prompt}{_now}\n{self._start_sequence}"
-
+        _prompt = _prompt[:3800 * 4]
         response = await Completion(api_key=self._api_key).create(
             model=model,
             prompt=_prompt,

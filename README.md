@@ -6,7 +6,7 @@ OpenAI Chat Telegram Bot
 
 在 Telegram 上使用 OpenAi 写作. Python > 3.7。
 
-本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，**chatGPT 的 Python 实现** 由本机器人自实现。
+本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，chatGPT **功能**的 **Python 实现** 由本机器人自实现。
 
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
@@ -178,6 +178,13 @@ close - 设置用户冷却时间
 ### Config.json
 
 会自动合并缺失的键值进行修复。
+
+### 默认参数
+
+- 群组回复记忆为 5000
+- 用量限制为 60000/h
+- 上下文记忆力为 7
+- 触发截断的字符数为 3333 (api:max 4095)
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
