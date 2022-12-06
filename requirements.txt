@@ -7,3 +7,4 @@ openai
 redis
 loguru
 httpx
+apscheduler

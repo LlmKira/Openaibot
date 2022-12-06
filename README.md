@@ -4,7 +4,7 @@ OpenAI Chat Telegram Bot
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-在 Telegram 上使用 OpenAi 写作.
+在 Telegram 上使用 OpenAi 写作. Python > 3.7
 
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me

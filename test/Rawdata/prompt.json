@@ -1,19 +1,43 @@
 {
+  "id": "cmpl-6KR9WeH7z66MJohFPqG6Ev8mVIFSs",
+  "object": "text_completion",
+  "created": 1670328954,
+  "model": "text-davinci-003",
   "choices": [
     {
-      "finish_reason": "length",
+      "text": " 你有什么功能？\n",
       "index": 0,
       "logprobs": null,
-      "text": "\n"
+      "finish_reason": "stop"
+    },
+    {
+      "text": "你能给我一些建议吗？\n\n",
+      "index": 1,
+      "logprobs": null,
+      "finish_reason": "stop"
+    },
+    {
+      "text": " What can you do to help me today?\n",
+      "index": 2,
+      "logprobs": null,
+      "finish_reason": "stop"
+    },
+    {
+      "text": " 我希望得到你的協助\n\n",
+      "index": 3,
+      "logprobs": null,
+      "finish_reason": "stop"
+    },
+    {
+      "text": " What can you do to help me?\n",
+      "index": 4,
+      "logprobs": null,
+      "finish_reason": "stop"
     }
   ],
-  "created": 1670231889,
-  "id": "cmpl-6K1txDdOyBVr6ikci1V",
-  "model": "text-davinci-003",
-  "object": "text_completion",
   "usage": {
-    "completion_tokens": 1,
-    "prompt_tokens": 5,
-    "total_tokens": 6
+    "prompt_tokens": 60,
+    "completion_tokens": 81,
+    "total_tokens": 141
   }
 }

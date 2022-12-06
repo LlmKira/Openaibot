@@ -5,6 +5,9 @@
 # @Github    ：sudoskys
 import os
 import json
+import random
+from typing import Union
+
 from .network import request
 
 
@@ -23,7 +26,11 @@ API = _load_api()
 
 
 class Completion(object):
-    def __init__(self, api_key: str, proxy_url: str = ""):
+    def __init__(self, api_key: Union[str, list], proxy_url: str = ""):
+        if isinstance(api_key, list):
+            api_key: list
+            api_key = random.choice(api_key)
+            api_key: str
         self.__api_key = api_key
         self.__proxy = proxy_url
 

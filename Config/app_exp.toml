@@ -1,7 +1,7 @@
 [bot]
 master = [100]
 botToken = 'key'
-OPENAI_API_KEY = 'key'
+OPENAI_API_KEY = ["key"]
 INTRO = "POWER BY OPENAI"
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"

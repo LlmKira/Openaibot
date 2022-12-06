@@ -6,16 +6,16 @@
 import json
 import pathlib
 import time
+from typing import Union
 
-from loguru import logger
-
-from App.chatGPT import PrivateChat
+# from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Data import DataWorker, DictUpdate, DefaultData
 from utils.Detect import DFA, Censor
 
-# 日志机器
-logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", rotation="500 MB", enqueue=True)
+from utils.Base import Logger
+
+logger = Logger()
 
 # 工具数据类型
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
@@ -43,6 +43,18 @@ if not pathlib.Path("./Data/Danger.form").exists():
 # 过滤器
 ContentDfa = DFA(path="./Data/Danger.form")
 
+global _csonfig
+global Group_Msg
+
+
+def init_Msg():
+    global Group_Msg
+    Group_Msg = {}
+    return Group_Msg
+
+
+init_Msg()
+
 
 # IO
 def load_csonfig():
@@ -57,10 +69,6 @@ def load_csonfig():
 def save_csonfig():
     with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
-
-
-def extract_arg(arg):
-    return arg.split()[1:]
 
 
 class rqParser(object):
@@ -124,34 +132,66 @@ class Usage(object):
         return True
 
 
-def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None):
-    if usercold_time is None:
-        usercold_time = _csonfig["usercold_time"]
-    if groupcold_time is None:
-        groupcold_time = _csonfig["groupcold_time"]
-    if DataUtils.getKey(f"flood_user_{user}"):
-        # double req in 3 seconds
-        return True
-    else:
-        if _csonfig["usercold_time"] > 1:
-            DataUtils.setKey(f"flood_user_{user}", "FAST", exN=usercold_time)
-    # User
-    if DataUtils.getKey(f"flood_group_{group}"):
-        # double req in 3 seconds
-        return True
-    else:
-        if _csonfig["groupcold_time"] > 1:
-            DataUtils.setKey(f"flood_group_{group}", "FAST", exN=groupcold_time)
-    return False
+class Utils(object):
+    @staticmethod
+    def forget_me(user_id, group_id):
+        from openai_async.utils.data import MsgFlow
+        _cid = DefaultData.composing_uid(user_id=user_id, chat_id=group_id)
+        return MsgFlow(uid=_cid).forget()
 
+    @staticmethod
+    def extract_arg(arg):
+        return arg.split()[1:]
 
-def Humanization(strs):
-    return strs.lstrip('？?!！：。')
+    @staticmethod
+    def Humanization(strs):
+        return strs.lstrip('？?!！：。')
+
+    @staticmethod
+    def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None):
+        if usercold_time is None:
+            usercold_time = _csonfig["usercold_time"]
+        if groupcold_time is None:
+            groupcold_time = _csonfig["groupcold_time"]
+        if DataUtils.getKey(f"flood_user_{user}"):
+            # double req in 3 seconds
+            return True
+        else:
+            if _csonfig["usercold_time"] > 1:
+                DataUtils.setKey(f"flood_user_{user}", "FAST", exN=usercold_time)
+        # User
+        if DataUtils.getKey(f"flood_group_{group}"):
+            # double req in 3 seconds
+            return True
+        else:
+            if _csonfig["groupcold_time"] > 1:
+                DataUtils.setKey(f"flood_group_{group}", "FAST", exN=groupcold_time)
+        return False
+
+    @staticmethod
+    def checkMsg(msg_uid):
+        global Group_Msg
+        if Group_Msg is None:
+            Group_Msg = {}
+        if len(Group_Msg) > 2500:
+            Group_Msg = Group_Msg[2500:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
+            # print(Group_Msg)
+        return Group_Msg.get(str(msg_uid))
+
+    @staticmethod
+    def trackMsg(msg_uid, user_id):
+        global Group_Msg
+        if Group_Msg is None:
+            Group_Msg = {}
+        if len(Group_Msg) > 2500:
+            Group_Msg = Group_Msg[2500:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
+        Group_Msg[str(msg_uid)] = user_id
+        # print(Group_Msg)
 
 
 class GroupChat(object):
     @staticmethod
-    async def load_group_response(user, group, key: str = "", prompt: str = "Say this is a test",
+    async def load_group_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
                                   userlimit: int = None):
         if not key:
             logger.error("SETTING:API key missing")
@@ -165,7 +205,7 @@ class GroupChat(object):
             return "I am a robot and not fit to answer dangerous content."
 
         # 洪水防御攻击
-        if WaitFlood(user=user, group=group, usercold_time=userlimit):
+        if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
 
         # 用量检测
@@ -179,11 +219,17 @@ class GroupChat(object):
             # openai.api_key = key
             # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
             #                                     max_tokens=int(_csonfig["token_limit"]))
-            import openai_sync
-            response = await openai_sync.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
-                                                                        temperature=0.2,
-                                                                        frequency_penalty=1,
-                                                                        max_tokens=int(_csonfig["token_limit"]))
+            import openai_async.Chat
+            _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
+            receiver = openai_async.Chat.Chatbot(api_key=key,
+                                                 conversation_id=_cid)
+            response = await receiver.get_chat_response(model="text-davinci-003", prompt=str(prompt),
+                                                        max_tokens=int(_csonfig["token_limit"]))
+            # await openai_async.Completion(api_key=key).create(model="text-davinci-003", prompt=str(prompt),
+            #                                                         temperature=0.2,
+            #                                                         frequency_penalty=1,
+            #                                                         max_tokens=int(_csonfig["token_limit"]))
+            # print(response)
             _deal_rq = rqParser.get_response_text(response)
             # print(_deal_rq)
             _deal = _deal_rq[0]
@@ -197,7 +243,7 @@ class GroupChat(object):
         Usage.renewUsage(user=user, father=_Usage, usage=_usage)
         _deal = ContentDfa.filter_all(_deal)
         # 人性化处理
-        _deal = Humanization(_deal)
+        _deal = Utils.Humanization(_deal)
         return _deal
 
 
@@ -234,15 +280,29 @@ async def WhiteGroupCheck(bot, message, WHITE):
     return False
 
 
-async def Text(bot, message, config):
+async def Forget(bot, message, config):
+    from openai_async.utils.data import MsgFlow
+    _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
+    return MsgFlow(uid=_cid).forget()
+
+
+async def Chat_P(bot, message, config):
     load_csonfig()
+    # 处理初始化
+    _prompt = message.text
+    if message.text.startswith("/chat"):
+        await Forget(bot, message, config)
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
+            return
+        _prompt = _prompt_r[1]
+    # 处理开关
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
-
-    # 群组白名单检查
-    await WhiteGroupCheck(bot, message, config.WHITE)
-    _prompt = message.text.split(" ", 1)
+    # 白名单检查
+    if await WhiteUserCheck(bot, message, config.WHITE):
+        return
     try:
         if len(_prompt) > 1:
             _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
@@ -251,36 +311,41 @@ async def Text(bot, message, config):
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
-        await bot.reply_to(message, f"Wait！:Trigger Api request rate limit")
+        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
 
 
-async def Chat_P(bot, message, config):
+async def Text(bot, message, config, reset: bool = False):
     load_csonfig()
+    # 拿到 prompt
+    _prompt = message.text
+    if message.text.startswith("/chat"):
+        await Forget(bot, message, config)
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
+            return
+        _prompt = _prompt_r[1]
+    # 处理是否忘记
+    if reset:
+        await Forget(bot, message, config)
+    else:
+        # 加判定上文是否为此人的消息
+        if not str(Utils.checkMsg(f"{message.chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
+            return
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
-    # 白名单检查
-    if await WhiteUserCheck(bot, message, config.WHITE):
-        return
-    # 处理
-    _prompt = message.text
+    # 群组白名单检查
+    await WhiteGroupCheck(bot, message, config.WHITE)
+
     try:
-        if len(_prompt) > 1:
-            _req = await PrivateChat.load_response(user=message.from_user.id, group=message.chat.id,
+        _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
                                                    key=config.OPENAI_API_KEY,
-                                                   prompt=_prompt[1])
-            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+                                                   prompt=_prompt)
+        msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+        Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
         logger.error(e)
-        await bot.reply_to(message, f"Wait:Trigger Api request rate limit")
-
-
-async def Start(bot, message, config):
-    await bot.reply_to(message, f"Ping，Use Chat")
-
-
-async def About(bot, message, config):
-    await bot.reply_to(message, f"{config.ABOUT}")
+        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
 
 
 async def Master(bot, message, config):
@@ -288,6 +353,42 @@ async def Master(bot, message, config):
     if message.from_user.id in config.master:
         try:
             command = message.text
+            if command.startswith("/usercold"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["usercold_time"] = int(_len_)
+                    await bot.reply_to(message, f"user cooltime:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset user cold time limit to{_len_}")
+
+            if command.startswith("/groupcold"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["groupcold_time"] = int(_len_)
+                    await bot.reply_to(message, f"group cooltime:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset group cold time limit to{_len_}")
+
+            if command.startswith("/tokenlimit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["token_limit"] = int(_len_)
+                    await bot.reply_to(message, f"tokenlimit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
+
+            if command.startswith("/inputlimit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["input_limit"] = int(_len_)
+                    await bot.reply_to(message, f"inputlimit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset input limit to{_len_}")
+
             if command == "/onw":
                 _csonfig["whiteGroupSwitch"] = True
                 await bot.reply_to(message, "ON:whiteGroup")
@@ -320,44 +421,8 @@ async def Master(bot, message, config):
                 else:
                     await bot.reply_to(message, "没有找到配置文件")
 
-            if command.startswith("/usercold"):
-                _len = extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["usercold_time"] = int(_len_)
-                    await bot.reply_to(message, f"user cooltime:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset user cold time limit to{_len_}")
-
-            if command.startswith("/groupcold"):
-                _len = extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["groupcold_time"] = int(_len_)
-                    await bot.reply_to(message, f"group cooltime:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset group cold time limit to{_len_}")
-
-            if command.startswith("/tokenlimit"):
-                _len = extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["token_limit"] = int(_len_)
-                    await bot.reply_to(message, f"tokenlimit:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
-
-            if command.startswith("/inputlimit"):
-                _len = extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["input_limit"] = int(_len_)
-                    await bot.reply_to(message, f"inputlimit:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset input limit to{_len_}")
-
             if "/addw" in command:
-                for group in extract_arg(command):
+                for group in Utils.extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     _csonfig["whiteGroup"].append(str(groupId))
                     await bot.reply_to(message, 'White Group Added' + str(groupId))
@@ -365,7 +430,7 @@ async def Master(bot, message, config):
                 save_csonfig()
 
             if "/delw" in command:
-                for group in extract_arg(command):
+                for group in Utils.extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     if int(groupId) in _csonfig["whiteGroup"]:
                         _csonfig["whiteGroup"].remove(str(groupId))
@@ -388,7 +453,7 @@ async def Master(bot, message, config):
                 logger.info("SETTING:whiteUser OFF")
 
             if "/adduser" in command:
-                for group in extract_arg(command):
+                for group in Utils.extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     _csonfig["whiteUser"].append(str(groupId))
                     await bot.reply_to(message, 'White User Added' + str(groupId))
@@ -396,7 +461,7 @@ async def Master(bot, message, config):
                 save_csonfig()
 
             if "/deluser" in command:
-                for group in extract_arg(command):
+                for group in Utils.extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     if int(groupId) in _csonfig["whiteUser"]:
                         _csonfig["whiteUser"].remove(str(groupId))
@@ -420,3 +485,11 @@ async def Master(bot, message, config):
                 await Chat_P(bot, message, config)
         except Exception as e:
             logger.error(e)
+
+
+async def Start(bot, message, config):
+    await bot.reply_to(message, f"Ping，Use /chat start a new chat loop")
+
+
+async def About(bot, message, config):
+    await bot.reply_to(message, f"{config.ABOUT}")
