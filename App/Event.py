@@ -21,9 +21,9 @@ logger.add(sink='run.log', format="{time} - {level} - {message}", level="INFO", 
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
 urlForm = {
     "Danger.form": [
-        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
+        # "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
         "https://raw.githubusercontent.com/nonecares/-/master/ban.txt",
-        "https://github.com/cjh0613/tencent-sensitive-words/blob/main/sensitive_words_lines.txt",
+        "https://raw.githubusercontent.com/cjh0613/tencent-sensitive-words/main/sensitive_words_lines.txt",
         "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt",
         "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
     ]
