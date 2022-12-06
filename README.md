@@ -6,7 +6,7 @@ OpenAI Chat Telegram Bot
 
 在 Telegram 上使用 OpenAi 写作. Python > 3.7。
 
-本程序利用 Api 认证 Token 运作，并不是 chatGPT的逆向，chatGPT 的 Python 实现由本机器人自实现。
+本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，**chatGPT 的 Python 实现** 由本机器人自实现。
 
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
@@ -14,7 +14,7 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 **不对机器人生成的任何内容负责，内容由OpenAi提供**
 
-*自己实现的 chatGPT ，体验基本一样*
+*自己实现的 chatGPT ，体验基本一样，就是 Api 要钱*
 
 *自制依赖库，没有做Api请求速率限制*
 
