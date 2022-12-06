@@ -407,7 +407,7 @@ async def Master(bot, message, config):
                 if isinstance(_csonfig["whiteUser"], list):
                     _csonfig["whiteUser"] = list(set(_csonfig["whiteUser"]))
                 save_csonfig()
-            if "/updetect" in command:
+            if command == "/updetect":
                 keys, _error = InitCensor()
                 if _error:
                     error = '\n'.join(_error)
