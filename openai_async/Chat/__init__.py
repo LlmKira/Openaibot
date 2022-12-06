@@ -50,10 +50,10 @@ class Chatbot(object):
                                 character: list = None, head: str = None) -> dict:
         """
         异步的，得到对话上下文
-        :param head:
-        :param max_tokens: 最大返回
-        :param model: 模型
-        :param prompt: 提示
+        :param head: 预设技巧
+        :param max_tokens: 限制返回字符数量
+        :param model: 模型选择
+        :param prompt: 提示词
         :param character: 性格提示词，列表字符串
         :return:
         """
@@ -65,7 +65,7 @@ class Chatbot(object):
         _now = f"{self._restart_sequence}{prompt}."
         # 构建 prompt 上下文，由上下文桶提供支持
         _old = self._MsgFlow.read()
-        _head = f"The following is a conversation with an AI assistant. The assistant is {_character}."
+        _head = f"The following is a conversation with chatGPT Ai assistant. The assistant is {_character}."
         _head = f"{_head}\n{head}\n"
         # 截断器
         _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
