@@ -131,6 +131,12 @@ adduser 加入用户白名单
 deluser 取消用户白名单
 ```
 
+**配置**
+``
+/updetect 热更新危险词
+/config 查看运行配置
+``
+
 ## 其他
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
