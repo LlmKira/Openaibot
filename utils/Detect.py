@@ -36,7 +36,7 @@ class Censor:
                         tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
                         for sid in tmpList:
                             item = sid.strip(",").strip("\n")
-                            if item and len(item) > 1:
+                            if item and len(item) > 1 and (not item.isalpha()):
                                 Words.append(item)
                     else:
                         print(f"初始化失败 -> {i}")
