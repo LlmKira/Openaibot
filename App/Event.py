@@ -310,8 +310,7 @@ async def Chat_P(bot, message, config):
             _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
                                                        key=config.OPENAI_API_KEY,
                                                        prompt=_prompt[1])
-            await bot.reply_to(message, f"{_req}\n{config.INTRO}",
-                               parse_mode='MarkdownV2')
+            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
         await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
@@ -344,8 +343,7 @@ async def Text(bot, message, config, reset: bool = False):
         _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
                                                    key=config.OPENAI_API_KEY,
                                                    prompt=_prompt)
-        msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}",
-                                 parse_mode='MarkdownV2')
+        msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
         logger.error(e)
