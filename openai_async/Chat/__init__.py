@@ -47,28 +47,26 @@ class Chatbot(object):
         return hash_object.hexdigest()
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
-                                character: list = None) -> dict:
+                                character: list = None, head: str = None) -> dict:
         """
         异步的，得到对话上下文
+        :param head:
         :param max_tokens: 最大返回
         :param model: 模型
         :param prompt: 提示
         :param character: 性格提示词，列表字符串
         :return:
         """
+        if head is None:
+            head = f"\nHuman: 你好，你是谁？\nAI: 我是由OpenAI创造的人工智能。我怎么帮你?"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely"]
         _character = ",".join(character)
         _now = f"{self._restart_sequence}{prompt}."
         # 构建 prompt 上下文，由上下文桶提供支持
         _old = self._MsgFlow.read()
-        # _head = f"The following is a conversation with an girl. The girl is {_character}." \
-        #        f"\n\nHuman: Hello, who are you?\nGirl: I am an Enthusiastic and learned girl Ai. How can I help you?" \
-        #        "today?\n"
-
-        _head = f"The following is a conversation with an AI assistant. The assistant is {_character}." \
-                f"\n\nHuman: 你好，你是谁？\nAI: 我是由OpenAI创造的人工智能。我怎么帮你?" \
-                "today?\n"
+        _head = f"The following is a conversation with an AI assistant. The assistant is {_character}."
+        _head = f"{_head}\n{head}\n"
         # 截断器
         _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
         total_length = 0
