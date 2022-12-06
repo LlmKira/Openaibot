@@ -59,6 +59,8 @@ pip install -r requirements.txt
 
 Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 
+如果没有，程序会自动下拉云端默认名单，后续的 updetect 也会拉云端覆盖本地。
+
 ### 配置 Config/app.toml
 
 `cp app_exp.toml app.toml`
