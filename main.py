@@ -10,7 +10,7 @@ import loguru
 from utils.Base import ReadConfig
 from App.Controller import BotRunner
 
-loguru.logger.info("Config文件更新，请重新覆写 Config")
+# loguru.logger.info("新闻：Config文件更新，请重新覆写 Config")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 App = BotRunner(config)
