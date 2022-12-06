@@ -266,7 +266,8 @@ class GroupChat(object):
             # print(_deal_rq)
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
-            logger.info(f"RUN:{user}:{group} --prompt: {prompt} --req: {_deal} ")
+            _time = int(time.time() * 1000)
+            logger.info(f"RUN:{user}:{group}--time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
