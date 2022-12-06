@@ -101,7 +101,7 @@ class Usage(object):
         :return: bool
         """
         # 时间
-        key_time = int(time.strftime("%Y%m%d%H%M", time.localtime()))
+        key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
         GET = DataUtils.getKey(f"usage_{user}_{key_time}")
         if GET:
             if GET >= 60000:
@@ -173,8 +173,8 @@ class Utils(object):
         global Group_Msg
         if Group_Msg is None:
             Group_Msg = {}
-        if len(Group_Msg) > 2500:
-            Group_Msg = Group_Msg[2500:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
+        if len(Group_Msg) > 5000:
+            Group_Msg = Group_Msg[5000:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
             # print(Group_Msg)
         return Group_Msg.get(str(msg_uid))
 
@@ -183,8 +183,8 @@ class Utils(object):
         global Group_Msg
         if Group_Msg is None:
             Group_Msg = {}
-        if len(Group_Msg) > 2500:
-            Group_Msg = Group_Msg[2500:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
+        if len(Group_Msg) > 5000:
+            Group_Msg = Group_Msg[5000:]  # 如果字典中的键数量超过了最大值，则删除一些旧的键
         Group_Msg[str(msg_uid)] = user_id
         # print(Group_Msg)
 
