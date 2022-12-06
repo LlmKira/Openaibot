@@ -8,19 +8,19 @@
           "type": "string",
           "intro": "ID of the model to use.",
           "must": true,
-          "Defaults": null
+          "Defaults": ""
         },
         "prompt": {
           "type": "string,array",
           "intro": "The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.",
           "must": false,
-          "Defaults": null
+          "Defaults": ""
         },
         "suffix": {
           "type": "string,array",
           "intro": "The suffix that comes after a completion of inserted text.",
           "must": false,
-          "Defaults": null
+          "Defaults": ""
         },
         "temperature": {
           "type": "number",
@@ -56,7 +56,7 @@
           "type": "boolean",
           "intro": "Include the log probabilities on the logprobs most likely tokens, as well the chosen tokens. ",
           "must": false,
-          "Defaults": null
+          "Defaults": false
         },
         "echo": {
           "type": "boolean",
@@ -68,7 +68,7 @@
           "type": "string,array",
           "intro": "Up to 4 sequences where the API will stop generating further tokens. ",
           "must": false,
-          "Defaults": null
+          "Defaults": ""
         },
         "presence_penalty": {
           "type": "number",
@@ -92,13 +92,13 @@
           "type": "map",
           "intro": "Modify the likelihood of specified tokens appearing in the completion.",
           "must": false,
-          "Defaults": null
+          "Defaults": {}
         },
         "user": {
           "type": "string",
           "intro": "A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.",
           "must": false,
-          "Defaults": null
+          "Defaults": ""
         }
       }
     }
