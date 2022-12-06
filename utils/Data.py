@@ -18,6 +18,10 @@ except Exception:
 
 class DefaultData(object):
     @staticmethod
+    def composing_uid(user_id, chat_id):
+        return f"{user_id}:{chat_id}"
+
+    @staticmethod
     def defaultConfig():
         return {
             "statu": True,
@@ -121,3 +125,10 @@ def getPuffix(self, fix):
     listGet = connection.scan_iter(f"{fix}*")
     connection.close()
     return listGet
+
+
+def limit_dict_size(dicts, max_size):
+    if len(dicts) > max_size:
+        # 如果字典中的键数量超过了最大值，则删除一些旧的键
+        dicts = dicts[max_size:]
+    return dicts

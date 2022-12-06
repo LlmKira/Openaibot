@@ -6,7 +6,7 @@
 
 # 自己打包的utils 库，调用自己打包的 Gpt api
 
-from openai_sync.chat import Chatbot
+from openai_async.Chat import Chatbot
 from utils.Data import DataWorker
 
 # 工具数据类型
@@ -24,12 +24,6 @@ class ChatUtils(object):
 
     def _renew_conversation_id(self, conversation_id):
         ConversionUtils.setKey(self.user, conversation_id)
-
-    def refresh_session(self, user):
-        self.chatbot.reset_chat()  # Forgets conversation
-        self.chatbot.refresh_session()  # Uses the session_token to get a new bearer token
-        self.conversation_id = ConversionUtils.getKey(self.user)
-        self.chatbot = Chatbot(api_key=self._api_key, conversation_id=self.conversation_id)
 
     def get_resp(self, prompt: str = "test", output: str = "text"):
         try:

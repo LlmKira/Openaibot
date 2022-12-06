@@ -1,19 +1,15 @@
 {
     "statu": true,
-    "input_limit": 200,
-    "token_limit": 100,
-    "usercold_time": 5,
+    "input_limit": 250,
+    "token_limit": 1000,
+    "usercold_time": 10,
     "groupcold_time": 1,
     "whiteUserSwitch": true,
     "whiteGroupSwitch": false,
     "whiteGroup": [
-        "-1001662266151",
-        "-1001561314417",
         "1515"
     ],
     "whiteUser": [
-        "-1001662266151",
-        "-1001561314417",
         "5275155445"
     ],
     "Model": {

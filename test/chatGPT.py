@@ -5,7 +5,7 @@
 # @Github    ：sudoskys
 import asyncio
 
-from App.chatGPT import PrivateChat
+# from App.chatGPT import PrivateChat
 
 
 async def test_api():
