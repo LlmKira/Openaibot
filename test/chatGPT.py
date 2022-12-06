@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 12/6/22 10:50 AM
-# @FileName: chatGPT.py
+# @FileName: chatGPT.py.nouse
 # @Software: PyCharm
 # @Github    ：sudoskys
 import asyncio

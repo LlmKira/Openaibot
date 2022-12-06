@@ -63,7 +63,8 @@ def load_csonfig():
         _csonfig = json.load(f)
         now_table = DefaultData.defaultConfig()
         DictUpdate.dict_update(now_table, _csonfig)
-        return now_table
+        _csonfig = now_table
+        return _csonfig
 
 
 def save_csonfig():
@@ -188,6 +189,30 @@ class Utils(object):
         Group_Msg[str(msg_uid)] = user_id
         # print(Group_Msg)
 
+    @staticmethod
+    def removeList(key, command):
+        info = []
+        for group in Utils.extract_arg(command):
+            groupId = "".join(list(filter(str.isdigit, group)))
+            if int(groupId) in _csonfig[key]:
+                _csonfig[key].remove(str(groupId))
+                info.append(f'{key} Removed {groupId}')
+                logger.info(f"SETTING:{key} Removed {group}")
+        if isinstance(_csonfig[key], list):
+            _csonfig[key] = list(set(_csonfig[key]))
+        save_csonfig()
+        return '\n'.join(info)
+
+    @staticmethod
+    def addList(key, command):
+        info = []
+        for group in Utils.extract_arg(command):
+            groupId = "".join(list(filter(str.isdigit, group)))
+            _csonfig[key].append(str(groupId))
+            logger.info(f"SETTING:{key} Added {group}")
+        save_csonfig()
+        return '\n'.join(info)
+
 
 class GroupChat(object):
     @staticmethod
@@ -250,6 +275,10 @@ class GroupChat(object):
 
 
 async def WhiteUserCheck(bot, message, WHITE):
+    if str(abs(message.chat.id)) in _csonfig["blockUser"]:
+        await bot.send_message(message.chat.id,
+                               f"You are blocked!...\n\n{WHITE}")
+        return True
     if _csonfig.get("whiteUserSwitch"):
         if not str(abs(message.from_user.id)) in _csonfig.get("whiteUser"):
             try:
@@ -359,7 +388,8 @@ async def Master(bot, message, config):
     if message.from_user.id in config.master:
         try:
             command = message.text
-            if command.startswith("/usercold"):
+            # SET
+            if command.startswith("/set_user_cold"):
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -368,7 +398,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
-            if command.startswith("/groupcold"):
+            if command.startswith("/set_group_cold"):
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -377,7 +407,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
-            if command.startswith("/tokenlimit"):
+            if command.startswith("/set_token_limit"):
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -386,7 +416,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
-            if command.startswith("/inputlimit"):
+            if command.startswith("/set_input_limit"):
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -395,13 +425,88 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset input limit to{_len_}")
 
-            if command == "/onw":
+            if command == "/config":
+                save_csonfig()
+                path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
+                if pathlib.Path(path).exists():
+                    doc = open(path, 'rb')
+                    await bot.send_document(message.chat.id, doc)
+                else:
+                    await bot.reply_to(message, "没有找到配置文件")
+
+            if "/add_block_group" in command:
+                _key = "blockGroup"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/del_block_group" in command:
+                _key = "blockGroup"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/add_block_user" in command:
+                _key = "blockUser"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/del_block_user" in command:
+                _key = "blockUser"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/add_white_group" in command:
+                _key = "whiteUser"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
+            if "/add_white_user" in command:
+                _key = "whiteUser"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/del_white_group" in command:
+                _key = "whiteGroup"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/del_white_user" in command:
+                _key = "whiteUser"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            # UPDATE
+            if command == "/update_detect":
+                keys, _error = InitCensor()
+                if _error:
+                    error = '\n'.join(_error)
+                    errors = f"Error:\n{error}"
+                else:
+                    # 重载 Danger 库
+                    ContentDfa.change_words(path="./Data/Danger.form")
+                    errors = "Success"
+                if message:
+                    await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
+
+            # USER White
+            if command == "/open_user_white_mode":
+                _csonfig["whiteUserSwitch"] = True
+                await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
+                save_csonfig()
+                logger.info("SETTING:whiteUser ON")
+
+            if command == "/close_user_white_mode":
+                _csonfig["whiteUserSwitch"] = False
+                await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
+                save_csonfig()
+                logger.info("SETTING:whiteUser OFF")
+
+            # GROUP White
+            if command == "/open_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = True
                 await bot.reply_to(message, "ON:whiteGroup")
                 save_csonfig()
                 logger.info("SETTING:whiteGroup ON")
 
-            if command == "/offw":
+            if command == "/close_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = False
                 await bot.reply_to(message, "SETTING:whiteGroup OFF")
                 save_csonfig()
@@ -418,83 +523,6 @@ async def Master(bot, message, config):
                 await bot.reply_to(message, "SETTING:BOT OFF")
                 save_csonfig()
                 logger.info("SETTING:BOT OFF")
-
-            if command == "/config":
-                path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
-                if pathlib.Path(path).exists():
-                    doc = open(path, 'rb')
-                    await bot.send_document(message.chat.id, doc)
-                else:
-                    await bot.reply_to(message, "没有找到配置文件")
-
-            if "/addw" in command:
-                for group in Utils.extract_arg(command):
-                    groupId = "".join(list(filter(str.isdigit, group)))
-                    _csonfig["whiteGroup"].append(str(groupId))
-                    await bot.reply_to(message, 'White Group Added' + str(groupId))
-                    logger.info(f"SETTING:White Group Added {group}")
-                save_csonfig()
-
-            if "/block" in command:
-                for group in Utils.extract_arg(command):
-                    groupId = "".join(list(filter(str.isdigit, group)))
-                    _csonfig["blockGroup"].append(str(groupId))
-                    await bot.reply_to(message, 'Block Group Added' + str(groupId))
-                    logger.info(f"SETTING:Block Group Added {group}")
-                save_csonfig()
-
-            if "/delw" in command:
-                for group in Utils.extract_arg(command):
-                    groupId = "".join(list(filter(str.isdigit, group)))
-                    if int(groupId) in _csonfig["whiteGroup"]:
-                        _csonfig["whiteGroup"].remove(str(groupId))
-                        await bot.reply_to(message, 'White Group Removed ' + str(groupId))
-                        logger.info(f"SETTING:White Group Removed {group}")
-                if isinstance(_csonfig["whiteGroup"], list):
-                    _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
-                save_csonfig()
-
-            if command == "/userwon":
-                _csonfig["whiteUserSwitch"] = True
-                await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
-                save_csonfig()
-                logger.info("SETTING:whiteUser ON")
-
-            if command == "/userwoff":
-                _csonfig["whiteUserSwitch"] = False
-                await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
-                save_csonfig()
-                logger.info("SETTING:whiteUser OFF")
-
-            if "/adduser" in command:
-                for group in Utils.extract_arg(command):
-                    groupId = "".join(list(filter(str.isdigit, group)))
-                    _csonfig["whiteUser"].append(str(groupId))
-                    await bot.reply_to(message, 'White User Added' + str(groupId))
-                    logger.info(f"SETTING:White User Added {group}")
-                save_csonfig()
-
-            if "/deluser" in command:
-                for group in Utils.extract_arg(command):
-                    groupId = "".join(list(filter(str.isdigit, group)))
-                    if int(groupId) in _csonfig["whiteUser"]:
-                        _csonfig["whiteUser"].remove(str(groupId))
-                        await bot.reply_to(message, 'White User Removed ' + str(groupId))
-                        logger.info(f"SETTING:White User Removed {group}")
-                if isinstance(_csonfig["whiteUser"], list):
-                    _csonfig["whiteUser"] = list(set(_csonfig["whiteUser"]))
-                save_csonfig()
-            if command == "/updetect":
-                keys, _error = InitCensor()
-                if _error:
-                    error = '\n'.join(_error)
-                    errors = f"Error:\n{error}"
-                else:
-                    # 重载 AntiSpam 主题库
-                    ContentDfa.change_words(path="./Data/Danger.form")
-                    errors = "Success"
-                if message:
-                    await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
             if not command.startswith("/"):
                 await private_Chat(bot, message, config)
         except Exception as e:

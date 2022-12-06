@@ -31,14 +31,20 @@ class DefaultData(object):
             "groupcold_time": 1,
             "whiteUserSwitch": True,
             "whiteGroupSwitch": False,
-            "blockGroup": [],
+            "blockGroup": [
+                "1001662266151",
+            ],
+            "blockUser": [
+                "110",
+            ],
             "whiteGroup": [
-                "-1001662266151",
+                "1001662266151",
             ],
             "whiteUser": [
+                "110",
             ],
             "Model": {
-                "-1001561314417": ""
+                "1005522236": "not use this key"
             }
         }
 

@@ -96,7 +96,7 @@ url = "http://127.0.0.1:7890"
 
 [Telegram botToken申请](https://t.me/BotFather)
 
-[OPENAI_API_KEY申请](https://beta.openai.com/account/api-keys)
+[OPENAI_API_KEY申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换。）
 
 ## 运行
 
@@ -121,36 +121,28 @@ kill -9
 
 ## 命令
 
-**限制群组**
-
-```
-onw 白名单开
-offw 白名单关
-open 开机器人
-close 关机器人
-usercold 用户冷却时间 ，1 为无限制
-groupcold 群组冷却时间，1 为无限制
-tokenlimit Api 的回复限制
-inputlimit 输入prompt的限制
-addw  加入白名单，/addw 111 222
-delw  取消白名单，/delw 111 222
-config See Config
-```
-
-**限制私聊**
-
-```
-userwon 用户白名单 开
-userwoff 用户白名单 关
-adduser 加入用户白名单
-deluser 取消用户白名单
-```
-
-**配置**
-``
-/updetect 热更新危险词
-/config 查看运行配置
-``
+| 命令                        | 作用                   | 额外          |
+|---------------------------|----------------------|-------------|
+| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送     |
+| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送     |
+| `/set_token_limit`        | 设置输出限制长度             |             |
+| `/set_user_cold`          | 设置输入限制长度             |             |
+| `/config`                 | 获取/备份 config.json 文件 | 发送文件        |
+| `/add_block_group`        | 禁止                   | 直接生效        |
+| `/del_block_group`        | 解禁                   | 直接生效        |
+| `/add_block_user`         | 禁止                   | 直接生效        |
+| `/del_block_user`         | 解禁                   | 直接生效        |
+| `/add_white_group`        | 加入                   | 需要开启白名单模式生效 |
+| `/add_white_user`         | 加入                   | 需要开启白名单模式生效 |
+| `/del_white_group`        | 除名                   | 需要开启白名单模式生效 |
+| `/del_white_user`         | 除名                   | 需要开启白名单模式生效 |
+| `/update_detect`          | 更新敏感词                |             |
+| `/open_user_white_mode`   | 开用户白名单               |             |
+| `/open_group_white_mode`  | 开群组白名单               |             |
+| `/close_user_white_mode`  | 关用户白名单               |             |
+| `/close_group_white_mode` | 关群组白名单               |             |
+| `/open`                   | 设置用户冷却时间             |             |
+| `/close`                  | 设置用户冷却时间             |             |
 
 ## 其他
 

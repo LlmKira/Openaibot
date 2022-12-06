@@ -6,6 +6,10 @@
     "groupcold_time": 1,
     "whiteUserSwitch": true,
     "whiteGroupSwitch": false,
+    "blockGroup": [],
+    "blockUser": [
+        "110"
+    ],
     "whiteGroup": [
         "1515"
     ],
@@ -13,6 +17,6 @@
         "5275155445"
     ],
     "Model": {
-        "-1001561314417": ""
+        "1005522236": "not use this key"
     }
 }
