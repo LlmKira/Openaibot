@@ -22,7 +22,7 @@ This is not an official OpenAI product. This is a personal project and is not af
 * 支持速率限制
 * 支持白名单系统
 * 支持内容过滤
-* (20221205)依赖库不支持异步，大量请求会阻塞,替换为自己的异步库
+* (20221205)依赖库不支持异步，大量请求会阻塞,替换为自己写的异步库
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
