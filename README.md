@@ -144,6 +144,31 @@ kill -9
 | `/open`                   | 设置用户冷却时间             |             |
 | `/close`                  | 设置用户冷却时间             |             |
 
+### 样表
+
+```markdown
+set_user_cold - 设置用户冷却时间
+set_group_cold - 设置群组冷却时间
+set_token_limit - 设置输出限制长度
+set_user_cold - 设置输入限制长度
+config - 获取/备份 config.json 文件
+add_block_group - 禁止群组
+del_block_group - 解禁群组
+add_block_user - 禁止用户
+del_block_user - 解禁用户
+add_white_group - 加入白名单群组
+add_white_user - 加入白名单用户
+del_white_group - 除名白名单群
+del_white_user - 除名白名单人
+update_detect - 更新敏感词
+open_user_white_mode - 开用户白名单
+open_group_white_mode - 开群组白名单
+close_user_white_mode - 关用户白名单
+close_group_white_mode - 关群组白名单
+open - 设置用户冷却时间
+close - 设置用户冷却时间
+```
+
 ## 其他
 
 ### 统计
