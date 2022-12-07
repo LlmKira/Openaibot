@@ -7,12 +7,12 @@
     "whiteUserSwitch": true,
     "whiteGroupSwitch": false,
     "blockGroup": [],
-    "blockUser": [
-    ],
-    "whiteGroup": [
-    ],
+    "blockUser": [],
+    "whiteGroup": [],
     "whiteUser": [
+        "5275155445"
     ],
     "Model": {
+        "1005522236": "not use this key"
     }
 }
