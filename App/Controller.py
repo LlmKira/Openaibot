@@ -12,11 +12,10 @@ from telebot.asyncio_storage import StateMemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from App import Event
-from utils.Base import Logger
 import time
 from collections import deque
 
-logger = Logger()
+from loguru import logger
 global me_id
 
 time_interval = 60

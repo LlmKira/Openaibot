@@ -9,13 +9,12 @@ import random
 import time
 from typing import Union
 
-from utils.Base import Logger
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Data import DataWorker, DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
 
-logger = Logger()
+from loguru import logger
 
 # 工具数据类型
 DataUtils = DataWorker(prefix="Open_Ai_bot_")

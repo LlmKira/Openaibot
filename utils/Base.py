@@ -9,18 +9,6 @@ import rtoml
 from rich.console import Console
 
 
-def Logger():
-    from loguru import logger
-
-    # 日志机器
-    logger.add(sink='run.log',
-               format="{time} - {level} - {message}",
-               level="INFO",
-               rotation="500 MB",
-               enqueue=True)
-    return logger
-
-
 class Dict(dict):
     __setattr__ = dict.__setitem__
     __getattr__ = dict.__getitem__

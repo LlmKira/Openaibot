@@ -11,10 +11,9 @@ import pathlib
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from utils.Base import ReadConfig, Logger
+from utils.Base import ReadConfig
+from loguru import logger
 
-# 这里是数据基本类
-logger = Logger()
 
 redis_installed = True
 

@@ -7,8 +7,15 @@ from pathlib import Path
 
 from App.Controller import BotRunner
 from utils.Base import ReadConfig
+from loguru import logger
+# 日志机器
+logger.add(sink='run.log',
+           format="{time} - {level} - {message}",
+           level="INFO",
+           rotation="500 MB",
+           enqueue=True)
 
-# loguru.logger.info("新闻：Config文件更新，请重新覆写 Config")
+logger.info("新闻：api key 只能通过 机器人命令配置")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 App = BotRunner(config)
