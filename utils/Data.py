@@ -31,16 +31,19 @@ class Api_keys(object):
 
     @staticmethod
     def get_key():
-        with open("./Config/api_keys.json", encoding="utf-8") as f:
-            _config = json.load(f)
-            now_table = DefaultData.defaultKeys()
-            DictUpdate.dict_update(now_table, _config)
-            _config = now_table
-        return _config
+        now_table = DefaultData.defaultKeys()
+        if pathlib.Path("./Config/api_keys.json").exists():
+            with open("./Config/api_keys.json", encoding="utf-8") as f:
+                _config = json.load(f)
+                DictUpdate.dict_update(now_table, _config)
+                _config = now_table
+            return _config
+        else:
+            return now_table
 
     @staticmethod
     def save_key(_config):
-        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+        with open("./Config/api_keys.json", "w+", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
     @staticmethod

@@ -538,16 +538,20 @@ async def Master(bot, message, config):
 
             if command == "/see_api_key":
                 keys = Api_keys.get_key()
-                await bot.reply_to(message, f"Now Have {keys}")
+                # 脱敏
+                _key = []
+                for i in keys["OPENAI_API_KEY"]:
+                    _key.append(DefaultData.mask_middle(i, 12))
+                await bot.reply_to(message, f"Now Have {''.join(_key)}")
 
-            if command == "/add_api_key":
+            if "/add_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
                     Api_keys.add_key(key=str(_parser[0]))
                 logger.info("SETTING:ADD API KEY")
                 await bot.reply_to(message, "SETTING:ADD API KEY")
 
-            if command == "/del_api_key":
+            if "/del_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
                     Api_keys.pop_key(key=str(_parser[0]))
