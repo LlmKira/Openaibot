@@ -97,9 +97,10 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
-[Telegram botToken申请](https://t.me/BotFather)
+[Telegram botToken 申请](https://t.me/BotFather)
 
-[OPENAI_API_KEY申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换。）
+[OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换）
+[定价参考](https://openai.com/api/pricing/)
 
 ## 运行
 
