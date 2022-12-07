@@ -20,7 +20,8 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 ## 特性
 
-* 聊天(chat) 续写(write)
+* 聊天(chat)，使用 /chat 重置对话后，私聊消息或群组24小时内的消息，会自动链接上下文进行推测。直接回复就可以继续对话。
+* 续写(write)  独立推测，续写
 * 多用户，多Api key
 * chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊无感回复
