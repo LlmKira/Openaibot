@@ -275,7 +275,7 @@ class GroupChat(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"Api Outline\n {prompt}"
+            _deal = f"Api Outline or too long prompt \n {prompt}"
         # 限额
         Usage.renewUsage(user=user, father=_Usage, usage=_usage)
         _deal = ContentDfa.filter_all(_deal)
