@@ -53,7 +53,6 @@ class BotRunner(object):
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
             print("USE PROXY！")
-        query = {}
 
         # 私聊起动机
         @bot.message_handler(commands=["start", 'about'], chat_types=['private'])

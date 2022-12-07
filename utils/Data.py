@@ -24,6 +24,62 @@ except Exception:
     redis_installed = False
 
 
+class Api_keys(object):
+    """
+    管理 Api
+    """
+
+    @staticmethod
+    def get_key():
+        with open("./Config/api_keys.json", encoding="utf-8") as f:
+            _config = json.load(f)
+            now_table = DefaultData.defaultKeys()
+            DictUpdate.dict_update(now_table, _config)
+            _config = now_table
+        return _config
+
+    @staticmethod
+    def save_key(_config):
+        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def add_key(key: str):
+        _config = Api_keys.get_key()
+        _config['OPENAI_API_KEY'].append(key)
+        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
+        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+        return key
+
+    @staticmethod
+    def pop_key(key: str):
+        _config = Api_keys.get_key()
+        if key not in _config['OPENAI_API_KEY']:
+            return
+        _config['OPENAI_API_KEY'].remove(key)
+        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
+        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+        return key
+
+    @staticmethod
+    def pop_api_key(resp, auth):
+        _path = str(pathlib.Path.cwd()) + "/Config/app.toml"
+        # 读取
+        _config = Api_keys.get_key()
+        _config: dict
+        # 弹出
+        ERROR = resp.get("error")
+        if ERROR:
+            if ERROR.get('type') == "insufficient_quota":
+                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
+                    _config["OPENAI_API_KEY"].remove(auth)
+                    logger.error(f"弹出负载:insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
+                    # 存储
+        Api_keys.save_key(_config)
+
+
 class DefaultData(object):
     """
     数据提供类
@@ -70,20 +126,8 @@ class DefaultData(object):
         }
 
     @staticmethod
-    def pop_api_key(resp, auth):
-        _path = str(pathlib.Path.cwd()) + "/Config/app.toml"
-        # 读取
-        _config = ReadConfig().parseFile(_path, toObj=False)
-        _config: dict
-        # 弹出
-        ERROR = resp.get("error")
-        if ERROR:
-            if ERROR.get('type') == "insufficient_quota":
-                if isinstance(_config['bot']["OPENAI_API_KEY"], list) and auth in _config['bot']["OPENAI_API_KEY"]:
-                    _config['bot']["OPENAI_API_KEY"].remove(auth)
-                    logger.error(f"弹出负载:insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
-                    # 存储
-        ReadConfig.saveDict(_path, _config)
+    def defaultKeys():
+        return {"OPENAI_API_KEY": []}
 
 
 class ExpiringDict(OrderedDict):

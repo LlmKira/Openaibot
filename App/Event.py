@@ -9,18 +9,17 @@ import random
 import time
 from typing import Union
 
+from utils.Base import Logger
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
-from utils.Data import DataWorker, DictUpdate, DefaultData
+from utils.Data import DataWorker, DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
-from utils.Data import ExpiringDict
-from utils.Base import Logger
-from datetime import datetime, timedelta
 
 logger = Logger()
 
 # 工具数据类型
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
+MsgsRecordUtils = DataWorker(prefix="Open_Ai_bot_msg_record")
 urlForm = {
     "Danger.form": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
@@ -46,16 +45,6 @@ if not pathlib.Path("./Data/Danger.form").exists():
 ContentDfa = DFA(path="./Data/Danger.form")
 
 global _csonfig
-global Group_Msg
-
-
-def init_Msg():
-    global Group_Msg
-    Group_Msg = ExpiringDict()
-    return Group_Msg
-
-
-init_Msg()
 
 
 # IO
@@ -173,22 +162,13 @@ class Utils(object):
 
     @staticmethod
     def checkMsg(msg_uid):
-        global Group_Msg
-        if Group_Msg is None:
-            Group_Msg = ExpiringDict()
-        Group_Msg.cleanup()
+        _Group_Msg = MsgsRecordUtils.getKey(msg_uid)
         # print(Group_Msg.get(str(msg_uid)))
-        return Group_Msg.get(str(msg_uid))
+        return _Group_Msg
 
     @staticmethod
     def trackMsg(msg_uid, user_id):
-        global Group_Msg
-        if Group_Msg is None:
-            Group_Msg = ExpiringDict()
-        Group_Msg.cleanup()
-        Group_Msg[str(msg_uid)] = user_id
-        Group_Msg.set_expiration(str(msg_uid), datetime.now() + timedelta(hours=24))
-        # print(Group_Msg)
+        return MsgsRecordUtils.setKey(msg_uid, str(user_id), exN=86400)
 
     @staticmethod
     def removeList(key, command):
@@ -264,7 +244,7 @@ class GroupChat(object):
             if method == "write":
                 # OPENAI
                 response = await openai_async.Completion(api_key=key,
-                                                         call_func=DefaultData.pop_api_key
+                                                         call_func=Api_keys.pop_api_key
                                                          ).create(
                     model="text-davinci-003",
                     prompt=str(prompt),
@@ -278,7 +258,7 @@ class GroupChat(object):
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
                 receiver = Chat.Chatbot(api_key=key,
                                         conversation_id=_cid,
-                                        call_func=DefaultData.pop_api_key
+                                        call_func=Api_keys.pop_api_key
                                         )
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
@@ -296,7 +276,7 @@ class GroupChat(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"Api Boom: {e} \n {prompt}"
+            _deal = f"Api Outline\n {prompt}"
         # 限额
         Usage.renewUsage(user=user, father=_Usage, usage=_usage)
         _deal = ContentDfa.filter_all(_deal)
@@ -372,7 +352,7 @@ async def private_Chat(bot, message, config):
     try:
         if len(_prompt) > 1:
             _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
-                                                       key=config.OPENAI_API_KEY,
+                                                       key=Api_keys.get_key()["OPENAI_API_KEY"],
                                                        prompt=_prompt[1])
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
@@ -413,7 +393,7 @@ async def Text(bot, message, config, reset: bool = False):
         return
     try:
         _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
-                                                   key=config.OPENAI_API_KEY,
+                                                   key=Api_keys.get_key()["OPENAI_API_KEY"],
                                                    prompt=_prompt,
                                                    method=types
                                                    )
@@ -555,6 +535,24 @@ async def Master(bot, message, config):
                 await bot.reply_to(message, "SETTING:whiteGroup OFF")
                 save_csonfig()
                 logger.info("SETTING:whiteGroup OFF")
+
+            if command == "/see_api_key":
+                keys = Api_keys.get_key()
+                await bot.reply_to(message, f"Now Have {keys}")
+
+            if command == "/add_api_key":
+                _parser = Utils.extract_arg(command)
+                if _parser:
+                    Api_keys.add_key(key=str(_parser[0]))
+                logger.info("SETTING:ADD API KEY")
+                await bot.reply_to(message, "SETTING:ADD API KEY")
+
+            if command == "/del_api_key":
+                _parser = Utils.extract_arg(command)
+                if _parser:
+                    Api_keys.pop_key(key=str(_parser[0]))
+                logger.info("SETTING:DEL API KEY")
+                await bot.reply_to(message, "SETTING:DEL API KEY")
 
             if command == "/open":
                 _csonfig["statu"] = True

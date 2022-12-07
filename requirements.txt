@@ -8,3 +8,5 @@ redis
 loguru
 httpx
 apscheduler
+jiagu
+nltk

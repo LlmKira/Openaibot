@@ -5,10 +5,8 @@
 # @Github    ：sudoskys
 from pathlib import Path
 
-import loguru
-
-from utils.Base import ReadConfig
 from App.Controller import BotRunner
+from utils.Base import ReadConfig
 
 # loguru.logger.info("新闻：Config文件更新，请重新覆写 Config")
 

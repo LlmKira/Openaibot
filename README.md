@@ -167,6 +167,9 @@ kill -9
 | `/close`                  | 关闭机器人                |                                            |
 | `/chat`                   | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
 | `/write`                  | 续写                   | 续写.                                        |
+| `/see_api_key`            | 现在几个 Api key         |                                            |
+| `/del_api_key`            | 删除 Api key           |                                            |
+| `/add_api_key`            | 增加 Api key           |                                            |
 
 ### 样表
 
@@ -177,6 +180,9 @@ set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
 set_input_limit - 设置输入限制长度
+see_api_key - 现在几个 Api key
+del_api_key - 删除 Api key
+add_api_key - 增加 Api key
 config - 获取/备份 config.json 文件
 add_block_group - 禁止群组
 del_block_group - 解禁群组
