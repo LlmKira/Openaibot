@@ -544,7 +544,7 @@ async def Master(bot, message, config):
                     # 脱敏
                     _key = []
                     for i in keys["OPENAI_API_KEY"]:
-                        _key.append(DefaultData.mask_middle(i, 12))
+                        _key.append(DefaultData.mask_middle(i, 10))
                     _info = '\n'.join(_key)
                     await bot.reply_to(message, f"Now Have \n{_info}")
 
