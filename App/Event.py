@@ -541,7 +541,8 @@ async def Master(bot, message, config):
                 _key = []
                 for i in keys["OPENAI_API_KEY"]:
                     _key.append(DefaultData.mask_middle(i, 12))
-                await bot.reply_to(message, f"Now Have {''.join(_key)}")
+                _info = '\n'.join(_key)
+                await bot.reply_to(message, f"Now Have {_info}")
 
             if "/add_api_key" in command:
                 _parser = Utils.extract_arg(command)

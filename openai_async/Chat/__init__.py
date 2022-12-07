@@ -244,10 +244,9 @@ class Chatbot(object):
         _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
         # 重切割代币
         _mk = self.__token_limit - self.tokenizer(_header)  # 余量？
-
         if _mk < 0:
             _mk = 0
-        while self.tokenizer(_prompt) > _mk:
+        while self.tokenizer(_prompt) > _mk - 10:
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
