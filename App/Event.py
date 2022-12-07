@@ -293,7 +293,8 @@ async def WhiteUserCheck(bot, message, WHITE):
         if not str(abs(message.from_user.id)) in _csonfig.get("whiteUser"):
             try:
                 await bot.send_message(message.chat.id,
-                                       f"Check the settings to find that you is not whitelisted!...{WHITE}")
+                                       f"{message.from_user.id}:Check the settings to find that you is not "
+                                       f"whitelisted!...{WHITE}")
             except Exception as e:
                 logger.error(e)
             finally:
@@ -307,13 +308,13 @@ async def WhiteUserCheck(bot, message, WHITE):
 async def WhiteGroupCheck(bot, message, WHITE):
     if str(abs(message.chat.id)) in _csonfig["blockGroup"]:
         await bot.send_message(message.chat.id,
-                               f"The group is blocked!...\n\n{WHITE}")
+                               f"TGroup{message.chat.id} is blocked!...\n\n{WHITE}")
         return True
     if _csonfig.get("whiteGroupSwitch"):
         if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
             try:
                 await bot.send_message(message.chat.id,
-                                       f"The group is not whitelisted!...\n\n{WHITE}")
+                                       f"Group {message.chat.id} is not whitelisted!...\n\n{WHITE}")
             except Exception as e:
                 logger.error(e)
             finally:
