@@ -7,8 +7,6 @@ import time
 
 import rtoml
 from rich.console import Console
-from pathlib import Path
-from utils.Logging import logCreate
 
 
 def Logger():
@@ -57,9 +55,11 @@ class ReadConfig(object):
     def get(self):
         return self.config
 
-    def parseFile(self, paths):
+    def parseFile(self, paths, toObj: bool = True):
         data = rtoml.load(open(paths, 'r'))
-        self.config = Tool().dictToObj(data)
+        self.config = data
+        if toObj:
+            self.config = Tool().dictToObj(data)
         return self.config
 
     def parseDict(self, data):

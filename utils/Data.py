@@ -73,13 +73,14 @@ class DefaultData(object):
     def pop_api_key(resp, auth):
         _path = str(pathlib.Path.cwd()) + "/Config/app.toml"
         # 读取
-        _config = ReadConfig().parseFile(_path)
+        _config = ReadConfig().parseFile(_path, toObj=False)
+        _config: dict
         # 弹出
         ERROR = resp.get("error")
         if ERROR:
             if ERROR.get('type') == "insufficient_quota":
-                if isinstance(_config.bot.OPENAI_API_KEY, list) and auth in _config.bot.OPENAI_API_KEY:
-                    _config.bot.OPENAI_API_KEY.remove(auth)
+                if isinstance(_config['bot']["OPENAI_API_KEY"], list) and auth in _config['bot']["OPENAI_API_KEY"]:
+                    _config['bot']["OPENAI_API_KEY"].remove(auth)
                     logger.error(f"弹出负载:insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
                     # 存储
         ReadConfig.saveDict(_path, _config)
