@@ -21,6 +21,10 @@ except Exception:
 
 
 class DefaultData(object):
+    """
+    数据提供类
+    """
+
     @staticmethod
     def composing_uid(user_id, chat_id):
         return f"{user_id}:{chat_id}"
@@ -52,8 +56,21 @@ class DefaultData(object):
             }
         }
 
+    @staticmethod
+    def pop_api_key(config, key):
+        # 读取
+
+        # 弹出
+
+        # 存储
+        pass
+
 
 class ExpiringDict(OrderedDict):
+    """
+    过期字典
+    """
+
     def __init__(self, *args, **kwargs):
         self.expirations = {}
         super().__init__(*args, **kwargs)
@@ -125,6 +142,10 @@ class DataWorker(object):
 
 
 class DictUpdate(object):
+    """
+    字典深度更新
+    """
+
     @staticmethod
     def dict_update(raw, new):
         DictUpdate.dict_update_iter(raw, new)

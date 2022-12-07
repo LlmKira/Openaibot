@@ -61,11 +61,15 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 
 ### 配置 Redis
 
-```shell
-# 本机
-apt-get install redis
+**本机**
 
-# Docker + 持久化（保存在 ./redis 目录下）
+```shell
+apt-get install redis
+```
+
+**Docker + 持久化（保存在 ./redis 目录下）**
+
+```
 docker run --name redis -d -v $(pwd)/redis:/data -p 6379:6379 redis redis-server --save 60 1 --loglevel warning
 ```
 
@@ -113,7 +117,7 @@ url = "http://127.0.0.1:7890"
 [OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换）
 [定价参考](https://openai.com/api/pricing/)
 
-请不要向任何人暴露你的 app.toml
+请不要向任何人暴露你的 `app.toml`
 
 ## 运行
 

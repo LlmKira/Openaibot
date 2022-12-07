@@ -39,6 +39,22 @@ class Chatbot(object):
         self._MsgFlow.save(prompt=REPLY[0], role=self._start_sequence)
         return REPLY
 
+    @staticmethod
+    def random_string(length):
+        import string  # 导入string模块
+        import random  # 导入random模块
+
+        all_chars = string.ascii_letters + string.digits  # 获取所有字符，包括大小写字母和数字
+
+        result = ''  # 创建一个空字符串用于保存生成的随机字符
+
+        for i in range(length):
+            result += random.choice(all_chars)  # 随机选取一个字符，并添加到result中
+
+        return result  # 返回生成的随机字符
+
+    # _prompt = random_string(3700)
+
     def get_hash(self):
         import hashlib
         my_string = str(self.conversation_id)
@@ -75,13 +91,13 @@ class Chatbot(object):
             string_length = len(_old_list[i])
             total_length += string_length
             # 检查总长度是否超过了限制
-            if total_length > 3333 * 4:
+            if total_length > 3800:
                 cutoff_index = i
                 break
         _old_list = _old_list[:cutoff_index]
         _old_prompt = '\n'.join(_old_list)  # 首个不带 \n
         _prompt = f"{_head}{_old_prompt}{_now}\n{self._start_sequence}"
-        _prompt = _prompt[:3800 * 4]
+        _prompt = _prompt[:3800]
         response = await Completion(api_key=self._api_key).create(
             model=model,
             prompt=_prompt,
