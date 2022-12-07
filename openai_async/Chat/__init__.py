@@ -76,14 +76,14 @@ class Chatbot(object):
         :return:
         """
         if head is None:
-            head = f"\nHuman: 你好，你是谁？\nAI: 我是由OpenAI创造的人工智能。我怎么帮你?"
+            head = f"\nHuman: 你好，你是谁？\nAI: 我是 Ai assistant 请提问?"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely"]
         _character = ",".join(character)
         _now = f"{self._restart_sequence}{prompt}."
         # 构建 prompt 上下文，由上下文桶提供支持
         _old = self._MsgFlow.read()
-        _head = f"The following is a conversation with chatGPT Ai assistant. The assistant is {_character}."
+        _head = f"The following is a conversation with Ai assistant. The assistant is {_character}."
         _head = f"{_head}\n{head}\n"
         # 截断器
         _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
@@ -108,7 +108,7 @@ class Chatbot(object):
             top_p=1,
             n=1,
             frequency_penalty=0,
-            presence_penalty=0.6,
+            presence_penalty=0.5,
             user=str(self.get_hash()),
             stop=["Human:", "AI:"],
         )
