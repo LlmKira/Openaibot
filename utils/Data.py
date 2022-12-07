@@ -5,12 +5,16 @@
 # @Github    ：sudoskys
 import ast
 import json
+import pathlib
 
 # 缓冲
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
+from utils.Base import ReadConfig, Logger
+
 # 这里是数据基本类
+logger = Logger()
 
 redis_installed = True
 
@@ -28,6 +32,15 @@ class DefaultData(object):
     @staticmethod
     def composing_uid(user_id, chat_id):
         return f"{user_id}:{chat_id}"
+
+    @staticmethod
+    def mask_middle(s: str, n: int) -> str:
+        # 计算需要替换的字符数
+        num_chars = len(s) - 2 * n
+        # 构造替换字符串
+        mask = "*" * num_chars
+        # 将替换字符串插入到原字符串的指定位置
+        return s[:n] + mask + s[n + num_chars:]
 
     @staticmethod
     def defaultConfig():
@@ -57,13 +70,19 @@ class DefaultData(object):
         }
 
     @staticmethod
-    def pop_api_key(config, key):
+    def pop_api_key(resp, auth):
+        _path = str(pathlib.Path.cwd()) + "/Config/app.toml"
         # 读取
-
+        _config = ReadConfig().parseFile(_path)
         # 弹出
-
-        # 存储
-        pass
+        ERROR = resp.get("error")
+        if ERROR:
+            if ERROR.get('type') == "insufficient_quota":
+                if isinstance(_config.bot.OPENAI_API_KEY, list) and auth in _config.bot.OPENAI_API_KEY:
+                    _config.bot.OPENAI_API_KEY.remove(auth)
+                    logger.error(f"弹出负载:insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
+                    # 存储
+        ReadConfig.saveDict(_path, _config)
 
 
 class ExpiringDict(OrderedDict):

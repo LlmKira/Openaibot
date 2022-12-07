@@ -23,11 +23,12 @@ async def request(
         auth: str = None,
         json_body: bool = False,
         proxy: str = "",
-        insufficient_func=None,
+        call_func=None,
         **kwargs,
 ):
     """
     请求
+    :param call_func: 回调函数，用于调整结构
     :param method:
     :param url:
     :param params:
@@ -35,7 +36,6 @@ async def request(
     :param auth:
     :param json_body:
     :param proxy:
-    :param insufficient_func: 用量超额回调函数，用于调整结构
     :param kwargs: 参数
     :return:
     """
@@ -85,9 +85,9 @@ async def request(
     req_data = json.loads(raw_data)
     ERROR = req_data.get("error")
     if ERROR:
-        if ERROR.get('type') == "insufficient_quota":
-            if insufficient_func:
-                insufficient_func()
+        # if ERROR.get('type') == "insufficient_quota":
+        if call_func:
+            call_func(req_data, auth)
         raise RuntimeError(f"{ERROR.get('type')}:{ERROR.get('message')}")
     return req_data
 

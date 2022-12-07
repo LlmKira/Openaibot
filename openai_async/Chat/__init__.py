@@ -10,17 +10,19 @@ from ..utils.data import MsgFlow
 
 
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id):
+    def __init__(self, api_key, conversation_id, call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
         :param api_key:
         :param conversation_id: 独立ID,每个场景需要独一个
+        :param call_func: 回调
         """
         self._api_key = api_key
         self.conversation_id = conversation_id
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
         self._start_sequence = "\nGirl:"
         self._restart_sequence = "\nHuman: "
+        self.__call_func = call_func
 
     def reset_chat(self):
         # Forgets conversation
@@ -98,7 +100,7 @@ class Chatbot(object):
         _old_prompt = '\n'.join(_old_list)  # 首个不带 \n
         _prompt = f"{_head}{_old_prompt}{_now}\n{self._start_sequence}"
         _prompt = _prompt[:3800]
-        response = await Completion(api_key=self._api_key).create(
+        response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
             temperature=0.9,

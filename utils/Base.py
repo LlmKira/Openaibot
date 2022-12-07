@@ -65,3 +65,7 @@ class ReadConfig(object):
     def parseDict(self, data):
         self.config = Tool().dictToObj(data)
         return self.config
+
+    @staticmethod
+    def saveDict(paths, data):
+        return rtoml.dump(data, open(paths, 'w'))

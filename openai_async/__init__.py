@@ -26,13 +26,16 @@ API = _load_api()
 
 
 class Completion(object):
-    def __init__(self, api_key: Union[str, list], proxy_url: str = ""):
+    def __init__(self, api_key: Union[str, list], proxy_url: str = "", call_func=None):
         if isinstance(api_key, list):
             api_key: list
+            if not api_key:
+                raise RuntimeError("负载额度用完了")
             api_key = random.choice(api_key)
             api_key: str
         self.__api_key = api_key
         self.__proxy = proxy_url
+        self.__call_func = call_func
 
     def get_api_key(self):
         return self.__api_key
@@ -77,4 +80,5 @@ class Completion(object):
                              auth=self.__api_key,
                              proxy=self.__proxy,
                              json_body=True,
+                             call_func=self.__call_func
                              )

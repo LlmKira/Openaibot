@@ -252,19 +252,27 @@ class GroupChat(object):
             #                                     max_tokens=int(_csonfig["token_limit"]))
             if method == "write":
                 # OPENAI
-                response = await openai_async.Completion(api_key=key).create(model="text-davinci-003",
-                                                                             prompt=str(prompt),
-                                                                             temperature=0.2,
-                                                                             frequency_penalty=1,
-                                                                             max_tokens=int(_csonfig["token_limit"]))
+                response = await openai_async.Completion(api_key=key,
+                                                         call_func=DefaultData.pop_api_key
+                                                         ).create(
+                    model="text-davinci-003",
+                    prompt=str(prompt),
+                    temperature=0.2,
+                    frequency_penalty=1,
+                    max_tokens=int(_csonfig["token_limit"])
+                )
             elif method == "chat":
                 # CHAT
                 from openai_async import Chat
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
                 receiver = Chat.Chatbot(api_key=key,
-                                        conversation_id=_cid)
-                response = await receiver.get_chat_response(model="text-davinci-003", prompt=str(prompt),
-                                                            max_tokens=int(_csonfig["token_limit"]))
+                                        conversation_id=_cid,
+                                        call_func=DefaultData.pop_api_key
+                                        )
+                response = await receiver.get_chat_response(model="text-davinci-003",
+                                                            prompt=str(prompt),
+                                                            max_tokens=int(_csonfig["token_limit"])
+                                                            )
             else:
                 return "NO SUPPORT METHOD"
             # print(response)
@@ -277,7 +285,7 @@ class GroupChat(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"Api Outline \n {prompt}"
+            _deal = f"Api {e} \n {prompt}"
         # 限额
         Usage.renewUsage(user=user, father=_Usage, usage=_usage)
         _deal = ContentDfa.filter_all(_deal)
