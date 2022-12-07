@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 from utils.Base import ReadConfig
 from loguru import logger
 
-
 redis_installed = True
 
 try:
@@ -77,8 +76,13 @@ class Api_keys(object):
             if ERROR.get('type') == "insufficient_quota":
                 if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
                     _config["OPENAI_API_KEY"].remove(auth)
-                    logger.error(f"弹出负载:insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
+                    logger.error(
+                        f"弹出过期ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
                     # 存储
+            if ERROR.get('code') == "invalid_api_key":
+                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
+                    _config["OPENAI_API_KEY"].remove(auth)
+                    logger.error(f"弹出非法ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}")
         Api_keys.save_key(_config)
 
 
