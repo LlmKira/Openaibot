@@ -16,11 +16,11 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 *自己实现的 chatGPT ，体验基本一样，就是 Api 要钱*
 
-*自制依赖库，没有做Api请求速率限制*
+*自制异步依赖库*
 
 ## 特性
 
-* 聊天(chat)
+* 聊天(chat) chatGpt 自实现 + NLP增强
 * 续写(write)  独立推测，续写
 * 多用户
 * 多Api key 负载，超额弹出。
@@ -182,7 +182,7 @@ kill -9
 
 ```markdown
 chat - 交谈
-write - 续写
+write - 补全
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度

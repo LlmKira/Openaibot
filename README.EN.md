@@ -6,8 +6,7 @@ OpenAI Chat Telegram Bot
 
 Writing with OpenAi on Telegram. Python > 3.7.
 
-This program operates using `Api` authentication `Token` and is not an inverse of `chatGPT`, the **Python
-implementation** of the chatGPT **function** is self-implemented by this bot.
+This program operates using `Api` authentication `Token` and is not an inverse of `chatGPT`, the **Python implementation** of the chatGPT **function** is self-implemented by this bot.
 
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. don't sue me
@@ -31,16 +30,14 @@ This is not an official OpenAI product. This is a personal project and is not af
 * Support for whitelist system
 * Support for blacklisting system
 * Support for content filtering
-* (20221205) Dependency library does not support asynchronous, large number of requests will block, replace with own
-  asynchronous library
+* (20221205) Dependency library does not support asynchronous, large number of requests will block, replace with own asynchronous library
 * replace chatGpt with your own chatGpt Openai api Python implementation
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
 **chat**
 
-When you use `/chat text` to reset a conversation, private messages or group messages within 24 hours will automatically
-be inferred using context, and you can continue the conversation by replying directly.
+When you use `/chat text` to reset a conversation, private messages or group messages within 24 hours will automatically be inferred using context, and you can continue the conversation by replying directly.
 
 Each time `/chat` is used it resets Ai's memory bucket.
 
@@ -52,8 +49,7 @@ Use `/write` to continue writing without contextual speculation.
 
 * Pull/update programs
 
-The install script automatically backs up the restored configuration, run it in the root directory (not in the program
-directory)
+The install script automatically backs up the restored configuration, run it in the root directory (not in the program directory)
 If it's a minor update you can just ``git pull``
 
 ```shell
@@ -90,8 +86,7 @@ pip install -r requirements.txt
 
 Data/Danger.form One line of one blacklisted vocabulary. There must be at least one.
 
-If not, the program will automatically pull down the cloud default list, and subsequent updetects will pull the cloud to
-overwrite the local one.
+If not, the program will automatically pull down the cloud default list, and subsequent updetects will pull the cloud to overwrite the local one.
 
 You can turn this filter off by placing a one-line list, but I don't favour you doing this.
 
@@ -104,27 +99,33 @@ You can turn this filter off by placing a one-line list, but I don't favour you 
 
 **configuration file**
 
-``toml
+```toml
 [bot]
 master = [100, 200] # master user id &owner
 botToken = 'key'
-OPENAI_API_KEY = ['key'] # multiple key loads
-INTRO = "POWER BY OPENAI" # Suffix
+INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
 
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
-
 ```
 
 [Telegram botToken request](https://t.me/BotFather)
 
-[OPENAI_API_KEY request](https://beta.openai.com/account/api-keys), supports multiple key distribution load
+**configure key**
+
+```markdown
+see_api_key - now several Api keys
+del_api_key - remove Api key
+add_api_key - add Api key
+```
+
+[OPENAI_API_KEY application](https://beta.openai.com/account/api-keys), support for multiple key distribution load
 [Pricing Reference](https://openai.com/api/pricing/)
 
-Please do not expose your `app.toml` to anyone
+Please don't expose your `app.toml` to anyone
 
 ## Run
 
@@ -147,42 +148,53 @@ ps -aux|grep python3
 kill -9  
 ```
 
+
 ## command
 
-| command                   | role                        | extra                                  |
-|---------------------------|-----------------------------|----------------------------------------|
-| `/set_user_cold`          | set user_cooldown           | can't_send                             |
-| `/set_group_cold`         | set_group_cooldown          | can't_send                             | 
-| `/set_token_limit`        | Set the output limit length |                                        |
-| `/set_input_limit`        | set_input_limit_length      |                                        |
-| `/config`                 | get/backup config.json file | send file                              |
-| `/add_block_group`        | disable                     | direct effect                          |
-| `/del_block_group`        | unblock                     | take effect directly                   |
-| `/add_block_user`         | disable                     | take effect directly                   |
-| `/del_block_user`         | unblock                     | take effect directly                   |
-| `/add_white_group`        | Add                         | Requires whitelist mode to take effect |
-| `/add_white_user`         | Add                         | Requires whitelist mode to take effect |
-| `/del_white_group`        | del_white_group             | Requires whitelist mode to be enabled  |
-| `/del_white_user`         | Delist                      | Requires whitelist mode to take effect |
-| `/update_detect`          | update_sensitive_words      |                                        |
-| `/open_user_white_mode`   | Enable user whitelisting    |                                        |
-| `/open_group_white_mode`  | open_group_white_listing    |                                        |
-| `/close_user_white_mode`  | close_user_white_listing    |                                        |
-| `/close_group_white_mode` | turn off group whitelisting |                                        |
-| `/open`                   | Set user cooldown time      |                                        |
-| `/close`                  | set user cooldown time      |                                        |
+| command                   | role                        | extra                                                                                                                            |
+|---------------------------|-----------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `/set_user_cold`          | set user_cooldown           | can't_send                                                                                                                       |
+| `/set_group_cold`         | set_group_cooldown          | can't_send                                                                                                                       | 
+| `/set_token_limit`        | Set the output limit length |                                                                                                                                  |
+| `/set_input_limit`        | set_input_limit_length      |                                                                                                                                  |
+| `/config`                 | get/backup config.json file | send file                                                                                                                        |
+| `/add_block_group`        | disable                     | direct effect                                                                                                                    |
+| `/del_block_group`        | unblock                     | take effect directly                                                                                                             |
+| `/add_block_user`         | disable                     | take effect directly                                                                                                             |
+| `/del_block_user`         | unblock                     | take effect directly                                                                                                             |
+| `/add_white_group`        | Add                         | Requires whitelist mode to take effect                                                                                           |
+| `/add_white_user`         | Add                         | Requires whitelist mode to take effect                                                                                           |
+| `/del_white_group`        | del_white_group             | Requires whitelist mode to be enabled                                                                                            |
+| `/del_white_user`         | Delist                      | Requires whitelist mode to take effect                                                                                           |
+| `/update_detect`          | update_sensitive_words      |                                                                                                                                  |
+| `/open_user_white_mode`   | Enable user whitelisting    |                                                                                                                                  |
+| `/open_group_white_mode`  | open_group_white_listing    |                                                                                                                                  |
+| `/close_user_white_mode`  | close_user_white_listing    |                                                                                                                                  |
+| `/close_group_white_mode` | turn off group whitelisting |                                                                                                                                  |
+| `/open`                   | Set user cooldown time      |                                                                                                                                  |
+| `/close`                  | set user cooldown time      |                                                                                                                                  |
+| `/see_api_key`            | several Api keys now        |                                                                                                                                  |
+| `/del_api_key`            | remove Api key              |                                                                                                                                  |
+| `/add_api_key`            | add Api key                 |                                                                                                                                  |
+| `/chat`                   | Conversations               | Each time /chat starts over, forgetting the record. Replies cannot be indexed after 24 h in groups, private chats are permanent. |
+| `/write`                  | continue                    | continue.                                                                                                                        | 
 
 ### Sample table
 
 ```markdown
-set_user_cold - sets the user cooldown time
+chat - Talking
+write - Complement
+set_user_cold - sets user cooldown
 set_group_cold - sets the group cooldown time
 set_token_limit - sets the output limit length
 set_input_limit - sets the input limit length
+see_api_key - now several Api keys
+del_api_key - remove Api key
+add_api_key - add Api key
 config - get/backup config.json file
-add_block_group - disable a group
+add_block_group - disable groups
 del_block_group - unblock a group
-add_block_user - disable users
+add_block_user - disable user
 del_block_user - unblock user
 add_white_group - add a whitelisted group
 add_white_user - add whitelisted users
@@ -192,9 +204,9 @@ update_detect - update sensitive words
 open_user_white_mode - open user whitelist
 open_group_white_mode - open group whitelist
 close_user_white_mode - turn off user whitelisting
-close_group_white_mode - turn off group whitelisting
-open - sets the user cooldown time
-close - sets the user cooldown time
+close_group_white_mode - Turn off group whitelisting
+open - turn on bots
+close - closes the bot
 ```
 
 ## Other
