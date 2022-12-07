@@ -31,7 +31,7 @@ class Chatbot(object):
         self._start_sequence = "\nAI:"
         self._restart_sequence = "\nHuman: "
         self.__call_func = call_func
-        self.__token_limit = 2700
+        self.__token_limit = 2500
 
     def reset_chat(self):
         # Forgets conversation
