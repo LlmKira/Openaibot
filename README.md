@@ -103,7 +103,6 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 [bot]
 master = [100, 200] # master user id &owner
 botToken = 'key'
-OPENAI_API_KEY = ['key'] # 多 key 负载
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
@@ -114,6 +113,14 @@ url = "http://127.0.0.1:7890"
 ```
 
 [Telegram botToken 申请](https://t.me/BotFather)
+
+**配置 key**
+
+```markdown
+see_api_key - 现在几个 Api key
+del_api_key - 删除 Api key
+add_api_key - 增加 Api key
+```
 
 [OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载
 [定价参考](https://openai.com/api/pricing/)
