@@ -147,7 +147,7 @@ kill -9
 | `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送                                    |
 | `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送                                    |
 | `/set_token_limit`        | 设置输出限制长度             |                                            |
-| `/set_user_cold`          | 设置输入限制长度             |                                            |
+| `/set_input_limit`        | 设置输入限制长度             |                                            |
 | `/config`                 | 获取/备份 config.json 文件 | 发送文件                                       |
 | `/add_block_group`        | 禁止                   | 直接生效                                       |
 | `/del_block_group`        | 解禁                   | 直接生效                                       |
@@ -175,7 +175,7 @@ write - 续写
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
-set_user_cold - 设置输入限制长度
+set_input_limit - 设置输入限制长度
 config - 获取/备份 config.json 文件
 add_block_group - 禁止群组
 del_block_group - 解禁群组
