@@ -102,6 +102,8 @@ url = "http://127.0.0.1:7890"
 [OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换）
 [定价参考](https://openai.com/api/pricing/)
 
+请不要向任何人暴露你的 app.toml
+
 ## 运行
 
 * 运行
