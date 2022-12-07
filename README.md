@@ -22,7 +22,8 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 * 聊天(chat)
 * 续写(write)  独立推测，续写
-* 多用户，多Api key
+* 多用户
+* 多Api key 负载，超额弹出。
 * chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊无感回复
 * 支持速率限制
@@ -114,7 +115,7 @@ url = "http://127.0.0.1:7890"
 
 [Telegram botToken 申请](https://t.me/BotFather)
 
-[OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载（不支持自动故障切换）
+[OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载
 [定价参考](https://openai.com/api/pricing/)
 
 请不要向任何人暴露你的 `app.toml`
