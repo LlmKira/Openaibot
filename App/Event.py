@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 import json
 import pathlib
+import random
 import time
 from typing import Union
 
@@ -232,9 +233,19 @@ class GroupChat(object):
 
         # 内容审计
         if ContentDfa.exists(str(prompt)):
-            return "I am a robot and not fit to answer dangerous content."
+            _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "我不好说 ", "害怕", "这是理所当然的。",
+                             "我可以说的是……", "我想说的是……", "我想强调的是……", "我想补充的是……", "我想指出的是……",
+                             "我想重申的是……", "我想强调的是……""什么事儿呀？", "是啊，是啊。", "你猜啊。", "就是啊。",
+                             "哎呀，真的吗？",
+                             "啊哈哈哈。", "你知道的。"]
+            _censor = ["有点离谱，不想回答", "累了，歇会儿", "能不能换个话题？", "我不想说话。", "没什么好说的。",
+                       "现在不是说话的时候。", "我没有什么可说的。", "我不喜欢说话。",
+                       "我不想接受问题。", "我不喜欢被问问题。", "我觉得这个问题并不重要。", "我不想谈论这个话题。",
+                       "我不想对这个问题发表意见。"]
+            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --DFA:True"
+            return _info
 
-        # 洪水防御攻击
+            # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
 
@@ -285,7 +296,7 @@ class GroupChat(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"Api {e} \n {prompt}"
+            _deal = f"Api Boom: {e} \n {prompt}"
         # 限额
         Usage.renewUsage(user=user, father=_Usage, usage=_usage)
         _deal = ContentDfa.filter_all(_deal)
