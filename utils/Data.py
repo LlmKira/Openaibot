@@ -108,32 +108,48 @@ class DefaultData(object):
     def defaultConfig():
         return {
             "statu": True,
-            "input_limit": 200,
-            "token_limit": 100,
-            "usercold_time": 5,
+            "input_limit": 250,
+            "token_limit": 300,
+            "usage_limit": 15000,
+            "per_user_limit": 1,
+            "usercold_time": 10,
             "groupcold_time": 1,
             "whiteUserSwitch": True,
-            "whiteGroupSwitch": False,
-            "blockGroup": [
-                "1001662266151",
-            ],
-            "blockUser": [
-                "110",
-            ],
-            "whiteGroup": [
-                "1001662266151",
-            ],
+            "whiteGroupSwitch": True,
+            "blockGroup": [],
+            "blockUser": [],
+            "whiteGroup": [],
             "whiteUser": [
-                "110",
             ],
             "Model": {
-                "1005522236": "not use this key"
             }
         }
 
     @staticmethod
     def defaultKeys():
         return {"OPENAI_API_KEY": []}
+
+    @staticmethod
+    def defaultAnalysis():
+        return {"frequency": 0, "usage": {}}
+
+    def setAnalysis(self,
+                    **kwargs
+                    ):
+        """
+        frequency,
+        usage,
+        :param self:
+        :param kwargs:
+        :return:
+        """
+        _Analysis = self.defaultAnalysis()
+        if pathlib.Path("./analysis.json").exists():
+            with open("./analysis.json", encoding="utf-8") as f:
+                DictUpdate.dict_update(_Analysis, json.load(f))
+        DictUpdate.dict_update(_Analysis, kwargs)
+        with open("./analysis.json", "w", encoding="utf8") as f:
+            json.dump(_Analysis, f, indent=4, ensure_ascii=False)
 
 
 class ExpiringDict(OrderedDict):
