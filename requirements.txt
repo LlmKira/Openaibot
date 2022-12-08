@@ -1,6 +1,5 @@
 pyTelegramBotAPI
 rtoml
-pathlib
 rich
 aiohttp
 openai
