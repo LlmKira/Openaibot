@@ -82,7 +82,10 @@ class BotRunner(object):
         # 私聊
         @bot.message_handler(content_types=['text'], chat_types=['private'])
         async def handle_private_msg(message):
-            await Event.Master(bot, message, _config)
+            if message.from_user.id in _config.master:
+                await Event.Master(bot, message, _config)
+            if message.text.startswith("/chat") or not message.text.startswith("/"):
+                await Event.Friends(bot, message, _config)
             request_timestamps.append(time.time())
 
         from telebot import asyncio_filters
