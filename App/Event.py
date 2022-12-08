@@ -442,201 +442,204 @@ async def Text(bot, message, config, reset: bool = False):
         await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
 
 
+async def Friends(bot, message, config):
+    command = message.text
+    if command.startswith("/chat") or not command.startswith("/"):
+        await private_Chat(bot, message, config)
+
+
 async def Master(bot, message, config):
     load_csonfig()
     if message.from_user.id in config.master:
         try:
             command = message.text
-            if command.startswith("/chat") or not command.startswith("/"):
-                await private_Chat(bot, message, config)
-            else:
-                # SET
-                if command.startswith("/set_user_cold"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
+            # SET
+            if command.startswith("/set_user_cold"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["usercold_time"] = int(_len_)
+                    await bot.reply_to(message, f"user cooltime:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset user cold time limit to{_len_}")
+
+            if command.startswith("/set_user_hour_limit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["per_user_limit"] = int(_len_)
+                    await bot.reply_to(message, f"set_hour_limit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset per_user_limit to{_len_}")
+
+            if command.startswith("/set_user_usage_limit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["usage_limit"] = int(_len_)
+                    await bot.reply_to(message, f"usage_limit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset usage_limit to{_len_}")
+            if command.startswith("/reset_user_usage_limit"):
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
-                        _csonfig["usercold_time"] = int(_len_)
-                        await bot.reply_to(message, f"user cooltime:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset user cold time limit to{_len_}")
+                        Usage(uid=_len_).resetTotalUsage()
+                        logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
+                await bot.reply_to(message, f"usage_limit:{_len}")
 
-                if command.startswith("/set_user_hour_limit"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
-                    if _len_:
-                        _csonfig["per_user_limit"] = int(_len_)
-                        await bot.reply_to(message, f"set_hour_limit:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset per_user_limit to{_len_}")
-
-                if command.startswith("/set_user_usage_limit"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
-                    if _len_:
-                        _csonfig["usage_limit"] = int(_len_)
-                        await bot.reply_to(message, f"usage_limit:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset usage_limit to{_len_}")
-                if command.startswith("/reset_user_usage_limit"):
-                    _len = Utils.extract_arg(command)
-                    for i in _len:
-                        _len_ = "".join(list(filter(str.isdigit, i)))
-                        if _len_:
-                            Usage(uid=_len_).resetTotalUsage()
-                            logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
-                    await bot.reply_to(message, f"usage_limit:{_len}")
-
-                if command.startswith("/set_group_cold"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
-                    if _len_:
-                        _csonfig["groupcold_time"] = int(_len_)
-                        await bot.reply_to(message, f"group cooltime:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset group cold time limit to{_len_}")
-
-                if command.startswith("/set_token_limit"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
-                    if _len_:
-                        _csonfig["token_limit"] = int(_len_)
-                        await bot.reply_to(message, f"tokenlimit:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
-
-                if command.startswith("/set_input_limit"):
-                    _len = Utils.extract_arg(command)[0]
-                    _len_ = "".join(list(filter(str.isdigit, _len)))
-                    if _len_:
-                        _csonfig["input_limit"] = int(_len_)
-                        await bot.reply_to(message, f"inputlimit:{_len_}")
-                        save_csonfig()
-                        logger.info(f"SETTING:reset input limit to{_len_}")
-
-                if command == "/config":
+            if command.startswith("/set_group_cold"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["groupcold_time"] = int(_len_)
+                    await bot.reply_to(message, f"group cooltime:{_len_}")
                     save_csonfig()
-                    path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
-                    if pathlib.Path(path).exists():
-                        doc = open(path, 'rb')
-                        await bot.send_document(message.chat.id, doc)
-                    else:
-                        await bot.reply_to(message, "没有找到配置文件")
+                    logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
-                if "/add_block_group" in command:
-                    _key = "blockGroup"
-                    _info = Utils.addList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                if "/del_block_group" in command:
-                    _key = "blockGroup"
-                    _info = Utils.removeList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                if "/add_block_user" in command:
-                    _key = "blockUser"
-                    _info = Utils.addList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                if "/del_block_user" in command:
-                    _key = "blockUser"
-                    _info = Utils.removeList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                # whiteGroup
-                if "/add_white_group" in command:
-                    _key = "whiteGroup"
-                    _info = Utils.addList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                if "/del_white_group" in command:
-                    _key = "whiteGroup"
-                    _info = Utils.removeList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                # whiteUser
-                if "/add_white_user" in command:
-                    _key = "whiteUser"
-                    _info = Utils.addList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                if "/del_white_user" in command:
-                    _key = "whiteUser"
-                    _info = Utils.removeList(_key, command)
-                    await bot.reply_to(message, _info)
-
-                # UPDATE
-                if command == "/update_detect":
-                    keys, _error = InitCensor()
-                    if _error:
-                        error = '\n'.join(_error)
-                        errors = f"Error:\n{error}"
-                    else:
-                        # 重载 Danger 库
-                        ContentDfa.change_words(path="./Data/Danger.form")
-                        errors = "Success"
-                    if message:
-                        await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
-
-                # USER White
-                if command == "/open_user_white_mode":
-                    _csonfig["whiteUserSwitch"] = True
-                    await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
+            if command.startswith("/set_token_limit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["token_limit"] = int(_len_)
+                    await bot.reply_to(message, f"tokenlimit:{_len_}")
                     save_csonfig()
-                    logger.info("SETTING:whiteUser ON")
+                    logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
-                if command == "/close_user_white_mode":
-                    _csonfig["whiteUserSwitch"] = False
-                    await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
+            if command.startswith("/set_input_limit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["input_limit"] = int(_len_)
+                    await bot.reply_to(message, f"inputlimit:{_len_}")
                     save_csonfig()
-                    logger.info("SETTING:whiteUser OFF")
+                    logger.info(f"SETTING:reset input limit to{_len_}")
 
-                # GROUP White
-                if command == "/open_group_white_mode":
-                    _csonfig["whiteGroupSwitch"] = True
-                    await bot.reply_to(message, "ON:whiteGroup")
-                    save_csonfig()
-                    logger.info("SETTING:whiteGroup ON")
+            if command == "/config":
+                save_csonfig()
+                path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
+                if pathlib.Path(path).exists():
+                    doc = open(path, 'rb')
+                    await bot.send_document(message.chat.id, doc)
+                else:
+                    await bot.reply_to(message, "没有找到配置文件")
 
-                if command == "/close_group_white_mode":
-                    _csonfig["whiteGroupSwitch"] = False
-                    await bot.reply_to(message, "SETTING:whiteGroup OFF")
-                    save_csonfig()
-                    logger.info("SETTING:whiteGroup OFF")
+            if "/add_block_group" in command:
+                _key = "blockGroup"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
 
-                if command == "/see_api_key":
-                    keys = Api_keys.get_key()
-                    # 脱敏
-                    _key = []
-                    for i in keys["OPENAI_API_KEY"]:
-                        _key.append(DefaultData.mask_middle(i, 10))
-                    _info = '\n'.join(_key)
-                    await bot.reply_to(message, f"Now Have \n{_info}")
+            if "/del_block_group" in command:
+                _key = "blockGroup"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
 
-                if "/add_api_key" in command:
-                    _parser = Utils.extract_arg(command)
-                    if _parser:
-                        Api_keys.add_key(key=str(_parser[0]).strip())
-                    logger.info("SETTING:ADD API KEY")
-                    await bot.reply_to(message, "SETTING:ADD API KEY")
+            if "/add_block_user" in command:
+                _key = "blockUser"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
 
-                if "/del_api_key" in command:
-                    _parser = Utils.extract_arg(command)
-                    if _parser:
-                        Api_keys.pop_key(key=str(_parser[0]).strip())
-                    logger.info("SETTING:DEL API KEY")
-                    await bot.reply_to(message, "SETTING:DEL API KEY")
+            if "/del_block_user" in command:
+                _key = "blockUser"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
 
-                if command == "/open":
-                    _csonfig["statu"] = True
-                    await bot.reply_to(message, "SETTING:BOT ON")
-                    save_csonfig()
-                    logger.info("SETTING:BOT ON")
+            # whiteGroup
+            if "/add_white_group" in command:
+                _key = "whiteGroup"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
 
-                if command == "/close":
-                    _csonfig["statu"] = False
-                    await bot.reply_to(message, "SETTING:BOT OFF")
-                    save_csonfig()
-                    logger.info("SETTING:BOT OFF")
+            if "/del_white_group" in command:
+                _key = "whiteGroup"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            # whiteUser
+            if "/add_white_user" in command:
+                _key = "whiteUser"
+                _info = Utils.addList(_key, command)
+                await bot.reply_to(message, _info)
+
+            if "/del_white_user" in command:
+                _key = "whiteUser"
+                _info = Utils.removeList(_key, command)
+                await bot.reply_to(message, _info)
+
+            # UPDATE
+            if command == "/update_detect":
+                keys, _error = InitCensor()
+                if _error:
+                    error = '\n'.join(_error)
+                    errors = f"Error:\n{error}"
+                else:
+                    # 重载 Danger 库
+                    ContentDfa.change_words(path="./Data/Danger.form")
+                    errors = "Success"
+                if message:
+                    await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
+
+            # USER White
+            if command == "/open_user_white_mode":
+                _csonfig["whiteUserSwitch"] = True
+                await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
+                save_csonfig()
+                logger.info("SETTING:whiteUser ON")
+
+            if command == "/close_user_white_mode":
+                _csonfig["whiteUserSwitch"] = False
+                await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
+                save_csonfig()
+                logger.info("SETTING:whiteUser OFF")
+
+            # GROUP White
+            if command == "/open_group_white_mode":
+                _csonfig["whiteGroupSwitch"] = True
+                await bot.reply_to(message, "ON:whiteGroup")
+                save_csonfig()
+                logger.info("SETTING:whiteGroup ON")
+
+            if command == "/close_group_white_mode":
+                _csonfig["whiteGroupSwitch"] = False
+                await bot.reply_to(message, "SETTING:whiteGroup OFF")
+                save_csonfig()
+                logger.info("SETTING:whiteGroup OFF")
+
+            if command == "/see_api_key":
+                keys = Api_keys.get_key()
+                # 脱敏
+                _key = []
+                for i in keys["OPENAI_API_KEY"]:
+                    _key.append(DefaultData.mask_middle(i, 10))
+                _info = '\n'.join(_key)
+                await bot.reply_to(message, f"Now Have \n{_info}")
+
+            if "/add_api_key" in command:
+                _parser = Utils.extract_arg(command)
+                if _parser:
+                    Api_keys.add_key(key=str(_parser[0]).strip())
+                logger.info("SETTING:ADD API KEY")
+                await bot.reply_to(message, "SETTING:ADD API KEY")
+
+            if "/del_api_key" in command:
+                _parser = Utils.extract_arg(command)
+                if _parser:
+                    Api_keys.pop_key(key=str(_parser[0]).strip())
+                logger.info("SETTING:DEL API KEY")
+                await bot.reply_to(message, "SETTING:DEL API KEY")
+
+            if command == "/open":
+                _csonfig["statu"] = True
+                await bot.reply_to(message, "SETTING:BOT ON")
+                save_csonfig()
+                logger.info("SETTING:BOT ON")
+
+            if command == "/close":
+                _csonfig["statu"] = False
+                await bot.reply_to(message, "SETTING:BOT OFF")
+                save_csonfig()
+                logger.info("SETTING:BOT OFF")
         except Exception as e:
             logger.error(e)
 
