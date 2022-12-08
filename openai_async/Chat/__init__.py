@@ -9,7 +9,7 @@ from __future__ import division, print_function, unicode_literals
 import json
 import os
 
-import loguru
+# import loguru
 # import jiagu
 import nltk
 from snownlp import SnowNLP
@@ -298,7 +298,7 @@ class Chatbot(object):
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        loguru.logger.debug(_prompt)
+        # loguru.logger.debug(_prompt)
         response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
