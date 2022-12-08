@@ -270,7 +270,7 @@ class GroupChat(object):
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
         if _Usage["status"]:
-            return "OUT OF USAGE"
+            return "小时额度或者单人总额度用完，请申请重置或等待"
         # 请求
         try:
             import openai_async

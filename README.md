@@ -18,6 +18,7 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 *自制异步依赖库*
 
+
 ## 特性
 
 * 聊天(chat) chatGpt 自实现 + NLP增强
@@ -232,6 +233,7 @@ close - 关闭机器人
 - 用量限制为 60000/h
 - 上下文记忆力为 7
 - 触发截断的字符数为 3333x4 (api:max 4095x4) (tokenx4 粗略估算)
+- *状态：靠近shit code 的方向*
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
