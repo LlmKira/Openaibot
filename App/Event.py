@@ -13,7 +13,7 @@ from typing import Union
 from utils.Base import ReadConfig
 from utils.Data import DataWorker, DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
-
+from pydantic import BaseModel
 from loguru import logger
 
 # 工具数据类型
@@ -81,9 +81,6 @@ class rqParser(object):
         if response.get("usage"):
             usage = response.get("usage").get("total_tokens")
         return usage
-
-
-from pydantic import BaseModel
 
 
 class Usage_Data(BaseModel):
@@ -270,7 +267,7 @@ class GroupChat(object):
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
         if _Usage["status"]:
-            return "OUT OF USAGE"
+            return "小时额度或者单人总额度用完，请申请重置或等待"
         # 请求
         try:
             import openai_async
