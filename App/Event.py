@@ -13,7 +13,7 @@ from typing import Union
 from utils.Base import ReadConfig
 from utils.Data import DataWorker, DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
-
+from pydantic import BaseModel
 from loguru import logger
 
 # 工具数据类型
@@ -81,9 +81,6 @@ class rqParser(object):
         if response.get("usage"):
             usage = response.get("usage").get("total_tokens")
         return usage
-
-
-from pydantic import BaseModel
 
 
 class Usage_Data(BaseModel):
