@@ -51,7 +51,7 @@ dependenceInit() {
     exit 1
   )
   pip3 install --upgrade pip
-  pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+  pip install -r requirements.txt # -i https://pypi.tuna.tsinghua.edu.cn/simple
   # while read -r requirement; do pip3 install "${requirement}" -i https://pypi.tuna.tsinghua.edu.cn/simple; done <requirements.txt || echox yellow "===pip install failed,please check it====="
   echox yellow "========Down=========="
 }
@@ -92,21 +92,22 @@ run() {
       echox skyBlue "初始化配置文件夹：init ${config}...."
       mkdir "$config"
     fi
-    # 备份配置文件
-    if [ -f "${dir}/Captcha.toml" ]; then
-      echox skyBlue "移动配置文件：backup ${dir}/Captcha.toml to ${config} ...."
-      cp -f "${dir}/Captcha.toml" "$config"
-    fi
+
+
     # 备份配置文件
     if [ -f "${dir}/config.json" ]; then
       echox skyBlue "移动配置文件：backup ${dir}/config.json to ${config} ...."
       cp -f "${dir}/config.json" "$config"
+
     # 备份配置文件
-    if [ -f "${dir}/taskRedis.json" ]; then
-      echox skyBlue "移动配置文件：backup ${dir}/taskRedis.json to ${dataBack} ...."
-      cp -f "${dir}/taskRedis.json" "$dataBack"
+    if [ -f "${dir}/analysis.json" ]; then
+      echox skyBlue "移动配置文件：backup ${dir}/analysis.json to ${dataBack} ...."
+      cp -f "${dir}/analysis.json" "$dataBack"
     fi
     fi
+
+
+
     # 备份运行数据
     if [ -d "$data" ]; then
       echox skyBlue "备份运行数据：Copy run data to ${dataBack}...."
@@ -117,10 +118,12 @@ run() {
       echox skyBlue "备份运行数据：Copy Config to ${dataBack}...."
       cp -rf "$config" "$dataBack" #文件夹目录 文件夹上级
     fi
-    read -r -p "请问，是否使用可能存在的备份配置？Do you want to update your app with probably exist old data？${dir} y/n?[default=y]" input
+    read -r -p "请问，是否使用可能存在的上一次配置？Do you want to update your app with probably exist old data？${dir} y/n?[default=y]" input
     if [ -z "${input}" ]; then
       input=y
     fi
+
+
     case $input in
     [nN][oO] | [nN])
       echox red "We will reinstall a pure app...."
@@ -135,9 +138,9 @@ run() {
       #  echox green "恢复配置文件：Reuse the Captcha.toml from ${dataBack}...."
       #  cp -f "${dataBack}/Captcha.toml" "$dir" #文件夹目录 文件夹上级
       # fi
-      if [ -f "${dataBack}/taskRedis.json" ]; then
-      echox green "恢复配置文件：Reuse the taskRedis.json from ${dataBack}...."
-      cp -f "${dataBack}/taskRedis.json" "$dir" #文件夹目录 文件夹上级
+      if [ -f "${dataBack}/analysis.json" ]; then
+      echox green "恢复配置文件：Reuse the analysis.json from ${dataBack}...."
+      cp -f "${dataBack}/analysis.json" "$dir" #文件夹目录 文件夹上级
       fi
       if [ -d "${dataBack}/Config" ]; then
         echox green "恢复配置库：Reuse the Config from ${dataBack}...."
@@ -153,6 +156,7 @@ run() {
       echox skyBlue "Invalid input"
       ;;
     esac
+
   fi
 }
 
