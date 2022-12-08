@@ -7,5 +7,10 @@ redis
 loguru
 httpx
 apscheduler
-jiagu
+snownlp
 nltk
+fastapi
+pydantic
+uvicorn
+sumy
+jieba

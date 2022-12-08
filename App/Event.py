@@ -83,44 +83,76 @@ class rqParser(object):
         return usage
 
 
+from pydantic import BaseModel
+
+
+class Usage_Data(BaseModel):
+    user: str
+    now: int
+    usage: int
+    total_usage: int
+
+
 class Usage(object):
-    @staticmethod
-    def isOutUsage(user):
+    def __init__(self, uid: Union[int, str]):
+        self.__uid = str(uid)
+        self.__Data = DataWorker(prefix="Open_Ai_bot_usage_")
+
+    def __get_usage(self):
+        _usage = self.__Data.getKey(f"{self.__uid}_usage")
+        if _usage:
+            return Usage_Data(**_usage)
+        else:
+            return None
+
+    def __set_usage(self, now, usage, total_usage):
+        _data = Usage_Data(now=now, user=str(self.__uid), usage=usage, total_usage=total_usage)
+        self.__Data.setKey(f"{self.__uid}_usage",
+                           _data.dict())
+        return _data
+
+    def isOutUsage(self):
         """
         累计
-        :param user:
         :return: bool
         """
         # 时间
         key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
-        GET = DataUtils.getKey(f"usage_{user}_{key_time}")
+        GET = self.__get_usage()
         if GET:
-            if GET >= 60000:
-                return {"status": True, "use": GET, "uid": key_time}
+            if GET.usage < _csonfig["usage_limit"]:
+                return {"status": False, "use": GET.dict(), "time": key_time}
             else:
-                return {"status": False, "use": GET, "uid": key_time}
+                # 没有设置限制
+                if _csonfig["usage_limit"] < 2:
+                    return {"status": False, "use": GET.dict(), "time": key_time}
+
+            if GET.total_usage < _csonfig["per_user_limit"]:
+                return {"status": False, "use": GET.dict(), "time": key_time}
+            else:
+                # 没有设置限制
+                if _csonfig["per_user_limit"] < 2:
+                    return {"status": False, "use": GET.dict(), "time": key_time}
         else:
-            GET = 0
-            DataUtils.setKey(f"usage_{user}_{key_time}", GET)
-            return {"status": False, "use": GET, "uid": key_time}
+            GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
+            return {"status": False, "use": GET.dict(), "time": key_time}
+        return {"status": True, "use": GET.dict(), "time": key_time}
 
-    @staticmethod
-    def renewUsage(user, usage, father):
-        GET = father["use"]
-        key_time = father['uid']
-        GET = GET + usage
-        DataUtils.setKey(f"usage_{user}_{key_time}", GET)
+    def renewUsage(self, usage: int):
+        key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
+        GET = self.__get_usage()
+        if not GET:
+            GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
+        GET.total_usage = GET.total_usage + usage
+        if GET.now == key_time:
+            GET.usage = GET.usage + usage
+        else:
+            GET.now = key_time
+            GET.usage = 0
+        self.__Data.setKey(f"{self.__uid}_usage",
+                           GET.dict())
         # double req in 3 seconds
-        return True
-
-    @staticmethod
-    def upMsg(user, usage, father):
-        GET = father["use"]
-        key_time = father['uid']
-        GET = GET + usage
-        DataUtils.setKey(f"usage_{user}_{key_time}", GET)
-        # double req in 3 seconds
-        return True
+        return GET
 
 
 class Utils(object):
@@ -229,7 +261,8 @@ class GroupChat(object):
             return "TOO FAST"
 
         # 用量检测
-        _Usage = Usage.isOutUsage(user)
+        _UsageManger = Usage(uid=user)
+        _Usage = _UsageManger.isOutUsage()
         if _Usage["status"]:
             return "OUT OF USAGE"
         # 请求
@@ -276,9 +309,14 @@ class GroupChat(object):
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
             _deal = f"Api Outline or too long prompt \n {prompt}"
-        # 限额
-        Usage.renewUsage(user=user, father=_Usage, usage=_usage)
+
+        # 更新额度
+        _AnalysisUsage = _UsageManger.renewUsage(usage=_usage)
+
+        # 统计
+        DefaultData().setAnalysis(usage={f"{user}": _AnalysisUsage.total_usage})
         _deal = ContentDfa.filter_all(_deal)
+
         # 人性化处理
         _deal = Utils.Humanization(_deal)
         return _deal
@@ -335,10 +373,10 @@ async def private_Chat(bot, message, config):
     _prompt = message.text
     if message.text.startswith("/chat"):
         await Forget(bot, message, config)
-        _prompt_r = Utils.extract_arg(message.text)
-        if not _prompt_r:
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
             return
-        _prompt = _prompt_r[0]
+        _prompt = _prompt_r[1]
     # 处理开关
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
@@ -406,7 +444,7 @@ async def Master(bot, message, config):
     if message.from_user.id in config.master:
         try:
             command = message.text
-            if not command.startswith("/"):
+            if command.startswith("/chat") or not command.startswith("/"):
                 await private_Chat(bot, message, config)
             else:
                 # SET
@@ -418,6 +456,25 @@ async def Master(bot, message, config):
                         await bot.reply_to(message, f"user cooltime:{_len_}")
                         save_csonfig()
                         logger.info(f"SETTING:reset user cold time limit to{_len_}")
+
+                if command.startswith("/set_user_hour_limit"):
+                    _len = Utils.extract_arg(command)[0]
+                    _len_ = "".join(list(filter(str.isdigit, _len)))
+                    if _len_:
+                        _csonfig["per_user_limit"] = int(_len_)
+                        await bot.reply_to(message, f"set_hour_limit:{_len_}")
+                        save_csonfig()
+                        logger.info(f"SETTING:reset per_user_limit to{_len_}")
+
+                if command.startswith("/set_user_usage_limit"):
+
+                    _len = Utils.extract_arg(command)[0]
+                    _len_ = "".join(list(filter(str.isdigit, _len)))
+                    if _len_:
+                        _csonfig["usage_limit"] = int(_len_)
+                        await bot.reply_to(message, f"usage_limit:{_len_}")
+                        save_csonfig()
+                        logger.info(f"SETTING:reset usage_limit to{_len_}")
 
                 if command.startswith("/set_group_cold"):
                     _len = Utils.extract_arg(command)[0]

@@ -3,11 +3,21 @@
 # @FileName: chat.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+from __future__ import absolute_import
+from __future__ import division, print_function, unicode_literals
+
 import json
 import os
 
-import jiagu
+import loguru
+# import jiagu
 import nltk
+from snownlp import SnowNLP
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer as Summarizer
+from sumy.nlp.stemmers import Stemmer
+from sumy.utils import get_stop_words
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -31,7 +41,7 @@ class Chatbot(object):
         self._start_sequence = "\nGirl:"
         self._restart_sequence = "\nHuman: "
         self.__call_func = call_func
-        self.__token_limit = 2500
+        self.__token_limit = 3000
 
     def reset_chat(self):
         # Forgets conversation
@@ -101,6 +111,23 @@ class Chatbot(object):
         return _item
 
     @staticmethod
+    def summary_v2(sentence, n):
+        # 差缺中文系统
+        LANGUAGE = "english"
+        # 统计中文字符数量
+        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
+            _chinese = True
+            LANGUAGE = "chinese"
+        parser = PlaintextParser.from_string(sentence, Tokenizer(LANGUAGE))
+        stemmer = Stemmer(LANGUAGE)
+        summarizer = Summarizer(stemmer)
+        summarizer.stop_words = get_stop_words(LANGUAGE)
+        _words = summarizer(parser.document, n)
+        _words = [str(i) for i in _words]
+        _return = "".join(_words)
+        return _return
+
+    @staticmethod
     def summary(sentence, n):
         """
         :param sentence: 字符串
@@ -114,7 +141,9 @@ class Chatbot(object):
             _chinese = True
         if _chinese:
             try:
-                _sum = jiagu.summarize(sentence, round(n / 10))
+                s = SnowNLP(sentence)  # str为之前去掉符号的中文字符串
+                _sum = (s.summary(round(n)))  # 进行总结 summary
+                # _sum = jiagu.summarize(sentence, round(n / 10))
             except Exception as e:
                 _sum = [sentence]
             content = ",".join(_sum)  # 摘要
@@ -156,58 +185,76 @@ class Chatbot(object):
         # 真正开始
         _new_list = []
         _limit = self.__token_limit - extra_token
+
         # 预设转移
         _new_list.append(chat_list.pop(0))
-        # 保留比
-        _real = _limit * 0.75
-        # 保留段数据的初步语义处理和计算切片位置
+
+        # 总结比
+        _real = _limit * 0.6
+
+        # 总长和浮标
         real_length = 0
         cutoff_index = -1
         _real_list = []
-        for i in reversed(range(len(chat_list))):
+        for i in range(len(chat_list)):
             content = chat_list[i]
-            # 压缩数据
-            _corn = content.split(":", 1)
-            if len(_corn) > 1:
-                _head = _corn[0]
-                if _corn[1].isspace() or len(_corn[1]) == 0:
-                    continue
-                _talk = self.zip_str(_corn[1])
-                content = f"{_head}: {_talk}"
-            else:
-                content = self.zip_str(_corn[0])
-            _real_list.append(content)
-            string_length = self.tokenizer(content)
-            real_length += string_length
-            if real_length > _real:
-                cutoff_index = i
-                break
-        # 抛弃段能简化则简化
-        after = _limit - real_length
-        after_length = 0
-        _after_list = []
-        _nlp = chat_list[:cutoff_index]
-        for i in reversed(range(len(_nlp))):
-            content = _nlp[i]
             # 压缩数据
             _item = self.tokenizer(content)
             if _item > 7:
                 _corn = content.split(":", 1)
+                # print(f"处理前{_corn}")
                 if len(_corn) > 1:
                     _head = _corn[0]
-                    if _corn[1].isspace() or len(_corn[1]) == 0:
+                    if _corn[1].isspace() or len(_corn[1]) < 3:
                         continue
-                    _talk = self.summary(_corn[1], round(_item / 7))
+                    if len(_corn[1].strip()) < 3:
+                        continue
+                    _talk = _corn[1]
+                    if self.tokenizer(_talk) > 120:
+                        _talk = self.summary_v2(_corn[1], 2)
+                        if not _talk:
+                            _talk = _talk[:len(_talk) - 120]
                     content = f"{_head}: {_talk}"
                 else:
-                    content = self.summary(_corn[0], round(_item / 7))
-                _fate = self.tokenizer(content)
-                after_length = after_length + _fate
-                _after_list.append(content)
-                if after_length > after:
+                    content = self.summary_v2(_corn[0], 2)
+                _real_list.append(content)
+                # print(f"处理后{content}")
+                string_length = self.tokenizer(content)
+                real_length += string_length
+                if real_length > _real:
+                    cutoff_index = i
                     break
+
+        after = _limit - real_length
+        _after_list = []
+        _nlp = chat_list[cutoff_index:]
+        # 保留段数据的初步语义处理和计算切片位置
+        after_length = 0
+        for i in reversed(range(len(_nlp))):
+            content = _nlp[i]
+            # 压缩数据
+            _corn = content.split(":", 1)
+            if len(_corn) > 1:
+                _head = _corn[0]
+                if len(_corn[1]) < 4 or _corn[1].isspace():
+                    continue
+                if len(_corn[1].strip()) < 2:
+                    continue
+                _talk = self.zip_str(_corn[1])
+                content = f"{_head}: {_talk.strip()}"
+            else:
+                content = self.zip_str(_corn[0])
+            _fate = self.tokenizer(content)
+            after_length = after_length + _fate
+            _after_list.append(content)
+            if after_length > after:
+                break
+        _dic = {i: None for i in _real_list}
+        _real_list = list(_dic.keys())
+        keywords = " ".join(_real_list)
+        _prompt_zip = keywords
+        _new_list.append(_prompt_zip)
         _new_list.extend(reversed(_after_list))
-        _new_list.extend(reversed(_real_list))
         return _new_list
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
@@ -223,7 +270,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nGirl: 我是 Girl assistant ，请问你有什么问题？"
+            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 Girl AI assistant ，请问你有什么问题？"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
@@ -238,18 +285,20 @@ class Chatbot(object):
         _prompt_table = _head + _old_list + _now
         # 截断器
         _prompt_apple = self.cutter(_prompt_table,
-                                    extra_token=int(len(_prompt_table) + self.tokenizer(self._start_sequence))
+                                    extra_token=int(
+                                        len(_prompt_table) + self.tokenizer(self._start_sequence) + max_tokens)
                                     )
         _header = _prompt_apple.pop(0)
         _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
         # 重切割代币
-        _mk = self.__token_limit - self.tokenizer(_header)  # 余量？
+        _mk = self.__token_limit - max_tokens - self.tokenizer(_header)  # 余量？
         if _mk < 0:
             _mk = 0
         while self.tokenizer(_prompt) > _mk - 10:
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
+        loguru.logger.debug(_prompt)
         response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
@@ -260,7 +309,18 @@ class Chatbot(object):
             frequency_penalty=0,
             presence_penalty=0.5,
             user=str(self.get_hash()),
-            stop=["Human:", "Girl:"],
+            stop=["Human:", "AI:"],
         )
         self.record_ai(prompt=prompt, response=response)
         return response
+
+    @staticmethod
+    def str_prompt(prompt: str) -> list:
+        range_list = prompt.split("\n")
+        # 如果当前项不包含 `:`，则将其并入前一项中
+        result = [range_list[i] + range_list[i + 1] if ":" not in range_list[i] else range_list[i] for i in
+                  range(len(range_list))]
+        # 使用列表推导式过滤掉空白项
+        filtered_result = [x for x in result if x != ""]
+        # 输出处理后的结果
+        return filtered_result

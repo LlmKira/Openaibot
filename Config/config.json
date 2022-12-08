@@ -1,18 +1,19 @@
 {
-    "statu": true,
-    "input_limit": 250,
-    "token_limit": 1000,
-    "usercold_time": 10,
-    "groupcold_time": 1,
-    "whiteUserSwitch": true,
-    "whiteGroupSwitch": false,
-    "blockGroup": [],
-    "blockUser": [],
-    "whiteGroup": [],
-    "whiteUser": [
-        "5275155445"
-    ],
-    "Model": {
-        "1005522236": "not use this key"
-    }
+  "statu": true,
+  "input_limit": 200,
+  "token_limit": 1000,
+  "usage_limit": 15000,
+  "per_user_limit": 1,
+  "usercold_time": 10,
+  "groupcold_time": 1,
+  "whiteUserSwitch": true,
+  "whiteGroupSwitch": false,
+  "blockGroup": [],
+  "blockUser": [],
+  "whiteGroup": [],
+  "whiteUser": [
+    "5275155445"
+  ],
+  "Model": {
+  }
 }

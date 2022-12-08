@@ -152,9 +152,9 @@ kill -9
 
 | 命令                        | 作用                   | 额外                                         |
 |---------------------------|----------------------|--------------------------------------------|
-| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送                                    |
-| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送                                    |
-| `/set_token_limit`        | 设置输出限制长度             |                                            |
+| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送         1 为无限制                     |
+| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送            1 为无限制                  |
+| `/set_token_limit`        | 设置输出限制长度             | Api的4095限制是输入+输出，如果超限，那么请调小输出              |
 | `/set_input_limit`        | 设置输入限制长度             |                                            |
 | `/config`                 | 获取/备份 config.json 文件 | 发送文件                                       |
 | `/add_block_group`        | 禁止                   | 直接生效                                       |
@@ -177,6 +177,8 @@ kill -9
 | `/see_api_key`            | 现在几个 Api key         |                                            |
 | `/del_api_key`            | 删除 Api key           |                                            |
 | `/add_api_key`            | 增加 Api key           |                                            |
+| `/set_user_usage_limit`   | 用户分配总额度              | 1 为无限制                                     |
+| `/set_hour_limit`         | 用户小时可用量              | 1 为无限制                                     |
 
 ### 样表
 

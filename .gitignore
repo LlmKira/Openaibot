@@ -8,7 +8,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+Config/*.json
 Data/*.form
 # Distribution / packaging
 .Python

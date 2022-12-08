@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 import asyncio
 import json
+import pathlib
 
 from telebot import util
 from telebot.async_telebot import AsyncTeleBot
@@ -16,6 +17,9 @@ import time
 from collections import deque
 
 from loguru import logger
+
+from utils.Data import DefaultData
+
 global me_id
 
 time_interval = 60
@@ -92,9 +96,7 @@ class BotRunner(object):
                 request_timestamps.popleft()
             # 计算请求频率
             request_frequency = len(request_timestamps)
-            req = {"frequency": request_frequency}
-            with open("./analysis.json", "w", encoding="utf8") as f:
-                json.dump(req, f, indent=4, ensure_ascii=False)
+            DefaultData().setAnalysis(frequency=request_frequency)
             return request_frequency
 
         async def main():
@@ -104,7 +106,7 @@ class BotRunner(object):
             logger.info(f"Init Bot id:{me_id}")
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
-                set_cron(get_request_frequency, second=3)
+                set_cron(get_request_frequency, second=4)
             )
 
         asyncio.run(main())
