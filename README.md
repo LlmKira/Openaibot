@@ -150,36 +150,38 @@ kill -9
 
 ## 命令
 
-| 命令                        | 作用                   | 额外                                         |
-|---------------------------|----------------------|--------------------------------------------|
-| `/set_user_cold`          | 设置用户冷却时间             | 时间内不能发送         1 为无限制                     |
-| `/set_group_cold`         | 设置群组冷却时间             | 时间内不能发送            1 为无限制                  |
-| `/set_token_limit`        | 设置输出限制长度             | Api的4095限制是输入+输出，如果超限，那么请调小输出              |
-| `/set_input_limit`        | 设置输入限制长度             |                                            |
-| `/config`                 | 获取/备份 config.json 文件 | 发送文件                                       |
-| `/add_block_group`        | 禁止                   | 直接生效                                       |
-| `/del_block_group`        | 解禁                   | 直接生效                                       |
-| `/add_block_user`         | 禁止                   | 直接生效                                       |
-| `/del_block_user`         | 解禁                   | 直接生效                                       |
-| `/add_white_group`        | 加入                   | 需要开启白名单模式生效                                |
-| `/add_white_user`         | 加入                   | 需要开启白名单模式生效                                |
-| `/del_white_group`        | 除名                   | 需要开启白名单模式生效                                |
-| `/del_white_user`         | 除名                   | 需要开启白名单模式生效                                |
-| `/update_detect`          | 更新敏感词                |                                            |
-| `/open_user_white_mode`   | 开用户白名单               |                                            |
-| `/open_group_white_mode`  | 开群组白名单               |                                            |
-| `/close_user_white_mode`  | 关用户白名单               |                                            |
-| `/close_group_white_mode` | 关群组白名单               |                                            |
-| `/open`                   | 开启机器人                |                                            |
-| `/close`                  | 关闭机器人                |                                            |
-| `/chat`                   | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
-| `/write`                  | 续写                   | 续写.                                        |
-| `/see_api_key`            | 现在几个 Api key         |                                            |
-| `/del_api_key`            | 删除 Api key           |                                            |
-| `/add_api_key`            | 增加 Api key           |                                            |
-| `/set_user_usage_limit`   | 用户分配总额度              | 1 为无限制            按用户计量                    |
-| `/set_hour_limit`         | 用户小时可用量              | 1 为无限制              按用户计量                  |
-| `/reset_user_usage_limit` | 重置用户分配额度             | 按用户计量                                      |
+限制类设置设定为 `1` 代表不生效。
+
+| 命令                               | 作用                   | 额外                                         |
+|----------------------------------|----------------------|--------------------------------------------|
+| `/set_user_cold`                 | 设置用户冷却时间             | 时间内不能发送         1 为无限制                     |
+| `/set_group_cold`                | 设置群组冷却时间             | 时间内不能发送            1 为无限制                  |
+| `/set_token_limit`               | 设置输出限制长度             | Api的4095限制是输入+输出，如果超限，那么请调小输出              |
+| `/set_input_limit`               | 设置输入限制长度             |                                            |
+| `/config`                        | 获取/备份 config.json 文件 | 发送文件                                       |
+| `/add_block_group`      +id绝对值   | 禁止                   | 直接生效         可跟多参数，空格分割                    |
+| `/del_block_group`       +id绝对值  | 解禁                   | 直接生效          可跟多参数，空格分割                   |
+| `/add_block_user`     +id绝对值     | 禁止                   | 直接生效           可跟多参数，空格分割                  |
+| `/del_block_user`     +id绝对值     | 解禁                   | 直接生效           可跟多参数，空格分割                  |
+| `/add_white_group`     +id绝对值    | 加入                   | 需要开启白名单模式生效       可跟多参数，空格分割               |
+| `/add_white_user`      +id绝对值    | 加入                   | 需要开启白名单模式生效       可跟多参数，空格分割               |
+| `/del_white_group`     +id绝对值    | 除名                   | 需要开启白名单模式生效        可跟多参数，空格分割              |
+| `/del_white_user`      +id绝对值    | 除名                   | 需要开启白名单模式生效      可跟多参数，空格分割                |
+| `/update_detect`                 | 更新敏感词                |                                            |
+| `/open_user_white_mode`          | 开用户白名单               |                                            |
+| `/open_group_white_mode`         | 开群组白名单               |                                            |
+| `/close_user_white_mode`         | 关用户白名单               |                                            |
+| `/close_group_white_mode`        | 关群组白名单               |                                            |
+| `/open`                          | 开启机器人                |                                            |
+| `/close`                         | 关闭机器人                |                                            |
+| `/chat`                          | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
+| `/write`                         | 续写                   | 续写.                                        |
+| `/see_api_key`                   | 现在几个 Api key         |                                            |
+| `/del_api_key`       +key        | 删除 Api key           | 可跟多参数，空格分割                                 |
+| `/add_api_key`           +key    | 增加 Api key           | 可跟多参数，空格分割                                 |
+| `/set_user_usage_limit`          | 用户分配总额度              | 1 为无限制            按用户计量                    |
+| `/set_hour_limit`                | 用户小时可用量              | 1 为无限制              按用户计量                  |
+| `/reset_user_usage_limit`+userID | 重置用户分配额度             | 按用户计量          可跟多参数，空格分割                  |
 
 ### 样表
 
