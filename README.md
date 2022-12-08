@@ -177,8 +177,9 @@ kill -9
 | `/see_api_key`            | 现在几个 Api key         |                                            |
 | `/del_api_key`            | 删除 Api key           |                                            |
 | `/add_api_key`            | 增加 Api key           |                                            |
-| `/set_user_usage_limit`   | 用户分配总额度              | 1 为无限制                                     |
-| `/set_hour_limit`         | 用户小时可用量              | 1 为无限制                                     |
+| `/set_user_usage_limit`   | 用户分配总额度              | 1 为无限制            按用户计量                    |
+| `/set_hour_limit`         | 用户小时可用量              | 1 为无限制              按用户计量                  |
+| `/reset_user_usage_limit` | 重置用户分配额度             | 按用户计量                                      |
 
 ### 样表
 
@@ -192,7 +193,10 @@ set_input_limit - 设置输入限制长度
 see_api_key - 现在几个 Api key
 del_api_key - 删除 Api key
 add_api_key - 增加 Api key
-config - 获取/备份 config.json 文件
+config - 获取/备份热配置文件
+set_user_usage_limit - 设置用户总额限度
+reset_user_usage_limit - 重置用户额度
+set_hour_limit - 设置用户小时限额
 add_block_group - 禁止群组
 del_block_group - 解禁群组
 add_block_user - 禁止用户

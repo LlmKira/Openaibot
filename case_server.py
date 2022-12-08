@@ -19,9 +19,6 @@ class Item(BaseModel):
     prompt_type: list = []
 
 
-
-
-
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -31,18 +28,18 @@ def read_root():
 async def create_item(item: Item):
     if not any(item.dict().keys()):
         return {"code": 404, "data": "", "msg": "没有数据"}
+    prompt = item.prompt_str
     if item.prompt_str:
         item.prompt_list = CutParent.str_prompt(item.prompt_str)
     try:
-        prompt_list = CutParent.cutter(item.prompt_list)
+        prompt = CutParent.cutter(item.prompt_list)
     except Exception as e:
-        prompt_list = item.prompt_list
         code = 400
         msg = "failed"
     else:
         code = 200
         msg = "success"
-    return {"code": code, "data": prompt_list, "msg": msg}
+    return {"code": code, "data": prompt, "msg": msg}
 
 
 if __name__ == '__main__':

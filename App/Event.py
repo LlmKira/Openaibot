@@ -111,6 +111,12 @@ class Usage(object):
                            _data.dict())
         return _data
 
+    def resetTotalUsage(self):
+        GET = self.__get_usage()
+        GET.total_usage = 0
+        self.__Data.setKey(f"{self.__uid}_usage",
+                           GET.dict())
+
     def isOutUsage(self):
         """
         累计
@@ -467,7 +473,6 @@ async def Master(bot, message, config):
                         logger.info(f"SETTING:reset per_user_limit to{_len_}")
 
                 if command.startswith("/set_user_usage_limit"):
-
                     _len = Utils.extract_arg(command)[0]
                     _len_ = "".join(list(filter(str.isdigit, _len)))
                     if _len_:
@@ -475,6 +480,14 @@ async def Master(bot, message, config):
                         await bot.reply_to(message, f"usage_limit:{_len_}")
                         save_csonfig()
                         logger.info(f"SETTING:reset usage_limit to{_len_}")
+                if command.startswith("/reset_user_usage_limit"):
+                    _len = Utils.extract_arg(command)
+                    for i in _len:
+                        _len_ = "".join(list(filter(str.isdigit, i)))
+                        if _len_:
+                            Usage(uid=_len_).resetTotalUsage()
+                            logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
+                    await bot.reply_to(message, f"usage_limit:{_len}")
 
                 if command.startswith("/set_group_cold"):
                     _len = Utils.extract_arg(command)[0]
