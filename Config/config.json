@@ -8,7 +8,7 @@
     "groupcold_time": 1,
     "User": {
         "5275155445": {
-            "white": false,
+            "white": true,
             "block": false,
             "usage": 1
         }
