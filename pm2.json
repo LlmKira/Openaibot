@@ -2,11 +2,16 @@
     "apps": [{
       "name": "bot main",
       "script": "python main.py",
-      "watch": true,
-      "ignore_watch": ["node_modules","logs","data","public"],
       "instances": 1,
       "error_file": "main_error.log",
       "out_file": "main_out.log",
+      "log_date_format": "YYYY-MM-DD HH-mm-ss"
+    },{
+      "name": "bot prompt server",
+      "script": "python case_server.py",
+      "instances": 1,
+      "error_file": "ps_error.log",
+      "out_file": "ps_out.log",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     }]
 }
