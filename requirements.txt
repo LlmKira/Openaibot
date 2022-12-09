@@ -14,3 +14,6 @@ pydantic
 uvicorn
 sumy
 jieba
+pathlib
+numpy
+wordcloud

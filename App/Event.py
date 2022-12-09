@@ -8,12 +8,11 @@ import pathlib
 import random
 import time
 from typing import Union
-
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
-from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger
+from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
 
@@ -110,7 +109,7 @@ class Reply(object):
                        "现在不是说话的时候。", "我没有什么可说的。", "我不喜欢说话。",
                        "我不想接受问题。", "我不喜欢被问问题。", "我觉得这个问题并不重要。", "我不想谈论这个话题。",
                        "我不想对这个问题发表意见。"]
-            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --DFA:True"
+            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --"
             return _info
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
@@ -147,9 +146,11 @@ class Reply(object):
                                         conversation_id=_cid,
                                         call_func=Api_keys.pop_api_key
                                         )
+                _head = Header(uid=user).get()
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
-                                                            max_tokens=int(_csonfig["token_limit"])
+                                                            max_tokens=int(_csonfig["token_limit"]),
+                                                            role=_head
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -159,7 +160,7 @@ class Reply(object):
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
             _time = int(time.time() * 1000)
-            logger.info(f"RUN:{user}:{group}--time: {_time} --prompt: {prompt} --req: {_deal} ")
+            logger.info(f"RUN:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
@@ -240,6 +241,15 @@ async def Text(bot, message, config, reset: bool = False):
             return
         _prompt = _prompt_r[1]
         types = "write"
+    if message.text.startswith("/remind"):
+        _remind_r = message.text.split(" ", 1)
+        if len(_remind_r) < 2:
+            return
+        _remind = _remind_r[1]
+        _remind = ContentDfa.filter_all(_remind)
+        Header(uid=message.from_user.id).set(_remind)
+        return await bot.reply_to(message, f"设定完毕:{_remind}")
+
     # 处理是否忘记
     if reset:
         await Forget(bot, message, config)
@@ -299,6 +309,14 @@ async def private_Chat(bot, message, config):
 async def Friends(bot, message, config):
     load_csonfig()
     command = message.text
+    if command.startswith("/remind"):
+        _remind_r = message.text.split(" ", 1)
+        if len(_remind_r) < 2:
+            return
+        _remind = _remind_r[1]
+        _remind = ContentDfa.filter_all(_remind)
+        Header(uid=message.from_user.id).set(_remind)
+        await bot.reply_to(message, f"设定完毕:{_remind}")
     # 启动函数
     if command.startswith("/chat") or not command.startswith("/"):
         await private_Chat(bot, message, config)
@@ -330,7 +348,7 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
-            if command.startswith("/set_user_hour_limit"):
+            if command.startswith("/set_per_user_limit"):
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:

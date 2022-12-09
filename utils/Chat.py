@@ -32,6 +32,22 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
+class Header(object):
+    def __init__(self, uid):
+        self._uid = str(uid)
+        self.__Data = DataWorker(prefix="Open_Ai_bot_user_head")
+
+    def get(self):
+        _usage = self.__Data.getKey(f"{self._uid}")
+        if not _usage:
+            return None
+        else:
+            return str(_usage)
+
+    def set(self, context):
+        return self.__Data.setKey(f"{self._uid}", context)
+
+
 class UserManger(object):
     def __init__(self, uid: int):
         """

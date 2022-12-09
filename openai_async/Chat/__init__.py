@@ -8,44 +8,50 @@ from __future__ import division, print_function, unicode_literals
 
 import json
 import os
+import random
+import re
 
 # import loguru
 # import jiagu
-import nltk
 from snownlp import SnowNLP
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lsa import LsaSummarizer as Summarizer
 from sumy.nlp.stemmers import Stemmer
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.summarizers.lsa import LsaSummarizer as Summarizer
 from sumy.utils import get_stop_words
+
 # 基于 Completion 上层
 from openai_async import Completion
+from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
+from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from ..utils.data import MsgFlow
 
 
-# nltk.download('punkt')
-# nltk.download('stopwords')
-
-
-class Chatbot(object):
-    def __init__(self, api_key, conversation_id, call_func=None):
+class Talk(object):
+    @staticmethod
+    def tfidf_summarization(sentence: str, ratio=0.5):
         """
-        chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
-        :param api_key:
-        :param conversation_id: 独立ID,每个场景需要独一个
-        :param call_func: 回调
+        采用tfidf进行摘要抽取
+        :param sentence:
+        :param ratio: 摘要占文本长度的比例
+        :return:
         """
-        self._api_key = api_key
-        self.conversation_id = conversation_id
-        self._MsgFlow = MsgFlow(uid=self.conversation_id)
-        self._start_sequence = "\nAI:"
-        self._restart_sequence = "\nHuman: "
-        self.__call_func = call_func
-        self.__token_limit = 3000
+        summ = TfidfSummarization(ratio=ratio)
+        summ = summ.analysis(sentence)
+        return summ
 
-    def reset_chat(self):
-        # Forgets conversation
-        return self._MsgFlow.forget()
+    @staticmethod
+    def tfidf_keywords(keywords, delete_stopwords=True, topK=5, withWeight=False):
+        """
+        tfidf 提取关键词
+        :param keywords:
+        :param delete_stopwords: 是否删除停用词
+        :param topK: 输出关键词个数
+        :param withWeight: 是否输出权重
+        :return: [(word, weight), (word1, weight1)]
+        """
+        tfidf = TfidfKeywords(delete_stopwords=delete_stopwords, topK=topK, withWeight=withWeight)
+        return tfidf.keywords(keywords)
 
     @staticmethod
     def tokenizer(s: str) -> float:
@@ -59,6 +65,165 @@ class Chatbot(object):
         # 统计非中文字符数量
         num_non_chinese = len([c for c in s if ord(c) <= 127])
         return int(num_chinese * 2 + num_non_chinese * 0.25) + 5
+
+    @staticmethod
+    def normal_cut_sentence(text):
+        text = re.sub('([。！？\?])([^’”])', r'\1\n\2', text)
+        # 普通断句符号且后面没有引号
+        text = re.sub('(\.{6})([^’”])', r'\1\n\2', text)
+        # 英文省略号且后面没有引号
+        text = re.sub('(\…{2})([^’”])', r'\1\n\2', text)
+        # 中文省略号且后面没有引号
+        text = re.sub('([.。！？\?\.{6}\…{2}][’”])([^’”])', r'\1\n\2', text)
+        # 断句号+引号且后面没有引号
+        return text.split("\n")
+
+    def cut_chinese_sentence(self, text):
+        p = re.compile("“.*?”")
+        listr = []
+        index = 0
+        for i in p.finditer(text):
+            temp = ''
+            start = i.start()
+            end = i.end()
+            for j in range(index, start):
+                temp += text[j]
+            if temp != '':
+                temp_list = self.normal_cut_sentence(temp)
+                listr += temp_list
+            temp = ''
+            for k in range(start, end):
+                temp += text[k]
+            if temp != ' ':
+                listr.append(temp)
+            index = end
+        return listr
+
+    @staticmethod
+    def get_language(sentence: str):
+        language = "english"
+        # 差缺中文系统
+        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
+            language = "chinese"
+        return language
+
+    def cut_sentence(self, sentence: str) -> list:
+        language = self.get_language(sentence)
+        if language == "chinese":
+            _reply_list = self.cut_chinese_sentence(sentence)
+        else:
+            from nltk.tokenize import sent_tokenize
+            _reply_list = sent_tokenize(sentence, language=language)
+        if len(_reply_list) < 1:
+            return [sentence]
+        return _reply_list
+
+    def cut_ai_prompt(self, prompt: str) -> list:
+        """
+        切薄负载机
+        :param prompt:
+        :return:
+        """
+        _some = prompt.split(":", 1)
+        _head = ""
+        if len(_some) > 1:
+            _head = f"{_some[0]}:"
+            prompt = _some[1]
+        _reply = self.cut_sentence(prompt)
+        _prompt_list = []
+        for item in _reply:
+            _prompt_list.append(f"{_head}{item.strip()}")
+        _prompt_list = list(filter(None, _prompt_list))
+        return _prompt_list
+
+    @staticmethod
+    def summary_v2(sentence, n):
+        # 差缺中文系统
+        LANGUAGE = "english"
+        # 统计中文字符数量
+        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
+            _chinese = True
+            LANGUAGE = "chinese"
+        parser = PlaintextParser.from_string(sentence, Tokenizer(LANGUAGE))
+        stemmer = Stemmer(LANGUAGE)
+        summarizer = Summarizer(stemmer)
+        summarizer.stop_words = get_stop_words(LANGUAGE)
+        _words = summarizer(parser.document, n)
+        _words = [str(i) for i in _words]
+        _return = "".join(_words)
+        return _return
+
+    @staticmethod
+    def summary(sentence, n):
+        """
+        :param sentence: 字符串
+        :param n: 几句话
+        :return: 总结
+        """
+        # 差缺中文系统
+        _chinese = False
+        # 统计中文字符数量
+        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
+            _chinese = True
+        if _chinese:
+            try:
+                s = SnowNLP(sentence)  # str为之前去掉符号的中文字符串
+                _sum = (s.summary(round(n)))  # 进行总结 summary
+                # _sum = jiagu.summarize(sentence, round(n / 10))
+            except Exception as e:
+                _sum = [sentence]
+            content = ",".join(_sum)  # 摘要
+        else:
+            import nltk
+            nltk.download('punkt')
+            nltk.download('stopwords')
+            tokens = nltk.word_tokenize(sentence)
+            # 分句
+            sentences = nltk.sent_tokenize(sentence)
+            # 计算词频
+            frequencies = nltk.FreqDist(tokens)
+            # 计算每个句子的得分
+            scores = {}
+            for sentence_ in sentences:
+                score = 0
+                for word in nltk.word_tokenize(sentence_):
+                    if word in frequencies:
+                        score += frequencies[word]
+                scores[sentence_] = score
+            # 按照得分顺序排序句子
+            sorted_sentences = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+            # 返回前 num_sentences 个句子
+            return_num = round(n / 2)
+            if len(sorted_sentences) < return_num:
+                return_num = len(sorted_sentences)
+            _list = [sentence_[0] for sentence_ in sorted_sentences[:return_num]]
+            content = ",".join(_list)
+        if len(content.strip(" ")) == 0:
+            content = sentence
+        return content
+
+
+class Chatbot(object):
+    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\nHuman:",
+                 start_sequ: str = "\nAI: ",
+                 call_func=None):
+        """
+        chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
+        :param api_key:
+        :param conversation_id: 独立ID,每个场景需要独一个
+        :param call_func: 回调
+        """
+        self._api_key = api_key
+        self.conversation_id = conversation_id
+        self._MsgFlow = MsgFlow(uid=self.conversation_id)
+        self._start_sequence = start_sequ
+        self._restart_sequence = restart_sequ
+        self.__call_func = call_func
+        self.__token_limit = token_limit
+
+    def reset_chat(self):
+        # Forgets conversation
+        return self._MsgFlow.forget()
 
     def record_ai(self, prompt, response):
         REPLY = []
@@ -110,157 +275,121 @@ class Chatbot(object):
             _item = _item.replace(key, value)
         return _item
 
-    @staticmethod
-    def summary_v2(sentence, n):
-        # 差缺中文系统
-        LANGUAGE = "english"
-        # 统计中文字符数量
-        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
-            _chinese = True
-            LANGUAGE = "chinese"
-        parser = PlaintextParser.from_string(sentence, Tokenizer(LANGUAGE))
-        stemmer = Stemmer(LANGUAGE)
-        summarizer = Summarizer(stemmer)
-        summarizer.stop_words = get_stop_words(LANGUAGE)
-        _words = summarizer(parser.document, n)
-        _words = [str(i) for i in _words]
-        _return = "".join(_words)
-        return _return
-
-    @staticmethod
-    def summary(sentence, n):
+    def Summer(self, prompt: str, chat_list: list, extra_token: int = 0) -> list:
         """
-        :param sentence: 字符串
-        :param n: 几句话
-        :return: 总结
-        """
-        # 差缺中文系统
-        _chinese = False
-        # 统计中文字符数量
-        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
-            _chinese = True
-        if _chinese:
-            try:
-                s = SnowNLP(sentence)  # str为之前去掉符号的中文字符串
-                _sum = (s.summary(round(n)))  # 进行总结 summary
-                # _sum = jiagu.summarize(sentence, round(n / 10))
-            except Exception as e:
-                _sum = [sentence]
-            content = ",".join(_sum)  # 摘要
-        else:
-            tokens = nltk.word_tokenize(sentence)
-            # 分句
-            sentences = nltk.sent_tokenize(sentence)
-            # 计算词频
-            frequencies = nltk.FreqDist(tokens)
-            # 计算每个句子的得分
-            scores = {}
-            for sentence_ in sentences:
-                score = 0
-                for word in nltk.word_tokenize(sentence_):
-                    if word in frequencies:
-                        score += frequencies[word]
-                scores[sentence_] = score
-            # 按照得分顺序排序句子
-            sorted_sentences = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-            # 返回前 num_sentences 个句子
-            return_num = round(n / 2)
-            if len(sorted_sentences) < return_num:
-                return_num = len(sorted_sentences)
-            _list = [sentence_[0] for sentence_ in sorted_sentences[:return_num]]
-            content = ",".join(_list)
-        if len(content.strip(" ")) == 0:
-            content = sentence
-        return content
-
-    def cutter(self, chat_list: list, extra_token: int = 0) -> list:
-        """
-        负责提炼截断对话
+        负责统计超长上下文
+        :param prompt:
         :param extra_token: 换行符号预期会占用的位置
-        :param chat_list: 对话字符串列表
+        :param chat_list: 对话字符串列表，从消息桶中输入。
+        PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
+        # 定义 token = token - extra
+        # 为了处理超长上下文一个 关键词提取机器 和 分词，分句子机器。
+        # 我们对 prompt 进行提取关键词，选高频词。
+        # 对列表进行如下处理
+
+        # 将对话组成二维表。连续的并列发言人抛弃上一位。
+        # 过滤空的，重复的，过短的提问组。
+        # 将最近的3组发言转入高注意力表，进行初步简化和语义提取，计算 token，计算剩余token。
+        # 使用高频词筛选关键对话加入处理表，弹出原表：(根据逗号分选长表和短表)对于短句直接加入，对于超长句进行二次分割，把关键词左中右三句加入。
+        # 计算 token，如果超过了剩余 token，抛弃超短句和早的句子，从表头弹出它们。
+        # 如果没达到要求，那么随机选取无关数据加入处理表。
+        # 第一位 链接 处理表 链接 高注意力表。
+        # 最后计算进行强制 while 裁剪
+        # 刚开始玩随便了
         if len(chat_list) < 5:
             return chat_list
-        # 真正开始
-        _new_list = []
-        _limit = self.__token_limit - extra_token
-
-        # 预设转移
-        _new_list.append(chat_list.pop(0))
-
-        # 总结比
-        _real = _limit * 0.6
-
-        # 总长和浮标
-        real_length = 0
-        cutoff_index = -1
-        _real_list = []
-        for i in range(len(chat_list)):
-            content = chat_list[i]
-            # 压缩数据
-            _item = self.tokenizer(content)
-            if _item > 7:
-                _corn = content.split(":", 1)
-                # print(f"处理前{_corn}")
-                if len(_corn) > 1:
-                    _head = _corn[0]
-                    if _corn[1].isspace() or len(_corn[1]) < 3:
-                        continue
-                    if len(_corn[1].strip()) < 3:
-                        continue
-                    _talk = _corn[1]
-                    if self.tokenizer(_talk) > 120:
-                        _talk = self.summary_v2(_corn[1], 2)
-                        if not _talk:
-                            _talk = _talk[:len(_talk) - 120]
-                    content = f"{_head}: {_talk}"
+        # 组建最终注意力表
+        _Final = []
+        # 弹出第一位
+        _head = chat_list.pop(0)
+        # 组建待处理表
+        _chat = []
+        __last_author = ""
+        # 筛选标准发言机器
+        for i in range(len(chat_list) - 2):
+            if ":" in chat_list[i]:
+                ___now = chat_list[i].split(":", 1)
+                ___after = chat_list[i + 1].split(":", 1)
+                if len(___now[1]) < 3 or len(___after[1]) < 3:
+                    continue
+                if ___now[0] != ___after[0]:
+                    _chat.append(chat_list[i])
+        # 切割最近的数据进行高注意力控制
+        _chat.extend(Talk().cut_ai_prompt(chat_list[-1]))
+        _chat.extend(Talk().cut_ai_prompt(chat_list[-2]))
+        # 弹出chat的最后四条
+        if len(_chat) > 3:
+            _High = [_chat.pop(-1), _chat.pop(-1), _chat.pop(-1)]
+        else:
+            _High = []
+        # 计算待处理表需要的token
+        _high_token = 0 + Talk.tokenizer(_head)
+        for i in _High:
+            _high_token = _high_token + Talk.tokenizer(i)
+        _create_token = self.__token_limit - _high_token - extra_token
+        if _create_token < 20:
+            return chat_list
+        # 切分中插
+        _pre_chat = []
+        for i in range(len(_chat)):
+            _item = _chat[i]
+            if Talk.tokenizer(_item) > 200:
+                if Talk.get_language(_item) == "chinese":
+                    _sum = Talk.tfidf_summarization(sentence=_item, ratio=0.3)
+                    if len(_sum) > 7:
+                        _pre_chat.append(_sum)
                 else:
-                    content = self.summary_v2(_corn[0], 2)
-                _real_list.append(content)
-                # print(f"处理后{content}")
-                string_length = self.tokenizer(content)
-                real_length += string_length
-                if real_length > _real:
-                    cutoff_index = i
-                    break
-
-        after = _limit - real_length
-        _after_list = []
-        _nlp = chat_list[cutoff_index:]
-        # 保留段数据的初步语义处理和计算切片位置
-        after_length = 0
-        for i in reversed(range(len(_nlp))):
-            content = _nlp[i]
-            # 压缩数据
-            _corn = content.split(":", 1)
-            if len(_corn) > 1:
-                _head = _corn[0]
-                if len(_corn[1]) < 4 or _corn[1].isspace():
-                    continue
-                if len(_corn[1].strip()) < 2:
-                    continue
-                _talk = self.zip_str(_corn[1])
-                content = f"{_head}: {_talk.strip()}"
+                    _cut = Talk().cut_ai_prompt(prompt=_item)
+                    if len(_cut) > 3:
+                        _pre_chat.append(_cut[0])
+                        _pre_chat.append(_cut[1])
+                        _pre_chat.append(_cut[2])
+                    else:
+                        _pre_chat.extend(_cut)
             else:
-                content = self.zip_str(_corn[0])
-            _fate = self.tokenizer(content)
-            after_length = after_length + _fate
-            _after_list.append(content)
-            if after_length > after:
-                break
-        _dic = {i: None for i in _real_list}
-        _real_list = list(_dic.keys())
-        keywords = " ".join(_real_list)
-        _prompt_zip = keywords
-        _new_list.append(_prompt_zip)
-        _new_list.extend(reversed(_after_list))
-        return _new_list
+                _pre_chat.append(_item)
+        # 累计有效Token，从下向上加入
+        _now_token = 0
+        _useful = []
+        __useful_down = False
+        for i in reversed(range(len(_pre_chat))):
+            _item = _pre_chat[i]
+            _key = Talk.tfidf_keywords(prompt)
+            for ir in _key:
+                if ir in _item:
+                    _useful.append(_item)
+                    _now_token = _now_token + Talk.tokenizer(_item)
+                    if _now_token > _create_token:
+                        __useful_down = True
+                        break
+        # 竟然没凑齐
+        _not_useful = []
+        if not __useful_down:
+            for i in reversed(range(len(_pre_chat) - 1)):
+                _item = random.choice(_pre_chat)
+                if ":" in _pre_chat[i]:
+                    ___now = _pre_chat[i].split(":", 1)
+                    ___after = _pre_chat[i + 1].split(":", 1)
+                    if len(___now[1]) < 3 or len(___after[1]) < 3:
+                        continue
+                    if ___now[0] != ___after[0]:
+                        _not_useful.append(_item)
+                        _now_token = _now_token + Talk.tokenizer(_item)
+                        if _now_token > _create_token:
+                            break
+        _Final.append(_head)
+        _Final.extend(_not_useful)
+        _Final.extend(_useful)
+        _Final.extend(_High)
+        return _Final
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
-                                character: list = None, head: str = None) -> dict:
+                                character: list = None, head: str = None, role: str = None) -> dict:
         """
         异步的，得到对话上下文
+        :param role:
         :param head: 预设技巧
         :param max_tokens: 限制返回字符数量
         :param model: 模型选择
@@ -275,26 +404,26 @@ class Chatbot(object):
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
         # 初始化
-        _role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
+        if role is None:
+            role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
         _old = self._MsgFlow.read()
         # 构造内容
-        _head = [f"{_role}\n{head}\n"]
+        _head = [f"{role}\n{head}\n"]
         _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
         _now = [f"{self._restart_sequence}{prompt}."]
         # 拼接
         _prompt_table = _head + _old_list + _now
         # 截断器
-        _prompt_apple = self.cutter(_prompt_table,
+        _prompt_apple = self.Summer(prompt=prompt, chat_list=_prompt_table,
                                     extra_token=int(
-                                        len(_prompt_table) + self.tokenizer(self._start_sequence) + max_tokens)
-                                    )
+                                        len(_prompt_table) + Talk.tokenizer(self._start_sequence) + max_tokens))
         _header = _prompt_apple.pop(0)
         _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
         # 重切割代币
-        _mk = self.__token_limit - max_tokens - self.tokenizer(_header)  # 余量？
+        _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 余量？
         if _mk < 0:
             _mk = 0
-        while self.tokenizer(_prompt) > _mk - 10:
+        while Talk.tokenizer(_prompt) > _mk - 10:
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt

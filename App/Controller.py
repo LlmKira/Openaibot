@@ -4,20 +4,16 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import asyncio
-import json
-import pathlib
-
-from telebot import util
-from telebot.async_telebot import AsyncTeleBot
-from telebot.asyncio_storage import StateMemoryStorage
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from App import Event
 import time
 from collections import deque
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
+from telebot import util
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
 
+from App import Event
 from utils.Data import DefaultData
 
 global me_id
@@ -69,7 +65,8 @@ class BotRunner(object):
         @bot.message_handler(chat_types=['supergroup', 'group'])
         async def group_msg_no_admin(message):
             global me_id
-            if message.text.startswith("/chat") or message.text.startswith("/write"):
+            if message.text.startswith("/chat") or message.text.startswith("/write") or message.text.startswith(
+                    "/remind"):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
             else:
