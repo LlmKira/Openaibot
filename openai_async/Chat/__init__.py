@@ -38,7 +38,7 @@ class Chatbot(object):
         self._api_key = api_key
         self.conversation_id = conversation_id
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
-        self._start_sequence = "\nGirl:"
+        self._start_sequence = "\nAI:"
         self._restart_sequence = "\nHuman: "
         self.__call_func = call_func
         self.__token_limit = 3000
@@ -270,7 +270,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 Girl AI assistant ，请问你有什么问题？"
+            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 AI assistant ，请问你有什么问题？"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)

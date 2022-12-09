@@ -9,16 +9,14 @@ import random
 import time
 from typing import Union
 
-# from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig
-from utils.Data import DataWorker, DictUpdate, DefaultData, Api_keys
-from utils.Detect import DFA, Censor
-from pydantic import BaseModel
 from loguru import logger
 
-# 工具数据类型
-DataUtils = DataWorker(prefix="Open_Ai_bot_")
-MsgsRecordUtils = DataWorker(prefix="Open_Ai_bot_msg_record")
+# from App.chatGPT import PrivateChat
+from utils.Base import ReadConfig
+from utils.Chat import Utils, Usage, rqParser
+from utils.Data import DictUpdate, DefaultData, Api_keys
+from utils.Detect import DFA, Censor
+
 urlForm = {
     "Danger.form": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
@@ -62,182 +60,39 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
-class rqParser(object):
-    @staticmethod
-    def get_response_text(response):
-        REPLY = []
-        Choice = response.get("choices")
-        if Choice:
-            for item in Choice:
-                _text = item.get("text")
-                REPLY.append(_text)
-        if not REPLY:
-            REPLY = ["Nothing to say:response null~"]
-        return REPLY
+async def Forget(bot, message, config):
+    """
+    重置消息流
+    :param bot:
+    :param message:
+    :param config:
+    :return:
+    """
+    from openai_async.utils.data import MsgFlow
+    _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
+    return MsgFlow(uid=_cid).forget()
+
+
+class Reply(object):
+    """
+    群组
+    """
 
     @staticmethod
-    def get_response_usage(response):
-        usage = len("机器资源")
-        if response.get("usage"):
-            usage = response.get("usage").get("total_tokens")
-        return usage
-
-
-class Usage_Data(BaseModel):
-    user: str
-    now: int
-    usage: int
-    total_usage: int
-
-
-class Usage(object):
-    def __init__(self, uid: Union[int, str]):
-        self.__uid = str(uid)
-        self.__Data = DataWorker(prefix="Open_Ai_bot_usage_")
-
-    def __get_usage(self):
-        _usage = self.__Data.getKey(f"{self.__uid}_usage")
-        if _usage:
-            return Usage_Data(**_usage)
-        else:
-            return None
-
-    def __set_usage(self, now, usage, total_usage):
-        _data = Usage_Data(now=now, user=str(self.__uid), usage=usage, total_usage=total_usage)
-        self.__Data.setKey(f"{self.__uid}_usage",
-                           _data.dict())
-        return _data
-
-    def resetTotalUsage(self):
-        GET = self.__get_usage()
-        GET.total_usage = 0
-        self.__Data.setKey(f"{self.__uid}_usage",
-                           GET.dict())
-
-    def isOutUsage(self):
+    async def load_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
+                            userlimit: int = None, method: str = "chat"):
         """
-        累计
-        :return: bool
+
+        :param user:
+        :param group:
+        :param key:
+        :param prompt:
+        :param userlimit:
+        :param method:
+        :return:
         """
-        # 时间
-        key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
-        GET = self.__get_usage()
-        if GET:
-            if GET.usage < _csonfig["usage_limit"]:
-                return {"status": False, "use": GET.dict(), "time": key_time}
-            else:
-                # 没有设置限制
-                if _csonfig["usage_limit"] < 2:
-                    return {"status": False, "use": GET.dict(), "time": key_time}
-
-            if GET.total_usage < _csonfig["per_user_limit"]:
-                return {"status": False, "use": GET.dict(), "time": key_time}
-            else:
-                # 没有设置限制
-                if _csonfig["per_user_limit"] < 2:
-                    return {"status": False, "use": GET.dict(), "time": key_time}
-        else:
-            GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
-            return {"status": False, "use": GET.dict(), "time": key_time}
-        return {"status": True, "use": GET.dict(), "time": key_time}
-
-    def renewUsage(self, usage: int):
-        key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
-        GET = self.__get_usage()
-        if not GET:
-            GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
-        GET.total_usage = GET.total_usage + usage
-        if GET.now == key_time:
-            GET.usage = GET.usage + usage
-        else:
-            GET.now = key_time
-            GET.usage = 0
-        self.__Data.setKey(f"{self.__uid}_usage",
-                           GET.dict())
-        # double req in 3 seconds
-        return GET
-
-
-class Utils(object):
-    @staticmethod
-    def forget_me(user_id, group_id):
-        from openai_async.utils.data import MsgFlow
-        _cid = DefaultData.composing_uid(user_id=user_id, chat_id=group_id)
-        return MsgFlow(uid=_cid).forget()
-
-    @staticmethod
-    def extract_arg(arg):
-        return arg.split()[1:]
-
-    @staticmethod
-    def Humanization(strs):
-        return strs.lstrip('？?!！：。')
-
-    @staticmethod
-    def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None):
-        if usercold_time is None:
-            usercold_time = _csonfig["usercold_time"]
-        if groupcold_time is None:
-            groupcold_time = _csonfig["groupcold_time"]
-        if DataUtils.getKey(f"flood_user_{user}"):
-            # double req in 3 seconds
-            return True
-        else:
-            if _csonfig["usercold_time"] > 1:
-                DataUtils.setKey(f"flood_user_{user}", "FAST", exN=usercold_time)
-        # User
-        if DataUtils.getKey(f"flood_group_{group}"):
-            # double req in 3 seconds
-            return True
-        else:
-            if _csonfig["groupcold_time"] > 1:
-                DataUtils.setKey(f"flood_group_{group}", "FAST", exN=groupcold_time)
-        return False
-
-    @staticmethod
-    def checkMsg(msg_uid):
-        _Group_Msg = MsgsRecordUtils.getKey(msg_uid)
-        # print(Group_Msg.get(str(msg_uid)))
-        return _Group_Msg
-
-    @staticmethod
-    def trackMsg(msg_uid, user_id):
-        return MsgsRecordUtils.setKey(msg_uid, str(user_id), exN=86400)
-
-    @staticmethod
-    def removeList(key, command):
-        info = []
-        for group in Utils.extract_arg(command):
-            groupId = "".join(list(filter(str.isdigit, group)))
-            if int(groupId) in _csonfig[key]:
-                _csonfig[key].remove(str(groupId))
-                info.append(f'{key} Removed {groupId}')
-                logger.info(f"SETTING:{key} Removed {group}")
-        if isinstance(_csonfig[key], list):
-            _csonfig[key] = list(set(_csonfig[key]))
-        save_csonfig()
-        _info = '\n'.join(info)
-        return f"删除了\n{_info}"
-
-    @staticmethod
-    def addList(key, command):
-        info = []
-        for group in Utils.extract_arg(command):
-            groupId = "".join(list(filter(str.isdigit, group)))
-            _csonfig[key].append(str(groupId))
-            info.append(f'{key} Added {groupId}')
-            logger.info(f"SETTING:{key} Added {group}")
-        if isinstance(_csonfig[key], list):
-            _csonfig[key] = list(set(_csonfig[key]))
-        save_csonfig()
-        _info = '\n'.join(info)
-        return f"加入了\n{_info}"
-
-
-class GroupChat(object):
-    @staticmethod
-    async def load_group_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
-                                  userlimit: int = None, method: str = "chat"):
+        load_csonfig()
+        # 载入全局变量
         if not key:
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
@@ -326,6 +181,13 @@ class GroupChat(object):
 
 
 async def WhiteUserCheck(bot, message, WHITE):
+    """
+
+    :param bot: 机器人对象
+    :param message: 消息流
+    :param WHITE: 白名单提示
+    :return:
+    """
     if str(abs(message.chat.id)) in _csonfig["blockUser"]:
         await bot.send_message(message.chat.id,
                                f"You are blocked!...\n\n{WHITE}")
@@ -364,12 +226,6 @@ async def WhiteGroupCheck(bot, message, WHITE):
     return False
 
 
-async def Forget(bot, message, config):
-    from openai_async.utils.data import MsgFlow
-    _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
-    return MsgFlow(uid=_cid).forget()
-
-
 async def private_Chat(bot, message, config):
     load_csonfig()
     # 处理初始化
@@ -389,9 +245,9 @@ async def private_Chat(bot, message, config):
         return
     try:
         if len(_prompt) > 1:
-            _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
-                                                       key=Api_keys.get_key()["OPENAI_API_KEY"],
-                                                       prompt=_prompt)
+            _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
+                                             key=Api_keys.get_key()["OPENAI_API_KEY"],
+                                             prompt=_prompt)
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
@@ -430,11 +286,11 @@ async def Text(bot, message, config, reset: bool = False):
     if await WhiteGroupCheck(bot, message, config.WHITE):
         return
     try:
-        _req = await GroupChat.load_group_response(user=message.from_user.id, group=message.chat.id,
-                                                   key=Api_keys.get_key()["OPENAI_API_KEY"],
-                                                   prompt=_prompt,
-                                                   method=types
-                                                   )
+        _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
+                                         key=Api_keys.get_key()["OPENAI_API_KEY"],
+                                         prompt=_prompt,
+                                         method=types
+                                         )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
@@ -443,6 +299,7 @@ async def Text(bot, message, config, reset: bool = False):
 
 
 async def Friends(bot, message, config):
+    load_csonfig()
     command = message.text
     if command.startswith("/chat") or not command.startswith("/"):
         await private_Chat(bot, message, config)
