@@ -2,3 +2,6 @@ jiagu
 httpx
 redis
 nltk
+wordcloud
+PIL
+numpy

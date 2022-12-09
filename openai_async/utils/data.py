@@ -28,7 +28,7 @@ class MsgFlow(object):
         """
         self.uid = str(uid)
         self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_")
-        self.memory: int = 40
+        self.memory: int = 50
 
     @staticmethod
     def composing_uid(user_id, chat_id):

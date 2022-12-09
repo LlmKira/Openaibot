@@ -8,12 +8,11 @@ import pathlib
 import random
 import time
 from typing import Union
-
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
-from utils.Chat import Utils, Usage, rqParser
+from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys
 from utils.Detect import DFA, Censor
 
@@ -82,7 +81,7 @@ class Reply(object):
     async def load_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
                             userlimit: int = None, method: str = "chat"):
         """
-
+        发起请求
         :param user:
         :param group:
         :param key:
@@ -99,7 +98,6 @@ class Reply(object):
         # 长度限定
         if _csonfig["input_limit"] < len(str(prompt)) / 4:
             return "TOO LONG"
-
         # 内容审计
         if ContentDfa.exists(str(prompt)):
             _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "我不好说 ", "害怕", "这是理所当然的。",
@@ -111,13 +109,11 @@ class Reply(object):
                        "现在不是说话的时候。", "我没有什么可说的。", "我不喜欢说话。",
                        "我不想接受问题。", "我不喜欢被问问题。", "我觉得这个问题并不重要。", "我不想谈论这个话题。",
                        "我不想对这个问题发表意见。"]
-            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --DFA:True"
+            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --"
             return _info
-
-            # 洪水防御攻击
+        # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
-
         # 用量检测
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
@@ -150,9 +146,11 @@ class Reply(object):
                                         conversation_id=_cid,
                                         call_func=Api_keys.pop_api_key
                                         )
+                _head = Header(uid=user).get()
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
-                                                            max_tokens=int(_csonfig["token_limit"])
+                                                            max_tokens=int(_csonfig["token_limit"]),
+                                                            role=_head
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -162,25 +160,22 @@ class Reply(object):
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
             _time = int(time.time() * 1000)
-            logger.info(f"RUN:{user}:{group}--time: {_time} --prompt: {prompt} --req: {_deal} ")
+            logger.info(f"RUN:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
             _deal = f"Api Outline or too long prompt \n {prompt}"
-
         # 更新额度
         _AnalysisUsage = _UsageManger.renewUsage(usage=_usage)
-
         # 统计
         DefaultData().setAnalysis(usage={f"{user}": _AnalysisUsage.total_usage})
         _deal = ContentDfa.filter_all(_deal)
-
         # 人性化处理
         _deal = Utils.Humanization(_deal)
         return _deal
 
 
-async def WhiteUserCheck(bot, message, WHITE):
+async def WhiteUserCheck(bot, message, WHITE: str = ""):
     """
 
     :param bot: 机器人对象
@@ -188,12 +183,13 @@ async def WhiteUserCheck(bot, message, WHITE):
     :param WHITE: 白名单提示
     :return:
     """
-    if str(abs(message.chat.id)) in _csonfig["blockUser"]:
+    if UserManger(message.from_user.id).read("block"):
         await bot.send_message(message.chat.id,
                                f"You are blocked!...\n\n{WHITE}")
-        return True
+        return
     if _csonfig.get("whiteUserSwitch"):
-        if not str(abs(message.from_user.id)) in _csonfig.get("whiteUser"):
+        # 没有在白名单里！
+        if not UserManger(message.from_user.id).read("white"):
             try:
                 await bot.reply_to(message, f"{message.from_user.id}:Check the settings to find that you is not "
                                             f"whitelisted!...{WHITE}")
@@ -208,11 +204,12 @@ async def WhiteUserCheck(bot, message, WHITE):
 
 
 async def WhiteGroupCheck(bot, message, WHITE):
-    if str(abs(message.chat.id)) in _csonfig["blockGroup"]:
+    if GroupManger(message.chat.id).read("block"):
         await bot.reply_to(message, f"Group{message.chat.id} is blocked!...\n\n{WHITE}")
         return True
     if _csonfig.get("whiteGroupSwitch"):
-        if not str(abs(message.chat.id)) in _csonfig.get("whiteGroup"):
+        # 没有在白名单里！
+        if not UserManger(message.chat.id).read("white"):
             try:
                 await bot.reply_to(message, f"Group {message.chat.id} is not whitelisted!...\n\n{WHITE}")
             except Exception as e:
@@ -224,34 +221,6 @@ async def WhiteGroupCheck(bot, message, WHITE):
         if _csonfig.get("whiteUserSwitch") is None:
             return True
     return False
-
-
-async def private_Chat(bot, message, config):
-    load_csonfig()
-    # 处理初始化
-    _prompt = message.text
-    if message.text.startswith("/chat"):
-        await Forget(bot, message, config)
-        _prompt_r = message.text.split(" ", 1)
-        if len(_prompt_r) < 2:
-            return
-        _prompt = _prompt_r[1]
-    # 处理开关
-    if not _csonfig.get("statu"):
-        await bot.reply_to(message, "BOT:Under Maintenance")
-        return
-    # 白名单检查
-    if await WhiteUserCheck(bot, message, config.WHITE):
-        return
-    try:
-        if len(_prompt) > 1:
-            _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
-                                             key=Api_keys.get_key()["OPENAI_API_KEY"],
-                                             prompt=_prompt)
-            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
-    except Exception as e:
-        logger.error(e)
-        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
 
 
 async def Text(bot, message, config, reset: bool = False):
@@ -272,13 +241,24 @@ async def Text(bot, message, config, reset: bool = False):
             return
         _prompt = _prompt_r[1]
         types = "write"
+    if message.text.startswith("/remind"):
+        _remind_r = message.text.split(" ", 1)
+        if len(_remind_r) < 2:
+            return
+        _remind = _remind_r[1]
+        _remind = ContentDfa.filter_all(_remind)
+        Header(uid=message.from_user.id).set(_remind)
+        return await bot.reply_to(message, f"设定完毕:{_remind}")
+
     # 处理是否忘记
     if reset:
         await Forget(bot, message, config)
     else:
         # 加判定上文是否为此人的消息
         if not str(Utils.checkMsg(f"{message.chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
+            # 不是，那就傲娇点
             return
+    # 启动状态
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
@@ -298,9 +278,46 @@ async def Text(bot, message, config, reset: bool = False):
         await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
 
 
+async def private_Chat(bot, message, config):
+    load_csonfig()
+    # 处理初始化
+    _prompt = message.text
+    if message.text.startswith("/chat"):
+        await Forget(bot, message, config)
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
+            return
+        _prompt = _prompt_r[1]
+    # 处理机器人开关
+    if not _csonfig.get("statu"):
+        await bot.reply_to(message, "BOT:Under Maintenance")
+        return
+    # 白名单用户检查
+    if await WhiteUserCheck(bot, message, config.WHITE):
+        return
+    try:
+        if len(_prompt) > 1:
+            _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
+                                             key=Api_keys.get_key()["OPENAI_API_KEY"],
+                                             prompt=_prompt)
+            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+    except Exception as e:
+        logger.error(e)
+        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
+
+
 async def Friends(bot, message, config):
     load_csonfig()
     command = message.text
+    if command.startswith("/remind"):
+        _remind_r = message.text.split(" ", 1)
+        if len(_remind_r) < 2:
+            return
+        _remind = _remind_r[1]
+        _remind = ContentDfa.filter_all(_remind)
+        Header(uid=message.from_user.id).set(_remind)
+        await bot.reply_to(message, f"设定完毕:{_remind}")
+    # 启动函数
     if command.startswith("/chat") or not command.startswith("/"):
         await private_Chat(bot, message, config)
 
@@ -312,6 +329,7 @@ async def Master(bot, message, config):
             command = message.text
             # SET
             if command.startswith("/set_user_cold"):
+                # 用户冷静时间
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -320,33 +338,8 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
-            if command.startswith("/set_user_hour_limit"):
-                _len = Utils.extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["per_user_limit"] = int(_len_)
-                    await bot.reply_to(message, f"set_hour_limit:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset per_user_limit to{_len_}")
-
-            if command.startswith("/set_user_usage_limit"):
-                _len = Utils.extract_arg(command)[0]
-                _len_ = "".join(list(filter(str.isdigit, _len)))
-                if _len_:
-                    _csonfig["usage_limit"] = int(_len_)
-                    await bot.reply_to(message, f"usage_limit:{_len_}")
-                    save_csonfig()
-                    logger.info(f"SETTING:reset usage_limit to{_len_}")
-            if command.startswith("/reset_user_usage_limit"):
-                _len = Utils.extract_arg(command)
-                for i in _len:
-                    _len_ = "".join(list(filter(str.isdigit, i)))
-                    if _len_:
-                        Usage(uid=_len_).resetTotalUsage()
-                        logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
-                await bot.reply_to(message, f"usage_limit:{_len}")
-
             if command.startswith("/set_group_cold"):
+                # 群组冷静时间
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -355,7 +348,49 @@ async def Master(bot, message, config):
                     save_csonfig()
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
+            if command.startswith("/set_per_user_limit"):
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["per_user_limit"] = int(_len_)
+                    await bot.reply_to(message, f"set_hour_limit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset per_user_limit to{_len_}")
+
+            if command.startswith("/set_per_hour_limit"):
+                # 设定用户小时用量
+                _len = Utils.extract_arg(command)[0]
+                _len_ = "".join(list(filter(str.isdigit, _len)))
+                if _len_:
+                    _csonfig["hour_limit"] = int(_len_)
+                    await bot.reply_to(message, f"hour_limit:{_len_}")
+                    save_csonfig()
+                    logger.info(f"SETTING:reset hour_limit to{_len_}")
+
+            if command.startswith("/promote_user_limit"):
+                # 设定用户小时用量
+                _len = Utils.extract_arg(command)
+                if len(_len) != 2:
+                    return
+                __user_id = int("".join(list(filter(str.isdigit, _len[0]))))
+                __limit = int("".join(list(filter(str.isdigit, _len[1]))))
+                if __user_id > 0 and __limit > 0:
+                    UserManger(__user_id).save({"usage": __limit})
+                    await bot.reply_to(message, f"user_limit:{__limit}")
+                    logger.info(f"SETTING:promote user_limit to{__limit}")
+
+            if command.startswith("/reset_user_usage"):
+                # 重置用户的用量总数据
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        Usage(uid=_len_).resetTotalUsage()
+                        logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
+                        await bot.reply_to(message, f"hour_limit:{_len}")
+
             if command.startswith("/set_token_limit"):
+                # 返回多少？
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
@@ -365,15 +400,17 @@ async def Master(bot, message, config):
                     logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
             if command.startswith("/set_input_limit"):
+                # 输入字符？
                 _len = Utils.extract_arg(command)[0]
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["input_limit"] = int(_len_)
-                    await bot.reply_to(message, f"inputlimit:{_len_}")
+                    await bot.reply_to(message, f"input limit:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset input limit to{_len_}")
 
             if command == "/config":
+                # 配置文件
                 save_csonfig()
                 path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
                 if pathlib.Path(path).exists():
@@ -383,46 +420,88 @@ async def Master(bot, message, config):
                     await bot.reply_to(message, "没有找到配置文件")
 
             if "/add_block_group" in command:
-                _key = "blockGroup"
-                _info = Utils.addList(_key, command)
-                await bot.reply_to(message, _info)
+                # 重置用户的用量总数据
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:add block group {_len_}"
+                        GroupManger(int(_len_)).save({"block": True})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             if "/del_block_group" in command:
-                _key = "blockGroup"
-                _info = Utils.removeList(_key, command)
-                await bot.reply_to(message, _info)
+                # 重置用户的用量总数据
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:del block group {_len_}"
+                        GroupManger(int(_len_)).save({"block": False})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             if "/add_block_user" in command:
-                _key = "blockUser"
-                _info = Utils.addList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:add_block_userp {_len_}"
+                        UserManger(int(_len_)).save({"block": True})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             if "/del_block_user" in command:
-                _key = "blockUser"
-                _info = Utils.removeList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:del_block_user {_len_}"
+                        UserManger(int(_len_)).save({"block": False})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             # whiteGroup
             if "/add_white_group" in command:
-                _key = "whiteGroup"
-                _info = Utils.addList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:add_white_group {_len_}"
+                        GroupManger(int(_len_)).save({"white": True})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             if "/del_white_group" in command:
-                _key = "whiteGroup"
-                _info = Utils.removeList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:del_white_group {_len_}"
+                        GroupManger(int(_len_)).save({"white": False})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             # whiteUser
             if "/add_white_user" in command:
-                _key = "whiteUser"
-                _info = Utils.addList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:add_white_user {_len_}"
+                        UserManger(int(_len_)).save({"white": True})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             if "/del_white_user" in command:
-                _key = "whiteUser"
-                _info = Utils.removeList(_key, command)
-                await bot.reply_to(message, _info)
+                _len = Utils.extract_arg(command)
+                for i in _len:
+                    _len_ = "".join(list(filter(str.isdigit, i)))
+                    if _len_:
+                        _ev = f"SETTING:del_white_user {_len_}"
+                        UserManger(int(_len_)).save({"white": False})
+                        await bot.reply_to(message, _ev)
+                        logger.info(_ev)
 
             # UPDATE
             if command == "/update_detect":
