@@ -53,6 +53,8 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 ## 初始化
 
+内存大于 500MB ，因为用到了 NLP 技术上下文。
+
 * 拉取/更新程序
 
 安装脚本会自动备份恢复配置，在根目录运行(不要在程序目录内)
