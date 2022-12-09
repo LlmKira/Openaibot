@@ -22,8 +22,8 @@ from sumy.utils import get_stop_words
 
 # 基于 Completion 上层
 from openai_async import Completion
-from text_analysis_tools.api.keywords.tfidf import TfidfKeywords
-from text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
+from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
+from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from ..utils.data import MsgFlow
 
 
