@@ -185,6 +185,7 @@ kill -9
 | `/chat`                            | 对话                   | 每次/chat都会重新开始，遗忘记录。群组中 24 h 后不能索引回复，私聊则永久。 |
 | `/write`                           | 续写                   | 续写.                                        |
 | `/see_api_key`                     | 现在几个 Api key         |                                            |
+| `/remind`                          | 人设                   | 固定的提示词.                                    |
 | `/del_api_key`       +key          | 删除 Api key           | 可跟多参数，空格分割                                 |
 | `/add_api_key`           +key      | 增加 Api key           | 可跟多参数，空格分割                                 |
 | `/set_per_user_limit`              | 用户分配总额度              | 1 为无限制            按用户计量                    |
@@ -197,6 +198,7 @@ kill -9
 ```markdown
 chat - 交谈
 write - 补全
+remind - 人设
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
