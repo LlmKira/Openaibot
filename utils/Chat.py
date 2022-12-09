@@ -6,14 +6,12 @@
 import json
 import time
 from typing import Union
-
-from utils.Data import DefaultData, DataWorker, DictUpdate
-from pydantic import BaseModel
+from utils.Data import DefaultData, DataWorker, DictUpdate, Usage_Data
 from loguru import logger
 
-MsgsRecordUtils = DataWorker(prefix="Open_Ai_bot_msg_record")
 # 工具数据类型
 DataUtils = DataWorker(prefix="Open_Ai_bot_")
+MsgsRecordUtils = DataWorker(prefix="Open_Ai_bot_msg_record")
 
 global _csonfig
 
@@ -32,6 +30,80 @@ def load_csonfig():
 def save_csonfig():
     with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+
+
+class UserManger(object):
+    def __init__(self, uid: int):
+        """
+        """
+        self._uid = str(abs(uid))
+        load_csonfig()
+        user = _csonfig["User"].get(self._uid)
+        if not user:
+            user = {}
+        self._renew(user)
+
+    def _renew(self, item):
+        """
+        UpDTA进去
+        :param item:
+        :return:
+        """
+        load_csonfig()
+        # 更新默认设置的必要结构
+        _item = item
+        _reply = DefaultData.defaultUser()
+        DictUpdate.dict_update(_reply, _item)
+        _csonfig["User"][self._uid] = _reply
+        save_csonfig()
+
+    def save(self, setting: dict = None):
+        if not setting:
+            return None
+        _reply = DefaultData.defaultUser()
+        DictUpdate.dict_update(_reply, setting)
+        return self._renew(_reply)
+
+    def read(self, key) -> Union[any]:
+        _item = _csonfig["User"].get(self._uid)
+        return _item.get(key)
+
+
+class GroupManger(object):
+    def __init__(self, uid: int):
+        """
+        """
+        self._uid = str(abs(uid))
+        load_csonfig()
+        user = _csonfig["Group"].get(self._uid)
+        if not user:
+            user = {}
+        self._renew(user)
+
+    def _renew(self, item):
+        """
+        UpDTA进去
+        :param item:
+        :return:
+        """
+        load_csonfig()
+        # 更新默认设置的必要结构
+        _item = item
+        _reply = DefaultData.defaultGroup()
+        DictUpdate.dict_update(_reply, _item)
+        _csonfig["Group"][self._uid] = _reply
+        save_csonfig()
+
+    def save(self, setting: dict = None):
+        if not setting:
+            return None
+        _reply = DefaultData.defaultGroup()
+        DictUpdate.dict_update(_reply, setting)
+        return self._renew(_reply)
+
+    def read(self, key) -> Union[any]:
+        _item = _csonfig["Group"].get(self._uid)
+        return _item.get(key)
 
 
 class Utils(object):
@@ -134,13 +206,6 @@ class rqParser(object):
         return usage
 
 
-class Usage_Data(BaseModel):
-    user: str
-    now: int
-    usage: int
-    total_usage: int
-
-
 class Usage(object):
     def __init__(self, uid: Union[int, str]):
         self.__uid = str(uid)
@@ -174,24 +239,30 @@ class Usage(object):
         load_csonfig()
         key_time = int(time.strftime("%Y%m%d%H", time.localtime()))
         GET = self.__get_usage()
-        if GET:
-            if GET.usage < _csonfig["usage_limit"]:
-                return {"status": False, "use": GET.dict(), "time": key_time}
-            else:
-                # 没有设置限制
-                if _csonfig["usage_limit"] < 2:
-                    return {"status": False, "use": GET.dict(), "time": key_time}
-
-            if GET.total_usage < _csonfig["per_user_limit"]:
-                return {"status": False, "use": GET.dict(), "time": key_time}
-            else:
-                # 没有设置限制
-                if _csonfig["per_user_limit"] < 2:
-                    return {"status": False, "use": GET.dict(), "time": key_time}
-        else:
+        # 居然没有记录
+        if not GET:
             GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
             return {"status": False, "use": GET.dict(), "time": key_time}
-        return {"status": True, "use": GET.dict(), "time": key_time}
+        # 按照异常返回的逻辑
+        # 小时计量
+        if _csonfig["hour_limit"] > 1:
+            # 设定了，又超额了
+            if GET.usage > _csonfig["hour_limit"]:
+                return {"status": True, "use": GET.dict(), "time": key_time}
+        # 用户额度计量---特殊额度---还有通用额度
+        USER_ = _csonfig["per_user_limit"]
+        _LIMIT = UserManger(int(self.__uid)).read("usage")
+        if not isinstance(_LIMIT, int):
+            _LIMIT = 10000
+        if _LIMIT != 1:
+            USER_ = _LIMIT
+        # 没有设置限制
+        if USER_ == 1 and _LIMIT == 1:
+            return {"status": False, "use": GET.dict(), "time": key_time}
+        # 覆盖完毕
+        if GET.total_usage > USER_:
+            return {"status": True, "use": GET.dict(), "time": key_time}
+        return {"status": False, "use": GET.dict(), "time": key_time}
 
     def renewUsage(self, usage: int):
         key_time = int(time.strftime("%Y%m%d%H", time.localtime()))

@@ -182,9 +182,9 @@ kill -9
 | `/see_api_key`                   | 现在几个 Api key         |                                            |
 | `/del_api_key`       +key        | 删除 Api key           | 可跟多参数，空格分割                                 |
 | `/add_api_key`           +key    | 增加 Api key           | 可跟多参数，空格分割                                 |
-| `/set_user_usage_limit`          | 用户分配总额度              | 1 为无限制            按用户计量                    |
+| `/set_user_hour_limit`          | 用户分配总额度              | 1 为无限制            按用户计量                    |
 | `/set_hour_limit`                | 用户小时可用量              | 1 为无限制              按用户计量                  |
-| `/reset_user_usage_limit`+userID | 重置用户分配额度             | 按用户计量          可跟多参数，空格分割                  |
+| `/reset_user_hour_limit`+userID | 重置用户分配额度             | 按用户计量          可跟多参数，空格分割                  |
 
 ### 样表
 
@@ -199,8 +199,8 @@ see_api_key - 现在几个 Api key
 del_api_key - 删除 Api key
 add_api_key - 增加 Api key
 config - 获取/备份热配置文件
-set_user_usage_limit - 设置用户总额限度
-reset_user_usage_limit - 重置用户额度
+set_user_hour_limit - 设置用户总额限度
+reset_user_hour_limit - 重置用户额度
 set_hour_limit - 设置用户小时限额
 add_block_group - 禁止群组
 del_block_group - 解禁群组
@@ -224,6 +224,8 @@ close - 关闭机器人
 ### 统计
 
 ``analysis.json`` 是频率统计，60s 内的请求次数。
+
+还有 total usage ，这个不包含所有用量数据，只是从 redis 拉取下来了而已
 
 ### Config.json
 

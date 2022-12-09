@@ -6,13 +6,12 @@
 import ast
 import json
 import pathlib
-
 # 缓冲
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from utils.Base import ReadConfig
 from loguru import logger
+from pydantic import BaseModel
 
 redis_installed = True
 
@@ -20,6 +19,13 @@ try:
     from redis import Redis, ConnectionPool
 except Exception:
     redis_installed = False
+
+
+class Usage_Data(BaseModel):
+    user: str
+    now: int
+    usage: int
+    total_usage: int
 
 
 class Api_keys(object):
@@ -110,17 +116,14 @@ class DefaultData(object):
             "statu": True,
             "input_limit": 250,
             "token_limit": 300,
-            "usage_limit": 15000,
+            "hour_limit": 15000,
             "per_user_limit": 1,
             "usercold_time": 10,
             "groupcold_time": 1,
+            "User": {},
+            "Group": {},
             "whiteUserSwitch": True,
             "whiteGroupSwitch": True,
-            "blockGroup": [],
-            "blockUser": [],
-            "whiteGroup": [],
-            "whiteUser": [
-            ],
             "Model": {
             }
         }
@@ -150,6 +153,21 @@ class DefaultData(object):
         DictUpdate.dict_update(_Analysis, kwargs)
         with open("./analysis.json", "w", encoding="utf8") as f:
             json.dump(_Analysis, f, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def defaultUser():
+        return {"white": False,
+                "block": False,
+                "usage": 1
+                }
+
+    # 单独配额，如果这里不是 1,优先按这这分配额度
+    @staticmethod
+    def defaultGroup():
+        return {
+            "white": False,
+            "block": False
+        }
 
 
 class ExpiringDict(OrderedDict):

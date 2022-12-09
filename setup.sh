@@ -93,40 +93,37 @@ run() {
       mkdir "$config"
     fi
 
-
     # 备份配置文件
     if [ -f "${dir}/config.json" ]; then
       echox skyBlue "移动配置文件：backup ${dir}/config.json to ${config} ...."
       cp -f "${dir}/config.json" "$config"
+    fi
 
-    # 备份配置文件
+    # 统计数据
     if [ -f "${dir}/analysis.json" ]; then
-      echox skyBlue "移动配置文件：backup ${dir}/analysis.json to ${dataBack} ...."
+      echox skyBlue "备份统计数据：backup ${dir}/analysis.json to ${dataBack} ...."
       cp -f "${dir}/analysis.json" "$dataBack"
     fi
-    fi
-
-
 
     # 备份运行数据
     if [ -d "$data" ]; then
       echox skyBlue "备份运行数据：Copy run data to ${dataBack}...."
       cp -rf "$data" "$dataBack" #文件夹目录 文件夹上级
     fi
+
     # 备份配置数据
     if [ -d "$config" ]; then
       echox skyBlue "备份运行数据：Copy Config to ${dataBack}...."
       cp -rf "$config" "$dataBack" #文件夹目录 文件夹上级
     fi
-    read -r -p "请问，是否使用可能存在的上一次配置？Do you want to update your app with probably exist old data？${dir} y/n?[default=y]" input
+    read -r -p "HELLO!请问，是否使用可能存在的上一次配置？Update your app with probably EXIST old data？${dir} y/n?[default=y]" input
     if [ -z "${input}" ]; then
       input=y
     fi
 
-
     case $input in
     [nN][oO] | [nN])
-      echox red "We will reinstall a pure app...."
+      echox red "Reinstalling A Pure APP....BUT IF YOU WANT TO RECOVER OLD DATA,PLEASE CHECK /tmp DIR"
       rm -rf "${dir}"
       Gitpull
       dependenceInit
@@ -139,8 +136,8 @@ run() {
       #  cp -f "${dataBack}/Captcha.toml" "$dir" #文件夹目录 文件夹上级
       # fi
       if [ -f "${dataBack}/analysis.json" ]; then
-      echox green "恢复配置文件：Reuse the analysis.json from ${dataBack}...."
-      cp -f "${dataBack}/analysis.json" "$dir" #文件夹目录 文件夹上级
+        echox green "恢复配置文件：Reuse the analysis.json from ${dataBack}...."
+        cp -f "${dataBack}/analysis.json" "$dir" #文件夹目录 文件夹上级
       fi
       if [ -d "${dataBack}/Config" ]; then
         echox green "恢复配置库：Reuse the Config from ${dataBack}...."
