@@ -210,7 +210,7 @@ async def WhiteGroupCheck(bot, message, WHITE):
         return True
     if _csonfig.get("whiteGroupSwitch"):
         # 没有在白名单里！
-        if not UserManger(message.chat.id).read("white"):
+        if not GroupManger(message.chat.id).read("white"):
             try:
                 await bot.reply_to(message, f"Group {message.chat.id} is not whitelisted!...\n\n{WHITE}")
             except Exception as e:
