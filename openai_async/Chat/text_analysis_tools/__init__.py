@@ -7,8 +7,8 @@
 # KeyPhraseExtraction
 # TfidfKeywords
 
-from .api.keywords.tfidf import TfidfKeywords
-from .api.keywords.textrank import TextRankKeywords
-from .api.keyphrase.keyphrase import KeyPhraseExtraction
-from .api.summarization.tfidf_summarization import TfidfSummarization
-from .api.summarization.textrank_summarization import TextRankSummarization
+from api.keywords.tfidf import TfidfKeywords
+from api.keywords.textrank import TextRankKeywords
+from api.keyphrase.keyphrase import KeyPhraseExtraction
+from api.summarization.tfidf_summarization import TfidfSummarization
+from api.summarization.textrank_summarization import TextRankSummarization
