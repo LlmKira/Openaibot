@@ -18,13 +18,13 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer as Summarizer
 from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
-
-nltk.download('punkt')
-nltk.download('stopwords')
-
 # 基于 Completion 上层
 from openai_async import Completion
 from ..utils.data import MsgFlow
+
+
+# nltk.download('punkt')
+# nltk.download('stopwords')
 
 
 class Chatbot(object):
