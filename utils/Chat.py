@@ -134,6 +134,19 @@ class Utils(object):
         return arg.split()[1:]
 
     @staticmethod
+    def tokenizer(s: str) -> float:
+        """
+        谨慎的计算器，会预留 5 token
+        :param s:
+        :return:
+        """
+        # 统计中文字符数量
+        num_chinese = len([c for c in s if ord(c) > 127])
+        # 统计非中文字符数量
+        num_non_chinese = len([c for c in s if ord(c) <= 127])
+        return int(num_chinese * 2 + num_non_chinese * 0.25) + 5
+
+    @staticmethod
     def Humanization(strs):
         return strs.lstrip('？?!！：。')
 
