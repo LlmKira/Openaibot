@@ -9,8 +9,6 @@ import random
 import time
 from typing import Union
 from loguru import logger
-
-from openai_async.Chat import Talk
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
@@ -247,7 +245,7 @@ async def Text(bot, message, config, reset: bool = False):
         if len(_remind_r) < 2:
             return
         _remind = _remind_r[1]
-        if Talk.tokenizer(_remind) > 333:
+        if Utils.tokenizer(_remind) > 333:
             return bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         Header(uid=message.from_user.id).set(_remind)
@@ -317,7 +315,7 @@ async def Friends(bot, message, config):
         if len(_remind_r) < 2:
             return
         _remind = _remind_r[1]
-        if Talk.tokenizer(_remind) > 333:
+        if Utils.tokenizer(_remind) > 333:
             return bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         Header(uid=message.from_user.id).set(_remind)
