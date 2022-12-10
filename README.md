@@ -238,6 +238,7 @@ open - 开启机器人
 close - 关闭机器人
 disable_change_head - 允许设定头
 enable_change_head - 禁止设定头
+help - 帮助
 ```
 
 ### 禁止设置head

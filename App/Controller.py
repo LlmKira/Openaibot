@@ -54,16 +54,18 @@ class BotRunner(object):
             print("USE PROXY！")
 
         # 私聊起动机
-        @bot.message_handler(commands=["start", 'about'], chat_types=['private'])
+        @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
         async def handle_command(message):
             if "/start" in message.text:
                 await Event.Start(bot, message, _config)
             elif "/about" in message.text:
                 await Event.About(bot, message, _config)
+            elif "/help" in message.text:
+                await Event.Help(bot, message, _config)
 
         # 群聊
-        @bot.message_handler(chat_types=['supergroup', 'group'])
-        async def group_msg_no_admin(message):
+        @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
+        async def group_msg(message):
             global me_id
             if message.text.startswith("/chat") or message.text.startswith("/write") or message.text.startswith(
                     "/remind"):
@@ -74,6 +76,8 @@ class BotRunner(object):
                     if message.reply_to_message.from_user.id == me_id:
                         await Event.Text(bot, message, _config, reset=False)
                         request_timestamps.append(time.time())
+            if message.text == "/help":
+                await Event.Help(bot, message, _config)
             return
 
         # 私聊
