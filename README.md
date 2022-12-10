@@ -4,7 +4,7 @@ OpenAI Chat Telegram Bot
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-在 Telegram 上使用 OpenAi 写作. Python > 3.7。
+在 Telegram 上使用 OpenAi 交互. Python > 3.7。
 
 本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，chatGPT **功能**的 **Python 实现** 由本机器人自实现。
 
@@ -22,16 +22,20 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 * 聊天(chat) chatGpt 自实现 + NLP增强
 * 续写(write)  独立推测，续写
-* 多用户
+* 设定固定头人设
+* 多主人管理
 * 多Api key 负载，超额弹出。
 * chatGPT api 版本实现，不逆向 preview 的 api
-* 支持私聊无感回复
+* 支持私聊
+* 支持群聊
 * 支持速率限制
+* 支持用量管理
 * 支持白名单系统
 * 支持黑名单系统
 * 支持内容过滤
 * (20221205) 依赖库不支持异步，大量请求会阻塞,替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
+* 动态裁剪上下文
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -53,7 +57,7 @@ This is not an official OpenAI product. This is a personal project and is not af
 
 ## 初始化
 
-内存大于 500MB ，因为用到了 NLP 技术上下文。
+服务器内存大于 500MB ，因为用到了 NLP 技术支持上下文。
 
 * 拉取/更新程序
 
