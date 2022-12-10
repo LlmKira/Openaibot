@@ -21,5 +21,6 @@
     },
     "whiteUserSwitch": true,
     "whiteGroupSwitch": false,
-    "Model": {}
+    "Model": {},
+    "allow_change_head": true
 }

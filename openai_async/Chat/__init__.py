@@ -324,7 +324,7 @@ class Chatbot(object):
         # _chat.extend(Talk().cut_ai_prompt(chat_list[-1]))
         # _chat.extend(Talk().cut_ai_prompt(chat_list[-2]))
         # 弹出chat的最后四条
-        if len(_chat) >= 3:
+        if len(chat_list) > 3:
             _High = [chat_list[-3], chat_list[-2], chat_list[-1]]
         else:
             _High = []
