@@ -339,7 +339,7 @@ class Chatbot(object):
         _pre_chat = []
         for i in range(len(_chat)):
             _item = _chat[i]
-            if Talk.tokenizer(_item) > 200:
+            if Talk.tokenizer(_item) > 240:
                 if Talk.get_language(_item) == "chinese":
                     _sum = Talk.tfidf_summarization(sentence=_item, ratio=0.3)
                     if len(_sum) > 7:
@@ -350,10 +350,13 @@ class Chatbot(object):
                         _pre_chat.append(_cut[0])
                         _pre_chat.append(_cut[1])
                         _pre_chat.append(_cut[2])
+                    elif len(_cut) < 1:
+                        _pre_chat.append(_item)
                     else:
                         _pre_chat.extend(_cut)
             else:
                 _pre_chat.append(_item)
+
         # 累计有效Token，从下向上加入
         _now_token = 0
         _useful = []
@@ -361,13 +364,16 @@ class Chatbot(object):
         for i in reversed(range(len(_pre_chat))):
             _item = _pre_chat[i]
             _key = Talk.tfidf_keywords(prompt)
+            add = False
             for ir in _key:
                 if ir in _item:
-                    _useful.append(_item)
-                    _now_token = _now_token + Talk.tokenizer(_item)
-                    if _now_token > _create_token:
-                        __useful_down = True
-                        break
+                    add = True
+            if add:
+                _useful.append(_item)
+                _now_token = _now_token + Talk.tokenizer(_item)
+                if _now_token > _create_token:
+                    __useful_down = True
+                    break
         # 竟然没凑齐
         _not_useful = []
         if not __useful_down:
@@ -389,71 +395,73 @@ class Chatbot(object):
         _Final.extend(_High)
         return _Final
 
-    async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
-                                character: list = None, head: str = None, role: str = None) -> dict:
-        """
-        异步的，得到对话上下文
-        :param role:
-        :param head: 预设技巧
-        :param max_tokens: 限制返回字符数量
-        :param model: 模型选择
-        :param prompt: 提示词
-        :param character: 性格提示词，列表字符串
-        :return:
-        """
-        # 预设
-        if head is None:
-            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 AI assistant ，请问你有什么问题？"
-        if character is None:
-            character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
-        _character = ",".join(character)
-        # 初始化
-        if role is None:
-            role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
-        _old = self._MsgFlow.read()
-        # 构造内容
-        _head = [f"{role}\n{head}\n"]
-        _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
-        _now = [f"{self._restart_sequence}{prompt}."]
-        # 拼接
-        _prompt_table = _head + _old_list + _now
-        # 截断器
-        _prompt_apple = self.Summer(prompt=prompt, chat_list=_prompt_table,
-                                    extra_token=int(
-                                        len(_prompt_table) + Talk.tokenizer(self._start_sequence) + max_tokens))
-        _header = _prompt_apple.pop(0)
-        _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
-        # 重切割代币
-        _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 余量？
-        if _mk < 0:
-            _mk = 0
-        while Talk.tokenizer(_prompt) > _mk - 10:
-            _prompt = _prompt[1:]
-        if _mk > 0:
-            _prompt = _header + _prompt
-        # loguru.logger.debug(_prompt)
-        response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
-            model=model,
-            prompt=_prompt,
-            temperature=0.9,
-            max_tokens=max_tokens,
-            top_p=1,
-            n=1,
-            frequency_penalty=0,
-            presence_penalty=0.5,
-            user=str(self.get_hash()),
-            stop=["Human:", "AI:"],
-        )
-        self.record_ai(prompt=prompt, response=response)
-        return response
 
-    @staticmethod
-    def str_prompt(prompt: str) -> list:
-        range_list = prompt.split("\n")
-        # 如果当前项不包含 `:`，则将其并入前一项中
-        result = [range_list[i] + range_list[i + 1] if ":" not in range_list[i] else range_list[i] for i in
-                  range(len(range_list))]
-        # 使用列表推导式过滤掉空白项
-        filtered_result = [x for x in result if x != ""]
-        # 输出处理后的结果
-        return filtered_result
+async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
+                            character: list = None, head: str = None, role: str = None) -> dict:
+    """
+    异步的，得到对话上下文
+    :param role:
+    :param head: 预设技巧
+    :param max_tokens: 限制返回字符数量
+    :param model: 模型选择
+    :param prompt: 提示词
+    :param character: 性格提示词，列表字符串
+    :return:
+    """
+    # 预设
+    if head is None:
+        head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 AI assistant ，请问你有什么问题？"
+    if character is None:
+        character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
+    _character = ",".join(character)
+    # 初始化
+    if role is None:
+        role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
+    _old = self._MsgFlow.read()
+    # 构造内容
+    _head = [f"{role}\n{head}\n"]
+    _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
+    _now = [f"{self._restart_sequence}{prompt}."]
+    # 拼接
+    _prompt_table = _head + _old_list + _now
+    # 截断器
+    _prompt_apple = self.Summer(prompt=prompt, chat_list=_prompt_table,
+                                extra_token=int(
+                                    len(_prompt_table) + Talk.tokenizer(self._start_sequence) + max_tokens))
+    _header = _prompt_apple.pop(0)
+    _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
+    # 重切割代币
+    _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 余量？
+    if _mk < 0:
+        _mk = 0
+    while Talk.tokenizer(_prompt) > _mk - 10:
+        _prompt = _prompt[1:]
+    if _mk > 0:
+        _prompt = _header + _prompt
+    # loguru.logger.debug(_prompt)
+    response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
+        model=model,
+        prompt=_prompt,
+        temperature=0.9,
+        max_tokens=max_tokens,
+        top_p=1,
+        n=1,
+        frequency_penalty=0,
+        presence_penalty=0.5,
+        user=str(self.get_hash()),
+        stop=["Human:", "AI:"],
+    )
+    self.record_ai(prompt=prompt, response=response)
+    return response
+
+
+@staticmethod
+def str_prompt(prompt: str) -> list:
+    range_list = prompt.split("\n")
+    # 如果当前项不包含 `:`，则将其并入前一项中
+    result = [range_list[i] + range_list[i + 1] if ":" not in range_list[i] else range_list[i] for i in
+              range(len(range_list))]
+    # 使用列表推导式过滤掉空白项
+    filtered_result = [x for x in result if x != ""]
+    # 输出处理后的结果
+    return filtered_result
