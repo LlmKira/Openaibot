@@ -261,3 +261,7 @@ close - 关闭机器人
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
+## 感谢
+
+- 贡献者
+- [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
