@@ -107,20 +107,61 @@ class Talk(object):
         return listr
 
     @staticmethod
+    def isCode(sentence):
+        code = False
+        _reco = [
+            '("',
+            '")',
+            ").",
+            "()",
+            "!=",
+            "=="
+        ]
+        _t = len(_reco)
+        _r = 0
+        for i in _reco:
+            if i in sentence:
+                _r += 1
+        if _r > _t / 2:
+            code = True
+        rms = [
+            "print_r(",
+            "var_dump(",
+            'NSLog( @',
+            'println(',
+            '.log(',
+            'print(',
+            'printf(',
+            'WriteLine(',
+            '.Println(',
+            '.Write(',
+            'alert(',
+            'echo(',
+        ]
+        for i in rms:
+            if i in sentence:
+                code = True
+        return code
+
+    @staticmethod
     def get_language(sentence: str):
         language = "english"
         # 差缺中文系统
         if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
             language = "chinese"
+        if Talk.isCode(sentence):
+            language = "code"
         return language
 
     def cut_sentence(self, sentence: str) -> list:
         language = self.get_language(sentence)
         if language == "chinese":
             _reply_list = self.cut_chinese_sentence(sentence)
-        else:
+        elif language == "english":
             # from nltk.tokenize import sent_tokenize
             _reply_list = self.english_sentence_cut(sentence)
+        else:
+            _reply_list = [sentence]
         if len(_reply_list) < 1:
             return [sentence]
         return _reply_list
@@ -297,7 +338,6 @@ class Chatbot(object):
                         _pre_chat.extend(_cut)
             else:
                 _pre_chat.append(_item)
-
         # 累计有效Token，从下向上加入
         _now_token = 0
         _useful = []
@@ -323,6 +363,8 @@ class Chatbot(object):
                 if ":" in _pre_chat[i]:
                     ___now = _pre_chat[i].split(":", 1)
                     ___after = _pre_chat[i + 1].split(":", 1)
+                    if len(___after) < 2 or len(___now) < 2:
+                        continue
                     if len(___now[1]) < 3 or len(___after[1]) < 3:
                         continue
                     if ___now[0] != ___after[0]:
