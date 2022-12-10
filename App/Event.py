@@ -246,7 +246,7 @@ async def Text(bot, message, config, reset: bool = False):
             return
         _remind = _remind_r[1]
         if Utils.tokenizer(_remind) > 333:
-            return bot.reply_to(message, f"过长:{_remind}")
+            return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         Header(uid=message.from_user.id).set(_remind)
         return await bot.reply_to(message, f"设定成功:{_remind}")
@@ -316,7 +316,7 @@ async def Friends(bot, message, config):
             return
         _remind = _remind_r[1]
         if Utils.tokenizer(_remind) > 333:
-            return bot.reply_to(message, f"过长:{_remind}")
+            return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         Header(uid=message.from_user.id).set(_remind)
         return await bot.reply_to(message, f"设定成功:{_remind}")

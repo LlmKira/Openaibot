@@ -81,7 +81,8 @@ class BotRunner(object):
         async def handle_private_msg(message):
             if message.from_user.id in _config.master:
                 await Event.Master(bot, message, _config)
-            if message.text.startswith("/chat") or not message.text.startswith("/"):
+            if message.text.startswith("/chat") or not message.text.startswith("/") or message.text.startswith(
+                    "/remind"):
                 await Event.Friends(bot, message, _config)
             request_timestamps.append(time.time())
 
