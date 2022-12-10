@@ -252,11 +252,16 @@ close - 关闭机器人
 
 ### 许可
 
+```markdown
+1. 非商用目的的使用按照仓库附带协议授权。
+2. 商用目的需要贡献所做的改进。
+3. 此项目不是 Openai 的官方项目。
+4. 不对机器人生成的任何内容负责
+```
+
 ```
 This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
 ```
-
-**不对机器人生成的任何内容负责，内容由OpenAi提供**
 
 ### QuickDev
 

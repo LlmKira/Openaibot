@@ -261,6 +261,14 @@ Missing key values are automatically merged and repaired.
 
 The Prompt clipping interface of peripherals provides support for other projects.
 
+### 声明
+
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 不对机器人生成的任何内容负责
+```
+
+
 ### QuickDev
 
 Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
