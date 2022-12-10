@@ -3,5 +3,7 @@ httpx
 redis
 nltk
 wordcloud
-PIL
+Pillow
 numpy
+sumy
+jieba
