@@ -321,14 +321,11 @@ class Chatbot(object):
                     _chat.append(chat_list[i])
         # 切割最近的数据进行高注意力控制
         # if Talk.tokenizer(chat_list[-1])>400:
-        _chat.extend(chat_list[-1])
-        _chat.extend(chat_list[-2])
-        _chat.extend(chat_list[-3])
         # _chat.extend(Talk().cut_ai_prompt(chat_list[-1]))
         # _chat.extend(Talk().cut_ai_prompt(chat_list[-2]))
         # 弹出chat的最后四条
         if len(_chat) >= 3:
-            _High = [_chat.pop(-1), _chat.pop(-1), _chat.pop(-1)]
+            _High = [chat_list[-3], chat_list[-2], chat_list[-1]]
         else:
             _High = []
         # 计算待处理表需要的token
