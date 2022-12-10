@@ -248,13 +248,12 @@ async def Text(bot, message, config, reset: bool = False):
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
         if _csonfig["allow_change_head"]:
-            await bot.reply_to(message, f"设定:{_remind}")
+            await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
         else:
             await bot.reply_to(message, f"禁止设定")
             Header(uid=message.from_user.id).set({})
-        return await bot.reply_to(message, f"设定成功:{_remind}")
-
+        return True
     # 处理是否忘记
     if reset:
         await Forget(bot, message, config)
@@ -323,7 +322,7 @@ async def Friends(bot, message, config):
             return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         if _csonfig["allow_change_head"]:
-            await bot.reply_to(message, f"设定:{_remind}")
+            await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
         else:
             await bot.reply_to(message, f"禁止设定")
@@ -609,3 +608,12 @@ async def Start(bot, message, config):
 
 async def About(bot, message, config):
     await bot.reply_to(message, f"{config.ABOUT}")
+
+
+async def Help(bot, message, config):
+    await bot.reply_to(message, f"""
+Use /chat + 句子 启动新消息流，只需要回复即可交谈。二十四小时前的消息会被Ai忘记。
+记录太长会被自动截断/浓缩。
+Use /write +句子 进行续写
+Use /remind 设置一个场景头，全程不会被裁剪。
+""")
