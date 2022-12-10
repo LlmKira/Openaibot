@@ -117,7 +117,7 @@ class Reply(object):
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
         if _Usage["status"]:
-            return "小时额度或者单人总额度用完，请申请重置或等待"
+            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
             import openai_async

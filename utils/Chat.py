@@ -272,6 +272,12 @@ class Usage(object):
         if not GET:
             GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
             return {"status": False, "use": GET.dict(), "time": key_time}
+        # 重置
+        if GET.now != key_time:
+            GET.usage = 0
+            GET.now = key_time
+            self.__Data.setKey(f"{self.__uid}_usage",
+                               GET.dict())
         # 按照异常返回的逻辑
         # 小时计量
         if _csonfig["hour_limit"] > 1:
@@ -299,11 +305,7 @@ class Usage(object):
         if not GET:
             GET = self.__set_usage(now=key_time, usage=0, total_usage=0)
         GET.total_usage = GET.total_usage + usage
-        if GET.now == key_time:
-            GET.usage = GET.usage + usage
-        else:
-            GET.now = key_time
-            GET.usage = 0
+        GET.usage = GET.usage + usage
         self.__Data.setKey(f"{self.__uid}_usage",
                            GET.dict())
         # double req in 3 seconds
