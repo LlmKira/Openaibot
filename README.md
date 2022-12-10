@@ -8,12 +8,6 @@ OpenAI Chat Telegram Bot
 
 本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，chatGPT **功能**的 **Python 实现** 由本机器人自实现。
 
-```
-This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
-```
-
-**不对机器人生成的任何内容负责，内容由OpenAi提供**
-
 *自己实现的 chatGPT ，体验基本一样，就是 Api 要钱*
 
 *自制异步依赖库*
@@ -255,6 +249,14 @@ close - 关闭机器人
 ### prompt_server.py
 
 外设的 Prompt 裁剪接口，给其他项目提供支持。
+
+### 许可
+
+```
+This is not an official OpenAI product. This is a personal project and is not affiliated with OpenAI in any way. Don't sue me
+```
+
+**不对机器人生成的任何内容负责，内容由OpenAi提供**
 
 ### QuickDev
 
