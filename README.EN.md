@@ -116,18 +116,18 @@ You can turn this filter off by placing a one-line list, but I don't favour you 
 
 **configuration file**
 
-``toml
+```toml
 [bot]
-master = [100, 200] # master user id &owner
+master = [555555, 66666] # master user id &account id
 botToken = 'key'
 INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
 
+# for bot , not openai
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
-
 ```
 
 [Telegram botToken request](https://t.me/BotFather)
@@ -260,6 +260,14 @@ Missing key values are automatically merged and repaired.
 ### prompt_server.py
 
 The Prompt clipping interface of peripherals provides support for other projects.
+
+### 声明
+
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 不对机器人生成的任何内容负责
+```
+
 
 ### QuickDev
 
