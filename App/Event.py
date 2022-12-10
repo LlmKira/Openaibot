@@ -247,8 +247,12 @@ async def Text(bot, message, config, reset: bool = False):
         _remind = _remind_r[1]
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
-        _remind = ContentDfa.filter_all(_remind)
-        Header(uid=message.from_user.id).set(_remind)
+        if _csonfig["allow_change_head"]:
+            await bot.reply_to(message, f"设定:{_remind}")
+            Header(uid=message.from_user.id).set(_remind)
+        else:
+            await bot.reply_to(message, f"禁止设定")
+            Header(uid=message.from_user.id).set({})
         return await bot.reply_to(message, f"设定成功:{_remind}")
 
     # 处理是否忘记
@@ -318,9 +322,14 @@ async def Friends(bot, message, config):
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
-        Header(uid=message.from_user.id).set(_remind)
-        return await bot.reply_to(message, f"设定成功:{_remind}")
-    # 启动函数
+        if _csonfig["allow_change_head"]:
+            await bot.reply_to(message, f"设定:{_remind}")
+            Header(uid=message.from_user.id).set(_remind)
+        else:
+            await bot.reply_to(message, f"禁止设定")
+            Header(uid=message.from_user.id).set({})
+        return
+        # 启动函数
     if command.startswith("/chat") or not command.startswith("/"):
         await private_Chat(bot, message, config)
 
@@ -567,6 +576,17 @@ async def Master(bot, message, config):
                     Api_keys.pop_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:DEL API KEY")
                 await bot.reply_to(message, "SETTING:DEL API KEY")
+            if "/enable_change_head" in command:
+                _csonfig["allow_change_head"] = True
+                await bot.reply_to(message, "SETTING:allow_change_head ON")
+                save_csonfig()
+                logger.info("SETTING:BOT ON")
+
+            if "/disable_change_head" in command:
+                _csonfig["allow_change_head"] = False
+                await bot.reply_to(message, "SETTING:allow_change_head OFF")
+                save_csonfig()
+                logger.info("SETTING:BOT ON")
 
             if command == "/open":
                 _csonfig["statu"] = True

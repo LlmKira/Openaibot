@@ -125,7 +125,8 @@ class DefaultData(object):
             "whiteUserSwitch": True,
             "whiteGroupSwitch": True,
             "Model": {
-            }
+            },
+            "allow_change_head": True
         }
 
     @staticmethod
