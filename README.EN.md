@@ -269,7 +269,7 @@ will automatically merge the missing keys to fix them.
 
 - Group revert memory to 24 hours
 - Usage limit is 60000/h
-- Context memory of 7
+- Contextual strong memory is 3, persona memory is permanent, retrospective memory is 70
 - Trigger truncation of 3333x4 (api:max 4095x4) (tokenx4 rough estimate)
 
 ### prompt_server.py
