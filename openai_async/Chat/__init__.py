@@ -186,7 +186,7 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\n你:",
+    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\n某人:",
                  start_sequ: str = "\n我: ",
                  call_func=None):
         """
@@ -392,15 +392,15 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\n你:让我们谈谈吧。"
+            head = f"\n某人:让我们谈谈吧。"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
         # 初始化
         if role is None:
-            role = f"I am a {_character} character."
+            role = f"I am a {_character} assistant."
         else:
-            role = f"I am a {_character} character.\n我:{role}. "
+            role = f"I am a {_character} assistant.\n我:{role}. "
         _old = self._MsgFlow.read()
         # 构造内容
         _head = [f"{role}\n{head}\n"]
@@ -434,7 +434,7 @@ class Chatbot(object):
             frequency_penalty=0,
             presence_penalty=0.5,
             user=str(self.get_hash()),
-            stop=["我:", "你:"],
+            stop=["我:", "某人:"],
         )
         self.record_ai(prompt=prompt, response=response)
         return response
