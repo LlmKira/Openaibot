@@ -7,7 +7,7 @@
   <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
 </p>
 
-<h2 align="center">OpenAIChatTelegramBot</h2>
+<h2 align="center">Openaibot</h2>
 
 OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
