@@ -90,16 +90,16 @@ def tfidf_keywords(delete_stopwords=False, topK=1, withWeight=False):
 
 
 history_list = [
-    "nihao",
-    "AI:赛义德表示，衷心祝贺中共二十大成功召开。我高度赞同习近平主席的重要论断。当前国际形势下，没有任何国家可以独自发展，各国应该相互尊重，走相互合作、互利共赢的新路，通过紧密合作解决当今世界面临的共同问题。中方始终站在国际公平正义一方，您提出的全球发展倡议充满人文关怀和先进理念，对于提升发展中国家能力、实现各国共同发展进步具有重要意义。突中关系友好，合作潜力巨大。中方长期以来对突经济社会发展以及抗击新冠肺炎疫情提供了宝贵帮助，突方对此铭记于心。越来越多突尼斯青年开始学习中文，他们相信中国将在国际上发挥更加重要作用。突方坚定致力于拓展深化各领域合作，愿同中方一道，将突中关系提升至新的更高水平。首届阿中峰会具有历史意义，突方将积极促进阿中关系进一步发展。",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "AI:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "Human:Using OpenAi's Api on Telegram to achieve chatGPT func|在 Telegram ",
-    "AI:在python中判断 list 中是否包含某个元素"
+    "1122",
+        "Ai:我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。完美是美好的理想接受残缺是美好的心态我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。",
+        "Human:Using OpenAi's Aeve chatGPT func|在 Telegram ",
+        "Human:Using OpenAi's Apihieve chatGPT func|在 Telegram ",
+        "Human:Using OpenAi's Api hatGPT func|在 Telegram ",
+        "Human:Using OpenAi's egram to achieve chatGPT func|在 Telegram ",
+        "Human:Using OpenAi'sto achieve chatGPT func|在 Telegram ",
+        "AI:Using OpenAi's Api on Telee chatGPT func|在 Telegram ",
+        "Human:Using OpenAi'so achieve chatGPT func|在 Telegram ",
+        "AI:在python中判断 list 中是否包含某个元素"
 ]
 
 # tfidf_keywords()
@@ -108,6 +108,5 @@ prompt = CutParent.Summer(
     prompt="习近平强调，中方坚定支持突方走符合自身国情的发展道路，反对外部势力干涉突尼斯内政，相信突方有智慧、有能力维护国家稳定和发展。",
     extra_token=500,
     chat_list=history_list)
-
 for i in prompt:
     print(i)

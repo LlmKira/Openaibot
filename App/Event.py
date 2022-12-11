@@ -248,6 +248,9 @@ async def Text(bot, message, config, reset: bool = False):
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
         if _csonfig["allow_change_head"]:
+            _remind = _remind.replace("你是", "Ai扮演")
+            _remind = _remind.replace("你", "Ai")
+            _remind = _remind.replace("我", "Human")
             await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
         else:
@@ -322,6 +325,9 @@ async def Friends(bot, message, config):
             return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         if _csonfig["allow_change_head"]:
+            _remind = _remind.replace("你是", "Ai扮演")
+            _remind = _remind.replace("你", "Ai")
+            _remind = _remind.replace("我", "Human")
             await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
         else:

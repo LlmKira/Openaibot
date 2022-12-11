@@ -399,6 +399,8 @@ class Chatbot(object):
         # 初始化
         if role is None:
             role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
+        else:
+            role = f"The following is a conversation with Ai assistant.Ai assistant is {_character}.Says {role}. "
         _old = self._MsgFlow.read()
         # 构造内容
         _head = [f"{role}\n{head}\n"]
