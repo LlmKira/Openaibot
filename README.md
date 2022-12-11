@@ -4,7 +4,7 @@
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Other-ff69b4">
   <img src="https://img.shields.io/badge/Python-3.7|8|9|10-green" alt="PYTHON" >
-  <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
+  <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Buyme-milk-DB94A2" alt="SPONSOR"></a>
 </p>
 
 <h2 align="center">OpenAIChatTelegramBot</h2>
