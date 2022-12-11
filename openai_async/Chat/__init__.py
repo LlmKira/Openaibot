@@ -422,8 +422,8 @@ class Chatbot(object):
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        import loguru
-        loguru.logger.debug(_prompt)
+        #import loguru
+        #loguru.logger.debug(_prompt)
         response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
