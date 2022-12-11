@@ -130,6 +130,8 @@ url = "http://127.0.0.1:7890"
 
 **配置 key**
 
+在机器人私聊中配置 key
+
 ```markdown
 see_api_key - 现在几个 Api key
 del_api_key - 删除 Api key
@@ -159,7 +161,7 @@ ps -aux|grep python3
   后加进程号码
 
 ```shell
-kill -9  
+kill -9 id
 ```
 
 ## 命令
