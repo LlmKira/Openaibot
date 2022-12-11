@@ -186,8 +186,8 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\nHuman:",
-                 start_sequ: str = "\nAI: ",
+    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\n你:",
+                 start_sequ: str = "\n我: ",
                  call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
@@ -392,15 +392,15 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\nHuman: 你好，让我们开始愉快的谈话！\nAI: 我是 AI assistant ，请问你有什么问题？"
+            head = f"\n你:让我们谈谈吧。"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
         # 初始化
         if role is None:
-            role = f"The following is a conversation with Ai assistant. The assistant is {_character}."
+            role = f"I am a {_character} character."
         else:
-            role = f"The following is a conversation with Ai assistant.Ai assistant is {_character}.Says {role}. "
+            role = f"I am a {_character} character.\n我:{role}. "
         _old = self._MsgFlow.read()
         # 构造内容
         _head = [f"{role}\n{head}\n"]
@@ -422,7 +422,8 @@ class Chatbot(object):
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        # loguru.logger.debug(_prompt)
+        import loguru
+        loguru.logger.debug(_prompt)
         response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
@@ -433,7 +434,7 @@ class Chatbot(object):
             frequency_penalty=0,
             presence_penalty=0.5,
             user=str(self.get_hash()),
-            stop=["Human:", "AI:"],
+            stop=["我:", "你:"],
         )
         self.record_ai(prompt=prompt, response=response)
         return response
