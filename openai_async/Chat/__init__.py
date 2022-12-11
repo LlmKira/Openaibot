@@ -392,7 +392,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\n某人:让我们谈谈吧。"
+            head = f"\n{self._restart_sequence}:让我们谈谈吧。"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
@@ -400,7 +400,7 @@ class Chatbot(object):
         if role is None:
             role = f"I am a {_character} assistant."
         else:
-            role = f"I am a {_character} assistant.\n我:{role}. "
+            role = f"I am a {_character} assistant.\n{self._start_sequence}:{role}. "
         _old = self._MsgFlow.read()
         # 构造内容
         _head = [f"{role}\n{head}\n"]
@@ -434,7 +434,7 @@ class Chatbot(object):
             frequency_penalty=0,
             presence_penalty=0.5,
             user=str(self.get_hash()),
-            stop=["我:", "某人:"],
+            stop=[f"{self._start_sequence}:", f"{self._restart_sequence}:"],
         )
         self.record_ai(prompt=prompt, response=response)
         return response
