@@ -3,12 +3,14 @@
 # @FileName: nltk_test.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from openai_async.Chat import Talk, Chatbot
+# from openai_async.Chat import Talk, Chatbot
 import nltk
 
 from openai_async.Chat.text_analysis_tools.api.keyphrase.keyphrase import KeyPhraseExtraction
 from openai_async.Chat.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from openai_async.Chat.text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
+from openai_async.Chat.text_analysis_tools.api.text_similarity.edit import EditSimilarity
+from openai_async.Chat.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 
 nltk.download('punkt')
 en_word = """
@@ -21,10 +23,11 @@ cn_word = """
 2012年4月27日，人民网在上海证券交易所上市交易（股票代码为“603000”）。它的成功上市创造中国资本市场的两个第一：第一家在国内A股上市的新闻网站，第一家在国内A股整体上市的媒体企业。
         """
 
-res = Talk().cut_ai_prompt(prompt=cn_word)
-for i in res:
-    print("----")
-    print(i)
+
+# res = #Talk().cut_ai_prompt(prompt=cn_word)
+# for i in res:
+#    print("----")
+#    print(i)
 
 
 def keyphrase_extract(topk=100, method='tfidf', with_word=True, save_pic=False, with_mask=True):
@@ -89,24 +92,45 @@ def tfidf_keywords(delete_stopwords=False, topK=1, withWeight=False):
     print("tfidf keywords result: {}\n".format(keywords))
 
 
+def edit_similarity():
+    """
+    采用编辑距离计算文本之间的相似性
+    :return: 编辑距离
+    """
+    edit = EditSimilarity()
+    edit_dis = edit.edit_dist("爱看的电影是行星", "你还记得爱看的电影吗")
+    print("edit distance: {}\n".format(edit_dis))
+
+
+def simhash_similarity():
+    """
+    采用simhash计算文本之间的相似性
+    :return:
+    """
+    simhash = SimHashSimilarity()
+    sim = simhash.run_simhash("我爱看的电影行星", "你还记得我爱看的电影吗？")
+    print("simhash result: {}\n".format(sim))
+
+
 history_list = [
     "1122",
-        "Ai:我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。完美是美好的理想接受残缺是美好的心态我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。",
-        "Human:Using OpenAi's Aeve chatGPT func|在 Telegram ",
-        "Human:Using OpenAi's Apihieve chatGPT func|在 Telegram ",
-        "Human:Using OpenAi's Api hatGPT func|在 Telegram ",
-        "Human:Using OpenAi's egram to achieve chatGPT func|在 Telegram ",
-        "Human:Using OpenAi'sto achieve chatGPT func|在 Telegram ",
-        "AI:Using OpenAi's Api on Telee chatGPT func|在 Telegram ",
-        "Human:Using OpenAi'so achieve chatGPT func|在 Telegram ",
-        "AI:在python中判断 list 中是否包含某个元素"
+    "Ai:我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。完美是美好的理想接受残缺是美好的心态我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。",
+    "Human:Using OpenAi's Aeve chatGPT func|在 Telegram ",
+    "Human:Using OpenAi's Apihieve chatGPT func|在 Telegram ",
+    "Human:Using OpenAi's Api hatGPT func|在 Telegram ",
+    "Human:Using OpenAi's egram to achieve chatGPT func|在 Telegram ",
+    "Human:Using OpenAi'sto achieve chatGPT func|在 Telegram ",
+    "AI:Using OpenAi's Api on Telee chatGPT func|在 Telegram ",
+    "Human:Using OpenAi'so achieve chatGPT func|在 Telegram ",
+    "AI:在python中判断 list 中是否包含某个元素"
 ]
 
 # tfidf_keywords()
-CutParent = Chatbot(api_key="none", conversation_id="none")
-prompt = CutParent.Summer(
-    prompt="习近平强调，中方坚定支持突方走符合自身国情的发展道路，反对外部势力干涉突尼斯内政，相信突方有智慧、有能力维护国家稳定和发展。",
-    extra_token=500,
-    chat_list=history_list)
-for i in prompt:
-    print(i)
+# CutParent = Chatbot(api_key="none", conversation_id="none")
+# prompt = CutParent.Summer(
+#     prompt="习近平强调，中方坚定支持突方走符合自身国情的发展道路，反对外部势力干涉突尼斯内政，相信突方有智慧、有能力维护国家稳定和发展。",
+#     extra_token=500,
+#     memory=history_list)
+# for i in prompt:
+#    print(i)
+simhash_similarity()

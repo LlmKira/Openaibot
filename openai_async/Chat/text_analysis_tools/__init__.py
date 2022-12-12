@@ -12,3 +12,4 @@ from .api.keywords.textrank import TextRankKeywords
 from .api.keyphrase.keyphrase import KeyPhraseExtraction
 from .api.summarization.tfidf_summarization import TfidfSummarization
 from .api.summarization.textrank_summarization import TextRankSummarization
+from .api.text_similarity.simhash import SimHashSimilarity
