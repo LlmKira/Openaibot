@@ -47,7 +47,7 @@ class MsgFlow(object):
         content = {"content": msg, "time": time_s}
         _message_streams = self._get_uid(self.uid)
         if "msg" in _message_streams:
-            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'])
+            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'], reverse=True)
             # 记忆容量重整
             if len(_message_streams["msg"]) > self.memory:
                 for i in range(len(_message_streams["msg"]) - self.memory + 1):
