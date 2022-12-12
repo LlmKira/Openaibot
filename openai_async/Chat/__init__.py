@@ -312,10 +312,13 @@ class Chatbot(object):
         # # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
         # 刚开始玩直接返回原表
 
+        # 提取内容
         _memory = []
         for i in memory:
             _memory.append(i["content"])
         memory = _memory
+
+        # loguru.logger.debug(memory)
 
         def _dict_ou(meo):
             _list = []
@@ -338,17 +341,17 @@ class Chatbot(object):
         _High = []
         _high_count = 0
         _index = []
-        for i in reversed(range(len(memory))):
+        for i in range(len(memory)):
             if memory[i].get("ask") and memory[i].get("reply"):
                 _high_count += 1
-                _High.append(memory[i].get("reply"))
                 _High.append(memory[i].get("ask"))
+                _High.append(memory[i].get("reply"))
                 _index.append(memory[i])
-                if _high_count > 3:
+                if _high_count > 2:
                     break
         for i in _index:
             memory.remove(i)
-        _High = list(reversed(_High))
+
         # 筛选标准发言机器
         _index = []
         for i in range(len(memory)):
@@ -365,44 +368,50 @@ class Chatbot(object):
                 _index.append(memory[i])
         for i in _index:
             memory.remove(i)
+
         # 计算待处理表需要的token
         _high_token = 0
         for i in _High:
             _high_token = _high_token + Talk.tokenizer(i)
         _create_token = self.__token_limit - _high_token - extra_token
-        if _create_token < 20:
-            return _High
         # 计算关联
         _sim = []
+        _now_token = 0
         for i in range(len(memory)):
-            _ask = memory[i].get("ask").split(":", 1)
-            _reply = memory[i].get("reply").split(":", 1)
+            __ask = memory[i].get("ask")
+            __reply = memory[i].get("reply")
+            _ask = __ask.split(":", 1)
+            _reply = __reply.split(":", 1)
             _diff1 = Talk.simhash_similarity(pre=prompt, aft=_ask[1])
             _diff2 = Talk.simhash_similarity(pre=prompt, aft=_reply[1])
             if _diff2 < 20 or _diff1 < 20:
                 _diff = _diff1 if _diff1 < _diff2 else _diff2
-                _sim.append({"diff": _diff, "content": memory[i]})
+                if _create_token - Talk.tokenizer(__ask + __reply) < 0:
+                    break
+                else:
+                    _sim.append({"diff": _diff, "content": memory[i]})
+        # 取出
+        _sim.sort(key=lambda x: x['diff'])
+        _sim_content = list([x['content'] for x in _sim])
 
-        # 计算关联
+        # 计算关联并填充余量
+        _create_token = _create_token - _now_token
         _relate = []
         for i in range(len(memory)):
             # 计算相似度
-            _ask = memory[i].get("ask").split(":", 1)
-            _reply = memory[i].get("reply").split(":", 1)
+            __ask = memory[i].get("ask")
+            __reply = memory[i].get("reply")
+            _ask = __ask.split(":", 1)
+            _reply = __reply.split(":", 1)
             add = False
             _key = Talk.tfidf_keywords(prompt, topK=3)
             for ir in _key:
                 if ir in _ask + _reply:
                     add = True
-            if add:
+            if add and _create_token - Talk.tokenizer(__ask + __reply) > 0:
                 _relate.append(memory[i])
-        _Full = False
-        # 排序填充
-        _sim.sort(key=lambda x: x['diff'])
-        # for x in _sim:
-        _sim_content = list([x['content'] for x in _sim])
         _sim_content.extend(_relate)
-        _now_token = 0
+        _sim_content = list(reversed(_sim_content))
         _useful = []
         for i in range(len(_sim_content)):
             __ask = _sim_content[i].get("ask")
@@ -411,9 +420,6 @@ class Chatbot(object):
             _reply = __reply.split(":", 1)
             _useful.append(__ask)
             _useful.append(__reply)
-            _now_token = _now_token + Talk.tokenizer(__ask + __reply)
-            if _now_token > _create_token:
-                break
         _Final.extend(_useful)
         _Final.extend(_High)
         token_limit = self.__token_limit - extra_token
@@ -473,6 +479,7 @@ class Chatbot(object):
                 _header + _prompt_s[0]))
         _prompt_apple = self.Summer(prompt=prompt, memory=_prompt_memory,
                                     extra_token=_extra_token)
+        # loguru.logger.debug(_prompt_apple)
         _prompt_apple.extend(_prompt_s)
         # 拼接请求内容
         _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
