@@ -18,3 +18,4 @@ Pillow
 pathlib
 numpy
 wordcloud
+scikit-learn

@@ -11,6 +11,8 @@ import os
 import random
 import re
 
+import loguru
+
 # import loguru
 # import jiagu
 
@@ -19,6 +21,7 @@ import re
 from openai_async import Completion
 from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
+from .text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 from ..utils.data import MsgFlow
 
 
@@ -34,6 +37,17 @@ class Talk(object):
         summ = TfidfSummarization(ratio=ratio)
         summ = summ.analysis(sentence)
         return summ
+
+    @staticmethod
+    def simhash_similarity(pre, aft):
+        """
+        采用simhash计算文本之间的相似性
+        :return:
+        """
+        simhash = SimHashSimilarity()
+        sim = simhash.run_simhash(pre, aft)
+        # print("simhash result: {}\n".format(sim))
+        return sim
 
     @staticmethod
     def tfidf_keywords(keywords, delete_stopwords=True, topK=5, withWeight=False):
@@ -185,8 +199,11 @@ class Talk(object):
         return _prompt_list
 
 
+# 聊天类
+
+
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id, token_limit: int = 3000, restart_sequ: str = "\n某人:",
+    def __init__(self, api_key, conversation_id, token_limit: int = 3500, restart_sequ: str = "\n某人:",
                  start_sequ: str = "\n我: ",
                  call_func=None):
         """
@@ -200,6 +217,11 @@ class Chatbot(object):
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
         self._start_sequence = start_sequ
         self._restart_sequence = restart_sequ
+        # 防止木头
+        if not self._start_sequence.strip().endswith(":"):
+            self._start_sequence = self._start_sequence + ":"
+        if not self._restart_sequence.strip().endswith(":"):
+            self._restart_sequence = self._restart_sequence + ":"
         self.__call_func = call_func
         self.__token_limit = token_limit
 
@@ -215,24 +237,30 @@ class Chatbot(object):
                 _text = item.get("text")
                 REPLY.append(_text)
         if not REPLY:
-            REPLY = ["(Ai Say Nothing)"]
-        self._MsgFlow.save(prompt=prompt, role=self._restart_sequence)
-        self._MsgFlow.save(prompt=REPLY[0], role=self._start_sequence)
+            REPLY = [""]
+        # 构建一轮对话场所
+        _msg = {"ask": f"{self._restart_sequence}{prompt}", "reply": f"{self._start_sequence}{REPLY[0]}"}
+        # 存储成对的对话
+        self._MsgFlow.saveMsg(msg=_msg)
+        # 拒绝分条存储
+        # self._MsgFlow.save(prompt=prompt, role=self._restart_sequence)
+        # self._MsgFlow.save(prompt=REPLY[0], role=self._start_sequence)
         return REPLY
 
     @staticmethod
     def random_string(length):
-        import string  # 导入string模块
-        import random  # 导入random模块
-
-        all_chars = string.ascii_letters + string.digits  # 获取所有字符，包括大小写字母和数字
-
-        result = ''  # 创建一个空字符串用于保存生成的随机字符
-
+        """
+        生成随机字符串
+        :param length:
+        :return:
+        """
+        import string
+        import random
+        all_chars = string.ascii_letters + string.digits
+        result = ''
         for i in range(length):
-            result += random.choice(all_chars)  # 随机选取一个字符，并添加到result中
-
-        return result  # 返回生成的随机字符
+            result += random.choice(all_chars)
+        return result
 
     # _prompt = random_string(3700)
 
@@ -257,12 +285,12 @@ class Chatbot(object):
             _item = _item.replace(key, value)
         return _item
 
-    def Summer(self, prompt: str, chat_list: list, extra_token: int = 0) -> list:
+    def Summer(self, prompt: str, memory: list, extra_token: int = 0) -> list:
         """
-        负责统计超长上下文
-        :param prompt:
-        :param extra_token: 换行符号预期会占用的位置
-        :param chat_list: 对话字符串列表，从消息桶中输入。
+        只负责处理消息桶
+        :param prompt: 记忆提示
+        :param extra_token: 记忆的限制
+        :param memory: 记忆桶
         PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
@@ -279,103 +307,138 @@ class Chatbot(object):
         # 如果没达到要求，那么随机选取无关数据加入处理表。
         # 第一位 链接 处理表 链接 高注意力表。
         # 最后计算进行强制 while 裁剪
-
         # 这里，连续的发言会被认定为 Api 失联，不具有价值。
 
-        # 刚开始玩随便了
-        if len(chat_list) < 5:
-            return chat_list
-        # 组建最终注意力表
+        # # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
+        # 刚开始玩直接返回原表
+
+        _memory = []
+        for i in memory:
+            _memory.append(i["content"])
+        memory = _memory
+
+        def _dict_ou(meo):
+            _list = []
+            for _ir in range(len(meo)):
+                if meo[_ir].get("ask") and meo[_ir].get("reply"):
+                    _list.append(meo[_ir].get("ask"))
+                    _list.append(meo[_ir].get("reply"))
+            return _list
+
+        if len(memory) < 3:
+            return _dict_ou(memory)
+
+        # 组建对话意图
         _Final = []
-        # 弹出第一位
-        _head = chat_list.pop(0)
-        # 组建待处理表
+
+        # 遗忘黑历史
         _chat = []
-        __last_author = ""
+
+        # 强调记忆
+        _High = []
+        _high_count = 0
+        _index = []
+        for i in reversed(range(len(memory))):
+            if memory[i].get("ask") and memory[i].get("reply"):
+                _high_count += 1
+                _High.append(memory[i].get("reply"))
+                _High.append(memory[i].get("ask"))
+                _index.append(memory[i])
+                if _high_count > 3:
+                    break
+        for i in _index:
+            memory.remove(i)
+        _High = list(reversed(_High))
         # 筛选标准发言机器
-        for i in range(len(chat_list) - 2):
-            if ":" in chat_list[i]:
-                ___now = chat_list[i].split(":", 1)
-                ___after = chat_list[i + 1].split(":", 1)
-                if len(___now[1]) < 3 or len(___after[1]) < 3:
+        _index = []
+        for i in range(len(memory)):
+            if memory[i].get("ask") and memory[i].get("reply"):
+                ___now = memory[i]["ask"].split(":", 1)
+                ___after = memory[i]["reply"].split(":", 1)
+                if len(___now) < 2 or len(___after) < 2:
                     continue
-                if ___now[0] != ___after[0]:
-                    _chat.append(chat_list[i])
-        # 切割最近的数据进行高注意力控制
-        # if Talk.tokenizer(chat_list[-1])>400:
-        # _chat.extend(Talk().cut_ai_prompt(chat_list[-1]))
-        # _chat.extend(Talk().cut_ai_prompt(chat_list[-2]))
-        # 弹出chat的最后四条
-        if len(chat_list) > 3:
-            _High = [chat_list[-3], chat_list[-2], chat_list[-1]]
-        else:
-            _High = []
+                if len(___now[1]) < 3 or len(___after[1]) < 3:
+                    _index.append(memory[i])
+                    # 忽略对话
+            else:
+                # 不是标准对话
+                _index.append(memory[i])
+        for i in _index:
+            memory.remove(i)
         # 计算待处理表需要的token
-        _high_token = 0 + Talk.tokenizer(_head)
+        _high_token = 0
         for i in _High:
             _high_token = _high_token + Talk.tokenizer(i)
         _create_token = self.__token_limit - _high_token - extra_token
         if _create_token < 20:
-            return chat_list
-        # 切分中插
-        _pre_chat = []
-        for i in range(len(_chat)):
-            _item = _chat[i]
-            if Talk.tokenizer(_item) > 240:
-                if Talk.get_language(_item) == "chinese":
-                    _sum = Talk.tfidf_summarization(sentence=_item, ratio=0.3)
-                    if len(_sum) > 7:
-                        _pre_chat.append(_sum)
-                else:
-                    _cut = Talk().cut_ai_prompt(prompt=_item)
-                    if len(_cut) > 3:
-                        _pre_chat.append(_cut[0])
-                        _pre_chat.append(_cut[1])
-                        _pre_chat.append(_cut[2])
-                    elif len(_cut) < 1:
-                        _pre_chat.append(_item)
-                    else:
-                        _pre_chat.extend(_cut)
-            else:
-                _pre_chat.append(_item)
-        # 累计有效Token，从下向上加入
-        _now_token = 0
-        _useful = []
-        __useful_down = False
-        for i in reversed(range(len(_pre_chat))):
-            _item = _pre_chat[i]
-            _key = Talk.tfidf_keywords(prompt)
+            return _High
+        # 计算关联
+        _sim = []
+        for i in range(len(memory)):
+            _ask = memory[i].get("ask").split(":", 1)
+            _reply = memory[i].get("reply").split(":", 1)
+            _diff1 = Talk.simhash_similarity(pre=prompt, aft=_ask[1])
+            _diff2 = Talk.simhash_similarity(pre=prompt, aft=_reply[1])
+            if _diff2 < 20 or _diff1 < 20:
+                _diff = _diff1 if _diff1 < _diff2 else _diff2
+                _sim.append({"diff": _diff, "content": memory[i]})
+
+        # 计算关联
+        _relate = []
+        for i in range(len(memory)):
+            # 计算相似度
+            _ask = memory[i].get("ask").split(":", 1)
+            _reply = memory[i].get("reply").split(":", 1)
             add = False
+            _key = Talk.tfidf_keywords(prompt, topK=3)
             for ir in _key:
-                if ir in _item:
+                if ir in _ask + _reply:
                     add = True
             if add:
-                _useful.append(_item)
-                _now_token = _now_token + Talk.tokenizer(_item)
-                if _now_token > _create_token:
-                    __useful_down = True
-                    break
-        # 竟然没凑齐
-        _not_useful = []
-        if not __useful_down:
-            for i in reversed(range(len(_pre_chat) - 1)):
-                _item = random.choice(_pre_chat)
-                if ":" in _pre_chat[i]:
-                    ___now = _pre_chat[i].split(":", 1)
-                    ___after = _pre_chat[i + 1].split(":", 1)
-                    if len(___after) < 2 or len(___now) < 2:
-                        continue
-                    if len(___now[1]) < 3 or len(___after[1]) < 3:
-                        continue
-                    if ___now[0] != ___after[0]:
-                        _not_useful.append(_item)
-                        _now_token = _now_token + Talk.tokenizer(_item)
-                        if _now_token > _create_token:
-                            break
-        _Final.append(_head)
-        _Final.extend(_not_useful)
+                _relate.append(memory[i])
+        _Full = False
+        # 排序填充
+        _sim.sort(key=lambda x: x['diff'])
+        # for x in _sim:
+        _sim_content = list([x['content'] for x in _sim])
+        _sim_content.extend(_relate)
+        _now_token = 0
+        _useful = []
+        for i in range(len(_sim_content)):
+            __ask = _sim_content[i].get("ask")
+            __reply = _sim_content[i].get("reply")
+            _ask = __ask.split(":", 1)
+            _reply = __reply.split(":", 1)
+            _useful.append(__ask)
+            _useful.append(__reply)
+            _now_token = _now_token + Talk.tokenizer(__ask + __reply)
+            if _now_token > _create_token:
+                break
         _Final.extend(_useful)
         _Final.extend(_High)
+        token_limit = self.__token_limit - extra_token
+        # 裁剪
+        _now = 0
+        _out = False
+        for i in range(len(_Final)):
+            _now += Talk.tokenizer(_Final[i])
+            if _now > token_limit:
+                _out = True
+        if _out:
+            for i in range(len(_Final)):
+                if Talk.tokenizer(_Final[i]) > 240:
+                    if Talk.get_language(_Final[i]) == "chinese":
+                        _sum = Talk.tfidf_summarization(sentence=_Final[i], ratio=0.3)
+                        if len(_sum) > 7:
+                            _Final[i] = _sum
+        _now = 0
+        _index = []
+        for i in range(len(_Final)):
+            _now += Talk.tokenizer(_Final[i])
+            if _now > token_limit:
+                _index.append(_Final[i])
+        for i in _index:
+            _Final.remove(i)
         return _Final
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
@@ -392,38 +455,35 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\n{self._restart_sequence}:让我们谈谈吧。"
+            head = f"\n{self._restart_sequence}让我们谈谈吧。"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
-        # 初始化
         if role is None:
             role = f"I am a {_character} assistant."
         else:
-            role = f"I am a {_character} assistant.\n{self._start_sequence}:{role}. "
-        _old = self._MsgFlow.read()
-        # 构造内容
-        _head = [f"{role}\n{head}\n"]
-        _old_list = [f"{x['role']} {x['prompt']}" for x in _old]
-        _now = [f"{self._restart_sequence}{prompt}."]
-        # 拼接
-        _prompt_table = _head + _old_list + _now
-        # 截断器
-        _prompt_apple = self.Summer(prompt=prompt, chat_list=_prompt_table,
-                                    extra_token=int(
-                                        len(_prompt_table) + Talk.tokenizer(self._start_sequence) + max_tokens))
-        _header = _prompt_apple.pop(0)
+            role = f"I am a {_character} assistant.\n{self._start_sequence}{role}. "
+        _header = f"{role}\n{head}\n"
+        _prompt_s = [f"{self._restart_sequence}{prompt}."]
+        _prompt_memory = self._MsgFlow.read()
+        # 寻找记忆和裁切上下文
+        # 占位限制
+        _extra_token = int(
+            len(_prompt_memory) + Talk.tokenizer(self._start_sequence) + max_tokens + Talk.tokenizer(
+                _header + _prompt_s[0]))
+        _prompt_apple = self.Summer(prompt=prompt, memory=_prompt_memory,
+                                    extra_token=_extra_token)
+        _prompt_apple.extend(_prompt_s)
+        # 拼接请求内容
         _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
-        # 重切割代币
-        _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 余量？
+        # 重切割
+        _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 计算余量
         if _mk < 0:
             _mk = 0
-        while Talk.tokenizer(_prompt) > _mk - 10:
+        while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        # import loguru
-        # loguru.logger.debug(_prompt)
         response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
@@ -442,6 +502,7 @@ class Chatbot(object):
     @staticmethod
     def str_prompt(prompt: str) -> list:
         range_list = prompt.split("\n")
+
         # 如果当前项不包含 `:`，则将其并入前一项中
         result = [range_list[i] + range_list[i + 1] if ":" not in range_list[i] else range_list[i] for i in
                   range(len(range_list))]

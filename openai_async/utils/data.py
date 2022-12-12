@@ -27,8 +27,8 @@ class MsgFlow(object):
         :param uid: 独立 id ，是一个消息桶
         """
         self.uid = str(uid)
-        self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_")
-        self.memory: int = 70
+        self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_chat_")
+        self.memory: int = 80
 
     @staticmethod
     def composing_uid(user_id, chat_id):
@@ -39,6 +39,24 @@ class MsgFlow(object):
 
     def _set_uid(self, uid, message_streams):
         return self.MsgFlowData.setKey(uid, message_streams)
+
+    def saveMsg(self, msg: dict) -> None:
+        # {"ask": {self._restart_sequence: prompt}, "reply": {self._start_sequence: REPLY[0]}}
+        import time
+        time_s = int(time.time() * 1000)
+        content = {"content": msg, "time": time_s}
+        _message_streams = self._get_uid(self.uid)
+        if "msg" in _message_streams:
+            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'])
+            # 记忆容量重整
+            if len(_message_streams["msg"]) > self.memory:
+                for i in range(len(_message_streams["msg"]) - self.memory + 1):
+                    # 多弹出一个用于腾出容量，不能在前面弹出，会造成无法记忆的情况！
+                    _message_streams["msg"].pop(0)
+            _message_streams["msg"].append(content)
+        else:
+            _message_streams["msg"] = [content]
+        self._set_uid(self.uid, _message_streams)
 
     def save(self, prompt, role: str = "Human") -> None:
         import time
@@ -57,13 +75,13 @@ class MsgFlow(object):
             _message_streams["msg"] = [content]
         self._set_uid(self.uid, _message_streams)
 
-    def read(self) -> dict:
+    def read(self) -> list:
         message_streams = self._get_uid(self.uid)
         if "msg" in message_streams:
             _msg = message_streams["msg"]
             return _msg
         else:
-            return {}
+            return []
 
     def forget(self):
         _message_streams = self._get_uid(self.uid)
