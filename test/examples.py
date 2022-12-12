@@ -340,7 +340,7 @@ if __name__ == "__main__":
     # simhash_similarity()
     # tfidf_keywords()
     # textrank_keywords()
-    keyphrase_extract()
+    # keyphrase_extract()
     # sentiment_analysis()
     # spell_correct()
     # tfidf_summarization()
@@ -350,3 +350,4 @@ if __name__ == "__main__":
     # word2vec_synonym()
     # synonym_dict()
     # triple_extraction()
+    simhash_similarity()
