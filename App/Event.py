@@ -68,7 +68,7 @@ async def Forget(bot, message, config):
     """
     from openai_async.utils.data import MsgFlow
     _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
-    return MsgFlow(uid=_cid).forget()
+    return MsgFlow(uid=message.from_user.id).forget()
 
 
 class Reply(object):
@@ -298,7 +298,8 @@ async def Text(bot, message, config, reset: bool = False):
                                          key=Api_keys.get_key()["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          method=types,
-                                         restart_name=_name
+                                         restart_name=_name,
+                                         start_name="Answer:"
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -333,7 +334,8 @@ async def private_Chat(bot, message, config):
                                              group=message.chat.id,
                                              key=Api_keys.get_key()["OPENAI_API_KEY"],
                                              prompt=_prompt,
-                                             restart_name=_name
+                                             restart_name=_name,
+                                             start_name="Answer:"
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
