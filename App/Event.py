@@ -160,7 +160,8 @@ class Reply(object):
                                         restart_sequ=restart_name,
                                         )
                 _head = Header(uid=user).get()
-                _head = ContentDfa.filter_all(_head)
+                if _head:
+                    _head = ContentDfa.filter_all(_head)
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
