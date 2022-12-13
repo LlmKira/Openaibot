@@ -201,7 +201,7 @@ class Talk(object):
 
 class Chatbot(object):
     def __init__(self, api_key, conversation_id, token_limit: int = 3500, restart_sequ: str = "\nSomeone:",
-                 start_sequ: str = "\nAnswer: ",
+                 start_sequ: str = "\nReply: ",
                  call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
