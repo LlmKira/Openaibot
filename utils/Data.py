@@ -99,7 +99,8 @@ class DefaultData(object):
 
     @staticmethod
     def composing_uid(user_id, chat_id):
-        return f"{user_id}:{chat_id}"
+        # return f"{user_id}:{chat_id}"
+        return f"{user_id}"
 
     @staticmethod
     def mask_middle(s: str, n: int) -> str:

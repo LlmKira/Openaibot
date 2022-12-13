@@ -68,7 +68,7 @@ async def Forget(bot, message, config):
     """
     from openai_async.utils.data import MsgFlow
     _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
-    return MsgFlow(uid=message.from_user.id).forget()
+    return MsgFlow(uid=_cid).forget()
 
 
 class Reply(object):
@@ -154,7 +154,7 @@ class Reply(object):
                 if len(restart_name) > 12:
                     restart_name = restart_name[-10:]
                 receiver = Chat.Chatbot(api_key=key,
-                                        conversation_id=user,
+                                        conversation_id=_cid,
                                         call_func=Api_keys.pop_api_key,
                                         start_sequ=start_name,
                                         restart_sequ=restart_name,
