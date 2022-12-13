@@ -299,7 +299,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Answer:"
+                                         start_name="Reply:"
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -335,7 +335,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key()["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="Answer:"
+                                             start_name="Reply:"
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
