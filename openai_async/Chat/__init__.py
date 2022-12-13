@@ -8,10 +8,7 @@ from __future__ import division, print_function, unicode_literals
 
 import json
 import os
-import random
 import re
-
-import loguru
 
 # import loguru
 # import jiagu
@@ -213,7 +210,7 @@ class Chatbot(object):
         :param call_func: 回调
         """
         self._api_key = api_key
-        self.conversation_id = conversation_id
+        self.conversation_id = str(conversation_id)
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
         self._start_sequence = start_sequ
         self._restart_sequence = restart_sequ
@@ -294,24 +291,8 @@ class Chatbot(object):
         PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
-
-        # 定义 token = token - extra
-        # 为了处理超长上下文一个 关键词提取机器 和 分词，分句子机器。
-        # 我们对 prompt 进行提取关键词，选高频词。
-        # 对列表进行如下处理
-        # 将对话组成二维表。连续的并列发言人抛弃上一位。
-        # 过滤空的，重复的，过短的提问组。
-        # 将最近的3组发言转入高注意力表，进行初步简化和语义提取，计算 token，计算剩余token。
-        # 使用高频词筛选关键对话加入处理表，弹出原表：(根据逗号分选长表和短表)对于短句直接加入，对于超长句进行二次分割，把关键词左中右三句加入。
-        # 计算 token，如果超过了剩余 token，抛弃超短句和早的句子，从表头弹出它们。
-        # 如果没达到要求，那么随机选取无关数据加入处理表。
-        # 第一位 链接 处理表 链接 高注意力表。
-        # 最后计算进行强制 while 裁剪
-        # 这里，连续的发言会被认定为 Api 失联，不具有价值。
-
-        # # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
+        # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
         # 刚开始玩直接返回原表
-
         # 提取内容
         _memory = []
         for i in memory:
