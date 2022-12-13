@@ -447,9 +447,9 @@ class Chatbot(object):
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
         if role is None:
-            role = f"I am a {_character} assistant."
+            role = f"{self._start_sequence} is a {_character} assistant."
         else:
-            role = f"I am a {_character} assistant.\n{self._start_sequence}{role}. "
+            role = f"{self._start_sequence} is a {_character} person.\n{self._start_sequence}{role}. "
         _header = f"{role}\n{head}\n"
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
         _prompt_memory = self._MsgFlow.read()
