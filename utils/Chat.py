@@ -180,7 +180,7 @@ class Utils(object):
 
     @staticmethod
     def trackMsg(msg_uid, user_id):
-        return MsgsRecordUtils.setKey(msg_uid, str(user_id), exN=86400)
+        return MsgsRecordUtils.setKey(msg_uid, str(user_id), exN=86400 * 2)
 
     @staticmethod
     def removeList(key, command):
