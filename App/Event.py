@@ -77,10 +77,17 @@ class Reply(object):
     """
 
     @staticmethod
-    async def load_response(user, group, key: Union[str, list], prompt: str = "Say this is a test",
-                            userlimit: int = None, method: str = "chat"):
+    async def load_response(user, group,
+                            key: Union[str, list],
+                            prompt: str = "Say this is a test",
+                            userlimit: int = None,
+                            method: str = "chat",
+                            start_name: str = "我:",
+                            restart_name: str = "某人:"):
         """
         发起请求
+        :param start_name: 称呼自己
+        :param restart_name: 称呼请求发起人
         :param user:
         :param group:
         :param key:
@@ -99,9 +106,9 @@ class Reply(object):
             return "TOO LONG"
         # 内容审计
         if ContentDfa.exists(str(prompt)):
-            _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "我不好说 ", "害怕", "这是理所当然的。",
+            _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "我不好说，", "害怕，", "这是理所当然的，",
                              "我可以说的是……", "我想说的是……", "我想强调的是……", "我想补充的是……", "我想指出的是……",
-                             "我想重申的是……", "我想强调的是……""什么事儿呀？", "是啊，是啊。", "你猜啊。", "就是啊。",
+                             "我想重申的是……", "我想强调的是……""什么事儿呀，", "是啊，是啊。", "你猜啊，", "就是啊，",
                              "哎呀，真的吗？",
                              "啊哈哈哈。", "你知道的。"]
             _censor = ["有点离谱，不想回答", "累了，歇会儿", "能不能换个话题？", "我不想说话。", "没什么好说的。",
@@ -142,9 +149,15 @@ class Reply(object):
                 from openai_async import Chat
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
                 # 启用单人账户桶
+                if len(start_name) > 12:
+                    start_name = start_name[-10:]
+                if len(restart_name) > 12:
+                    restart_name = restart_name[-10:]
                 receiver = Chat.Chatbot(api_key=key,
                                         conversation_id=user,
-                                        call_func=Api_keys.pop_api_key
+                                        call_func=Api_keys.pop_api_key,
+                                        start_sequ=start_name,
+                                        restart_sequ=restart_name,
                                         )
                 _head = Header(uid=user).get()
                 response = await receiver.get_chat_response(model="text-davinci-003",
@@ -252,7 +265,7 @@ async def Text(bot, message, config, reset: bool = False):
             _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
-            _remind = _remind.replace("YOU*", "某人")
+            _remind = _remind.replace("YOU*", "你")
             _remind = _remind.replace("ME*", "我")
             await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
@@ -276,10 +289,16 @@ async def Text(bot, message, config, reset: bool = False):
     if await WhiteGroupCheck(bot, message, config.WHITE):
         return
     try:
-        _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
+        # 自动获取名字
+        _name = f"{message.from_user.first_name}{message.from_user.last_name}"
+        if len(_name) > 12 and len(f"{message.from_user.last_name}") < 6:
+            _name = f"{message.from_user.last_name}"
+        _req = await Reply.load_response(user=message.from_user.id,
+                                         group=message.chat.id,
                                          key=Api_keys.get_key()["OPENAI_API_KEY"],
                                          prompt=_prompt,
-                                         method=types
+                                         method=types,
+                                         restart_name=_name
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -307,9 +326,15 @@ async def private_Chat(bot, message, config):
         return
     try:
         if len(_prompt) > 1:
-            _req = await Reply.load_response(user=message.from_user.id, group=message.chat.id,
+            _name = f"{message.from_user.first_name}{message.from_user.last_name}"
+            if len(_name) > 12 and len(f"{message.from_user.last_name}") < 6:
+                _name = f"{message.from_user.last_name}"
+            _req = await Reply.load_response(user=message.from_user.id,
+                                             group=message.chat.id,
                                              key=Api_keys.get_key()["OPENAI_API_KEY"],
-                                             prompt=_prompt)
+                                             prompt=_prompt,
+                                             restart_name=_name
+                                             )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
@@ -331,7 +356,7 @@ async def Friends(bot, message, config):
             _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
-            _remind = _remind.replace("YOU*", "某人")
+            _remind = _remind.replace("YOU*", "你")
             _remind = _remind.replace("ME*", "我")
             await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
             Header(uid=message.from_user.id).set(_remind)
