@@ -141,8 +141,9 @@ class Reply(object):
                 # CHAT
                 from openai_async import Chat
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
+                # 启用单人账户桶
                 receiver = Chat.Chatbot(api_key=key,
-                                        conversation_id=_cid,
+                                        conversation_id=user,
                                         call_func=Api_keys.pop_api_key
                                         )
                 _head = Header(uid=user).get()

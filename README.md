@@ -284,7 +284,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ### 上一次的性能分析
 
-**日常负载 200MB**
+**日常负载 316MB**
 
 ## 感谢
 
