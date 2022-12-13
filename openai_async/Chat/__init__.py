@@ -429,7 +429,7 @@ class Chatbot(object):
         return _Final
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
-                                character: list = None, head: str = None, role: str = None) -> dict:
+                                character: list = None, head: str = None, role: str = "") -> dict:
         """
         异步的，得到对话上下文
         :param role:
@@ -446,11 +446,11 @@ class Chatbot(object):
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
-        if role is None:
-            role = f"i am {self._start_sequence} is a {_character} assistant.\nPlay role of {self._start_sequence}"
-        else:
-            role = f"i am {self._start_sequence} is a {_character} person.i am {role}.\nPlay role of {self._start_sequence} "
-        _header = f"{role}\n{head}\n"
+        _role = f"i am {self._start_sequence} is a {_character} assistant.\nPlay role of {self._start_sequence}"
+        if role:
+            if len(f"{role}") > 5:
+                _role = f"i am {self._start_sequence}.{role}.\nPlay role of {self._start_sequence} "
+        _header = f"{_role}\n{head}\n"
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
         _prompt_memory = self._MsgFlow.read()
         # 寻找记忆和裁切上下文
