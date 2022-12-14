@@ -19,3 +19,4 @@ pathlib
 numpy
 wordcloud
 scikit-learn
+transformers

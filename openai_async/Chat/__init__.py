@@ -20,6 +20,9 @@ from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from .text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 from ..utils.data import MsgFlow
+from transformers import GPT2TokenizerFast
+
+gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 
 class Talk(object):
@@ -67,10 +70,7 @@ class Talk(object):
         :return:
         """
         # 统计中文字符数量
-        num_chinese = len([c for c in s if ord(c) > 127])
-        # 统计非中文字符数量
-        num_non_chinese = len([c for c in s if ord(c) <= 127])
-        return int(num_chinese * 2 + num_non_chinese * 0.25) + 5
+        return len(gpt_tokenizer.encode(s))
 
     @staticmethod
     def english_sentence_cut(text) -> list:
