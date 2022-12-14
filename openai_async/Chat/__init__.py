@@ -309,7 +309,7 @@ class Chatbot(object):
                     _list.append(meo[_ir].get("reply"))
             return _list
 
-        if len(memory) < 3:
+        if not len(memory) > 4:
             return _dict_ou(memory)
 
         # 组建对话意图
@@ -328,7 +328,7 @@ class Chatbot(object):
                 _High.append(memory[i].get("ask"))
                 _High.append(memory[i].get("reply"))
                 _index.append(memory[i])
-                if _high_count > 2:
+                if _high_count > 4:
                     break
         for i in _index:
             memory.remove(i)
