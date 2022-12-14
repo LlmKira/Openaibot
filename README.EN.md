@@ -11,8 +11,8 @@
 
 OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
-This program works with `Api` authentication `Token` and is not a reverse of `chatGPT`, the **Python implementation** of
-chatGPT **function** is implemented by this bot.
+This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
+the **Python implementation** of the chatGPT class is self-implemented by this bot.
 
 The **Python implementation** of chatGPT **functionality** is implemented by this bot. but the Api costs money
 
