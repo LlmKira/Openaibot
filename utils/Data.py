@@ -34,10 +34,10 @@ class Api_keys(object):
     """
 
     @staticmethod
-    def get_key():
+    def get_key(filePath: str = "api_keys.json"):
         now_table = DefaultData.defaultKeys()
-        if pathlib.Path("./Config/api_keys.json").exists():
-            with open("./Config/api_keys.json", encoding="utf-8") as f:
+        if pathlib.Path(filePath).exists():
+            with open(filePath, encoding="utf-8") as f:
                 _config = json.load(f)
                 DictUpdate.dict_update(now_table, _config)
                 _config = now_table
@@ -46,8 +46,8 @@ class Api_keys(object):
             return now_table
 
     @staticmethod
-    def save_key(_config):
-        with open("./Config/api_keys.json", "w+", encoding="utf8") as f:
+    def save_key(_config, filePath: str = "api_keys.json"):
+        with open(filePath, "w+", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
     @staticmethod
@@ -99,7 +99,8 @@ class DefaultData(object):
 
     @staticmethod
     def composing_uid(user_id, chat_id):
-        return f"{user_id}:{chat_id}"
+        # return f"{user_id}:{chat_id}"
+        return f"{user_id}"
 
     @staticmethod
     def mask_middle(s: str, n: int) -> str:

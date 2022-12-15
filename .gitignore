@@ -6,6 +6,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+analysis.json
+
 # C extensions
 *.so
 Config/*.json

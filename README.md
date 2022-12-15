@@ -13,7 +13,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-本程序利用 `Api` 认证 `Token` 运作，并不是 `chatGPT` 的逆向，chatGPT **功能**的 **Python 实现** 由本机器人自实现。
+本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现 chat ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 由本机器人自实现。
 
 *复刻的 chatGPT ，体验基本一样 (?)，就是 Api 要钱*
 
@@ -284,7 +284,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ### 上一次的性能分析
 
-**日常负载 200MB**
+**日常负载 316MB**
 
 ## 感谢
 

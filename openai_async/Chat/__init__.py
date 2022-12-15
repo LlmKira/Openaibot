@@ -10,19 +10,20 @@ import json
 import os
 import random
 import re
-
-import loguru
-
+import openai_async
 # import loguru
 # import jiagu
 
 
 # 基于 Completion 上层
-from openai_async import Completion
+from ..resouce import Completion
 from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from .text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 from ..utils.data import MsgFlow
+from transformers import GPT2TokenizerFast
+
+gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 
 class Talk(object):
@@ -70,10 +71,7 @@ class Talk(object):
         :return:
         """
         # 统计中文字符数量
-        num_chinese = len([c for c in s if ord(c) > 127])
-        # 统计非中文字符数量
-        num_non_chinese = len([c for c in s if ord(c) <= 127])
-        return int(num_chinese * 2 + num_non_chinese * 0.25) + 5
+        return len(gpt_tokenizer.encode(s))
 
     @staticmethod
     def english_sentence_cut(text) -> list:
@@ -203,8 +201,9 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id, token_limit: int = 3500, restart_sequ: str = "\n某人:",
-                 start_sequ: str = "\n我: ",
+    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3500,
+                 restart_sequ: str = "\nSomeone:",
+                 start_sequ: str = "\nReply: ",
                  call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
@@ -212,8 +211,18 @@ class Chatbot(object):
         :param conversation_id: 独立ID,每个场景需要独一个
         :param call_func: 回调
         """
-        self._api_key = api_key
-        self.conversation_id = conversation_id
+        if api_key is None:
+            api_key = openai_async.api_key
+        if isinstance(api_key, list):
+            api_key: list
+            if not api_key:
+                raise RuntimeError("NO KEY")
+            api_key = random.choice(api_key)
+            api_key: str
+        self.__api_key = api_key
+        if not api_key:
+            raise RuntimeError("NO KEY")
+        self.conversation_id = str(conversation_id)
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
         self._start_sequence = start_sequ
         self._restart_sequence = restart_sequ
@@ -294,24 +303,8 @@ class Chatbot(object):
         PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
-
-        # 定义 token = token - extra
-        # 为了处理超长上下文一个 关键词提取机器 和 分词，分句子机器。
-        # 我们对 prompt 进行提取关键词，选高频词。
-        # 对列表进行如下处理
-        # 将对话组成二维表。连续的并列发言人抛弃上一位。
-        # 过滤空的，重复的，过短的提问组。
-        # 将最近的3组发言转入高注意力表，进行初步简化和语义提取，计算 token，计算剩余token。
-        # 使用高频词筛选关键对话加入处理表，弹出原表：(根据逗号分选长表和短表)对于短句直接加入，对于超长句进行二次分割，把关键词左中右三句加入。
-        # 计算 token，如果超过了剩余 token，抛弃超短句和早的句子，从表头弹出它们。
-        # 如果没达到要求，那么随机选取无关数据加入处理表。
-        # 第一位 链接 处理表 链接 高注意力表。
-        # 最后计算进行强制 while 裁剪
-        # 这里，连续的发言会被认定为 Api 失联，不具有价值。
-
-        # # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
+        # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
         # 刚开始玩直接返回原表
-
         # 提取内容
         _memory = []
         for i in memory:
@@ -328,7 +321,7 @@ class Chatbot(object):
                     _list.append(meo[_ir].get("reply"))
             return _list
 
-        if len(memory) < 3:
+        if not len(memory) > 4:
             return _dict_ou(memory)
 
         # 组建对话意图
@@ -347,7 +340,7 @@ class Chatbot(object):
                 _High.append(memory[i].get("ask"))
                 _High.append(memory[i].get("reply"))
                 _index.append(memory[i])
-                if _high_count > 2:
+                if _high_count > 4:
                     break
         for i in _index:
             memory.remove(i)
@@ -448,7 +441,7 @@ class Chatbot(object):
         return _Final
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
-                                character: list = None, head: str = None, role: str = None) -> dict:
+                                character: list = None, head: str = None, role: str = "") -> dict:
         """
         异步的，得到对话上下文
         :param role:
@@ -465,11 +458,11 @@ class Chatbot(object):
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
-        if role is None:
-            role = f"I am a {_character} assistant."
-        else:
-            role = f"I am a {_character} assistant.\n{self._start_sequence}{role}. "
-        _header = f"{role}\n{head}\n"
+        _role = f"i am {self._start_sequence} is a {_character} assistant.\nPlay role of {self._start_sequence}"
+        if role:
+            if len(f"{role}") > 5:
+                _role = f"i am {self._start_sequence}.{role}.\nPlay role of {self._start_sequence} "
+        _header = f"{_role}\n{head}\n"
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
         _prompt_memory = self._MsgFlow.read()
         # 寻找记忆和裁切上下文
@@ -491,7 +484,8 @@ class Chatbot(object):
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
+        # print(_prompt)
+        response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
             temperature=0.9,
