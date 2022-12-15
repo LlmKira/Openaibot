@@ -25,13 +25,16 @@ class Completion(object):
         if not api_key:
             raise RuntimeError("NO KEY")
         self.__api_key = api_key
+        if not proxy_url:
+            proxy_url = openai_async.proxy_url
         self.__proxy = proxy_url
         self.__call_func = call_func
 
     def get_api_key(self):
         return self.__api_key
 
-    async def create(self, model: str = "text-davinci-003",
+    async def create(self,
+                     model: str = "text-davinci-003",
                      prompt: str = "Say this is a test",
                      temperature: float = 0,
                      max_tokens: int = 7,
@@ -53,23 +56,26 @@ class Completion(object):
         """
         api = API["v1"]["completions"]
         # 参数决定
-        params = {"model": model,
-                  "prompt": prompt,
-                  "temperature": temperature,
-                  "max_tokens": max_tokens
-                  }
-        api_config = {param: api["params"][param]["Defaults"]
-                      for param in api["params"].keys()
-                      if (param in kwargs) or (param in params)
-                      }
+        params = {
+            "model": model,
+            "prompt": prompt,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        api_config = {
+            param: api["params"][param]["Defaults"]
+            for param in api["params"].keys()
+            if (param in kwargs) or (param in params)
+        }
         api_config.update(params)
         api_config.update(kwargs)
         # 返回请求
-        return await request("POST",
-                             api["url"],
-                             data=api_config,
-                             auth=self.__api_key,
-                             proxy=self.__proxy,
-                             json_body=True,
-                             call_func=self.__call_func
-                             )
+        return await request(
+            "POST",
+            api["url"],
+            data=api_config,
+            auth=self.__api_key,
+            proxy=self.__proxy,
+            json_body=True,
+            call_func=self.__call_func
+        )

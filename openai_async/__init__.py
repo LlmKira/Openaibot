@@ -8,3 +8,4 @@ from .resouce import Completion
 from .Chat import Chatbot
 
 api_key = None
+proxy_url = ""
