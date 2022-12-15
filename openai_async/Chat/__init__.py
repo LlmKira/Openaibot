@@ -356,7 +356,7 @@ class Chatbot(object):
                     break
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
-        print(_msg_flow)
+        # print(_msg_flow)
         _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
         """
                 if _out:
