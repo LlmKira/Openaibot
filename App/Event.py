@@ -265,7 +265,7 @@ async def Text(bot, message, config, reset: bool = False):
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
         if _csonfig["allow_change_head"]:
-            _remind = _remind.replace("你是", "ME*扮演")
+            # _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
             _remind = _remind.replace("YOU*", "你")
@@ -360,7 +360,7 @@ async def Friends(bot, message, config):
             return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         if _csonfig["allow_change_head"]:
-            _remind = _remind.replace("你是", "ME*扮演")
+            # _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
             _remind = _remind.replace("YOU*", "你")
