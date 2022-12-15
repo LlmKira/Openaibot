@@ -390,7 +390,7 @@ class Chatbot(object):
         _role = f"I am [{self._start_sequence}] following.\nI am a [{_character}] assistant.\n"
         if role:
             if len(f"{role}") > 5:
-                _role = f"I am [{self._start_sequence}] following.\nI am [{_character}]\nI am sure that [{role}].\n"
+                _role = f"I am [{self._start_sequence}] following.\n{role}.\n"
         _header = f"{_role}\n{head}\n"
         # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
