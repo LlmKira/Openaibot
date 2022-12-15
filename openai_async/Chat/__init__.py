@@ -389,7 +389,7 @@ class Chatbot(object):
         _character = ",".join(character)
         _role = f"I am [{self._start_sequence}] following.\nI am a [{_character}] assistant.\n"
         if role:
-            if len(f"{role}") > 5:
+            if len(f"{role}") > 4:
                 _role = f"I am [{self._start_sequence}] following.\n{role}.\n"
         _header = f"{_role}\n{head}\n"
         # 构建主体
