@@ -655,8 +655,8 @@ async def About(bot, message, config):
 
 async def Help(bot, message, config):
     await bot.reply_to(message, f"""
-Use /chat + 句子 启动新消息流，只需要回复即可交谈。二十四小时前的消息会被Ai忘记。
-记录太长会被自动截断/浓缩。
-Use /write +句子 进行续写
+Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前的消息不能回复。
+Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
+Use /forgetme 遗忘过去，res history。
 """)
