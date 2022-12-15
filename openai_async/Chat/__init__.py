@@ -8,14 +8,15 @@ from __future__ import division, print_function, unicode_literals
 
 import json
 import os
+import random
 import re
-
+import openai_async
 # import loguru
 # import jiagu
 
 
 # 基于 Completion 上层
-from openai_async import Completion
+from ..resouce import Completion
 from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from .text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
@@ -200,7 +201,8 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key, conversation_id, token_limit: int = 3500, restart_sequ: str = "\nSomeone:",
+    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3500,
+                 restart_sequ: str = "\nSomeone:",
                  start_sequ: str = "\nReply: ",
                  call_func=None):
         """
@@ -209,7 +211,17 @@ class Chatbot(object):
         :param conversation_id: 独立ID,每个场景需要独一个
         :param call_func: 回调
         """
-        self._api_key = api_key
+        if api_key is None:
+            api_key = openai_async.api_key
+        if isinstance(api_key, list):
+            api_key: list
+            if not api_key:
+                raise RuntimeError("NO KEY")
+            api_key = random.choice(api_key)
+            api_key: str
+        self.__api_key = api_key
+        if not api_key:
+            raise RuntimeError("NO KEY")
         self.conversation_id = str(conversation_id)
         self._MsgFlow = MsgFlow(uid=self.conversation_id)
         self._start_sequence = start_sequ
@@ -472,8 +484,8 @@ class Chatbot(object):
             _prompt = _prompt[1:]
         if _mk > 0:
             _prompt = _header + _prompt
-        print(_prompt)
-        response = await Completion(api_key=self._api_key, call_func=self.__call_func).create(
+        # print(_prompt)
+        response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
             temperature=0.9,

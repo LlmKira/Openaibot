@@ -128,6 +128,7 @@ class Reply(object):
         # 请求
         try:
             import openai_async
+            openai_async.api_key = key
             # Openai_python
             # import openai
             # openai.api_key = key
@@ -135,9 +136,7 @@ class Reply(object):
             #                                     max_tokens=int(_csonfig["token_limit"]))
             if method == "write":
                 # OPENAI
-                response = await openai_async.Completion(api_key=key,
-                                                         call_func=Api_keys.pop_api_key
-                                                         ).create(
+                response = await openai_async.Completion(call_func=Api_keys.pop_api_key).create(
                     model="text-davinci-003",
                     prompt=str(prompt),
                     temperature=0.2,
@@ -153,8 +152,8 @@ class Reply(object):
                     start_name = start_name[-10:]
                 if len(restart_name) > 12:
                     restart_name = restart_name[-10:]
-                receiver = Chat.Chatbot(api_key=key,
-                                        conversation_id=_cid,
+                receiver = Chat.Chatbot(
+                                        conversation_id=int(_cid),
                                         call_func=Api_keys.pop_api_key,
                                         start_sequ=start_name,
                                         restart_sequ=restart_name,
@@ -297,7 +296,7 @@ async def Text(bot, message, config, reset: bool = False):
             _name = f"{message.from_user.last_name}"
         _req = await Reply.load_response(user=message.from_user.id,
                                          group=message.chat.id,
-                                         key=Api_keys.get_key()["OPENAI_API_KEY"],
+                                         key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
@@ -334,7 +333,7 @@ async def private_Chat(bot, message, config):
                 _name = f"{message.from_user.last_name}"
             _req = await Reply.load_response(user=message.from_user.id,
                                              group=message.chat.id,
-                                             key=Api_keys.get_key()["OPENAI_API_KEY"],
+                                             key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
                                              start_name="Reply:"
@@ -594,7 +593,7 @@ async def Master(bot, message, config):
                 logger.info("SETTING:whiteGroup OFF")
 
             if command == "/see_api_key":
-                keys = Api_keys.get_key()
+                keys = Api_keys.get_key("./Config/api_keys.json")
                 # 脱敏
                 _key = []
                 for i in keys["OPENAI_API_KEY"]:

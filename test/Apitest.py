@@ -3,18 +3,26 @@
 # @FileName: Apitest.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import asyncio
 
 # 最小单元测试
-import openai
-from utils.Base import ReadConfig
+import openai_async
+from utils.Data import Api_keys
 
-config = ReadConfig().parseFile("../Config/app.toml")
-openai.api_key = config.bot.OPENAI_API_KEY
-response = openai.Completion.create(model="text-davinci-003", prompt="Say this is a test", temperature=0,
-                                    max_tokens=20)
+openai_async.api_key = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
 
-# TEST
-print(response)
-print(type(response))
-print(response.get("choise"))
-print(response.get("choices"))
+print(openai_async.api_key)
+
+
+async def main():
+    response = await openai_async.Completion().create(model="text-davinci-003",
+                                                      prompt="Say this is a test",
+                                                      temperature=0,
+                                                      max_tokens=20)
+
+    # TEST
+    print(response)
+    print(type(response))
+
+
+asyncio.run(main())
