@@ -3,8 +3,6 @@
 # @FileName: chat.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from __future__ import absolute_import
-from __future__ import division, print_function, unicode_literals
 
 import json
 import os
@@ -35,9 +33,9 @@ class Talk(object):
         :param ratio: 摘要占文本长度的比例
         :return:
         """
-        summ = TfidfSummarization(ratio=ratio)
-        summ = summ.analysis(sentence)
-        return summ
+        _sum = TfidfSummarization(ratio=ratio)
+        _sum = _sum.analysis(sentence)
+        return _sum
 
     @staticmethod
     def simhash_similarity(pre, aft):
