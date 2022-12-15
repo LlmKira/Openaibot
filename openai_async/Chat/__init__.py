@@ -292,18 +292,23 @@ class Chatbot(object):
             _item = _item.replace(key, value)
         return _item
 
-    def Summer(self, prompt: str, memory: list, extra_token: int = 0) -> list:
+    def Summer(self, prompt: str, memory: list, extra_token: int = 0, recent_memory_num: int = 4) -> list:
         """
         只负责处理消息桶
         :param prompt: 记忆提示
         :param extra_token: 记忆的限制
         :param memory: 记忆桶
+        :param recent_memory_num: 参考最近的几条记忆
         PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
         # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
         # 刚开始玩直接返回原表
         # 提取内容
+
+        # 首先将记忆桶中的内容按时间排序，防止上下文乱序
+        memory = sorted(memory, key=lambda x: int(x["time"]))
+
         _memory = []
         for i in memory:
             _memory.append(i["content"])
@@ -319,7 +324,7 @@ class Chatbot(object):
                     _list.append(meo[_ir].get("reply"))
             return _list
 
-        if not len(memory) > 4:
+        if not len(memory) > recent_memory_num - 1:  # 如果记忆桶中的记忆不足,直接返回原列表
             return _dict_ou(memory)
 
         # 组建对话意图
@@ -332,7 +337,7 @@ class Chatbot(object):
         _High = []
         _high_count = 0
         _index = []
-        for i in range(len(memory)):
+        for i in range(len(memory) - recent_memory_num, len(memory)):  # 取出最近的几条记忆
             if memory[i].get("ask") and memory[i].get("reply"):
                 _high_count += 1
                 _High.append(memory[i].get("ask"))
