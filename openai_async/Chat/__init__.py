@@ -199,7 +199,7 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3500,
+    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3505,
                  restart_sequ: str = "\nSomeone:",
                  start_sequ: str = "\nReply: ",
                  call_func=None):
@@ -375,7 +375,7 @@ class Chatbot(object):
             _reply = __reply.split(":", 1)
             _diff1 = Talk.simhash_similarity(pre=prompt, aft=_ask[1])
             _diff2 = Talk.simhash_similarity(pre=prompt, aft=_reply[1])
-            if _diff2 < 20 or _diff1 < 20:
+            if _diff2 < 17 or _diff1 < 22:
                 _diff = _diff1 if _diff1 < _diff2 else _diff2
                 if _create_token - Talk.tokenizer(__ask + __reply) < 0:
                     break
@@ -388,7 +388,7 @@ class Chatbot(object):
         # 计算关联并填充余量
         _create_token = _create_token - _now_token
         _relate = []
-        _key = Talk.tfidf_keywords(prompt, topK=4)
+        _key = Talk.tfidf_keywords(prompt, topK=3)
         for i in range(len(memory)):
             # 主题
             __ask = memory[i].get("ask")
