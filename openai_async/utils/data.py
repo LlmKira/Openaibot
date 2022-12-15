@@ -27,7 +27,7 @@ class MsgFlow(object):
         :param uid: 独立 id ，是一个消息桶
         """
         self.uid = str(uid)
-        self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_chat_")
+        self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_chat_r_")
         self.memory: int = 80
 
     @staticmethod
@@ -40,6 +40,20 @@ class MsgFlow(object):
     def _set_uid(self, uid, message_streams):
         return self.MsgFlowData.setKey(uid, message_streams)
 
+    def get_content(self, meo, sign: bool = False) -> tuple:
+        """
+        得到单条消息的内容
+        :param sign: 是否署名
+        :param meo: 消息对象提取内容
+        :return: ask,reply
+        """
+        _ask_ = meo["content"].get("ask")
+        _reply_ = meo["content"].get("reply")
+        if not sign and ":" in _ask_ and '：' in _reply_:
+            _ask_ = _ask_.split(":", 1)[1]
+            _reply_ = _reply_.split(":", 1)[1]
+        return _ask_, _reply_
+
     def saveMsg(self, msg: dict) -> None:
         # {"ask": {self._restart_sequence: prompt}, "reply": {self._start_sequence: REPLY[0]}}
         import time
@@ -47,7 +61,7 @@ class MsgFlow(object):
         content = {"content": msg, "time": time_s}
         _message_streams = self._get_uid(self.uid)
         if "msg" in _message_streams:
-            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'], reverse=True)
+            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'], reverse=False)
             # 记忆容量重整
             if len(_message_streams["msg"]) > self.memory:
                 for i in range(len(_message_streams["msg"]) - self.memory + 1):
