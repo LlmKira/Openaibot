@@ -352,7 +352,7 @@ class Chatbot(object):
                 ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
                 _now_token += Talk.tokenizer(f"{ask}{reply}")
                 if _now_token > _create_token:
-                    print(f"{ask}-> {_now_token}")
+                    # print(f"{ask}-> {_now_token}")
                     break
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
