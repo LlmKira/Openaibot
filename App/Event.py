@@ -153,11 +153,11 @@ class Reply(object):
                 if len(restart_name) > 12:
                     restart_name = restart_name[-10:]
                 receiver = Chat.Chatbot(
-                                        conversation_id=int(_cid),
-                                        call_func=Api_keys.pop_api_key,
-                                        start_sequ=start_name,
-                                        restart_sequ=restart_name,
-                                        )
+                    conversation_id=int(_cid),
+                    call_func=Api_keys.pop_api_key,
+                    start_sequ=start_name,
+                    restart_sequ=restart_name,
+                )
                 _head = Header(uid=user).get()
                 if _head:
                     _head = ContentDfa.filter_all(_head)
@@ -242,8 +242,10 @@ async def Text(bot, message, config, reset: bool = False):
     # 拿到 prompt
     _prompt = message.text
     types = "chat"
-    if message.text.startswith("/chat"):
+    if message.text.startswith("/forgetme"):
         await Forget(bot, message, config)
+        return await bot.reply_to(message, f"Down,Miss you")
+    if message.text.startswith("/chat"):
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
@@ -314,11 +316,13 @@ async def private_Chat(bot, message, config):
     # 处理初始化
     _prompt = message.text
     if message.text.startswith("/chat"):
-        await Forget(bot, message, config)
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
         _prompt = _prompt_r[1]
+    if message.text.startswith("/forgetme"):
+        await Forget(bot, message, config)
+        return await bot.reply_to(message, f"Down,Miss you")
     # 处理机器人开关
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
@@ -368,7 +372,7 @@ async def Friends(bot, message, config):
             Header(uid=message.from_user.id).set({})
         return
         # 启动函数
-    if command.startswith("/chat") or not command.startswith("/"):
+    if command.startswith("/chat") or command.startswith("/forgetme") or not command.startswith("/"):
         await private_Chat(bot, message, config)
 
 

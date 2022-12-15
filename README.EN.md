@@ -214,6 +214,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                                                                                                           |
 | `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
+| `/forgetme`                        | 忘记我                  |                                  |
 
 ### Sample table
 
@@ -221,6 +222,7 @@ Restricted class setting set to ``1`` means no effect.
 chat - Talking
 write - complement
 remind - persona
+forgetme - reset
 set_user_cold - set user cooldown
 set_group_cold - sets the group cooldown time
 set_token_limit - set output limit length
