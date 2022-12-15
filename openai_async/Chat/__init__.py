@@ -383,7 +383,7 @@ class Chatbot(object):
                     break
                 else:
                     _sim.append({"diff": _diff, "content": memory[i]})
-        # 取出
+        # 取出相似度阵列
         _sim.sort(key=lambda x: x['diff'])
         _sim_content = list([x['content'] for x in _sim])
 
@@ -391,13 +391,13 @@ class Chatbot(object):
         _create_token = _create_token - _now_token
         _relate = []
         for i in range(len(memory)):
-            # 计算相似度
+            # 主题
             __ask = memory[i].get("ask")
             __reply = memory[i].get("reply")
             _ask = __ask.split(":", 1)
             _reply = __reply.split(":", 1)
             add = False
-            _key = Talk.tfidf_keywords(prompt, topK=3)
+            _key = Talk.tfidf_keywords(prompt, topK=4)
             for ir in _key:
                 if ir in _ask + _reply:
                     add = True
