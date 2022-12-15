@@ -305,7 +305,7 @@ class Chatbot(object):
             _result.append(reply)
         return _result
 
-    def Summer(self, prompt: str, memory: list, attention: int = 5, extra_token: int = 0) -> list:
+    def Summer(self, prompt: str, memory: list, attention: int = 4, extra_token: int = 0) -> list:
         """
         以单条消息为对象处理达标并排序时间轴
         数据清洗采用权重设定，而不操作元素删减
@@ -318,19 +318,19 @@ class Chatbot(object):
         # 单条消息的内容 {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
         _create_token = self.__token_limit - extra_token
         # 入口检查
-        if len(memory) < attention:
+        if len(memory) - attention < 0:
             return self.convert_msgflow_to_list(memory)
         # 组建
-        for i in range(0, attention):
+        for i in range(len(memory) - attention, len(memory)):
             memory[i]["content"]["weight"] = 1000
         # 筛选标准发言机器
         _index = []
-        for i in range(attention, len(memory)):
+        for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             if len(ask) < 1 or len(reply) < 1:
                 memory[i]["content"]["weight"] = 0
         # 相似度检索
-        for i in range(attention, len(memory)):
+        for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             _diff1 = Talk.simhash_similarity(pre=prompt, aft=ask)
             _diff2 = Talk.simhash_similarity(pre=prompt, aft=reply)
@@ -338,7 +338,7 @@ class Chatbot(object):
             memory[i]["content"]["weight"] = (100 - _diff)  # 相比于关键词检索有 2个优先级
         # 主题检索
         _key = Talk.tfidf_keywords(prompt, topK=3)
-        for i in range(attention, len(memory)):
+        for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
                 if ir in f"{ask}{reply}":
@@ -356,6 +356,7 @@ class Chatbot(object):
                     break
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
+        print(_msg_flow)
         _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
         """
                 if _out:
@@ -368,7 +369,7 @@ class Chatbot(object):
         """
         return _msg_flow_list
 
-    async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
+    async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
                                 character: list = None, head: str = None, role: str = "") -> dict:
         """
         异步的，得到对话上下文
