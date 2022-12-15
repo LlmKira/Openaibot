@@ -11,8 +11,10 @@
 
 OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
+>Translate by deepl (wink~
+
 This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
-the **Python implementation** of the chatGPT class is self-implemented by this bot.
+the **Python implementation** of the chatGPT-like is self-implemented by this bot.
 
 The **Python implementation** of chatGPT **functionality** is implemented by this bot. but the Api costs money
 
@@ -22,8 +24,8 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 
 * chat (chat) chatGpt replica + NLP enhancements
 * write independent speculation, continuation
-* Set fixed head persona
-* Multi-host management
+* Set a constant story set point
+* Multi maneger
 * Multi Api key load, overrun popup.
 * chatGPT api version implementation, not reverse preview's api
 * Support for private chats
@@ -33,21 +35,18 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 * Whitelisting support
 * Blacklisting support
 * Support for content filtering
-* (20221205) Dependency library does not support asynchronous, a lot of requests will block, replace it with your own
-  asynchronous library
-* chatGpt replaced with own chatGpt Openai api Python implementation
+* (20221205) Api library changed to an Async library implemented in this repository
 * Dynamic context trimming to prevent overruns
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
-*
-    * chatGpt **
+**chatGpt**
 
-🔭 Using `/chat + sentence` you can reset the AI's memory and then **just reply** to talk. Private chat messages or group
-messages within 24 hours are automatically inferred and cropped using context, and the conversation can continue by
+🔭 Using `/chat + sentence` you can start a loop and then **just reply** to talk. Private chat messages or group
+messages within 48 hours are automatically inferred and cropped using context, and the conversation can continue by
 replying directly.
 
-Ai's memory bucket is reset every time `/chat` is used.
+Use `/forgetme` resetAi's memory.
 
 **Continued**
 
@@ -139,9 +138,9 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
-[Telegram botToken request](https://t.me/BotFather)
+[get Telegram botToken](https://t.me/BotFather)
 
-**configure key**
+**configure (one or more) key**
 
 ```markdown
 see_api_key - now several Api keys
@@ -149,7 +148,8 @@ del_api_key - remove Api key
 add_api_key - add Api key
 ```
 
-[OPENAI_API_KEY application](https://beta.openai.com/account/api-keys), support for multiple key distribution load
+[OPENAI_API_KEY application](https://beta.openai.com/account/api-keys)
+
 [Pricing Reference](https://openai.com/api/pricing/)
 
 Please don't expose your `app.toml` to anyone
@@ -269,10 +269,9 @@ will automatically merge the missing keys to fix them.
 
 ### Default parameters
 
-- Group revert memory to 24 hours
-- Usage limit is 60000/h
-- Contextual strong memory is 3, persona memory is permanent, retrospective memory is 70
-- Trigger truncation of 3333x4 (api:max 4095x4) (tokenx4 rough estimate)
+- Group revert memory to 48 hours
+- Usage limit is 15000/h
+- Memory capacity of 80 dialogue pairs
 
 ### prompt_server.py
 
@@ -291,7 +290,7 @@ Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
 ### Last performance analysis
 
-**Daily load 200MB**
+**Daily load 300MB**
 
 ### Thanks to
 
