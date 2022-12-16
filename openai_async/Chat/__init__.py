@@ -330,7 +330,7 @@ class Chatbot(object):
             if len(prompt) < 80:
                 if (prompt.startswith("介绍") or prompt.startswith("查询")
                     or "2022年" in prompt or "2023年" in prompt) \
-                        or (len(prompt) < 12 and "?" in prompt or "？" in prompt):
+                        or (len(prompt) < 15 and "?" in prompt or "？" in prompt):
                     try:
                         if prompt.startswith("介绍") or prompt.startswith("查询"):
                             prompt.replace("介绍", "").replace("查询", "")
