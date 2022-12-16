@@ -307,20 +307,25 @@ class Chatbot(object):
         _appenx = ""
         # 提取内容
         re = []
+
+        # TIME
         from datetime import datetime, timedelta, timezone
         utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
         bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
-
-        _time = ["time", "多少天", "几天", "时间", "几点", "今天", "明天", "几月", "几月", "几号", "几个月", "天前"]
+        _time = ["time", "多少天", "几天", "时间", "几点", "今天", "昨天", "明天", "几月", "几月", "几号", "几个月",
+                 "天前"]
         if self.isIN(prompt=prompt, keywords=_time):
             now = bj_dt.strftime("%Y-%m-%d %H:%M")
             re.append(f"Current Time UTC8 {now}")
+
+        # WEEK
         _week_list = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
-        _week_key = ["星期"]
+        _week_key = ["星期", "星期几", "时间"]
         if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
             onw = bj_dt.weekday()
             re.append(f"Now {_week_list[onw]}")
 
+        # WEB
         if web_enhance_server:
             if len(prompt) < 80:
                 if (prompt.startswith("介绍") or prompt.startswith("查询")
