@@ -7,8 +7,6 @@
 import json
 import os
 import random
-import time
-
 import openai_async
 from .web import webEnhance
 
@@ -136,13 +134,14 @@ class Chatbot(object):
     def Summer(self,
                prompt: str,
                memory: list,
-               attention: int = 4,
+               attention: int = 3,
                start_token: int = 0,
                extra_token: int = 0
                ) -> list:
         """
         以单条消息为对象处理达标并排序时间轴
         数据清洗采用权重设定，而不操作元素删减
+        :param start_token: 中间件传过来的 token
         :param attention: 注意力
         :param prompt: 记忆提示
         :param extra_token: 记忆的限制
@@ -222,7 +221,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"{self._restart_sequence}让我们谈谈吧。\n"
+            head = f"{self._restart_sequence}让我们谈谈吧\n"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
