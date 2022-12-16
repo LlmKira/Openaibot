@@ -240,11 +240,12 @@ class Chatbot(object):
             Talk.tokenizer(self._start_sequence) +
             max_tokens +
             Talk.tokenizer(_header + _prompt_s[0]))
-        # Web 支持
         _prompt_list = []
+        # 中间件
         _appenx = self.Prehance(prompt=prompt, web_enhance_server=web_enhance_server)
         start_token = int(Talk.tokenizer(_appenx))
         _prompt_list.append(_appenx)
+        # 记忆池
         _prompt_apple = self.Summer(prompt=prompt,
                                     start_token=start_token,
                                     memory=_prompt_memory,
