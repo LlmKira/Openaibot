@@ -1,4 +1,5 @@
 ![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/covers.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_shield)
 
 ------------------------------------
 <p align="center">
@@ -18,6 +19,9 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 *复刻的 chatGPT ，体验基本一样 (?)，就是 Api 要钱*
 
 *自制异步依赖库提速，自制上下文优化策略*
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
 ## 特性
 
@@ -294,9 +298,11 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
+
 #### 声明
 
 ```markdown
 1. 此项目不是 Openai 的官方项目。
 2. 不对机器人生成的任何内容负责。
 ```
+
