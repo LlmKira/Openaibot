@@ -350,4 +350,5 @@ if __name__ == "__main__":
     # word2vec_synonym()
     # synonym_dict()
     # triple_extraction()
-    simhash_similarity()
+    # simhash_similarity()
+    triple_extraction()

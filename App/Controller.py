@@ -67,8 +67,7 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
         async def group_msg(message):
             global me_id
-            if message.text.startswith("/chat") or message.text.startswith("/write") or message.text.startswith(
-                    "/remind"):
+            if message.text.startswith(("/chat", "/write", "/forgetme", "/remind")):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
             else:
@@ -76,7 +75,7 @@ class BotRunner(object):
                     if message.reply_to_message.from_user.id == me_id:
                         await Event.Text(bot, message, _config, reset=False)
                         request_timestamps.append(time.time())
-            if message.text == "/help":
+            if message.text.startswith("/help"):
                 await Event.Help(bot, message, _config)
             return
 
@@ -85,8 +84,7 @@ class BotRunner(object):
         async def handle_private_msg(message):
             if message.from_user.id in _config.master:
                 await Event.Master(bot, message, _config)
-            if message.text.startswith("/chat") or not message.text.startswith("/") or message.text.startswith(
-                    "/remind"):
+            if message.text.startswith(("/chat", "/write", "/forgetme", "/remind")) or not message.text.startswith("/"):
                 await Event.Friends(bot, message, _config)
             request_timestamps.append(time.time())
 

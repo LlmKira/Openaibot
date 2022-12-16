@@ -3,6 +3,8 @@
 # @FileName: Summer.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+from __future__ import absolute_import
+from __future__ import division, print_function, unicode_literals
 
 # NO USE
 
@@ -14,7 +16,6 @@ class ChatUtils(object):
 
     @staticmethod
     def summary_v2(sentence, n):
-
         from sumy.nlp.stemmers import Stemmer
         from sumy.nlp.tokenizers import Tokenizer
         from sumy.parsers.plaintext import PlaintextParser

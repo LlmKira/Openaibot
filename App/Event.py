@@ -82,8 +82,8 @@ class Reply(object):
                             prompt: str = "Say this is a test",
                             userlimit: int = None,
                             method: str = "chat",
-                            start_name: str = "我:",
-                            restart_name: str = "某人:"):
+                            start_name: str = "Ai:",
+                            restart_name: str = "Human:"):
         """
         发起请求
         :param start_name: 称呼自己
@@ -153,11 +153,11 @@ class Reply(object):
                 if len(restart_name) > 12:
                     restart_name = restart_name[-10:]
                 receiver = Chat.Chatbot(
-                                        conversation_id=int(_cid),
-                                        call_func=Api_keys.pop_api_key,
-                                        start_sequ=start_name,
-                                        restart_sequ=restart_name,
-                                        )
+                    conversation_id=int(_cid),
+                    call_func=Api_keys.pop_api_key,
+                    start_sequ=start_name,
+                    restart_sequ=restart_name,
+                )
                 _head = Header(uid=user).get()
                 if _head:
                     _head = ContentDfa.filter_all(_head)
@@ -242,8 +242,10 @@ async def Text(bot, message, config, reset: bool = False):
     # 拿到 prompt
     _prompt = message.text
     types = "chat"
-    if message.text.startswith("/chat"):
+    if message.text.startswith("/forgetme"):
         await Forget(bot, message, config)
+        return await bot.reply_to(message, f"Down,Miss you")
+    if message.text.startswith("/chat"):
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
@@ -263,7 +265,7 @@ async def Text(bot, message, config, reset: bool = False):
         if Utils.tokenizer(_remind) > 333:
             return await bot.reply_to(message, f"过长:{_remind}")
         if _csonfig["allow_change_head"]:
-            _remind = _remind.replace("你是", "ME*扮演")
+            # _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
             _remind = _remind.replace("YOU*", "你")
@@ -300,7 +302,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Reply:"
+                                         start_name="ChatGPT:"
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -314,11 +316,13 @@ async def private_Chat(bot, message, config):
     # 处理初始化
     _prompt = message.text
     if message.text.startswith("/chat"):
-        await Forget(bot, message, config)
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
         _prompt = _prompt_r[1]
+    if message.text.startswith("/forgetme"):
+        await Forget(bot, message, config)
+        return await bot.reply_to(message, f"Down,Miss you")
     # 处理机器人开关
     if not _csonfig.get("statu"):
         await bot.reply_to(message, "BOT:Under Maintenance")
@@ -336,7 +340,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="Reply:"
+                                             start_name="ChatGPT:"
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
@@ -356,7 +360,7 @@ async def Friends(bot, message, config):
             return await bot.reply_to(message, f"过长:{_remind}")
         _remind = ContentDfa.filter_all(_remind)
         if _csonfig["allow_change_head"]:
-            _remind = _remind.replace("你是", "ME*扮演")
+            # _remind = _remind.replace("你是", "ME*扮演")
             _remind = _remind.replace("你", "ME*")
             _remind = _remind.replace("我", "YOU*")
             _remind = _remind.replace("YOU*", "你")
@@ -368,7 +372,7 @@ async def Friends(bot, message, config):
             Header(uid=message.from_user.id).set({})
         return
         # 启动函数
-    if command.startswith("/chat") or not command.startswith("/"):
+    if command.startswith("/chat") or command.startswith("/forgetme") or not command.startswith("/"):
         await private_Chat(bot, message, config)
 
 
@@ -651,8 +655,8 @@ async def About(bot, message, config):
 
 async def Help(bot, message, config):
     await bot.reply_to(message, f"""
-Use /chat + 句子 启动新消息流，只需要回复即可交谈。二十四小时前的消息会被Ai忘记。
-记录太长会被自动截断/浓缩。
-Use /write +句子 进行续写
+Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前的消息不能回复。
+Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
+Use /forgetme 遗忘过去，res history。
 """)

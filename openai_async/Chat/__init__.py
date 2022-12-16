@@ -3,8 +3,6 @@
 # @FileName: chat.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from __future__ import absolute_import
-from __future__ import division, print_function, unicode_literals
 
 import json
 import os
@@ -35,9 +33,9 @@ class Talk(object):
         :param ratio: 摘要占文本长度的比例
         :return:
         """
-        summ = TfidfSummarization(ratio=ratio)
-        summ = summ.analysis(sentence)
-        return summ
+        _sum = TfidfSummarization(ratio=ratio)
+        _sum = _sum.analysis(sentence)
+        return _sum
 
     @staticmethod
     def simhash_similarity(pre, aft):
@@ -201,7 +199,7 @@ class Talk(object):
 
 
 class Chatbot(object):
-    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3500,
+    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3505,
                  restart_sequ: str = "\nSomeone:",
                  start_sequ: str = "\nReply: ",
                  call_func=None):
@@ -248,7 +246,7 @@ class Chatbot(object):
         if not REPLY:
             REPLY = [""]
         # 构建一轮对话场所
-        _msg = {"ask": f"{self._restart_sequence}{prompt}", "reply": f"{self._start_sequence}{REPLY[0]}"}
+        _msg = {"weight": 0, "ask": f"{self._restart_sequence}{prompt}", "reply": f"{self._start_sequence}{REPLY[0]}"}
         # 存储成对的对话
         self._MsgFlow.saveMsg(msg=_msg)
         # 拒绝分条存储
@@ -294,153 +292,84 @@ class Chatbot(object):
             _item = _item.replace(key, value)
         return _item
 
-    def Summer(self, prompt: str, memory: list, extra_token: int = 0) -> list:
+    def convert_msgflow_to_list(self, msg_list: list) -> list:
         """
-        只负责处理消息桶
+        提取以单条 msgflow 组成的列表的回复。
+        :param msg_list:
+        :return:
+        """
+        _result = []
+        for ir in msg_list:
+            ask, reply = self._MsgFlow.get_content(ir, sign=True)
+            _result.append(ask)
+            _result.append(reply)
+        return _result
+
+    def Summer(self, prompt: str, memory: list, attention: int = 4, extra_token: int = 0) -> list:
+        """
+        以单条消息为对象处理达标并排序时间轴
+        数据清洗采用权重设定，而不操作元素删减
+        :param attention: 注意力
         :param prompt: 记忆提示
         :param extra_token: 记忆的限制
         :param memory: 记忆桶
-        PS:你可以启动根目录的 fastapi server 来使用 http 请求调用处理相同格式
         :return: 新的列表
         """
-        # {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
-        # 刚开始玩直接返回原表
-        # 提取内容
-        _memory = []
-        for i in memory:
-            _memory.append(i["content"])
-        memory = _memory
-
-        # loguru.logger.debug(memory)
-
-        def _dict_ou(meo):
-            _list = []
-            for _ir in range(len(meo)):
-                if meo[_ir].get("ask") and meo[_ir].get("reply"):
-                    _list.append(meo[_ir].get("ask"))
-                    _list.append(meo[_ir].get("reply"))
-            return _list
-
-        if not len(memory) > 4:
-            return _dict_ou(memory)
-
-        # 组建对话意图
-        _Final = []
-
-        # 遗忘黑历史
-        _chat = []
-
-        # 强调记忆
-        _High = []
-        _high_count = 0
-        _index = []
-        for i in range(len(memory)):
-            if memory[i].get("ask") and memory[i].get("reply"):
-                _high_count += 1
-                _High.append(memory[i].get("ask"))
-                _High.append(memory[i].get("reply"))
-                _index.append(memory[i])
-                if _high_count > 4:
-                    break
-        for i in _index:
-            memory.remove(i)
-
+        # 单条消息的内容 {"ask": self._restart_sequence+prompt, "reply": self._start_sequence+REPLY[0]}
+        _create_token = self.__token_limit - extra_token
+        # 入口检查
+        if len(memory) - attention < 0:
+            return self.convert_msgflow_to_list(memory)
+        # 组建
+        for i in range(len(memory) - attention, len(memory)):
+            memory[i]["content"]["weight"] = 1000
         # 筛选标准发言机器
         _index = []
-        for i in range(len(memory)):
-            if memory[i].get("ask") and memory[i].get("reply"):
-                ___now = memory[i]["ask"].split(":", 1)
-                ___after = memory[i]["reply"].split(":", 1)
-                if len(___now) < 2 or len(___after) < 2:
-                    continue
-                if len(___now[1]) < 3 or len(___after[1]) < 3:
-                    _index.append(memory[i])
-                    # 忽略对话
-            else:
-                # 不是标准对话
-                _index.append(memory[i])
-        for i in _index:
-            memory.remove(i)
-
-        # 计算待处理表需要的token
-        _high_token = 0
-        for i in _High:
-            _high_token = _high_token + Talk.tokenizer(i)
-        _create_token = self.__token_limit - _high_token - extra_token
-        # 计算关联
-        _sim = []
-        _now_token = 0
-        for i in range(len(memory)):
-            __ask = memory[i].get("ask")
-            __reply = memory[i].get("reply")
-            _ask = __ask.split(":", 1)
-            _reply = __reply.split(":", 1)
-            _diff1 = Talk.simhash_similarity(pre=prompt, aft=_ask[1])
-            _diff2 = Talk.simhash_similarity(pre=prompt, aft=_reply[1])
-            if _diff2 < 20 or _diff1 < 20:
-                _diff = _diff1 if _diff1 < _diff2 else _diff2
-                if _create_token - Talk.tokenizer(__ask + __reply) < 0:
-                    break
-                else:
-                    _sim.append({"diff": _diff, "content": memory[i]})
-        # 取出
-        _sim.sort(key=lambda x: x['diff'])
-        _sim_content = list([x['content'] for x in _sim])
-
-        # 计算关联并填充余量
-        _create_token = _create_token - _now_token
-        _relate = []
-        for i in range(len(memory)):
-            # 计算相似度
-            __ask = memory[i].get("ask")
-            __reply = memory[i].get("reply")
-            _ask = __ask.split(":", 1)
-            _reply = __reply.split(":", 1)
-            add = False
-            _key = Talk.tfidf_keywords(prompt, topK=3)
+        for i in range(0, len(memory) - attention):
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
+            if len(ask) < 1 or len(reply) < 1:
+                memory[i]["content"]["weight"] = 0
+        # 相似度检索
+        for i in range(0, len(memory) - attention):
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
+            _diff1 = Talk.simhash_similarity(pre=prompt, aft=ask)
+            _diff2 = Talk.simhash_similarity(pre=prompt, aft=reply)
+            _diff = (_diff1 + _diff2) / 2
+            memory[i]["content"]["weight"] = (100 - _diff)  # 相比于关键词检索有 2个优先级
+        # 主题检索
+        _key = Talk.tfidf_keywords(prompt, topK=3)
+        for i in range(0, len(memory) - attention):
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
-                if ir in _ask + _reply:
-                    add = True
-            if add and _create_token - Talk.tokenizer(__ask + __reply) > 0:
-                _relate.append(memory[i])
-        _sim_content.extend(_relate)
-        _sim_content = list(reversed(_sim_content))
-        _useful = []
-        for i in range(len(_sim_content)):
-            __ask = _sim_content[i].get("ask")
-            __reply = _sim_content[i].get("reply")
-            _ask = __ask.split(":", 1)
-            _reply = __reply.split(":", 1)
-            _useful.append(__ask)
-            _useful.append(__reply)
-        _Final.extend(_useful)
-        _Final.extend(_High)
-        token_limit = self.__token_limit - extra_token
-        # 裁剪
-        _now = 0
-        _out = False
-        for i in range(len(_Final)):
-            _now += Talk.tokenizer(_Final[i])
-            if _now > token_limit:
-                _out = True
-        if _out:
+                if ir in f"{ask}{reply}":
+                    memory[i]["content"]["weight"] = 150
+        # 进行筛选，计算限制
+        _msg_flow = []
+        _now_token = 0
+        memory = sorted(memory, key=lambda x: x['time'], reverse=True)
+        for i in range(0, len(memory)):
+            if memory[i]["content"]["weight"] > 80:
+                ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
+                _now_token += Talk.tokenizer(f"{ask}{reply}")
+                if _now_token > _create_token:
+                    # print(f"{ask}-> {_now_token}")
+                    break
+                _msg_flow.append(memory[i])
+        _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
+        # print(_msg_flow)
+        _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
+        """
+                if _out:
             for i in range(len(_Final)):
                 if Talk.tokenizer(_Final[i]) > 240:
                     if Talk.get_language(_Final[i]) == "chinese":
                         _sum = Talk.tfidf_summarization(sentence=_Final[i], ratio=0.3)
                         if len(_sum) > 7:
                             _Final[i] = _sum
-        _now = 0
-        _index = []
-        for i in range(len(_Final)):
-            _now += Talk.tokenizer(_Final[i])
-            if _now > token_limit:
-                _index.append(_Final[i])
-        for i in _index:
-            _Final.remove(i)
-        return _Final
+        """
+        return _msg_flow_list
 
-    async def get_chat_response(self, prompt: str, max_tokens: int = 150, model: str = "text-davinci-003",
+    async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
                                 character: list = None, head: str = None, role: str = "") -> dict:
         """
         异步的，得到对话上下文
@@ -458,33 +387,34 @@ class Chatbot(object):
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
-        _role = f"i am {self._start_sequence} is a {_character} assistant.\nPlay role of {self._start_sequence}"
+        _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} Ai assistant.\n"
         if role:
-            if len(f"{role}") > 5:
-                _role = f"i am {self._start_sequence}.{role}.\nPlay role of {self._start_sequence} "
+            if len(f"{role}") > 4:
+                _role = f"I am [{self._start_sequence}] following.\n我认为:{role}.\n"
         _header = f"{_role}\n{head}\n"
+        # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
         _prompt_memory = self._MsgFlow.read()
-        # 寻找记忆和裁切上下文
+
         # 占位限制
         _extra_token = int(
-            len(_prompt_memory) + Talk.tokenizer(self._start_sequence) + max_tokens + Talk.tokenizer(
-                _header + _prompt_s[0]))
-        _prompt_apple = self.Summer(prompt=prompt, memory=_prompt_memory,
-                                    extra_token=_extra_token)
-        # loguru.logger.debug(_prompt_apple)
+            len(_prompt_memory) +
+            Talk.tokenizer(self._start_sequence) +
+            max_tokens +
+            Talk.tokenizer(_header + _prompt_s[0]))
+        _prompt_apple = self.Summer(prompt=prompt, memory=_prompt_memory, extra_token=_extra_token)
         _prompt_apple.extend(_prompt_s)
-        # 拼接请求内容
-        _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"  # 这里的上面要额外 （条目数量） 计算代币 /n 占一个空格
+
+        # 拼接提示词汇
+        _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"
+
         # 重切割
-        _mk = self.__token_limit - max_tokens - Talk.tokenizer(_header)  # 计算余量
-        if _mk < 0:
-            _mk = 0
+        _limit = self.__token_limit - max_tokens - Talk.tokenizer(_header)
+        _mk = _limit if _limit > 0 else 0
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
-        if _mk > 0:
-            _prompt = _header + _prompt
-        # print(_prompt)
+        _prompt = _header + _prompt
+        # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
             prompt=_prompt,
