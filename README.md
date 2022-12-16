@@ -1,11 +1,12 @@
 ![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/covers.png)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_shield)
+
 
 ------------------------------------
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Other-ff69b4">
   <img src="https://img.shields.io/badge/Python-3.7|8|9|10-green" alt="PYTHON" >
   <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Buyme-milk-DB94A2" alt="SPONSOR"></a>
+  <a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small"/></a>
 </p>
 
 <h2 align="center">OpenaiBot</h2>
@@ -293,11 +294,6 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 - 贡献者
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
-
-## FOSSA
-
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
-
 
 #### 声明
 
