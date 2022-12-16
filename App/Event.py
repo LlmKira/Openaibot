@@ -83,9 +83,12 @@ class Reply(object):
                             userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
-                            restart_name: str = "Human:"):
+                            restart_name: str = "Human:",
+                            web_enhance_server: list = None
+                            ):
         """
         发起请求
+        :param web_enhance_server:
         :param start_name: 称呼自己
         :param restart_name: 称呼请求发起人
         :param user:
@@ -164,7 +167,8 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
-                                                            role=_head
+                                                            role=_head,
+                                                            web_enhance_server=web_enhance_server
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -302,7 +306,8 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="ChatGPT:"
+                                         start_name="ChatGPT:",
+                                         # web_enhance_server=config.Enhance_Server
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -340,7 +345,8 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="ChatGPT:"
+                                             start_name="ChatGPT:",
+                                             web_enhance_server=config.Enhance_Server
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:

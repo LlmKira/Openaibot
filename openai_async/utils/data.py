@@ -72,23 +72,6 @@ class MsgFlow(object):
             _message_streams["msg"] = [content]
         self._set_uid(self.uid, _message_streams)
 
-    def save(self, prompt, role: str = "Human") -> None:
-        import time
-        time_s = int(time.time() * 1000)
-        content = {"prompt": prompt, "role": str(role), "time": time_s}
-        _message_streams = self._get_uid(self.uid)
-        if "msg" in _message_streams:
-            _message_streams["msg"] = sorted(_message_streams["msg"], key=lambda x: x['time'])
-            # 记忆容量重整
-            if len(_message_streams["msg"]) > self.memory:
-                for i in range(len(_message_streams["msg"]) - self.memory + 1):
-                    # 多弹出一个用于腾出容量，不能在前面弹出，会造成无法记忆的情况！
-                    _message_streams["msg"].pop(0)
-            _message_streams["msg"].append(content)
-        else:
-            _message_streams["msg"] = [content]
-        self._set_uid(self.uid, _message_streams)
-
     def read(self) -> list:
         message_streams = self._get_uid(self.uid)
         if "msg" in message_streams:
@@ -102,28 +85,6 @@ class MsgFlow(object):
         if "msg" in _message_streams:
             _message_streams["msg"] = []
             self._set_uid(self.uid, _message_streams)
-        return True
-
-    def visit(self, visit_uid, role: str = "Someone", deep: int = 5):
-        """
-        复制对方对话 4 条进入我的桶
-        后续可能会启用名称的
-        :param role: 预留
-        :param deep: 复制深度
-        :param visit_uid 拜访用户桶，来完成跨桶交互
-        :return:
-        """
-        # 混流器
-        _visit_streams = self._get_uid(visit_uid)
-        if "msg" not in _visit_streams:
-            return False
-        _msg = _visit_streams["msg"]
-        if not (_msg >= deep):
-            return False
-        _sorted = sorted(_msg, key=lambda x: x['time'], reverse=True)
-        for ir in range(deep):
-            i = _sorted[ir]
-            self.save(prompt=i['prompt'], role=i['role'])
         return True
 
 
