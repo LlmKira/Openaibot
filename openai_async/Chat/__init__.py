@@ -302,8 +302,9 @@ class Chatbot(object):
                                      or "介绍" in prompt
                                      or "2022年" in prompt or "2023年" in prompt):  # or "?" in prompt or "？" in prompt):
                 try:
-                    re = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
+                    info = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
                 except Exception as e:
-                    re = []
+                    info = []
+                re.extend(info)
         _appenx = "".join(re)
         return _appenx
