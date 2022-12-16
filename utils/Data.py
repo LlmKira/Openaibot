@@ -34,7 +34,7 @@ class Api_keys(object):
     """
 
     @staticmethod
-    def get_key(filePath: str = "api_keys.json"):
+    def get_key(filePath: str = "./Config/api_keys.json"):
         now_table = DefaultData.defaultKeys()
         if pathlib.Path(filePath).exists():
             with open(filePath, encoding="utf-8") as f:
@@ -46,33 +46,32 @@ class Api_keys(object):
             return now_table
 
     @staticmethod
-    def save_key(_config, filePath: str = "api_keys.json"):
+    def save_key(_config, filePath: str = "./Config/api_keys.json"):
         with open(filePath, "w+", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def add_key(key: str):
+    def add_key(key: str,filePath：str="./Config/api_keys.json"):
         _config = Api_keys.get_key()
         _config['OPENAI_API_KEY'].append(key)
         _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+        with open(filePath, "w", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
         return key
 
     @staticmethod
-    def pop_key(key: str):
+    def pop_key(key: str,filePath：str="./Config/api_keys.json"):
         _config = Api_keys.get_key()
         if key not in _config['OPENAI_API_KEY']:
             return
         _config['OPENAI_API_KEY'].remove(key)
         _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open("./Config/api_keys.json", "w", encoding="utf8") as f:
+        with open(filePath, "w", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
         return key
 
     @staticmethod
     def pop_api_key(resp, auth):
-        _path = str(pathlib.Path.cwd()) + "/Config/app.toml"
         # 读取
         _config = Api_keys.get_key()
         _config: dict
