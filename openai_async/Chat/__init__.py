@@ -291,15 +291,16 @@ class Chatbot(object):
         _appenx = ""
         # 提取内容
         re = []
-        if "time" in prompt or "时间" in prompt or "几点" in prompt:
+        if "time" in prompt or "时间" in prompt or "几点" in prompt or "今天" in prompt or "几月" in prompt or "几号" in prompt:
             from datetime import datetime, timedelta, timezone
             utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
             bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
             now = bj_dt.strftime("%Y-%m-%d %H:%M")
             re.append(f"Current Time UTC8 {now}")
         if web_enhance_server:
-            if len(prompt) < 80 and (
-                    "知道" in prompt or "谈谈" in prompt or "介绍" in prompt):  # or "?" in prompt or "？" in prompt):
+            if len(prompt) < 80 and ("知道" in prompt or "谈谈" in prompt
+                                     or "介绍" in prompt
+                                     or "2022年" in prompt or "2023年" in prompt):  # or "?" in prompt or "？" in prompt):
                 try:
                     re = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
                 except Exception as e:
