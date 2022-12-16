@@ -287,22 +287,48 @@ class Chatbot(object):
         # 输出处理后的结果
         return filtered_result
 
+    @staticmethod
+    def isIN(prompt: str, keywords: list):
+        isIn = False
+        for i in keywords:
+            if i in prompt:
+                isIn = True
+        return isIn
+
+    @staticmethod
+    def isALLIN(prompt: str, keywords: list):
+        isIn = True
+        for i in keywords:
+            if i not in prompt:
+                isIn = False
+        return isIn
+
     def Prehance(self, prompt, web_enhance_server):
         _appenx = ""
         # 提取内容
         re = []
-        if "time" in prompt or "时间" in prompt or "几点" in prompt or "今天" in prompt or "几月" in prompt or "几号" in prompt:
-            from datetime import datetime, timedelta, timezone
-            utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
-            bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+        from datetime import datetime, timedelta, timezone
+        utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+        bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+
+        _time = ["time", "多少天", "几天", "时间", "几点", "今天", "明天", "几月", "几月", "几号", "几个月", "天前"]
+        if self.isIN(prompt=prompt, keywords=_time):
             now = bj_dt.strftime("%Y-%m-%d %H:%M")
             re.append(f"Current Time UTC8 {now}")
+        _week_list = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+        _week_key = ["星期"]
+        if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
+            onw = bj_dt.weekday()
+            re.append(f"Now {_week_list[onw]}")
+
         if web_enhance_server:
             if len(prompt) < 80:
                 if (prompt.startswith("介绍") or prompt.startswith("查询")
                     or "2022年" in prompt or "2023年" in prompt) \
                         or (len(prompt) < 12 and "?" in prompt or "？" in prompt):
                     try:
+                        if prompt.startswith("介绍") or prompt.startswith("查询"):
+                            prompt.replace("介绍", "").replace("查询", "")
                         info = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
                     except Exception as e:
                         print(e)
