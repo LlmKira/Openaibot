@@ -296,7 +296,7 @@ class Chatbot(object):
             re.append(f"Current  time {currentDateAndTime}")
         if web_enhance_server:
             if len(prompt) < 80 and (
-                    "知道" in prompt or "介绍一下" in prompt or "?" in prompt or "？" in prompt):
+                    "知道" in prompt or "谈谈" in prompt or "介绍" in prompt):  # or "?" in prompt or "？" in prompt):
                 try:
                     re = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
                 except Exception as e:

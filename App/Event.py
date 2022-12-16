@@ -307,7 +307,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          method=types,
                                          restart_name=_name,
                                          start_name="ChatGPT:",
-                                         # web_enhance_server=config.Enhance_Server
+                                         web_enhance_server=config.Enhance_Server
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
