@@ -11,7 +11,7 @@
 
 OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
->Translate by deepl (wink~
+> Translate by deepl (wink~
 
 This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
 the **Python implementation** of the chatGPT-like is self-implemented by this bot.
@@ -37,6 +37,7 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 * Support for content filtering
 * (20221205) Api library changed to an Async library implemented in this repository
 * Dynamic context trimming to prevent overruns
+* Pre enhance support, Web Connection
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
@@ -131,6 +132,7 @@ botToken = 'key'
 INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
+Enhance_Server = ["https://www.expserver.com?q={}"] # 联网支持，自己找 server
 
 # for bot , not openai
 [proxy]
@@ -214,7 +216,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                                                                                                           |
 | `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
-| `/forgetme`                        | 忘记我                  |                                  |
+| `/forgetme`                               | 忘记我                         |                                                                                                                                             |
 
 ### Sample table
 

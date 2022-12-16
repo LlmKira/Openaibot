@@ -37,6 +37,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 动态裁剪上下文，防止超额
+* 中间件支持，对Chat更友好
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -128,6 +129,7 @@ botToken = 'key' # 机器人密钥
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
+Enhance_Server = ["https://www.expserver.com?q={}"] # 联网支持，自己找 server
 
 # 设置的代理，但是不代理 openai api, 只代理 bot
 [proxy]
