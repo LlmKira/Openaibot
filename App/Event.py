@@ -82,8 +82,8 @@ class Reply(object):
                             prompt: str = "Say this is a test",
                             userlimit: int = None,
                             method: str = "chat",
-                            start_name: str = "我:",
-                            restart_name: str = "某人:"):
+                            start_name: str = "Ai:",
+                            restart_name: str = "Human:"):
         """
         发起请求
         :param start_name: 称呼自己
@@ -302,7 +302,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Reply:"
+                                         start_name="ChatGPT:"
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
@@ -340,7 +340,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="Reply:"
+                                             start_name="ChatGPT:"
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
