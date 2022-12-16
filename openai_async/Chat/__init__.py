@@ -298,13 +298,15 @@ class Chatbot(object):
             now = bj_dt.strftime("%Y-%m-%d %H:%M")
             re.append(f"Current Time UTC8 {now}")
         if web_enhance_server:
-            if len(prompt) < 80 and ("知道" in prompt or "谈谈" in prompt
-                                     or "介绍" in prompt
-                                     or "2022年" in prompt or "2023年" in prompt):  # or "?" in prompt or "？" in prompt):
-                try:
-                    info = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
-                except Exception as e:
-                    info = []
-                re.extend(info)
+            if len(prompt) < 80:
+                if (prompt.startswith("介绍") or prompt.startswith("查询")
+                    or "2022年" in prompt or "2023年" in prompt) \
+                        or (len(prompt) < 12 and "?" in prompt or "？" in prompt):
+                    try:
+                        info = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
+                    except Exception as e:
+                        print(e)
+                        info = []
+                    re.extend(info)
         _appenx = "".join(re)
         return _appenx
