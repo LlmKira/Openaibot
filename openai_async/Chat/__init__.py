@@ -320,7 +320,7 @@ class Chatbot(object):
 
         # WEEK
         _week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
-        _week_key = ["星期", "星期几", "时间"]
+        _week_key = ["星期", "星期几", "时间", "周几", "周一", "周二", "周三", "周四", "周五", "周六"]
         if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
             onw = bj_dt.weekday()
             re.append(f"Now {_week_list[onw]}")
