@@ -387,10 +387,10 @@ class Chatbot(object):
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
-        _role = f"I am [{self._start_sequence}] following.\nI am a [{_character}] assistant.\n"
+        _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} Ai assistant.\n"
         if role:
             if len(f"{role}") > 4:
-                _role = f"I am [{self._start_sequence}] following.\nI approve:{role}.\n"
+                _role = f"I am [{self._start_sequence}] following.\n我认为:{role}.\n"
         _header = f"{_role}\n{head}\n"
         # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
