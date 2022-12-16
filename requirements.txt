@@ -20,3 +20,4 @@ numpy
 wordcloud
 scikit-learn
 transformers
+beautifulsoup4

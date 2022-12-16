@@ -51,7 +51,7 @@ class Api_keys(object):
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
     @staticmethod
-    def add_key(key: str,filePath：str="./Config/api_keys.json"):
+    def add_key(key: str, filePath: str = "./Config/api_keys.json"):
         _config = Api_keys.get_key()
         _config['OPENAI_API_KEY'].append(key)
         _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
@@ -60,7 +60,7 @@ class Api_keys(object):
         return key
 
     @staticmethod
-    def pop_key(key: str,filePath：str="./Config/api_keys.json"):
+    def pop_key(key: str, filePath: str = "./Config/api_keys.json"):
         _config = Api_keys.get_key()
         if key not in _config['OPENAI_API_KEY']:
             return

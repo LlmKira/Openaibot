@@ -9,6 +9,7 @@ import nltk
 from openai_async.Chat.text_analysis_tools.api.keyphrase.keyphrase import KeyPhraseExtraction
 from openai_async.Chat.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
 from openai_async.Chat.text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
+from openai_async.Chat.text_analysis_tools.api.text_similarity.cosion import CosionSimilarity
 from openai_async.Chat.text_analysis_tools.api.text_similarity.edit import EditSimilarity
 from openai_async.Chat.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 
@@ -108,8 +109,22 @@ def simhash_similarity():
     :return:
     """
     simhash = SimHashSimilarity()
-    sim = simhash.run_simhash("我爱看的电影行星", "你还记得我爱看的电影吗？")
+    sim = simhash.run_simhash(
+        "ここすき,这里意为喜欢,通常被用在弹幕之中,是对视频某一片段表达赞赏用的. 似乎只有在中国才会被缩写为kksk（ここkokoすきsuki）.",
+        "2022年2月16日 · 最近,网红在痞幼发了一个开团了,导致蔡徐坤的黑粉们疯狂晒cxk的黑图,从而导致大量cxk的粉丝来骂痞幼,事后痞幼迅速出来道歉说自己说的开团了是游戏")
     print("simhash result: {}\n".format(sim))
+
+
+def cosion_sismilarity():
+    """
+    基于余弦计算文本相似性
+    :return: 余弦值
+    """
+    text1 = "ここすき,这里意为喜欢,通常被用在弹幕之中,是对视频某一片段表达赞赏用的. 似乎只有在中国才会被缩写为kksk（ここkokoすきsuki）."
+    text2 = "2021年11月25日 · kksk在网络中并不是“看看谁快”的中文拼音首字母的缩写,而是来自日本的一个二次元用语,即日语“ここ好き”的罗马音“ko ko SU KI”的缩写,意思是“喜欢"
+    cosion = CosionSimilarity()
+    similiar = cosion.similarity(text1, text2)
+    print("cosion similarity result: {}\n".format(similiar))
 
 
 history_list = [
@@ -133,4 +148,4 @@ history_list = [
 #     memory=history_list)
 # for i in prompt:
 #    print(i)
-simhash_similarity()
+cosion_sismilarity()

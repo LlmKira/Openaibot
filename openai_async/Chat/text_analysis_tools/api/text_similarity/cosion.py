@@ -3,7 +3,7 @@
 
 import jieba
 from sklearn.metrics.pairwise import cosine_similarity
-from text_analysis_tools.api.keywords import STOPWORDS
+from ...api.keywords import STOPWORDS
 
 
 class CosionSimilarity():
@@ -16,7 +16,7 @@ class CosionSimilarity():
             return [line.strip() for line in f]
 
     def cut_words(self, text, stopwords):
-        return [word for word in jieba.lcut(text) if word not in stopwords]
+        return [word for word in jieba.cut(text) if word not in stopwords]
 
     def similarity(self, text1, text2):
         stopwords = self.load_stopwords(STOPWORDS)
