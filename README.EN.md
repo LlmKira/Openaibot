@@ -298,3 +298,7 @@ Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
 - Contributors
 - [Text Analysis Tool Library](https://github.com/murray-z/text_analysis_tools)
+
+## FOSSA
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
