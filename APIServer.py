@@ -6,6 +6,7 @@ from utils.Base import ReadConfig
 from App.Event import Reply
 from utils.Data import Api_keys
 from loguru import logger
+from API.Whitelist import Whitelist
 
 class ReqBody(BaseModel):
     chatText: str
@@ -27,13 +28,15 @@ async def chat(body: ReqBody):
     verisign = APISignature({'secret':apicfg['secret'], 'text':body.chatText, 'timestamp':body.timestamp})
     if(not verisign.verify(body.signature)):
         return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
+    if(not Whitelist(body).checkAll()):
+        return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     try:
         if(body.chatId and body.chatText):
             res = await Reply.load_response(user=body.chatId, 
-                                                group=body.groupId, 
-                                                key=Api_keys.get_key()['OPENAI_API_KEY'], 
-                                                prompt=body.chatText, 
-                                                method='chat')
+                                            group=body.groupId, 
+                                            key=Api_keys.get_key()['OPENAI_API_KEY'], 
+                                            prompt=body.chatText, 
+                                            method='chat')
             return {'success': True, 'response': res, 'timestamp': body.timestamp}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
@@ -46,6 +49,8 @@ async def write(body: ReqBody):
     verisign = APISignature({'secret':apicfg['secret'], 'text':body.chatText, 'timestamp':body.timestamp})
     if(not verisign.verify(body.signature)):
         return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
+    if(not Whitelist(body).checkAll()):
+        return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     try:
         if(body.chatId and body.chatText):
                 res = await Reply.load_response(user=body.chatId, 
