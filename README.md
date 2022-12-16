@@ -276,12 +276,6 @@ help - 帮助
 
 外设的 Prompt 裁剪接口，给其他项目提供支持。
 
-### 声明
-
-```markdown
-1. 此项目不是 Openai 的官方项目。
-2. 不对机器人生成的任何内容负责。
-```
 
 ### QuickDev
 
@@ -299,3 +293,10 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 ## FOSSA
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
+
+#### 声明
+
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 不对机器人生成的任何内容负责。
+```
