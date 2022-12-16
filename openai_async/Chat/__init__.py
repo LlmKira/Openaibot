@@ -319,7 +319,7 @@ class Chatbot(object):
             re.append(f"Current Time UTC8 {now}")
 
         # WEEK
-        _week_list = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+        _week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
         _week_key = ["星期", "星期几", "时间"]
         if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
             onw = bj_dt.weekday()
