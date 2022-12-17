@@ -373,8 +373,15 @@ class Chatbot(object):
                             info.append(i)
                             _pre += Talk.tokenizer(i)
                     except Exception as e:
-                        print(e)
+                        print("Web Enhance", e)
                         info = []
                     re.extend(info)
-        _appenx = "\n".join(re)
+        _pre = 0
+        _return_list = []
+        for i in re:
+            if _pre > 200:
+                break
+            _return_list.append(i)
+            _pre += Talk.tokenizer(i)
+        _appenx = "\n".join(_return_list)
         return _appenx
