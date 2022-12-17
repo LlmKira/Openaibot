@@ -91,6 +91,7 @@ class MsgFlow(object):
 class DataWorker(object):
     """
     Redis 数据基类
+    不想用 redis 可以自动改动此类，换用其他方法。应该比较简单。
     """
 
     def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
