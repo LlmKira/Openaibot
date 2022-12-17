@@ -159,6 +159,21 @@ add_api_key - 增加 Api key
 
 请不要向任何人暴露你的 `app.toml`
 
+**配置 Redis端口**
+
+在 `Config/service.json` 下面。如果没有此文件，会使用默认值。如果有会深度覆盖。不会补全预设中没有的键。
+
+```json
+{
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "db": 0,
+    "password": null
+  }
+}
+```
+
 ## 运行
 
 * 运行
