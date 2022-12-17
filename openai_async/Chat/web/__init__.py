@@ -45,7 +45,7 @@ class webEnhance(object):
         if skip:
             return ""
         # 处理数据
-        sentence = res.strip(".").strip("\xa0").strip("…")
+        sentence = res.strip(".").strip("…").replace('\xa0', '').replace('    ', '').replace("\r", '')
         sentence = sentence.replace("，", ",").replace("。", ".")
         if 18 < len(sentence):
             return sentence
@@ -132,5 +132,5 @@ class webEnhance(object):
 
 
 if __name__ == '__main__':
-    re = webEnhance(server=["https://www.exp.com/search?q={}"]).get_content(prompt="KKSK 是什么意思")
+    re = webEnhance(server=["https://www.exp.com/?ie=utf8&query={}"]).get_content(prompt="介绍孤独摇滚")
     print(re)
