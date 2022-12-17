@@ -85,6 +85,15 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 
 `cd Openaibot`
 
+* [Docker](https://hub.docker.com/r/sudoskys/openaibot)
+
+```bash
+git clone https://github.com/sudoskys/Openaibot
+cd Openaibot
+vim Config/service.json # 见下面
+docker compose up -d
+```
+
 ## 配置
 
 ### 配置 Redis
@@ -95,11 +104,9 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 apt-get install redis
 ```
 
-**Docker + 持久化（保存在 ./redis 目录下）**
+**Docker**
 
-```
-docker run --name redis -d -v $(pwd)/redis:/data -p 6379:6379 redis redis-server --save 60 1 --loglevel warning
-```
+配置 `service.json` ， 样板示例在下面，需要将 `localhost` 改为 `redis`
 
 ### 配置依赖
 
@@ -144,7 +151,7 @@ url = "http://127.0.0.1:7890"
 
 [Telegram botToken 申请](https://t.me/BotFather)
 
-**配置 key**
+### 配置 key
 
 在机器人私聊中配置 key
 
@@ -159,7 +166,7 @@ add_api_key - 增加 Api key
 
 请不要向任何人暴露你的 `app.toml`
 
-**配置 Redis端口**
+### 配置 `service.json`
 
 在 `Config/service.json` 下面。如果没有此文件，会使用默认值。如果有会深度覆盖。不会补全预设中没有的键。
 
