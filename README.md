@@ -74,7 +74,7 @@ nlp 处理后的关键对话
 
 ## 初始化
 
-* 拉取/更新程序
+* 本地拉取/更新程序
 
 安装脚本会自动备份恢复配置，在根目录运行（不要在程序目录内）
 ，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``。
@@ -86,6 +86,8 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 `cd Openaibot`
 
 * [Docker](https://hub.docker.com/r/sudoskys/openaibot)
+
+Docker 镜像在保证情况 stable 后才会发布更新。
 
 ```bash
 git clone https://github.com/sudoskys/Openaibot

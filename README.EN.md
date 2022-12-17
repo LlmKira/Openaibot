@@ -85,6 +85,8 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 
 * [Docker](https://hub.docker.com/r/sudoskys/openaibot)
 
+Docker images will release updates only after they are guaranteed to be stable.
+
 ```bash
 git clone https://github.com/sudoskys/Openaibot
 cd Openaibot
