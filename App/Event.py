@@ -319,12 +319,20 @@ async def Text(bot, message, config, reset: bool = False):
 async def private_Chat(bot, message, config):
     load_csonfig()
     # 处理初始化
+    types = "chat"
     _prompt = message.text
     if message.text.startswith("/chat"):
         _prompt_r = message.text.split(" ", 1)
         if len(_prompt_r) < 2:
             return
         _prompt = _prompt_r[1]
+        types = "chat"
+    if message.text.startswith("/write"):
+        _prompt_r = message.text.split(" ", 1)
+        if len(_prompt_r) < 2:
+            return
+        _prompt = _prompt_r[1]
+        types = "write"
     if message.text.startswith("/forgetme"):
         await Forget(bot, message, config)
         return await bot.reply_to(message, f"Down,Miss you")
@@ -346,6 +354,7 @@ async def private_Chat(bot, message, config):
                                              prompt=_prompt,
                                              restart_name=_name,
                                              start_name="ChatGPT:",
+                                             method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
             await bot.reply_to(message, f"{_req}\n{config.INTRO}")
@@ -378,7 +387,8 @@ async def Friends(bot, message, config):
             Header(uid=message.from_user.id).set({})
         return
         # 启动函数
-    if command.startswith("/chat") or command.startswith("/forgetme") or not command.startswith("/"):
+    if command.startswith("/chat") or command.startswith("/forgetme") or command.startswith(
+            "/write") or not command.startswith("/"):
         await private_Chat(bot, message, config)
 
 
