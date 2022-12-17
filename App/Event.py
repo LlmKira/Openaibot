@@ -9,11 +9,17 @@ import random
 import time
 from typing import Union
 from loguru import logger
+
+import openai_async
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.Detect import DFA, Censor
+
+_service = Service_Data.get_key()
+_redis_conf = _service["redis"]
+openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
 urlForm = {
     "Danger.form": [
@@ -130,7 +136,7 @@ class Reply(object):
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
-            import openai_async
+            # import openai_async
             openai_async.api_key = key
             # Openai_python
             # import openai

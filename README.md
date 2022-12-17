@@ -74,7 +74,7 @@ nlp 处理后的关键对话
 
 ## 初始化
 
-* 拉取/更新程序
+* 本地拉取/更新程序
 
 安装脚本会自动备份恢复配置，在根目录运行（不要在程序目录内）
 ，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``。
@@ -84,6 +84,17 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 ```
 
 `cd Openaibot`
+
+* [Docker](https://hub.docker.com/r/sudoskys/openaibot)
+
+Docker 镜像在保证情况 stable 后才会发布更新。
+
+```bash
+git clone https://github.com/sudoskys/Openaibot
+cd Openaibot
+vim Config/service.json # 见下面
+docker compose up -d
+```
 
 ## 配置
 
@@ -95,11 +106,9 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 apt-get install redis
 ```
 
-**Docker + 持久化（保存在 ./redis 目录下）**
+**Docker**
 
-```
-docker run --name redis -d -v $(pwd)/redis:/data -p 6379:6379 redis redis-server --save 60 1 --loglevel warning
-```
+配置 `service.json` ， 样板示例在下面，需要将 `localhost` 改为 `redis`
 
 ### 配置依赖
 
@@ -144,7 +153,7 @@ url = "http://127.0.0.1:7890"
 
 [Telegram botToken 申请](https://t.me/BotFather)
 
-**配置 key**
+### 配置 key
 
 在机器人私聊中配置 key
 
@@ -158,6 +167,21 @@ add_api_key - 增加 Api key
 [定价参考](https://openai.com/api/pricing/)。
 
 请不要向任何人暴露你的 `app.toml`
+
+### 配置 `service.json`
+
+在 `Config/service.json` 下面。如果没有此文件，会使用默认值。如果有会深度覆盖。不会补全预设中没有的键。
+
+```json
+{
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "db": 0,
+    "password": null
+  }
+}
+```
 
 ## 运行
 

@@ -83,6 +83,18 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 
 ``cd Openaibot``
 
+* [Docker](https://hub.docker.com/r/sudoskys/openaibot)
+
+Docker images will release updates only after they are guaranteed to be stable.
+
+```bash
+git clone https://github.com/sudoskys/Openaibot
+cd Openaibot
+vim Config/service.json # see **Configure**
+docker compose up -d
+
+```
+
 ## Configure
 
 ### Configuring Redis
@@ -93,11 +105,9 @@ curl -LO https://raw.githubusercontent.com/sudoskys/Openaibot/main/setup.sh && s
 apt-get install redis
 ```
 
-**Docker + persistence (saved in . /redis directory)**
+**Docker**
 
-```
-docker run --name redis -d -v $(pwd)/redis:/data -p 6379:6379 redis redis-server --save 60 1 --loglevel warning
-```
+Configure `service.json`, the template example is below, you need to change host `localhost` to `redis`
 
 ### Configure dependencies
 
@@ -143,19 +153,36 @@ url = "http://127.0.0.1:7890"
 
 [get Telegram botToken](https://t.me/BotFather)
 
-**configure (one or more) key**
+### configure key
+
+Configure key in bot private chat
 
 ```markdown
-see_api_key - now several Api keys
-del_api_key - remove Api key
+see_api_key - Several Api keys now
+del_api_key - Delete Api key
 add_api_key - add Api key
 ```
 
-[OPENAI_API_KEY application](https://beta.openai.com/account/api-keys)
+[OPENAI_API_KEY Application](https://beta.openai.com/account/api-keys), supports multi-key distribution load.
+[Pricing Reference](https://openai.com/api/pricing/).
 
-[Pricing Reference](https://openai.com/api/pricing/)
+Please do not expose your `app.toml` to anyone
 
-Please don't expose your `app.toml` to anyone
+### Configure `service.json`
+
+under `Config/service.json`. If there is no such file, the default value will be used. Deep coverage if available. Keys
+that are not in the preset will not be completed.
+
+```json
+{
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "db": 0,
+    "password": null
+  }
+}
+```
 
 ## Run
 

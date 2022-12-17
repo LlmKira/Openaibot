@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 import ast
 import json
+import openai_async
 
 # 这里是数据基本类
 
@@ -37,7 +38,13 @@ class MsgFlow(object):
         :param uid: 独立 id ，是一个消息桶
         """
         self.uid = str(uid)
-        self.MsgFlowData = DataWorker(prefix="Open_Ai_memory_chat_r_")
+        _redis_config = openai_async.redis
+        # 工具数据类型
+        self.MsgFlowData = DataWorker(host=_redis_config.host,
+                                      port=_redis_config.port,
+                                      db=_redis_config.db,
+                                      password=_redis_config.password,
+                                      prefix="Open_Ai_memory_chat_r_")
         self.memory: int = 80
 
     @staticmethod
