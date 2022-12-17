@@ -7,11 +7,13 @@ from App.Event import Reply
 from utils.Data import Api_keys
 from loguru import logger
 from API.Whitelist import Whitelist
+from utils.Chat import Header, Utils
 import App.Event as appe
 import time
 import os
 from API.FakeMessage import FakeTGBotMessage
 
+_csonfig = appe.load_csonfig()
 
 class ReqBody(BaseModel):
     chatText: str
@@ -31,15 +33,15 @@ def checkIllegal(reqbody):
     message = FakeTGBotMessage()
     message.from_user.id = reqbody.chatId
     message.chat.id = reqbody.groupId
-    verisign = APISignature({'secret':apicfg['secret'], 'text':reqbody.chatText, 'timestamp':reqbody.timestamp})
+    verisign = APISignature({'secret':apicfg['secret'], 'text':reqbody.chatText, 'timestamp': str(reqbody.timestamp)})
     if(not verisign.verify(reqbody.signature)):
         return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
-    if(not Whitelist(_message = message, appe = appe).checkAll()):
+    if(not Whitelist(_message = message, csonfig= _csonfig).checkAll()):
         return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     if(not reqbody.chatId or not reqbody.timestamp or not reqbody.signature):
         return {'success': False,'response': 'NECESSARY_PARAMETER_IS_EMPTY'}
     '''
-    if(abs(time.time() - reqbody.timestamp) > 3600):
+    if(abs(int(time.time()) - reqbody.timestamp) > 3600):
         return {'success': False,'response': 'TIMESTAMP_OUTDATED'}
     '''
     return False
@@ -95,8 +97,29 @@ async def forgetme(body: ReqBody):
             return {'success': False,'response': 'GENERAL_FAILURE'}
     except Exception as e:
         logger.error(e)
-    
-    
+
+#### Remind
+@app.post('/remind')
+async def remind(body: ReqBody):
+    if(response := checkIllegal(body)):
+        return response
+    if Utils.tokenizer(_remind) > 333:
+        return {'success': False, 'response': 'REMIND_TEXT_TOO_LONG'}
+    if _csonfig["allow_change_head"]:
+        _remind = body.chatText
+        # _remind = _remind.replace("你是", "ME*扮演")
+        _remind = _remind.replace("你", "ME*")
+        _remind = _remind.replace("我", "YOU*")
+        _remind = _remind.replace("YOU*", "你")
+        _remind = _remind.replace("ME*", "我")
+        if(Header(uid=body.chatId).set(_remind)):
+            return {'success': True,'response': 'done'}
+        else:
+            return {'success': False,'response': 'GENERAL_FAILURE'}
+    else:
+        Header(uid=body.chatId).set({})
+        return {'success': False, 'response': 'REMIND_COMMAND_PROHIBITED'}
+
 #### Run HTTP Server when executed by Python CLI
 if __name__ == '__main__':
     import uvicorn

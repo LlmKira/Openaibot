@@ -2,10 +2,10 @@ import os
 from utils.Chat import UserManger, GroupManger
 
 class Whitelist:
-    def __init__(self, _message, appe):
+    def __init__(self, _message, csonfig):
         global message
         message = _message
-        self._csonfig = appe.load_csonfig()
+        self._csonfig = csonfig
     def checkPerson(self):
         if UserManger(message.from_user.id).read('block'):
             return False
