@@ -41,7 +41,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 动态裁剪上下文，防止超额
-* 网络中间件支持，数据实时，对Chat更友好
+* 网络中间件支持， Prompt Injection，对Chat更友好
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -289,7 +289,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 **日常负载 316MB**
 
-### 中间件支持
+### 中间件支持/Prompt Injection
 
 在记忆池和分析之间有一个 中间件，可以提供一定的联网检索支持和操作支持。可以对接其他 Api 的服务进行加料。
 

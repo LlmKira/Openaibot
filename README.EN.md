@@ -37,7 +37,7 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 * Support for content filtering
 * (20221205) Api library changed to an Async library implemented in this repository
 * Dynamic context trimming to prevent overruns
-* Pre enhance support, Web Connection
+* Pre enhance support, Prompt Injection+ Web
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
@@ -276,7 +276,7 @@ will automatically merge the missing keys to fix them.
 - Usage limit is 15000/h
 - Memory capacity of 80 dialogue pairs
 
-### Middleware support
+### Middleware support/Prompt Injection
 
 There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
 operational support. Services that can interface with other Api's can be spiked.
