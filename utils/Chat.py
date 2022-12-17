@@ -6,13 +6,26 @@
 import json
 import time
 from typing import Union
-from utils.Data import DefaultData, DataWorker, DictUpdate, Usage_Data
+
+from utils.Data import RedisConfig
+from utils.Data import DefaultData, DataWorker, DictUpdate, Usage_Data, Service_Data
 from loguru import logger
 
+service = Service_Data.get_key()
+redis_conf = service["redis"]
+redis_config = RedisConfig(**redis_conf)
 # 工具数据类型
-DataUtils = DataWorker(prefix="Open_Ai_bot_")
-MsgsRecordUtils = DataWorker(prefix="Open_Ai_bot_msg_record")
+DataUtils = DataWorker(host=redis_config.host,
+                       port=redis_config.port,
+                       db=redis_config.db,
+                       password=redis_config.password,
+                       prefix="Open_Ai_bot_")
 
+MsgsRecordUtils = DataWorker(host=redis_config.host,
+                             port=redis_config.port,
+                             db=redis_config.db,
+                             password=redis_config.password,
+                             prefix="Open_Ai_bot_msg_record")
 global _csonfig
 
 
@@ -35,7 +48,14 @@ def save_csonfig():
 class Header(object):
     def __init__(self, uid):
         self._uid = str(uid)
-        self.__Data = DataWorker(prefix="Open_Ai_bot_user_head")
+        _service = Service_Data.get_key()
+        _redis_conf = _service["redis"]
+        _redis_config = RedisConfig(**_redis_conf)
+        self.__Data = DataWorker(host=_redis_config.host,
+                                 port=_redis_config.port,
+                                 db=_redis_config.db,
+                                 password=_redis_config.password,
+                                 prefix="Open_Ai_bot_user_head")
 
     def get(self):
         _usage = self.__Data.getKey(f"{self._uid}")
@@ -238,7 +258,14 @@ class rqParser(object):
 class Usage(object):
     def __init__(self, uid: Union[int, str]):
         self.__uid = str(uid)
-        self.__Data = DataWorker(prefix="Open_Ai_bot_usage_")
+        _service = Service_Data.get_key()
+        _redis_conf = _service["redis"]
+        _redis_config = RedisConfig(**_redis_conf)
+        self.__Data = DataWorker(host=_redis_config.host,
+                                 port=_redis_config.port,
+                                 db=_redis_config.db,
+                                 password=_redis_config.password,
+                                 prefix="Open_Ai_bot_usage_")
 
     def __get_usage(self):
         _usage = self.__Data.getKey(f"{self.__uid}_usage")

@@ -154,5 +154,6 @@ class webEnhance(object):
 
 
 if __name__ == '__main__':
-    re = webEnhance(server=["https://www.exp.com/web?ie=utf8&query={}"]).get_content(prompt="孤独摇滚出品方")
-    # print(re)
+    re = webEnhance(server=["https://www.exp.com/web?ie=utf8&query={}"]).get_content(
+        prompt="joycon 的 蓝牙配对按钮 在哪里？")
+    print(re)

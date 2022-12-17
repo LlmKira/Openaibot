@@ -134,7 +134,7 @@ class Chatbot(object):
     def Summer(self,
                prompt: str,
                memory: list,
-               attention: int = 3,
+               attention: int = 4,
                start_token: int = 0,
                extra_token: int = 0
                ) -> list:
@@ -171,7 +171,7 @@ class Chatbot(object):
             score = _diff * 100
             memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
         # 主题检索
-        _key = Talk.tfidf_keywords(prompt, topK=5)
+        _key = Talk.tfidf_keywords(prompt, topK=2)
         for i in range(0, len(memory) - attention):
             #
             score = 0

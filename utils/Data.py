@@ -28,6 +28,36 @@ class Usage_Data(BaseModel):
     total_usage: int
 
 
+class RedisConfig(BaseModel):
+    host: str = "localhost"
+    port: int = 6379
+    db: int = 0
+    password: str = None
+
+
+class Service_Data(object):
+    """
+    管理 Api
+    """
+
+    @staticmethod
+    def get_key(filePath: str = "./Config/service.json"):
+        now_table = DefaultData.defaultService()
+        if pathlib.Path(filePath).exists():
+            with open(filePath, encoding="utf-8") as f:
+                _config = json.load(f)
+                DictUpdate.dict_update(now_table, _config)
+                _config = now_table
+            return _config
+        else:
+            return now_table
+
+    @staticmethod
+    def save_key(_config, filePath: str = "./Config/service.json"):
+        with open(filePath, "w+", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+
+
 class Api_keys(object):
     """
     管理 Api
@@ -168,6 +198,17 @@ class DefaultData(object):
         return {
             "white": False,
             "block": False
+        }
+
+    @staticmethod
+    def defaultService():
+        return {
+            "redis": {
+                "host": "localhost",
+                "port": 6379,
+                "db": 0,
+                "password": None
+            }
         }
 
 
