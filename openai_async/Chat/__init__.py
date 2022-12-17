@@ -303,6 +303,17 @@ class Chatbot(object):
                 isIn = False
         return isIn
 
+    @staticmethod
+    def server(server, key):
+        if isinstance(server, list):
+            return server
+        if isinstance(server, dict):
+            _now = []
+            for i in server.keys():
+                if server[i] == key:
+                    _now.append(i)
+            return _now
+
     def Prehance(self, prompt, web_enhance_server):
         _appenx = ""
         # 提取内容
@@ -324,7 +335,6 @@ class Chatbot(object):
         if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
             onw = bj_dt.weekday()
             re.append(f"Now {_week_list[onw]}")
-
         # WEB
         if web_enhance_server:
             if len(prompt) < 80:
@@ -334,7 +344,7 @@ class Chatbot(object):
                     try:
                         if prompt.startswith("介绍") or prompt.startswith("查询"):
                             prompt.replace("介绍", "").replace("查询", "")
-                        info = webEnhance(server=web_enhance_server).get_content(prompt=prompt)
+                        info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
                     except Exception as e:
                         print(e)
                         info = []
