@@ -175,7 +175,7 @@ class Chatbot(object):
         for i in range(0, len(memory) - attention):
             #
             score = 0
-            full_score = len(_key)
+            full_score = len(_key) if len(_key) != 0 else 1
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
                 if ir in f"{ask}{reply}":
