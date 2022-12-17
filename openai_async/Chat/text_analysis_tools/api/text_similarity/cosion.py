@@ -11,6 +11,7 @@ class CosionSimilarity():
     根据余弦函数计算相似性
     one-hot编码
     """
+
     def load_stopwords(self, stopwords_path):
         with open(stopwords_path, 'r', encoding='utf-8') as f:
             return [line.strip() for line in f]

@@ -15,7 +15,7 @@ def cut_words_weights(content):
     # 设置停用词
     # jieba.analyse.set_stop_words('path_of_stopwords')
     tags = jieba.analyse.extract_tags(content, topK=20, withWeight=True)
-    tags = [(keyword, int(weight*10)) for keyword, weight in tags]
+    tags = [(keyword, int(weight * 10)) for keyword, weight in tags]
     return tags
 
 
@@ -27,7 +27,7 @@ def hash_keyword_add_weight(keyword_weight, len_hash=64):
     :return:
     """
     # 关键词hash
-    keyword_weight = [(bin(hash(keyword)).replace("0b", "").replace("-", "").zfill(len_hash)[-1*len_hash:], weight)
+    keyword_weight = [(bin(hash(keyword)).replace("0b", "").replace("-", "").zfill(len_hash)[-1 * len_hash:], weight)
                       for keyword, weight in keyword_weight]
     # 加权
     add_weight = [0] * len_hash
@@ -78,7 +78,6 @@ class SimHashSimilarity():
         hash_file2 = hash_keyword_add_weight(tags2)
         hamming_dis = cal_hamming_distance(hash_file1, hash_file2)
         return hamming_dis
-
 
 
 if __name__ == "__main__":

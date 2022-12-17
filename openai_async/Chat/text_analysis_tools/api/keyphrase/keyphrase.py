@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 
+import re
+
 import jieba
 import jieba.analyse
-import re
 import numpy as np
-from wordcloud import WordCloud
-from PIL import Image
-from ..keyphrase import FONT_PATH, MASK_PATH
+
+
+# from wordcloud import WordCloud
 
 
 class KeyPhraseExtraction():
@@ -59,11 +60,11 @@ class KeyPhraseExtraction():
         for phrase in key_phrase:
             flag = False
             for item in key_phrase_filter:
-                if len(set(phrase) & set(item)) >= min(len(set(phrase)), len(set(item)))/2.0:
+                if len(set(phrase) & set(item)) >= min(len(set(phrase)), len(set(item))) / 2.0:
                     flag = True
                     break
             if not flag:
-                    key_phrase_filter.append(phrase)
+                key_phrase_filter.append(phrase)
 
         # 给短语赋值权重, 设置短语最多包含三个关键词
         keyphrase_weight = {''.join(phrase[-3:]): np.mean([keyword_score[word] for word in phrase[-3:]])
@@ -78,6 +79,7 @@ class KeyPhraseExtraction():
 
         return keyphrase_weight
 
+    """
     def wordcloud(self, keyphrrase_weight, save_path='./wordcloud.png', with_mask=False, mask_pic=MASK_PATH):
         font = FONT_PATH
         mask = mask_pic
@@ -102,6 +104,7 @@ class KeyPhraseExtraction():
             )
         wc.generate_from_frequencies(keyphrrase_weight)  # 绘制图片
         wc.to_file(save_path)  # 保存图片
+    """
 
 
 if __name__ == '__main__':
