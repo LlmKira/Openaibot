@@ -15,7 +15,6 @@ jieba
 Pillow
 pathlib
 numpy
-wordcloud
 scikit-learn
 transformers
 beautifulsoup4

@@ -168,21 +168,26 @@ class Chatbot(object):
             _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
             _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
             _diff = (_diff1 + _diff2) / 2
-            memory[i]["content"]["weight"] = _diff * 100 + 30  # 相比于关键词检索有 2个优先级
+            score = _diff * 100
+            memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
         # 主题检索
-        _key = Talk.tfidf_keywords(prompt, topK=3)
+        _key = Talk.tfidf_keywords(prompt, topK=5)
         for i in range(0, len(memory) - attention):
+            #
+            score = 0
+            full_score = len(_key)
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
                 if ir in f"{ask}{reply}":
-                    memory[i]["content"]["weight"] = 90
+                    score += 1
+            memory[i]["content"]["weight"] = (score / full_score) * 100  # 基准数据，置信为 0.5 百分比
         # 进行筛选，计算限制
         _msg_flow = []
         _msg_return = []
         _now_token = start_token
         memory = sorted(memory, key=lambda x: x['time'], reverse=True)
         for i in range(0, len(memory)):
-            if memory[i]["content"]["weight"] > 80:
+            if memory[i]["content"]["weight"] > 50:
                 ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
                 _now_token += Talk.tokenizer(f"{ask}{reply}")
                 if _now_token > _create_token:
@@ -259,6 +264,7 @@ class Chatbot(object):
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         _prompt = _header + _prompt
+        print(_prompt)
         # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
@@ -358,10 +364,17 @@ class Chatbot(object):
                         else:
                             if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
                                 prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
-                        info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
+                        _info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
+                        _pre = 0
+                        info = []
+                        for i in _info:
+                            if _pre > 100:
+                                break
+                            info.append(i)
+                            _pre += Talk.tokenizer(i)
                     except Exception as e:
                         print(e)
                         info = []
                     re.extend(info)
-        _appenx = "".join(re)
+        _appenx = "\n".join(re)
         return _appenx

@@ -16,6 +16,16 @@ except Exception:
     redis_installed = False
 
 
+class DataUtils(object):
+    @staticmethod
+    def processString5(txt, ori: str, rep: str, dels: str = None):
+        if len(ori) != len(rep):
+            raise Exception("NO")
+        transTable = txt.maketrans(ori, rep, dels)
+        txt = txt.translate(transTable)
+        return txt
+
+
 class MsgFlow(object):
     """
     数据存储桶，用于上下文分析时候提取桶的内容

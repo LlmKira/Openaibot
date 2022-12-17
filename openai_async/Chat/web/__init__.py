@@ -21,31 +21,33 @@ class webEnhance(object):
             self._server = random.choice(server)
 
     @staticmethod
-    def deal_res(query, res):
+    def deal_res(query, sentence):
         import re
         stop_sentence = ["下面就让我们",
                          "小编", "一起来看一下", "小伙伴们",
                          "究竟是什么意思", "看影片", "看人次", "？", "?", "是什么", "什么意思", "意思介绍", " › ",
-                         "游侠", "_哔哩哔哩_bilibili", "为您提供", "今日推荐", "線上看", "线上看", "知乎"]
+                         "游侠", "_哔哩哔哩_bilibili", "为您提供", "在线观看", "今日推荐", "線上看", "线上看", "知乎",
+                         "高清观看"]
         skip = False
         for ir in stop_sentence:
-            if ir in res:
+            if ir in sentence:
                 skip = True
         pas = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-        _link = re.findall(pas, res)
+        _link = re.findall(pas, sentence)
         if _link:
             for i in _link:
-                res = res.replace(i, "")
-        _link = re.findall("(?:[\w-]+\.)+[\w-]+", res)
+                sentence = sentence.replace(i, "")
+        _link = re.findall("(?:[\w-]+\.)+[\w-]+", sentence)
         if _link:
-            if len("".join(_link)) / len(res) > 0.7:
+            if len("".join(_link)) / len(sentence) > 0.7:
                 skip = True
             for i in _link:
-                res = res.replace(i, "")
+                sentence = sentence.replace(i, "")
         if skip:
             return ""
         # 处理数据
-        sentence = res.strip(".").strip("…").replace('\xa0', '').replace('    ', '').replace("\r", '')
+        sentence = sentence.strip(".").strip("…").replace('\xa0', '').replace('   ', '').replace("/r", '')
+        sentence = sentence.replace("/v", '').replace("/s", '').replace("/p", '').replace("/a", '').replace("/d", '')
         sentence = sentence.replace("，", ",").replace("。", ".")
         if 18 < len(sentence):
             return sentence
@@ -95,12 +97,12 @@ class webEnhance(object):
                 if i.parent.select("a[href]"):
                     continue
                 res = i.parent.text
-                cr = self.deal_res(query=query, res=res)
+                cr = self.deal_res(query=query, sentence=res)
                 if cr:
                     sret[cr] = 0
         else:
             for i in target[1]:
-                cr = self.deal_res(query=query, res=i)
+                cr = self.deal_res(query=query, sentence=i)
                 if cr:
                     sret[cr] = 0
         return list(sret.keys())
@@ -114,13 +116,33 @@ class webEnhance(object):
         if not _list:
             return []
         # list 互相匹配
-        for ir in range(0, len(_list), 2):
-            _pre = _list[ir]
-            _afe = _list[ir]
-            _deal = _list
-            sim = Talk.cosion_sismilarity(pre=_pre, aft=_afe)
-            if sim < 0.3:
-                _list.remove(_afe)
+        while len(_list) >= 2:
+            prev_len = len(_list)
+            _pre = _list[0]
+            _afe = _list[1]
+            sim = Talk.simhash_similarity(pre=_pre, aft=_afe)
+            if sim < 15:
+                _remo = _afe if len(_afe) > len(_pre) else _pre
+                # 移除过于相似的
+                _list.remove(_remo)
+            if len(_list) == prev_len:
+                break
+        while len(_list) >= 2:
+            prev_len = len(_list)
+            _list_len = len(_list)
+            for i in range(0, len(_list), 2):
+                if i + 1 >= _list_len:
+                    continue
+                _pre = _list[i]
+                _afe = _list[i + 1]
+                sim = Talk.cosion_sismilarity(pre=_pre, aft=_afe)
+                if sim > 0.6:
+                    _remo = _afe if len(_afe) > len(_pre) else _pre
+                    # 移除过于相似的
+                    _list.remove(_remo)
+                    _list_len = _list_len - 1
+            if len(_list) == prev_len:
+                break
         # 关键词算法匹配
         _key = Talk.tfidf_keywords(prompt, topK=5)
         for i in _list:
@@ -132,5 +154,5 @@ class webEnhance(object):
 
 
 if __name__ == '__main__':
-    re = webEnhance(server=["https://www.exp.com?ie=utf8&query={}"]).get_content(prompt="介绍孤独摇滚")
-    print(re)
+    re = webEnhance(server=["https://www.exp.com/web?ie=utf8&query={}"]).get_content(prompt="孤独摇滚出品方")
+    # print(re)
