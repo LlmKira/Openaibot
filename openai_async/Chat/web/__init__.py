@@ -132,5 +132,5 @@ class webEnhance(object):
 
 
 if __name__ == '__main__':
-    re = webEnhance(server=["https://www.exp.com/?ie=utf8&query={}"]).get_content(prompt="介绍孤独摇滚")
+    re = webEnhance(server=["https://www.exp.com?ie=utf8&query={}"]).get_content(prompt="介绍孤独摇滚")
     print(re)
