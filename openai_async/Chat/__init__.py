@@ -314,6 +314,16 @@ class Chatbot(object):
                     _now.append(i)
             return _now
 
+    @staticmethod
+    def match_enhance(prompt):
+        import re
+        match = re.findall(r"\[(.*?)\]", prompt)
+        match2 = re.findall(r"\"(.*?)\"", prompt)
+        match3 = re.findall(r"\((.*?)\)", prompt)
+        match.extend(match2)
+        match.extend(match3)
+        return match
+
     def Prehance(self, prompt, web_enhance_server):
         _appenx = ""
         # 提取内容
@@ -342,8 +352,12 @@ class Chatbot(object):
                     or "2022年" in prompt or "2023年" in prompt) \
                         or (len(prompt) < 20 and "?" in prompt or "？" in prompt):
                     try:
-                        if prompt.startswith("介绍") or prompt.startswith("查询"):
-                            prompt.replace("介绍", "").replace("查询", "")
+                        match = self.match_enhance(prompt)
+                        if match:
+                            prompt = match[0]
+                        else:
+                            if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
+                                prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
                         info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
                     except Exception as e:
                         print(e)
