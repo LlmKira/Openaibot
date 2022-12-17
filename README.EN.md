@@ -276,6 +276,11 @@ will automatically merge the missing keys to fix them.
 - Usage limit is 15000/h
 - Memory capacity of 80 dialogue pairs
 
+### Middleware support
+
+There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
+operational support. Services that can interface with other Api's can be spiked.
+
 ### prompt_server.py
 
 Peripheral Prompt trimming interface to give support to other projects.

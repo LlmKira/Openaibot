@@ -21,7 +21,6 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
 *自制异步依赖库提速，自制上下文优化策略*
 
-
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
 ## 特性
@@ -42,7 +41,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 动态裁剪上下文，防止超额
-* 中间件支持，对Chat更友好
+* 网络中间件支持，数据实时，对Chat更友好
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -135,7 +134,7 @@ INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
 Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
-# 联网支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
+# 联网中间件支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
 
 # 设置的代理，但是不代理 openai api, 只代理 bot
 [proxy]
@@ -282,7 +281,6 @@ help - 帮助
 
 外设的 Prompt 裁剪接口，给其他项目提供支持。
 
-
 ### QuickDev
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
@@ -290,6 +288,10 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 ### 上一次的性能分析
 
 **日常负载 316MB**
+
+### 中间件支持
+
+在记忆池和分析之间有一个 中间件，可以提供一定的联网检索支持和操作支持。可以对接其他 Api 的服务进行加料。
 
 ## 感谢
 
