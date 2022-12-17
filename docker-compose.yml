@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  openaibot:
+    image: sudoskys/openaibot:main
+    command: python3 main.py
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+    networks:
+      - app-tier
+  redis:
+    image: redis:latest
+    volumes:
+      - ./redis:/data
+    ports:
+      - 6379:6379
+    networks:
+      - app-tier
+
+networks:
+  app-tier:
+    driver: bridge
