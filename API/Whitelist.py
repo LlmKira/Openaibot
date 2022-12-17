@@ -1,4 +1,3 @@
-import os
 from utils.Chat import UserManger, GroupManger
 
 class Whitelist:

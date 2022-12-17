@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from API.Signature import APISignature
 from pydantic import BaseModel
-from pathlib import Path
 from utils.Base import ReadConfig
 from App.Event import Reply
 from utils.Data import Api_keys
@@ -11,9 +10,7 @@ from utils.Chat import Header, Utils
 import App.Event as appe
 import time
 import os
-from API.FakeMessage import FakeTGBotMessage
-
-_csonfig = appe.load_csonfig()
+from API.FakeMessage import FakeTGBotMessage, FakeTGBot
 
 class ReqBody(BaseModel):
     chatText: str
@@ -23,6 +20,9 @@ class ReqBody(BaseModel):
     signature: str
     
 apicfg = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/API/config.toml')
+config = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/Config/app.toml')
+_csonfig = appe.load_csonfig()
+
 app = FastAPI()
 
 @app.get('/')
@@ -58,7 +58,7 @@ async def chat(body: ReqBody):
                                             key=Api_keys.get_key()['OPENAI_API_KEY'], 
                                             prompt=body.chatText, 
                                             method='chat')
-            return {'success': True, 'response': res, 'timestamp': body.timestamp}
+            return {'success': True, 'response': res}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
     except Exception as e:
@@ -76,7 +76,7 @@ async def write(body: ReqBody):
                                                 key=Api_keys.get_key()['OPENAI_API_KEY'],
                                                 prompt=body.chatText, 
                                                 method='write')
-                return {'success': True, 'response':res, 'timestamp':body.timestamp}
+                return {'success': True, 'response':res}
         else:
             return {'success': False,'response':'INVAILD_CHATINFO'}
     except Exception as e:
@@ -113,12 +113,33 @@ async def remind(body: ReqBody):
         _remind = _remind.replace("YOU*", "你")
         _remind = _remind.replace("ME*", "我")
         if(Header(uid=body.chatId).set(_remind)):
-            return {'success': True,'response': 'done'}
+            return {'success': True,'response': '设定完成：' + _remind}
         else:
             return {'success': False,'response': 'GENERAL_FAILURE'}
     else:
         Header(uid=body.chatId).set({})
         return {'success': False, 'response': 'REMIND_COMMAND_PROHIBITED'}
+
+#### Administration
+@app.post('/admin/{action}')
+async def admin(body: ReqBody, action: str):
+    if(response := checkIllegal(body)):
+        return response
+    if(not body.chatId in config.master):
+        return {'success': False,'response': 'OPERATION_NOT_PERMITTED'}
+    admin_actions = ['set_user_cold', 'set_group_cold', 'set_token_limit', 'set_input_limit', 'see_api_key', 'del_api_key', 'add_api_key', 'set_per_user_limit', 'set_per_hour_limit', 'promote_user_limit', 'reset_user_usage', 'add_block_group', 'del_block_group', 'add_block_user', 'del_block_user', 'add_white_group', 'add_white_user', 'del_white_group', 'del_white_user', 'update_detect','open_user_white_mode', 'open_group_white_mode', 'close_user_white_mode', 'close_group_white_mode', 'open', 'close', 'disable_change_head', 'enable_change_head']
+    if(not action in admin_actions):
+        return {'success': False,'response': 'INVAILD_ADMIN_ACTION'}
+    message = FakeTGBotMessage()
+    message.from_user.id = body.chatId
+    message.text = '/{action} {msg}'.format(action=action, msg=body.chatText)
+    '''
+    def admin_callback(message, text):  # bot接口回调
+        return {'success': True,'response': text}
+    '''
+    bot = FakeTGBot()
+    await appe.Master(bot, message, config)
+    return {'success': True,'response': bot.resp}
 
 #### Run HTTP Server when executed by Python CLI
 if __name__ == '__main__':
