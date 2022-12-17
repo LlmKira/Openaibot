@@ -3,6 +3,7 @@
 # @FileName: Summer.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+"""
 from __future__ import absolute_import
 from __future__ import division, print_function, unicode_literals
 
@@ -38,11 +39,6 @@ class ChatUtils(object):
 
     @staticmethod
     def summary(sentence, n):
-        """
-        :param sentence: 字符串
-        :param n: 几句话
-        :return: 总结
-        """
         # 差缺中文系统
         _chinese = False
         # 统计中文字符数量
@@ -84,3 +80,4 @@ class ChatUtils(object):
         if len(content.strip(" ")) == 0:
             content = sentence
         return content
+"""
