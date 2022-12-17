@@ -7,11 +7,12 @@ from App.Event import Reply
 from utils.Data import Api_keys
 from loguru import logger
 from API.Whitelist import Whitelist
+import App.Event as appe
 
 class ReqBody(BaseModel):
     chatText: str
-    chatId: str
-    groupId: str
+    chatId: int
+    groupId: int
     timestamp: str
     signature: str
     
@@ -28,7 +29,7 @@ async def chat(body: ReqBody):
     verisign = APISignature({'secret':apicfg['secret'], 'text':body.chatText, 'timestamp':body.timestamp})
     if(not verisign.verify(body.signature)):
         return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
-    if(not Whitelist(body).checkAll()):
+    if(not Whitelist(body, appe).checkAll()):
         return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     try:
         if(body.chatId and body.chatText):
@@ -49,7 +50,7 @@ async def write(body: ReqBody):
     verisign = APISignature({'secret':apicfg['secret'], 'text':body.chatText, 'timestamp':body.timestamp})
     if(not verisign.verify(body.signature)):
         return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
-    if(not Whitelist(body).checkAll()):
+    if(not Whitelist(body, appe).checkAll()):
         return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     try:
         if(body.chatId and body.chatText):

@@ -1,7 +1,5 @@
 import os
-os.chdir("..")
 from utils.Chat import UserManger, GroupManger
-import App.Event as appe
 
 class FakeTGBotUser:
     id: int
@@ -12,16 +10,16 @@ class FakeTGBotMessage:
     chat = FakeTGBotChat()
 
 message = FakeTGBotMessage()
-_csonfig = appe.load_csonfig()
 
 class Whitelist:
-    def __init__(self, incomingObject):
+    def __init__(self, incomingObject, appe):
         message.chat.id = incomingObject.groupId
-        message.from_user.id = incomingObject.userId
+        message.from_user.id = incomingObject.chatId
+        self._csonfig = appe.load_csonfig()
     def checkPerson(self):
         if UserManger(message.from_user.id).read('block'):
             return False
-        if _csonfig.get("whiteUserSwitch"):
+        if self._csonfig.get("whiteUserSwitch"):
             if UserManger(message.from_user.id).read("white"):
                 return True
             else:
@@ -31,7 +29,7 @@ class Whitelist:
     def checkGroup(self):
         if GroupManger(message.chat.id).read('block'):
             return False
-        if _csonfig.get("whiteUserSwitch"):
+        if self._csonfig.get("whiteUserSwitch"):
             if GroupManger(message.chat.id).read("white"):
                 return True
             else:
@@ -40,7 +38,7 @@ class Whitelist:
             return True
     def checkAll(self):
         if message.chat.id:
-            if self.checkPerson() and self.checkGroup():
+            if self.checkGroup():
                 return True
             else:
                 return False
