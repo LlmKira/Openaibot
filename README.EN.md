@@ -132,7 +132,8 @@ botToken = 'key'
 INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
-Enhance_Server = ["https://www.expserver.com?q={}"] # 联网支持，自己找 server
+Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
+# 联网支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
 
 # for bot , not openai
 [proxy]
