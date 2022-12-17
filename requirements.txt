@@ -7,12 +7,10 @@ redis
 loguru
 httpx
 apscheduler
-snownlp
 nltk
 fastapi
 pydantic
 uvicorn
-sumy
 jieba
 Pillow
 pathlib
@@ -20,3 +18,4 @@ numpy
 wordcloud
 scikit-learn
 transformers
+beautifulsoup4

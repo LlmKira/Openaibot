@@ -1,10 +1,12 @@
 ![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/covers.png)
 
+
 ------------------------------------
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Other-ff69b4">
   <img src="https://img.shields.io/badge/Python-3.7|8|9|10-green" alt="PYTHON" >
   <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Buyme-milk-DB94A2" alt="SPONSOR"></a>
+  <a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small"/></a>
 </p>
 
 <h2 align="center">OpenaiBot</h2>
@@ -18,6 +20,8 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 *复刻的 chatGPT ，体验基本一样 (?)，就是 Api 要钱*
 
 *自制异步依赖库提速，自制上下文优化策略*
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
 ## 特性
 
@@ -37,6 +41,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 动态裁剪上下文，防止超额
+* 网络中间件支持， Prompt Injection，对Chat更友好
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -56,7 +61,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
 支持场景设置，采用 `/remind` 设计自己的请求头。例如 `Ai 扮演在空间站的宇航员`。设定小于 4 个字符会使用默认值。
 
-**这些设定的说明**
+*这些设定的说明*
 
 发送到 Api 的格式：
 
@@ -128,6 +133,8 @@ botToken = 'key' # 机器人密钥
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
+Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
+# 联网中间件支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
 
 # 设置的代理，但是不代理 openai api, 只代理 bot
 [proxy]
@@ -254,6 +261,15 @@ help - 帮助
 
 ## 其他
 
+### 中间件
+
+在记忆池和分析 之间有一个 中间件，可以提供一定的联网检索支持和操作支持。可以对接其他 Api 的服务进行加料。
+
+**Prompt Injection**
+
+使用 `“”` `[]` 来强调内容。触发方式有正式提问的问句，介绍，询问，查询请求，小于 80 字等要求。
+触发是隐式的，短的正式问句会触发。
+
 ### 统计
 
 ``analysis.json`` 是频率统计，60s 内的请求次数。
@@ -274,13 +290,6 @@ help - 帮助
 
 外设的 Prompt 裁剪接口，给其他项目提供支持。
 
-### 声明
-
-```markdown
-1. 此项目不是 Openai 的官方项目。
-2. 不对机器人生成的任何内容负责。
-```
-
 ### QuickDev
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
@@ -293,3 +302,11 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 - 贡献者
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
+
+#### 声明
+
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 不对机器人生成的任何内容负责。
+```
+

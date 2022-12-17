@@ -7,192 +7,18 @@
 import json
 import os
 import random
-import re
 import openai_async
+from .web import webEnhance
+
 # import loguru
 # import jiagu
 
 
 # 基于 Completion 上层
 from ..resouce import Completion
-from .text_analysis_tools.api.keywords.tfidf import TfidfKeywords
-from .text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
-from .text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
+from ..utils.Talk import Talk
+
 from ..utils.data import MsgFlow
-from transformers import GPT2TokenizerFast
-
-gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-
-
-class Talk(object):
-    @staticmethod
-    def tfidf_summarization(sentence: str, ratio=0.5):
-        """
-        采用tfidf进行摘要抽取
-        :param sentence:
-        :param ratio: 摘要占文本长度的比例
-        :return:
-        """
-        _sum = TfidfSummarization(ratio=ratio)
-        _sum = _sum.analysis(sentence)
-        return _sum
-
-    @staticmethod
-    def simhash_similarity(pre, aft):
-        """
-        采用simhash计算文本之间的相似性
-        :return:
-        """
-        simhash = SimHashSimilarity()
-        sim = simhash.run_simhash(pre, aft)
-        # print("simhash result: {}\n".format(sim))
-        return sim
-
-    @staticmethod
-    def tfidf_keywords(keywords, delete_stopwords=True, topK=5, withWeight=False):
-        """
-        tfidf 提取关键词
-        :param keywords:
-        :param delete_stopwords: 是否删除停用词
-        :param topK: 输出关键词个数
-        :param withWeight: 是否输出权重
-        :return: [(word, weight), (word1, weight1)]
-        """
-        tfidf = TfidfKeywords(delete_stopwords=delete_stopwords, topK=topK, withWeight=withWeight)
-        return tfidf.keywords(keywords)
-
-    @staticmethod
-    def tokenizer(s: str) -> float:
-        """
-        谨慎的计算器，会预留 5 token
-        :param s:
-        :return:
-        """
-        # 统计中文字符数量
-        return len(gpt_tokenizer.encode(s))
-
-    @staticmethod
-    def english_sentence_cut(text) -> list:
-        list_ = list()
-        for s_str in text.split('.'):
-            if '?' in s_str:
-                list_.extend(s_str.split('?'))
-            elif '!' in s_str:
-                list_.extend(s_str.split('!'))
-            else:
-                list_.append(s_str)
-        return list_
-
-    @staticmethod
-    def chinese_sentence_cut(text) -> list:
-        text = re.sub('([。！？\?])([^’”])', r'\1\n\2', text)
-        # 普通断句符号且后面没有引号
-        text = re.sub('(\.{6})([^’”])', r'\1\n\2', text)
-        # 英文省略号且后面没有引号
-        text = re.sub('(\…{2})([^’”])', r'\1\n\2', text)
-        # 中文省略号且后面没有引号
-        text = re.sub('([.。！？\?\.{6}\…{2}][’”])([^’”])', r'\1\n\2', text)
-        # 断句号+引号且后面没有引号
-        return text.split("\n")
-
-    def cut_chinese_sentence(self, text):
-        p = re.compile("“.*?”")
-        listr = []
-        index = 0
-        for i in p.finditer(text):
-            temp = ''
-            start = i.start()
-            end = i.end()
-            for j in range(index, start):
-                temp += text[j]
-            if temp != '':
-                temp_list = self.chinese_sentence_cut(temp)
-                listr += temp_list
-            temp = ''
-            for k in range(start, end):
-                temp += text[k]
-            if temp != ' ':
-                listr.append(temp)
-            index = end
-        return listr
-
-    @staticmethod
-    def isCode(sentence):
-        code = False
-        _reco = [
-            '("',
-            '")',
-            ").",
-            "()",
-            "!=",
-            "=="
-        ]
-        _t = len(_reco)
-        _r = 0
-        for i in _reco:
-            if i in sentence:
-                _r += 1
-        if _r > _t / 2:
-            code = True
-        rms = [
-            "print_r(",
-            "var_dump(",
-            'NSLog( @',
-            'println(',
-            '.log(',
-            'print(',
-            'printf(',
-            'WriteLine(',
-            '.Println(',
-            '.Write(',
-            'alert(',
-            'echo(',
-        ]
-        for i in rms:
-            if i in sentence:
-                code = True
-        return code
-
-    @staticmethod
-    def get_language(sentence: str):
-        language = "english"
-        # 差缺中文系统
-        if len([c for c in sentence if ord(c) > 127]) / len(sentence) > 0.5:
-            language = "chinese"
-        if Talk.isCode(sentence):
-            language = "code"
-        return language
-
-    def cut_sentence(self, sentence: str) -> list:
-        language = self.get_language(sentence)
-        if language == "chinese":
-            _reply_list = self.cut_chinese_sentence(sentence)
-        elif language == "english":
-            # from nltk.tokenize import sent_tokenize
-            _reply_list = self.english_sentence_cut(sentence)
-        else:
-            _reply_list = [sentence]
-        if len(_reply_list) < 1:
-            return [sentence]
-        return _reply_list
-
-    def cut_ai_prompt(self, prompt: str) -> list:
-        """
-        切薄负载机
-        :param prompt:
-        :return:
-        """
-        _some = prompt.split(":", 1)
-        _head = ""
-        if len(_some) > 1:
-            _head = f"{_some[0]}:"
-            prompt = _some[1]
-        _reply = self.cut_sentence(prompt)
-        _prompt_list = []
-        for item in _reply:
-            _prompt_list.append(f"{_head}{item.strip()}")
-        _prompt_list = list(filter(None, _prompt_list))
-        return _prompt_list
 
 
 # 聊天类
@@ -201,7 +27,7 @@ class Talk(object):
 class Chatbot(object):
     def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3505,
                  restart_sequ: str = "\nSomeone:",
-                 start_sequ: str = "\nReply: ",
+                 start_sequ: str = "\nReply:",
                  call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
@@ -305,10 +131,17 @@ class Chatbot(object):
             _result.append(reply)
         return _result
 
-    def Summer(self, prompt: str, memory: list, attention: int = 4, extra_token: int = 0) -> list:
+    def Summer(self,
+               prompt: str,
+               memory: list,
+               attention: int = 3,
+               start_token: int = 0,
+               extra_token: int = 0
+               ) -> list:
         """
         以单条消息为对象处理达标并排序时间轴
         数据清洗采用权重设定，而不操作元素删减
+        :param start_token: 中间件传过来的 token
         :param attention: 注意力
         :param prompt: 记忆提示
         :param extra_token: 记忆的限制
@@ -332,20 +165,21 @@ class Chatbot(object):
         # 相似度检索
         for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
-            _diff1 = Talk.simhash_similarity(pre=prompt, aft=ask)
-            _diff2 = Talk.simhash_similarity(pre=prompt, aft=reply)
+            _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
+            _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
             _diff = (_diff1 + _diff2) / 2
-            memory[i]["content"]["weight"] = (100 - _diff)  # 相比于关键词检索有 2个优先级
+            memory[i]["content"]["weight"] = _diff * 100 + 30  # 相比于关键词检索有 2个优先级
         # 主题检索
         _key = Talk.tfidf_keywords(prompt, topK=3)
         for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
                 if ir in f"{ask}{reply}":
-                    memory[i]["content"]["weight"] = 150
+                    memory[i]["content"]["weight"] = 90
         # 进行筛选，计算限制
         _msg_flow = []
-        _now_token = 0
+        _msg_return = []
+        _now_token = start_token
         memory = sorted(memory, key=lambda x: x['time'], reverse=True)
         for i in range(0, len(memory)):
             if memory[i]["content"]["weight"] > 80:
@@ -357,7 +191,9 @@ class Chatbot(object):
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
         # print(_msg_flow)
+        # print(_msg_flow)
         _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
+        _msg_return.extend(_msg_flow_list)
         """
                 if _out:
             for i in range(len(_Final)):
@@ -370,9 +206,11 @@ class Chatbot(object):
         return _msg_flow_list
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
-                                character: list = None, head: str = None, role: str = "") -> dict:
+                                character: list = None, head: str = None, role: str = "",
+                                web_enhance_server: list = None) -> dict:
         """
         异步的，得到对话上下文
+        :param web_enhance_server: ["https://www.exp.com/search?q={}"] 格式如此
         :param role:
         :param head: 预设技巧
         :param max_tokens: 限制返回字符数量
@@ -383,7 +221,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"\n{self._restart_sequence}让我们谈谈吧。"
+            head = f"{self._restart_sequence}让我们谈谈吧\n"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
@@ -391,23 +229,30 @@ class Chatbot(object):
         if role:
             if len(f"{role}") > 4:
                 _role = f"I am [{self._start_sequence}] following.\n我认为:{role}.\n"
-        _header = f"{_role}\n{head}\n"
+        _header = f"{_role}{head}"
         # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
         _prompt_memory = self._MsgFlow.read()
-
         # 占位限制
         _extra_token = int(
             len(_prompt_memory) +
             Talk.tokenizer(self._start_sequence) +
             max_tokens +
             Talk.tokenizer(_header + _prompt_s[0]))
-        _prompt_apple = self.Summer(prompt=prompt, memory=_prompt_memory, extra_token=_extra_token)
-        _prompt_apple.extend(_prompt_s)
-
+        _prompt_list = []
+        # 中间件
+        _appenx = self.Prehance(prompt=prompt, web_enhance_server=web_enhance_server)
+        start_token = int(Talk.tokenizer(_appenx))
+        _prompt_list.append(_appenx)
+        # 记忆池
+        _prompt_apple = self.Summer(prompt=prompt,
+                                    start_token=start_token,
+                                    memory=_prompt_memory,
+                                    extra_token=_extra_token)
+        _prompt_list.extend(_prompt_apple)
+        _prompt_list.extend(_prompt_s)
         # 拼接提示词汇
-        _prompt = '\n'.join(_prompt_apple) + f"\n{self._start_sequence}"
-
+        _prompt = '\n'.join(_prompt_list) + f"\n{self._start_sequence}"
         # 重切割
         _limit = self.__token_limit - max_tokens - Talk.tokenizer(_header)
         _mk = _limit if _limit > 0 else 0
@@ -441,3 +286,82 @@ class Chatbot(object):
         filtered_result = [x for x in result if x != ""]
         # 输出处理后的结果
         return filtered_result
+
+    @staticmethod
+    def isIN(prompt: str, keywords: list):
+        isIn = False
+        for i in keywords:
+            if i in prompt:
+                isIn = True
+        return isIn
+
+    @staticmethod
+    def isALLIN(prompt: str, keywords: list):
+        isIn = True
+        for i in keywords:
+            if i not in prompt:
+                isIn = False
+        return isIn
+
+    @staticmethod
+    def server(server, key):
+        if isinstance(server, list):
+            return server
+        if isinstance(server, dict):
+            _now = []
+            for i in server.keys():
+                if server[i] == key:
+                    _now.append(i)
+            return _now
+
+    @staticmethod
+    def match_enhance(prompt):
+        import re
+        match = re.findall(r"\[(.*?)\]", prompt)
+        match2 = re.findall(r"\"(.*?)\"", prompt)
+        match3 = re.findall(r"\((.*?)\)", prompt)
+        match.extend(match2)
+        match.extend(match3)
+        return match
+
+    def Prehance(self, prompt, web_enhance_server):
+        _appenx = ""
+        # 提取内容
+        re = []
+
+        # TIME
+        from datetime import datetime, timedelta, timezone
+        utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+        bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+        _time = ["time", "多少天", "几天", "时间", "几点", "今天", "昨天", "明天", "几月", "几月", "几号", "几个月",
+                 "天前"]
+        if self.isIN(prompt=prompt, keywords=_time):
+            now = bj_dt.strftime("%Y-%m-%d %H:%M")
+            re.append(f"Current Time UTC8 {now}")
+
+        # WEEK
+        _week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+        _week_key = ["星期", "星期几", "时间", "周几", "周一", "周二", "周三", "周四", "周五", "周六"]
+        if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
+            onw = bj_dt.weekday()
+            re.append(f"Now {_week_list[onw]}")
+        # WEB
+        if web_enhance_server:
+            if len(prompt) < 80:
+                if (prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道")
+                    or "2022年" in prompt or "2023年" in prompt) \
+                        or (len(prompt) < 20 and "?" in prompt or "？" in prompt):
+                    try:
+                        match = self.match_enhance(prompt)
+                        if match:
+                            prompt = match[0]
+                        else:
+                            if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
+                                prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
+                        info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
+                    except Exception as e:
+                        print(e)
+                        info = []
+                    re.extend(info)
+        _appenx = "".join(re)
+        return _appenx

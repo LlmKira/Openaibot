@@ -11,7 +11,7 @@
 
 OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
->Translate by deepl (wink~
+> Translate by deepl (wink~
 
 This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
 the **Python implementation** of the chatGPT-like is self-implemented by this bot.
@@ -37,6 +37,7 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 * Support for content filtering
 * (20221205) Api library changed to an Async library implemented in this repository
 * Dynamic context trimming to prevent overruns
+* Pre enhance support, Prompt Injection+ Web
 
 See https://github.com/sudoskys/Openaibot/issues/1
 
@@ -131,6 +132,8 @@ botToken = 'key'
 INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
+Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
+# 联网支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
 
 # for bot , not openai
 [proxy]
@@ -214,7 +217,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                                                                                                           |
 | `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
-| `/forgetme`                        | 忘记我                  |                                  |
+| `/forgetme`                               | 忘记我                         |                                                                                                                                             |
 
 ### Sample table
 
@@ -273,6 +276,11 @@ will automatically merge the missing keys to fix them.
 - Usage limit is 15000/h
 - Memory capacity of 80 dialogue pairs
 
+### Middleware support/Prompt Injection
+
+There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
+operational support. Services that can interface with other Api's can be spiked.
+
 ### prompt_server.py
 
 Peripheral Prompt trimming interface to give support to other projects.
@@ -296,3 +304,7 @@ Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
 - Contributors
 - [Text Analysis Tool Library](https://github.com/murray-z/text_analysis_tools)
+
+## FOSSA
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)

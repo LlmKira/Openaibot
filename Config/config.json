@@ -2,7 +2,7 @@
     "statu": true,
     "input_limit": 200,
     "token_limit": 1000,
-    "hour_limit": 15000,
+    "hour_limit": 1,
     "per_user_limit": 1,
     "usercold_time": 10,
     "groupcold_time": 1,
@@ -27,5 +27,6 @@
     "whiteUserSwitch": true,
     "whiteGroupSwitch": false,
     "Model": {},
-    "allow_change_head": true
+    "allow_change_head": true,
+    "web_enhance_server": []
 }

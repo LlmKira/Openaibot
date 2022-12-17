@@ -8,3 +8,4 @@ numpy
 sumy
 jieba
 transformers
+beautifulsoup4
