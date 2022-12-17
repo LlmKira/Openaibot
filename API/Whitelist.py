@@ -1,20 +1,10 @@
 import os
 from utils.Chat import UserManger, GroupManger
 
-class FakeTGBotUser:
-    id: int
-class FakeTGBotChat:
-    id: int
-class FakeTGBotMessage:
-    from_user = FakeTGBotUser()
-    chat = FakeTGBotChat()
-
-message = FakeTGBotMessage()
-
 class Whitelist:
-    def __init__(self, incomingObject, appe):
-        message.chat.id = incomingObject.groupId
-        message.from_user.id = incomingObject.chatId
+    def __init__(self, _message, appe):
+        global message
+        message = _message
         self._csonfig = appe.load_csonfig()
     def checkPerson(self):
         if UserManger(message.from_user.id).read('block'):
