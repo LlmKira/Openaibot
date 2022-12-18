@@ -312,7 +312,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="ChatGPT:",
+                                         start_name="Girl:",
                                          web_enhance_server=config.Enhance_Server
                                          )
         msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
@@ -359,7 +359,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="ChatGPT:",
+                                             start_name="Girl:",
                                              method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
