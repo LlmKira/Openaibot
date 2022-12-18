@@ -227,7 +227,7 @@ class Chatbot(object):
         if head is None:
             head = f""  # f"{self._restart_sequence}让我们谈谈吧\n"
         if character is None:
-            character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
+            character = ["educated", "clever", "friendly", "lovely", "talkative", "Romance"]
         _character = ",".join(character)
         _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} Ai assistant.\n"
         if role:
