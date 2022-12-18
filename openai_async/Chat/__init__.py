@@ -186,7 +186,7 @@ class Chatbot(object):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             if Talk.tokenizer(f"{ask}{reply}") > 240:
                 if Talk.get_language(f"{ask}{reply}") == "chinese":
-                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.4)
+                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.5)
                     if len(_sum) > 7:
                         memory[i]["content"]["ask"] = "info"
                         memory[i]["content"]["reply"] = _sum
@@ -263,6 +263,7 @@ class Chatbot(object):
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         _prompt = _header + _prompt
+        # print(_prompt)
         # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,

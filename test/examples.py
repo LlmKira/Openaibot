@@ -209,16 +209,14 @@ def tfidf_summarization(ratio=0.2):
     print("tfidf summarization result: {}\n".format(summ))
 
 
-def textrank_summarization(ratio=0.2):
+def textrank_summarization(sentence,ratio=0.2):
     """
     采用tfidf进行摘要抽取
     :param ratio: 摘要占文本长度的比例
     :return:
     """
-    with open('./test_data/test_summarization.txt', encoding="utf-8") as f:
-        doc = f.read()
     summ = TextRankSummarization(ratio=ratio)
-    summ = summ.analysis(doc)
+    summ = summ.analysis(sentence)
     print("textrank summarization result: {}\n".format(summ))
 
 
@@ -351,4 +349,7 @@ if __name__ == "__main__":
     # synonym_dict()
     # triple_extraction()
     # simhash_similarity()
-    triple_extraction()
+    doc="""
+    LDA（Latent Dirichlet Allocation）是一种主题建模方法，它根据文档库中主题的出现概率分配词语，使用LDA模型可以把文档集分成不同的主题。MMR（Maximal Marginal Relevance）是一种检索算法，可以根据文档中关键词的相似性来提取最相关的句子。TextRank是基于图的排序算法，可以根据文本内容之间的关系来提取文章的关键片段。Text_teaser是一种基于聚类的摘要算法，可以根据文本的内容进行聚类，并生成摘要。
+    """
+    textrank_summarization(sentence=doc)
