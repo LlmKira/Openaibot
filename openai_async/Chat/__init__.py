@@ -134,7 +134,7 @@ class Chatbot(object):
     def Summer(self,
                prompt: str,
                memory: list,
-               attention: int = 4,
+               attention: int = 3,
                start_token: int = 0,
                extra_token: int = 0
                ) -> list:
@@ -167,13 +167,12 @@ class Chatbot(object):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
             _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
-            _diff = (_diff1 + _diff2) / 2
+            _diff = _diff1 if _diff1 > _diff2 else _diff2
             score = _diff * 100
             memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
         # 主题检索
-        _key = Talk.tfidf_keywords(prompt, topK=2)
+        _key = Talk.tfidf_keywords(prompt, topK=4)
         for i in range(0, len(memory) - attention):
-            #
             score = 0
             full_score = len(_key) if len(_key) != 0 else 1
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
@@ -186,7 +185,7 @@ class Chatbot(object):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             if Talk.tokenizer(f"{ask}{reply}") > 240:
                 if Talk.get_language(f"{ask}{reply}") == "chinese":
-                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.3)
+                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.4)
                     if len(_sum) > 7:
                         memory[i]["content"]["ask"] = "info"
                         memory[i]["content"]["reply"] = _sum
@@ -263,7 +262,6 @@ class Chatbot(object):
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         _prompt = _header + _prompt
-        # print(_prompt)
         # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
