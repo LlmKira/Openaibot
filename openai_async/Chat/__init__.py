@@ -181,6 +181,15 @@ class Chatbot(object):
                 if ir in f"{ask}{reply}":
                     score += 1
             memory[i]["content"]["weight"] = (score / full_score) * 100  # 基准数据，置信为 0.5 百分比
+        # 预处理
+        for i in range(0, len(memory) - attention):
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
+            if Talk.tokenizer(f"{ask}{reply}") > 240:
+                if Talk.get_language(f"{ask}{reply}") == "chinese":
+                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.3)
+                    if len(_sum) > 7:
+                        memory[i]["content"]["ask"] = "info"
+                        memory[i]["content"]["reply"] = _sum
         # 进行筛选，计算限制
         _msg_flow = []
         _msg_return = []
@@ -196,18 +205,8 @@ class Chatbot(object):
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
         # print(_msg_flow)
-        # print(_msg_flow)
         _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
         _msg_return.extend(_msg_flow_list)
-        """
-                if _out:
-            for i in range(len(_Final)):
-                if Talk.tokenizer(_Final[i]) > 240:
-                    if Talk.get_language(_Final[i]) == "chinese":
-                        _sum = Talk.tfidf_summarization(sentence=_Final[i], ratio=0.3)
-                        if len(_sum) > 7:
-                            _Final[i] = _sum
-        """
         return _msg_flow_list
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
@@ -264,7 +263,7 @@ class Chatbot(object):
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         _prompt = _header + _prompt
-        print(_prompt)
+        # print(_prompt)
         # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,
