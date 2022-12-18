@@ -172,6 +172,7 @@ class Chatbot(object):
             memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
         # 主题检索
         _key = Talk.tfidf_keywords(prompt, topK=4)
+        # print(_key)
         for i in range(0, len(memory) - attention):
             score = 0
             full_score = len(_key) if len(_key) != 0 else 1
