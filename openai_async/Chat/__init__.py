@@ -225,7 +225,7 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"{self._restart_sequence}让我们谈谈吧\n"
+            head = f""  # f"{self._restart_sequence}让我们谈谈吧\n"
         if character is None:
             character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
         _character = ",".join(character)
