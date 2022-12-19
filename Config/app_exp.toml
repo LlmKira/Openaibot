@@ -5,7 +5,8 @@ botToken = 'key'
 INTRO = "POWER BY OPENAI"
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
-# 加强区
+
+# 中间件
 Enhance_Server = { "http:/exp?q={}" = "auto", "https://search.com?q={}" = "auto" }
 
 [proxy]

@@ -2,31 +2,16 @@
     "statu": true,
     "input_limit": 200,
     "token_limit": 1000,
-    "hour_limit": 1,
+    "hour_limit": 15000,
     "per_user_limit": 1,
     "usercold_time": 10,
     "groupcold_time": 1,
     "User": {
-        "5275155445": {
-            "white": true,
-            "block": false,
-            "usage": 1
-        },
-        "136817688": {
-            "white": false,
-            "block": false,
-            "usage": 1
-        }
     },
     "Group": {
-        "1001583282373": {
-            "white": false,
-            "block": false
-        }
     },
     "whiteUserSwitch": true,
-    "whiteGroupSwitch": false,
+    "whiteGroupSwitch": true,
     "Model": {},
-    "allow_change_head": true,
-    "web_enhance_server": []
+    "allow_change_head": true
 }
