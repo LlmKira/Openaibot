@@ -135,4 +135,6 @@ dmypy.json
 .pyre/
 /Config/api_keys.json
 /test/text_analysis_tools/
+
 analysis.json
+Config/config.json

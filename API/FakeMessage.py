@@ -1,4 +1,5 @@
-from loguru import logger
+# from loguru import logger
+
 class FakeTGBotUser:    #人
     id: int
 class FakeTGBotChat:    #群
@@ -17,4 +18,6 @@ class FakeTGBot:
     # global resp
     async def reply_to(self, message, text):
         # logger.info('reply_to !')
+        if(not self.callback):
+            return
         self.callback(message, text)
