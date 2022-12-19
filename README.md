@@ -190,6 +190,16 @@ add_api_key - 增加 Api key
 }
 ```
 
+#### VITS 语音支持说明
+
+这项技术提供了一种仿真的语音交互技术。
+
+Api 后端为我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe
+
+安装依赖，运行 `main.py` 文件可以默认使用。
+
+模型下面请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
+
 ## 运行
 
 * 运行

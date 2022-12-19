@@ -191,6 +191,16 @@ that are not in the preset will not be completed.
 }
 ```
 
+#### VITS Voice Support Description
+
+This technology provides an emulated voice interaction technique.
+
+The Api backend is my packaged adaptation of MoeGoe https://github.com/sudoskys/MoeGoe
+
+Install the dependencies and run the `main.py` file to use it by default.
+
+Please consult the MoeGoe project's Readme under Models and note the corresponding protocols for the models.
+
 ## Run
 
 * Run
