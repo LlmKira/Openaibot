@@ -343,6 +343,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 - 贡献者
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
+- [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
 #### 声明
 

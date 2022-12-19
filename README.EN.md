@@ -348,6 +348,7 @@ Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
 - Contributors
 - [Text Analysis Tool Library](https://github.com/murray-z/text_analysis_tools)
+- [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
 ## FOSSA
 
