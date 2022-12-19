@@ -4,7 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # from openai_async.Chat import Talk, Chatbot
-import nltk
+# import nltk
 
 from openai_async.Chat.text_analysis_tools.api.keyphrase.keyphrase import KeyPhraseExtraction
 from openai_async.Chat.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
@@ -12,8 +12,9 @@ from openai_async.Chat.text_analysis_tools.api.summarization.tfidf_summarization
 from openai_async.Chat.text_analysis_tools.api.text_similarity.cosion import CosionSimilarity
 from openai_async.Chat.text_analysis_tools.api.text_similarity.edit import EditSimilarity
 from openai_async.Chat.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
+from openai_async.Chat.text_analysis_tools.api.summarization.textrank_summarization import TextRankSummarization
 
-nltk.download('punkt')
+# nltk.download('punkt')
 en_word = """
         A wiki enables communities of editors and contributors to write documents collaboratively. All that people require to contribute is a computer, Internet access, a web browser, and a basic understanding of a simple markup language (e.g. MediaWiki markup language). A single page in a wiki website is referred to as a "wiki page", while the entire collection of pages, which are usually well-interconnected by hyperlinks, is "the wiki". A wiki is essentially a database for creating, browsing, and searching through information. A wiki allows non-linear, evolving, complex, and networked text, while also allowing for editor argument, debate, and interaction regarding the content and formatting.[10] A defining characteristic of wiki technology is the ease with which pages can be created and updated. Generally, there is no review by a moderator or gatekeeper before modifications are accepted and thus lead to changes on the website. Many wikis are open to alteration by the general public without requiring registration of user accounts. Many edits can be made in real-time and appear almost instantly online, but this feature facilitates abuse of the system. Private wiki servers require user authentication to edit pages, and sometimes even to read them. Maged N. Kamel Boulos, Cito Maramba, and Steve Wheeler write that the open wikis produce a process of Social Darwinism. "... because of the openness and rapidity that wiki pages can be edited, the pages undergo an evolutionary selection process, not unlike that which nature subjects to living organisms. 'Unfit' sentences and sections are ruthlessly culled, edited and replaced if they are not considered 'fit', which hopefully results in the evolution of a higher quality and more relevant page.
         """
@@ -69,12 +70,12 @@ def tfidf_summarization(ratio=0.5):
     :return:
     """
     doc = """
-    该研究主持者之一、波士顿大学地球与环境科学系博士陈池（音）表示，“尽管中国和印度国土面积仅占全球陆地的9%，但两国为这一绿化过程贡献超过三分之一。考虑到人口过多的国家一般存在对土地过度利用的问题，这个发现令人吃惊。”
-NASA埃姆斯研究中心的科学家拉玛·内曼尼（Rama Nemani）说，“这一长期数据能让我们深入分析地表绿化背后的影响因素。我们一开始以为，植被增加是由于更多二氧化碳排放，导致气候更加温暖、潮湿，适宜生长。”
-“MODIS的数据让我们能在非常小的尺度上理解这一现象，我们发现人类活动也作出了贡献。”
-NASA文章介绍，在中国为全球绿化进程做出的贡献中，有42%来源于植树造林工程，对于减少土壤侵蚀、空气污染与气候变化发挥了作用。
-据观察者网过往报道，2017年我国全国共完成造林736.2万公顷、森林抚育830.2万公顷。其中，天然林资源保护工程完成造林26万公顷，退耕还林工程完成造林91.2万公顷。京津风沙源治理工程完成造林18.5万公顷。三北及长江流域等重点防护林体系工程完成造林99.1万公顷。完成国家储备林建设任务68万公顷。
-    """
+        该研究主持者之一、波士顿大学地球与环境科学系博士陈池（音）表示，“尽管中国和印度国土面积仅占全球陆地的9%，但两国为这一绿化过程贡献超过三分之一。考虑到人口过多的国家一般存在对土地过度利用的问题，这个发现令人吃惊。”
+    NASA埃姆斯研究中心的科学家拉玛·内曼尼（Rama Nemani）说，“这一长期数据能让我们深入分析地表绿化背后的影响因素。我们一开始以为，植被增加是由于更多二氧化碳排放，导致气候更加温暖、潮湿，适宜生长。”
+    “MODIS的数据让我们能在非常小的尺度上理解这一现象，我们发现人类活动也作出了贡献。”
+    NASA文章介绍，在中国为全球绿化进程做出的贡献中，有42%来源于植树造林工程，对于减少土壤侵蚀、空气污染与气候变化发挥了作用。
+    据观察者网过往报道，2017年我国全国共完成造林736.2万公顷、森林抚育830.2万公顷。其中，天然林资源保护工程完成造林26万公顷，退耕还林工程完成造林91.2万公顷。京津风沙源治理工程完成造林18.5万公顷。三北及长江流域等重点防护林体系工程完成造林99.1万公顷。完成国家储备林建设任务68万公顷。
+        """
     summ = TfidfSummarization(ratio=ratio)
     summ = summ.analysis(cn_word)
     print("tfidf summarization result: {}\n".format(summ))
@@ -127,6 +128,22 @@ def cosion_sismilarity():
     print("cosion similarity result: {}\n".format(similiar))
 
 
+doc = """
+    LDA（Latent Dirichlet Allocation）是一种主题建模方法，它根据文档库中主题的出现概率分配词语，使用LDA模型可以把文档集分成不同的主题。MMR（Maximal Marginal Relevance）是一种检索算法，可以根据文档中关键词的相似性来提取最相关的句子。TextRank是基于图的排序算法，可以根据文本内容之间的关系来提取文章的关键片段。Text_teaser是一种基于聚类的摘要算法，可以根据文本的内容进行聚类，并生成摘要。
+    """
+
+
+def textrank_summarization(sentence, ratio=0.2):
+    """
+    采用tfidf进行摘要抽取
+    :param ratio: 摘要占文本长度的比例
+    :return:
+    """
+    summ = TextRankSummarization(ratio=ratio)
+    summ = summ.analysis(sentence)
+    print("textrank summarization result: {}\n".format(summ))
+
+
 history_list = [
     "1122",
     "Ai:我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。完美是美好的理想接受残缺是美好的心态我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。我的软肋是看不透舍不得输不起放不下每个人都有自己的人生冷暖自知。无论生活还是网络好象都是一场旅行。前路漫漫。不可能把所有的美丽与美景尽收眼底总有一些人和事会被自己遗忘在路上虽然有时我们并不想扔下这些曾经的美好 学会接受残缺是人生的成熟人无完人缺憾是人生的常态人生有成就有败有聚就有散没有谁能得天独厚一手。遮天鱼和熊掌不可兼得不强求凡事尽人事随缘而安追求。",
@@ -148,4 +165,13 @@ history_list = [
 #     memory=history_list)
 # for i in prompt:
 #    print(i)
-cosion_sismilarity()
+# cosion_sismilarity()
+doc = """
+       该研究主持者之一、波士顿大学地球与环境科学系博士陈池（音）表示，“尽管中国和印度国土面积仅占全球陆地的9%，但两国为这一绿化过程贡献超过三分之一。考虑到人口过多的国家一般存在对土地过度利用的问题，这个发现令人吃惊。”
+   NASA埃姆斯研究中心的科学家拉玛·内曼尼（Rama Nemani）说，“这一长期数据能让我们深入分析地表绿化背后的影响因素。我们一开始以为，植被增加是由于更多二氧化碳排放，导致气候更加温暖、潮湿，适宜生长。”
+   “MODIS的数据让我们能在非常小的尺度上理解这一现象，我们发现人类活动也作出了贡献。”
+   NASA文章介绍，在中国为全球绿化进程做出的贡献中，有42%来源于植树造林工程，对于减少土壤侵蚀、空气污染与气候变化发挥了作用。
+   据观察者网过往报道，2017年我国全国共完成造林736.2万公顷、森林抚育830.2万公顷。其中，天然林资源保护工程完成造林26万公顷，退耕还林工程完成造林91.2万公顷。京津风沙源治理工程完成造林18.5万公顷。三北及长江流域等重点防护林体系工程完成造林99.1万公顷。完成国家储备林建设任务68万公顷。
+"""
+print(1)
+print(tfidf_summarization(ratio=0.4))

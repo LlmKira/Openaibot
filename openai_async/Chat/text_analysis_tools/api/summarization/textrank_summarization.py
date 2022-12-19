@@ -25,12 +25,12 @@ def split_doc(doc, stopwords=None):
     while len(doc) > 0:
         for i in range(len(doc)):
             if doc[i] in ['。', '！', '?', '？']:
-                sentences.append(doc[:i+1])
-                doc = doc[i+1:]
+                sentences.append(doc[:i + 1])
+                doc = doc[i + 1:]
                 break
     for sent in sentences:
         if len(sent) > MIN_SEQ_LEN:
-            cut_sentences.append([word for word in jieba.lcut(sent) if word not in stopwords])
+            cut_sentences.append([word for word in jieba.cut(sent) if word not in stopwords])
             origin_sentences.append(sent)
     return origin_sentences, cut_sentences
 
@@ -54,7 +54,7 @@ def sentence_similarity(sent1, sent2):
         vector2[all_words.index(word)] += 1
 
     # cosine_distance 越大越不相似
-    return 1-cosine_distance(vector1, vector2)
+    return 1 - cosine_distance(vector1, vector2)
 
 
 def build_similarity_matrix(sentences):
@@ -87,6 +87,7 @@ def pagerank(A, eps=0.0001, d=0.85):
             return new_P
         P = new_P
 
+
 class TextRankSummarization:
     def __init__(self, ratio):
         self.ratio = ratio
@@ -101,7 +102,7 @@ class TextRankSummarization:
 
         sentences_ranks = [item[0] for item in sorted(enumerate(sentences_ranks), key=lambda item: -item[1])]
 
-        selected_sentences_index = sorted(sentences_ranks[:int(len(origin_sentences)*self.ratio)])
+        selected_sentences_index = sorted(sentences_ranks[:int(len(origin_sentences) * self.ratio)])
 
         summary = []
         for idx in selected_sentences_index:

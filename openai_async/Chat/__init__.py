@@ -134,7 +134,7 @@ class Chatbot(object):
     def Summer(self,
                prompt: str,
                memory: list,
-               attention: int = 4,
+               attention: int = 3,
                start_token: int = 0,
                extra_token: int = 0
                ) -> list:
@@ -167,13 +167,13 @@ class Chatbot(object):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
             _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
-            _diff = (_diff1 + _diff2) / 2
+            _diff = _diff1 if _diff1 > _diff2 else _diff2
             score = _diff * 100
             memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
         # 主题检索
-        _key = Talk.tfidf_keywords(prompt, topK=2)
+        _key = Talk.tfidf_keywords(prompt, topK=4)
+        # print(_key)
         for i in range(0, len(memory) - attention):
-            #
             score = 0
             full_score = len(_key) if len(_key) != 0 else 1
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
@@ -181,6 +181,15 @@ class Chatbot(object):
                 if ir in f"{ask}{reply}":
                     score += 1
             memory[i]["content"]["weight"] = (score / full_score) * 100  # 基准数据，置信为 0.5 百分比
+        # 预处理
+        for i in range(0, len(memory) - attention):
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
+            if Talk.tokenizer(f"{ask}{reply}") > 240:
+                if Talk.get_language(f"{ask}{reply}") == "chinese":
+                    _sum = Talk.tfidf_summarization(sentence=f"{ask}{reply}", ratio=0.5)
+                    if len(_sum) > 7:
+                        memory[i]["content"]["ask"] = "info"
+                        memory[i]["content"]["reply"] = _sum
         # 进行筛选，计算限制
         _msg_flow = []
         _msg_return = []
@@ -196,18 +205,8 @@ class Chatbot(object):
                 _msg_flow.append(memory[i])
         _msg_flow = sorted(_msg_flow, key=lambda x: x['time'], reverse=False)
         # print(_msg_flow)
-        # print(_msg_flow)
         _msg_flow_list = self.convert_msgflow_to_list(_msg_flow)
         _msg_return.extend(_msg_flow_list)
-        """
-                if _out:
-            for i in range(len(_Final)):
-                if Talk.tokenizer(_Final[i]) > 240:
-                    if Talk.get_language(_Final[i]) == "chinese":
-                        _sum = Talk.tfidf_summarization(sentence=_Final[i], ratio=0.3)
-                        if len(_sum) > 7:
-                            _Final[i] = _sum
-        """
         return _msg_flow_list
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
@@ -226,9 +225,9 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"{self._restart_sequence}让我们谈谈吧\n"
+            head = f""  # f"{self._restart_sequence}让我们谈谈吧\n"
         if character is None:
-            character = ["helpful", "creative", "clever", "friendly", "lovely", "talkative"]
+            character = ["educated", "clever", "friendly", "lovely", "talkative", "Romance"]
         _character = ",".join(character)
         _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} Ai assistant.\n"
         if role:
@@ -264,7 +263,7 @@ class Chatbot(object):
         while Talk.tokenizer(_prompt) > _mk:
             _prompt = _prompt[1:]
         _prompt = _header + _prompt
-        print(_prompt)
+        # print(_prompt)
         # 响应
         response = await Completion(api_key=self.__api_key, call_func=self.__call_func).create(
             model=model,

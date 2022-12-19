@@ -6,6 +6,7 @@
 import re
 import time
 from ..Chat.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
+from ..Chat.text_analysis_tools.api.summarization.textrank_summarization import TextRankSummarization
 from ..Chat.text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
 from ..Chat.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
 from ..Chat.text_analysis_tools.api.text_similarity.cosion import CosionSimilarity
@@ -15,6 +16,18 @@ gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 
 class Talk(object):
+    @staticmethod
+    def textrank_summarization(sentence: str, ratio=0.2):
+        """
+        采用 textrank 进行摘要抽取
+        :param sentence: 待处理语句
+        :param ratio: 摘要占文本长度的比例
+        :return:
+        """
+        _sum = TextRankSummarization(ratio=ratio)
+        _sum = _sum.analysis(sentence)
+        return _sum
+
     @staticmethod
     def tfidf_summarization(sentence: str, ratio=0.5):
         """
