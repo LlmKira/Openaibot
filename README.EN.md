@@ -180,6 +180,13 @@ that are not in the preset will not be completed.
     "port": 6379,
     "db": 0,
     "password": null
+  },
+  "tts": {
+    "status": true,
+    "api": "http://127.0.0.1:9557/tts/generate",
+    "limit": 40,
+    "model_name": "some.pth",
+    "speaker_id": 2
   }
 }
 ```
