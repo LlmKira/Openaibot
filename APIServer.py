@@ -34,8 +34,9 @@ def checkIllegal(reqbody):
     message.from_user.id = reqbody.chatId
     message.chat.id = reqbody.groupId
     verisign = APISignature({'secret':apicfg['secret'], 'text':reqbody.chatText, 'timestamp': str(reqbody.timestamp)})
-    if(not verisign.verify(reqbody.signature)):
-        return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
+    if(apicfg['doCheckSignature']):
+        if(not verisign.verify(reqbody.signature)):
+            return {'success': False, 'response': 'SIGNATURE_MISMATCH'}
     if(not Whitelist(_message = message, csonfig= _csonfig).checkAll()):
         return {'success': False, 'response': 'NOT_IN_WHITELIST_OR_BLOCKED'}
     if(not reqbody.chatId or not reqbody.timestamp or not reqbody.signature):
@@ -103,10 +104,10 @@ async def forgetme(body: ReqBody):
 async def remind(body: ReqBody):
     if(response := checkIllegal(body)):
         return response
+    _remind = body.chatText
     if Utils.tokenizer(_remind) > 333:
         return {'success': False, 'response': 'REMIND_TEXT_TOO_LONG'}
     if _csonfig["allow_change_head"]:
-        _remind = body.chatText
         # _remind = _remind.replace("你是", "ME*扮演")
         _remind = _remind.replace("你", "ME*")
         _remind = _remind.replace("我", "YOU*")
@@ -125,21 +126,26 @@ async def remind(body: ReqBody):
 async def admin(body: ReqBody, action: str):
     if(response := checkIllegal(body)):
         return response
-    if(not body.chatId in config.master):
+    if(not body.chatId in config.bot.master):
         return {'success': False,'response': 'OPERATION_NOT_PERMITTED'}
     admin_actions = ['set_user_cold', 'set_group_cold', 'set_token_limit', 'set_input_limit', 'see_api_key', 'del_api_key', 'add_api_key', 'set_per_user_limit', 'set_per_hour_limit', 'promote_user_limit', 'reset_user_usage', 'add_block_group', 'del_block_group', 'add_block_user', 'del_block_user', 'add_white_group', 'add_white_user', 'del_white_group', 'del_white_user', 'update_detect','open_user_white_mode', 'open_group_white_mode', 'close_user_white_mode', 'close_group_white_mode', 'open', 'close', 'disable_change_head', 'enable_change_head']
     if(not action in admin_actions):
         return {'success': False,'response': 'INVAILD_ADMIN_ACTION'}
     message = FakeTGBotMessage()
     message.from_user.id = body.chatId
-    message.text = '/{action} {msg}'.format(action=action, msg=body.chatText)
-    '''
-    def admin_callback(message, text):  # bot接口回调
-        return {'success': True,'response': text}
-    '''
-    bot = FakeTGBot()
-    await appe.Master(bot, message, config)
-    return {'success': True,'response': bot.resp}
+    message.text = '/{action}{msg}'.format(action=action, msg=' ' + body.chatText if body.chatText else '')
+    resp = {}
+    
+    def admin_callback(message, text):  # bot管理接口回调
+        nonlocal resp
+        # logger.info(text)
+        # logger.info('callback executed')
+        resp = {'success': True,'response': text}
+    
+    # bot = FakeTGBot()
+    bot = FakeTGBot(admin_callback)
+    await appe.Master(bot, message, config.bot)
+    return {'success': True,'response': resp}
 
 #### Run HTTP Server when executed by Python CLI
 if __name__ == '__main__':
