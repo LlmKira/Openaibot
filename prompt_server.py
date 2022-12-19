@@ -29,7 +29,7 @@ def read_root():
 @app.post("/prompt/cut")
 async def create_item(item: Item):
     limit = item.token_limit
-    CutParent = Chat.Chatbot(api_key="none", conversation_id="none", token_limit=limit,
+    CutParent = Chat.Chatbot(api_key="none", conversation_id=1, token_limit=limit,
                              restart_sequ=item.restart_sequ, start_sequ=item.start_sequ)
     if not any(item.dict().keys()):
         return {"code": 404, "data": "", "msg": "没有数据"}

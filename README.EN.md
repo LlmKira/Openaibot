@@ -180,9 +180,26 @@ that are not in the preset will not be completed.
     "port": 6379,
     "db": 0,
     "password": null
+  },
+  "tts": {
+    "status": true,
+    "api": "http://127.0.0.1:9557/tts/generate",
+    "limit": 40,
+    "model_name": "some.pth",
+    "speaker_id": 2
   }
 }
 ```
+
+#### VITS Voice Support Description
+
+This technology provides an emulated voice interaction technique.
+
+The Api backend is my packaged adaptation of MoeGoe https://github.com/sudoskys/MoeGoe
+
+Install the dependencies and run `server.py` to use it by default.
+
+Please consult the MoeGoe project's Readme under Models and note the corresponding protocols for the models.
 
 ## Run
 
@@ -331,6 +348,7 @@ Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
 - Contributors
 - [Text Analysis Tool Library](https://github.com/murray-z/text_analysis_tools)
+- [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
 ## FOSSA
 

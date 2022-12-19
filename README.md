@@ -179,9 +179,26 @@ add_api_key - 增加 Api key
     "port": 6379,
     "db": 0,
     "password": null
+  },
+  "tts": {
+    "status": true,
+    "api": "http://127.0.0.1:9557/tts/generate",
+    "limit": 40,
+    "model_name": "some.pth",
+    "speaker_id": 2
   }
 }
 ```
+
+#### VITS 语音支持说明
+
+这项技术提供了一种仿真的语音交互技术。
+
+Api 后端为我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe
+
+安装依赖，运行 `server.py` 文件可以默认使用。
+
+模型下面请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
 
 ## 运行
 
@@ -326,6 +343,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 - 贡献者
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
+- [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
 #### 声明
 
