@@ -196,7 +196,7 @@ add_api_key - 增加 Api key
 
 Api 后端为我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe
 
-安装依赖，运行 `main.py` 文件可以默认使用。
+安装依赖，运行 `server.py` 文件可以默认使用。
 
 模型下面请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
 
