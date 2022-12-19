@@ -208,6 +208,10 @@ class DefaultData(object):
                 "port": 6379,
                 "db": 0,
                 "password": None
+            },
+            "tts": {
+                "api": "http://127.0.0.1:9557/tts/generate",
+                "limit": 15
             }
         }
 

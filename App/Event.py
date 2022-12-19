@@ -19,6 +19,7 @@ from utils.Detect import DFA, Censor
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
+_tts_conf = _service["tts"]
 openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
 urlForm = {
