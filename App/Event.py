@@ -14,7 +14,7 @@ import openai_async
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
 
 _service = Service_Data.get_key()
@@ -63,6 +63,34 @@ def load_csonfig():
 def save_csonfig():
     with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+
+
+def TTS_Support_Check(text, user_id):
+    """
+    处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
+    :return:
+    """
+    if not _tts_conf["status"]:
+        return
+    from openai_async.utils.Talk import Talk
+    if Talk.get_language(text) != "chinese":
+        return
+    if len(text) > _tts_conf["limit"]:
+        return
+    _new_text = f"[ZH]{text}[ZH]"
+    result = TTS_Clint.request_tts_server(url=_tts_conf["api"],
+                                          params=TTS_REQ(task_id=user_id,
+                                                         text=_new_text,
+                                                         model_name=_tts_conf["model_name"],
+                                                         speaker_id=_tts_conf["speaker_id"]))
+    if not result:
+        return
+    try:
+        data = TTS_Clint.decode_wav(result["audio"])
+    except:
+        print("decode tts data failed")
+        return
+    return data
 
 
 async def Forget(bot, message, config):
@@ -316,7 +344,18 @@ async def Text(bot, message, config, reset: bool = False):
                                          start_name="Girl:",
                                          web_enhance_server=config.Enhance_Server
                                          )
-        msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+        voice = TTS_Support_Check(text=_req, user_id=message.from_user.id)
+        if voice:
+            if not message.chat.is_forum:
+                msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")
+            else:
+                detect = await bot.reply_to(message, f"{_req}")
+                msg = await bot.send_audio(chat_id=message.chat.id,
+                                           message_thread_id=detect.message_thread_id,
+                                           audio=voice,
+                                           title="Voice")
+        else:
+            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
         logger.error(e)
@@ -364,7 +403,19 @@ async def private_Chat(bot, message, config):
                                              method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
-            await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+            voice = TTS_Support_Check(text=_req, user_id=message.from_user.id)
+            if voice:
+                if not message.chat.is_forum:
+                    msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")
+                else:
+                    detect = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+                    msg = await bot.send_audio(chat_id=message.chat.id,
+                                               message_thread_id=detect.message_thread_id,
+                                               audio=voice,
+                                               title="Voice")
+            else:
+                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+            # await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
         await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
