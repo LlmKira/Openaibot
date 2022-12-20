@@ -30,6 +30,8 @@ config = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '
 _csonfig = appe.load_csonfig()
 
 def checkIllegal(reqbody):
+    if(not _csonfig['statu']):
+        return {'success': False, 'message': 'DISABLED'}
     message = FakeTGBotMessage()
     message.from_user.id = reqbody.chatId
     message.chat.id = reqbody.groupId
@@ -72,7 +74,7 @@ async def chat(body: ReqBody):
                 if(vresp):
                     return vresp
                 else:
-                    return {'success': True, 'response': res, 'isVITSFailed': True}
+                    return {'success': True, 'response': res, 'isTTSFailed': True}
             return {'success': True, 'response': res}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
@@ -98,7 +100,7 @@ async def write(body: ReqBody):
                 if(vresp):
                     return vresp
                 else:
-                    return {'success': True, 'response': res, 'isVITSFailed': True}
+                    return {'success': True, 'response': res, 'isTTSFailed': True}
             return {'success': True, 'response':res}
         else:
             return {'success': False,'response':'INVAILD_CHATINFO'}
