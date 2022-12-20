@@ -204,6 +204,29 @@ that are not in the preset will not be completed.
 }
 ```
 
+**Redis**
+
+- slightly
+
+**TTS**
+
+- status switch
+- type Type
+
+*VITS*
+
+- vits:limit text within length will be converted
+- vits:model_name The name of the model, some.pth, in the model folder
+- vits:speaker_id The ID of the speaker, see the model config
+
+*Azure*
+
+- azure:limit The text within the length will be converted
+- azure:
+  speaker[list-of-all-sound-engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
+- auzre:location Server resource address
+- auzre:key api key
+
 #### VITS Voice Support Description(ONLY CN NOW)
 
 This technology provides an emulated voice interaction technique.

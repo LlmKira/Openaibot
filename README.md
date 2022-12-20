@@ -190,7 +190,9 @@ add_api_key - 增加 Api key
       "speaker_id": 0
     },
     "azure": {
-      "key": ["123"],
+      "key": [
+        "123"
+      ],
       "limit": 70,
       "speaker": {
         "chinese": "zh-CN-XiaoxiaoNeural"
@@ -201,29 +203,44 @@ add_api_key - 增加 Api key
 }
 ```
 
-redis:
+**Redis**
 
-- ?
+- 略
 
-tts:
+**TTS**
 
 - status 开关
 - type 类型
+
+#### Azure 支持说明
+
+https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
+
+*Azure*
+
+- azure:limit 长度内的文本会被转换
+- azure:speaker
+  说话人, [所有声音引擎列表](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
+- auzre:location 服务器资源地址
+- auzre:key api key
+
+#### VITS 语音支持说明(ONLY CN NOW)
+
+Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
+
+*VITS*
+
 - vits:limit 长度内的文本会被转换
 - vits:model_name 模型名字，some.pth,在 model 文件夹下的
 - vits:speaker_id 说话人的ID,具体看模型config
 
-#### VITS 语音支持说明(ONLY CN NOW)
-
 这项技术提供了一种仿真的语音交互技术。
-
-Api 后端为我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe
 
 安装依赖，运行 `server.py` 文件可以默认使用。
 
-模型下面请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
-
-如果不说话，可能是文本的长度超过了设定的 limit。长度为直接取 `len()`
+模型下载请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
+如果不生效，可能是文本的长度超过了设定的 limit 。
+长度为直接取 `len()`
 
 ## 运行
 
