@@ -5,8 +5,9 @@
 # @Github    ：sudoskys
 import json
 import time
-from pathlib import Path
 from typing import Union
+
+import pathlib
 
 from utils.Data import RedisConfig
 from utils.Data import DefaultData, DataWorker, DictUpdate, Usage_Data, Service_Data
@@ -31,16 +32,19 @@ global _csonfig
 
 
 # IO
+
+# IO
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
-    if not Path("./Config/config.json").exists():
-        return now_table
-    with open("./Config/config.json", encoding="utf-8") as f:
-        _csonfig = json.load(f)
-        DictUpdate.dict_update(now_table, _csonfig)
-        _csonfig = now_table
-        return _csonfig
+    if pathlib.Path("./Config/config.json").exists():
+        with open("./Config/config.json", encoding="utf-8") as f:
+            _csonfig = json.load(f)
+    else:
+        _csonfig = {}
+    DictUpdate.dict_update(now_table, _csonfig)
+    _csonfig = now_table
+    return _csonfig
 
 
 def save_csonfig():

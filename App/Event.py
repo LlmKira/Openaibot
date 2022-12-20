@@ -54,13 +54,14 @@ global _csonfig
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
-    if not pathlib.Path("./Config/config.json").exists():
-        return now_table
-    with open("./Config/config.json", encoding="utf-8") as f:
-        _csonfig = json.load(f)
-        DictUpdate.dict_update(now_table, _csonfig)
-        _csonfig = now_table
-        return _csonfig
+    if pathlib.Path("./Config/config.json").exists():
+        with open("./Config/config.json", encoding="utf-8") as f:
+            _csonfig = json.load(f)
+    else:
+        _csonfig = {}
+    DictUpdate.dict_update(now_table, _csonfig)
+    _csonfig = now_table
+    return _csonfig
 
 
 def save_csonfig():
