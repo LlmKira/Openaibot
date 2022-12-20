@@ -4,7 +4,7 @@ from utils.Data import TTS_REQ, TTS_Clint, Service_Data
 from openai_async.utils.Talk import Talk
 from fastapi.responses import Response
 
-class VTIS:
+class VITS:
     def get(text, task:int = 1, doReturnRawAudio: bool = True):
         serviceCfg = Service_Data.get_key('./Config/service.json')
         ttsConf = serviceCfg['tts']
