@@ -86,7 +86,10 @@ async def TTS_Support_Check(text, user_id):
         if len(text) > _vits_config["limit"]:
             return
         # 简单处理文本
-        _new_text = f"[ZH]{text}[ZH]"
+        res = Talk.chinese_sentence_cut(text)
+        cn = {i: "[ZH]" for i in res}
+        _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
+        _new_text = "".join(_spell)
         # 接受数据
         result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
                                                         params=TTS_REQ(task_id=user_id,

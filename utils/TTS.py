@@ -65,7 +65,7 @@ class TTS_Clint(object):
 
 
 class VITS_TTS(object):
-    def __init__(self, url, timeout: int = 25, proxy: str = None):
+    def __init__(self, url, timeout: int = 30, proxy: str = None):
         self.__url = url
         self.__client = NetworkClient(timeout=timeout, proxy=proxy)
 
@@ -95,7 +95,7 @@ class VITS_TTS(object):
 
 
 class Azure_TTS(object):
-    def __init__(self, key: str, location: str, timeout: int = 20, proxy: str = None):
+    def __init__(self, key: str, location: str, timeout: int = 30, proxy: str = None):
         """
         Azure TTS 类型
         :param key: api 密钥
