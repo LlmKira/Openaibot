@@ -298,7 +298,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
 | `/forgetme`                               | 忘记我                         |                                                                                                                                             |
-| `/voice`                                    | VITS/AZURE  TTS             |                                                                                                                                             |
+| `/voice`                                  | VITS/AZURE  TTS             |                                                                                                                                             |
 
 ### Sample table
 

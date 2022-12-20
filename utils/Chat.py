@@ -81,10 +81,11 @@ class UserManger(object):
         """
         self._uid = str(abs(uid))
         load_csonfig()
-        user = _csonfig["User"].get(self._uid)
-        if not user:
-            user = {}
-        self._renew(user)
+        self.user = _csonfig["User"].get(self._uid)
+        if not self.user:
+            self.user = {}
+        self._user = DefaultData.defaultUser()
+        DictUpdate.dict_update(self._user, self.user)
 
     def _renew(self, item):
         """
@@ -95,7 +96,7 @@ class UserManger(object):
         load_csonfig()
         # 更新默认设置的必要结构
         _item = item
-        _reply = DefaultData.defaultUser()
+        _reply = self._user
         DictUpdate.dict_update(_reply, _item)
         _csonfig["User"][self._uid] = _reply
         save_csonfig()
@@ -103,7 +104,7 @@ class UserManger(object):
     def save(self, setting: dict = None):
         if not setting:
             return None
-        _reply = DefaultData.defaultUser()
+        _reply = self._user
         DictUpdate.dict_update(_reply, setting)
         return self._renew(_reply)
 
@@ -118,10 +119,11 @@ class GroupManger(object):
         """
         self._uid = str(abs(uid))
         load_csonfig()
-        user = _csonfig["Group"].get(self._uid)
-        if not user:
-            user = {}
-        self._renew(user)
+        self.user = _csonfig["Group"].get(self._uid)
+        if not self.user:
+            self.user = {}
+        self._user = DefaultData.defaultUser()
+        DictUpdate.dict_update(self._user, self.user)
 
     def _renew(self, item):
         """
@@ -132,7 +134,7 @@ class GroupManger(object):
         load_csonfig()
         # 更新默认设置的必要结构
         _item = item
-        _reply = DefaultData.defaultGroup()
+        _reply = self._user
         DictUpdate.dict_update(_reply, _item)
         _csonfig["Group"][self._uid] = _reply
         save_csonfig()
@@ -140,7 +142,7 @@ class GroupManger(object):
     def save(self, setting: dict = None):
         if not setting:
             return None
-        _reply = DefaultData.defaultGroup()
+        _reply = self._user
         DictUpdate.dict_update(_reply, setting)
         return self._renew(_reply)
 
