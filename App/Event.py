@@ -92,14 +92,14 @@ def TTS_Support_Check(text, user_id):
         if not result:
             print("TTS failed")
             return
-        logger.info(f"RUN:{user_id} --vits: {len(text)}")
+        logger.info(f"RUN:{user_id} --vits: {text}:{len(text)}")
         try:
             data = TTS_Clint.decode_wav(result["audio"])
         except:
             print("decode tts data failed")
             return
         return data
-    logger.error(f"RUN:{user_id} --vits: {len(text)} failed")
+    logger.error(f"RUN:{user_id} --vits: {text}:{len(text)} failed")
     return
 
 
