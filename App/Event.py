@@ -72,25 +72,27 @@ def TTS_Support_Check(text, user_id):
     """
     if not _tts_conf["status"]:
         return
-    from openai_async.utils.Talk import Talk
-    if Talk.get_language(text) != "chinese":
-        return
-    if len(text) > _tts_conf["limit"]:
-        return
-    _new_text = f"[ZH]{text}[ZH]"
-    result = TTS_Clint.request_tts_server(url=_tts_conf["api"],
-                                          params=TTS_REQ(task_id=user_id,
-                                                         text=_new_text,
-                                                         model_name=_tts_conf["model_name"],
-                                                         speaker_id=_tts_conf["speaker_id"]))
-    if not result:
-        return
-    try:
-        data = TTS_Clint.decode_wav(result["audio"])
-    except:
-        print("decode tts data failed")
-        return
-    return data
+    if _tts_conf["vits"]:
+        from openai_async.utils.Talk import Talk
+        if Talk.get_language(text) != "chinese":
+            return
+        if len(text) > _tts_conf["vits"]["limit"]:
+            return
+        _new_text = f"[ZH]{text}[ZH]"
+        result = TTS_Clint.request_vits_server(url=_tts_conf["vits"]["api"],
+                                               params=TTS_REQ(task_id=user_id,
+                                                              text=_new_text,
+                                                              model_name=_tts_conf["vits"]["model_name"],
+                                                              speaker_id=_tts_conf["vits"]["speaker_id"]))
+        if not result:
+            return
+        try:
+            data = TTS_Clint.decode_wav(result["audio"])
+        except:
+            print("decode tts data failed")
+            return
+        return data
+    return
 
 
 async def Forget(bot, message, config):

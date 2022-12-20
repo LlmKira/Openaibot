@@ -182,10 +182,12 @@ add_api_key - 增加 Api key
   },
   "tts": {
     "status": true,
-    "api": "http://127.0.0.1:9557/tts/generate",
-    "limit": 40,
-    "model_name": "some.pth",
-    "speaker_id": 2
+    "vits": {
+      "api": "http://127.0.0.1:9557/tts/generate",
+      "limit": 40,
+      "model_name": "some.pth",
+      "speaker_id": 2
+    }
   }
 }
 ```
