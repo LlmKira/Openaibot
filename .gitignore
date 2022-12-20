@@ -1,4 +1,5 @@
 Config/*.toml
+!Config/app_exp.toml
 .idea
 
 # Byte-compiled / optimized / DLL files
