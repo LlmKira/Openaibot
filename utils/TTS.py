@@ -48,4 +48,5 @@ class TTS_Clint(object):
                 return False
             return response_data
         except Exception as e:
+            print(e)
             return False
