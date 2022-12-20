@@ -98,8 +98,8 @@ def get_session(proxy: str = ""):
     loop = asyncio.get_event_loop()
     session = __session_pool.get(loop, None)
     if session is None:
-        if proxy != "":
-            proxies = {"all": proxy}
+        if proxy:
+            proxies = {"all://": proxy}
             session = httpx.AsyncClient(timeout=300, proxies=proxies)
         else:
             session = httpx.AsyncClient(timeout=300)

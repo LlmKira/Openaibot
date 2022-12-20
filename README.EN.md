@@ -186,13 +186,46 @@ that are not in the preset will not be completed.
     "type": "vits",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
-      "limit": 20,
+      "limit": 70,
       "model_name": "some.pth",
-      "speaker_id": 1
+      "speaker_id": 0
+    },
+    "azure": {
+      "key": [
+        "123"
+      ],
+      "limit": 70,
+      "speaker": {
+        "chinese": "zh-CN-XiaoxiaoNeural"
+      },
+      "location": "japanwest"
     }
   }
 }
 ```
+
+**Redis**
+
+- slightly
+
+**TTS**
+
+- status switch
+- type Type
+
+*VITS*
+
+- vits:limit text within length will be converted
+- vits:model_name The name of the model, some.pth, in the model folder
+- vits:speaker_id The ID of the speaker, see the model config
+
+*Azure*
+
+- azure:limit The text within the length will be converted
+- azure:
+  speaker[list-of-all-sound-engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
+- auzre:location Server resource address
+- auzre:key api key
 
 #### VITS Voice Support Description(ONLY CN NOW)
 
