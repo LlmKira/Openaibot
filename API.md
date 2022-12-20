@@ -150,8 +150,8 @@ public class HMACSHA256Example {
 | groupId        | Integer  | 是       | 如果该请求在群聊中发起，此参数可用于标识来源群聊             | 1919810    | 0      |
 | timestamp      | Integer  | 是       | 用于标识请求发起时间，应为秒级时间戳（10位整数）             | 1671441081 | 0      |
 | signature      | String   | 是       | 接口签名                                                     | (略)       | ""     |
-| returnVoice    | Bool     | 是       | chat、write接口专属功能。是否将AI返回合成为语音              | false      | false  |
-| returnVoiceRaw | Bool     | 是       | chat、write接口专属功能。合成语音时，是否输出原始wav文件（而不是base64编码） | true       | true   |
+| returnVoice    | Bool     | 是       | chat、write接口专属功能。是否将AI返回合成为语音。此项已被用户在/voice接口中的设置覆盖，您现在无需传入此参数。 | false      | false  |
+| returnVoiceRaw | Bool     | 是       | chat、write接口专属功能。合成语音时，是否输出原始wav文件（而不是wav的base64编码）由于各项目代码逻辑不同，您仍需在请求时传入此参数。 | true       | true   |
 
 实际请求时对数据类型的要求不是很严格。如若对timestamp传入字符串类型的时间戳，API将自动转换为整数。
 
@@ -175,12 +175,12 @@ Connection: keep-alive
 
 在returnVoiceRaw = false且正常合成语音时，本API所有接口都以json格式响应（已转义），编码UTF-8。格式如下：
 
-| 参数名       | 数据类型 | 解释                                                         | 示例数据                                               |
-| ------------ | -------- | ------------------------------------------------------------ | ------------------------------------------------------ |
-| success      | Bool     | 本次请求是否成功                                             | true                                                   |
-| response     | String   | 对本次请求的返回文本或音频Base64。若success=false，则本参数为请求出错原因。 | "喵~ 你好啊，主人！很高兴见到你！有什么能帮助你的吗？" |
-| isVITSFailed | Bool     | 语音合成是否失败。若失败，response将返回对话文本，您应在服务器控制台查看错误信息。未合成语音时不返回此参数。 | false                                                  |
-| text         | String   | 合成的语音所对应的文本。未合成语音时不返回此参数。           | "您好！很高兴为您服务，请问有什么我可以帮您的？"       |
+| 参数名      | 数据类型 | 解释                                                         | 示例数据                                               |
+| ----------- | -------- | ------------------------------------------------------------ | ------------------------------------------------------ |
+| success     | Bool     | 本次请求是否成功                                             | true                                                   |
+| response    | String   | 对本次请求的返回文本或音频Base64。若success=false，则本参数为请求出错原因。 | "喵~ 你好啊，主人！很高兴见到你！有什么能帮助你的吗？" |
+| isTTSFailed | Bool     | 语音合成是否失败。若失败，response将返回对话文本，您应在服务器控制台查看错误信息。未合成语音时不返回此参数。 | false                                                  |
+| text        | String   | 合成的语音所对应的文本。未合成语音时不返回此参数。           | "您好！很高兴为您服务，请问有什么我可以帮您的？"       |
 
 当success = false时，response所有可能的返回值如下：
 
@@ -196,6 +196,7 @@ Connection: keep-alive
 | OPERATION_NOT_PERMITTED      | 在执行管理指令时出现。当前chatId不是机器人管理员。           |
 | INVAILD_ADMIN_ACTION         | 所指定的管理操作无效。                                       |
 | GENERAL_FAILURE              | 不知道发生了什么，总之就是出错了。错误信息通常已输出到控制台，请通过终端查看。 |
+| DISABLED                     | 服务未开启，不处理任何请求。请通过/admin/open接口开启服务。  |
 
 请注意，当您的请求体无效时（如未转义双引号导致请求json格式错误），您的请求会被FastAPI截胡并返回FastAPI生成的json报错。此情况下的响应参数请参阅FastAPI文档。
 
@@ -238,7 +239,7 @@ Content-type: audio/x-pcm
     "groupId": "1919810",
     "signature": "no sign",
     "timestamp": "1671266252",
-    "returnVoice": true,
+    "returnVoice": true,    // returnVoice现已被/voice接口接管，无需传入
     "returnVoiceRaw": false
 }
 // 响应2：合成语音（Base64）
@@ -264,6 +265,40 @@ Content-type: audio/x-pcm
 {
     "success": true,
     "response": "，她叫玛丽。玛丽非常喜欢自然，特别是树木。每天，她都会去公园里散步，走在树林里，看着树叶的飘动和鸟儿的歌声。有时她也会在家里画一些树木的画作，表达对大自然的热爱之情。"
+}
+```
+
+### (POST)  /voice    语音合成开关
+
+```java
+// 请求1：切换语音合成
+{
+    "chatText": "无参，爱写啥写啥",
+    "chatId": "114514",
+    "groupId": "1919810",
+    "signature": "no sign",
+    "timestamp": "1671266252"
+}
+// 响应1：切换语音合成
+{
+    "success": true,
+    "response": "TTS Status: True"
+}
+
+// 请求2：合成语音（/chat）
+{
+    "chatText": "你好",
+    "chatId": "114514",
+    "groupId": "1919810",
+    "signature": "no sign",
+    "timestamp": "1671266252",
+    "returnVoiceRaw": false
+}
+// 响应2：合成语音（/chat）
+{
+    "success": true,
+    "response": "(wav语音Base64)",
+    "text": "你好哥哥！很高兴认识你！有什么可以与你分享的吗？"
 }
 ```
 

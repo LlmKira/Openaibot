@@ -15,7 +15,10 @@ class VITS:
         if(Talk.get_language(text) != 'chinese'):
             logger.warning('语言不支持。语音合成目前仅支持合成中文')
             return False
-        newtext = '[ZH]' + text + '[ZH]'
+        text = Talk.chinese_sentence_cut(text)
+        cn = {i: "[ZH]" for i in text}
+        _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
+        newtext = "".join(_spell)
         reqbody = TTS_REQ(model_name = vitsConf['model_name'],
                           task_id = task,
                           text = newtext,
