@@ -54,7 +54,7 @@ global _csonfig
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
-    if not pathlib.Path("./Config/config.json").exist():
+    if not pathlib.Path("./Config/config.json").exists():
         return now_table
     with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
