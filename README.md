@@ -215,6 +215,8 @@ Api 后端为我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe
 
 模型下面请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
 
+如果不说话，可能是文本的长度超过了设定的 limit。长度为直接取 `len()`
+
 ## 运行
 
 * 运行
@@ -351,6 +353,7 @@ help - 帮助
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ### API
+
 请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
 
 ### 上一次的性能分析
