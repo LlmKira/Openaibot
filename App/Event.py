@@ -99,6 +99,7 @@ def TTS_Support_Check(text, user_id):
             print("decode tts data failed")
             return
         return data
+    logger.error(f"RUN:{user_id} --vits: {len(text)} failed")
     return
 
 
