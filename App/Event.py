@@ -89,6 +89,7 @@ def TTS_Support_Check(text, user_id):
                                                               model_name=_tts_conf["vits"]["model_name"],
                                                               speaker_id=_tts_conf["vits"]["speaker_id"]))
         if not result:
+            print("TTS failed")
             return
         try:
             data = TTS_Clint.decode_wav(result["audio"])
