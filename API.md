@@ -150,8 +150,8 @@ public class HMACSHA256Example {
 | groupId        | Integer  | 是       | 如果该请求在群聊中发起，此参数可用于标识来源群聊             | 1919810    | 0      |
 | timestamp      | Integer  | 是       | 用于标识请求发起时间，应为秒级时间戳（10位整数）             | 1671441081 | 0      |
 | signature      | String   | 是       | 接口签名                                                     | (略)       | ""     |
-| returnVoice    | Bool     | 是       | chat、write接口专属功能。是否将AI返回合成为语音              | false      | false  |
-| returnVoiceRaw | Bool     | 是       | chat、write接口专属功能。合成语音时，是否输出原始wav文件（而不是base64编码） | true       | true   |
+| returnVoice    | Bool     | 是       | chat、write接口专属功能。是否将AI返回合成为语音。此项已被用户在/voice接口中的设置覆盖，您现在无需传入此参数。 | false      | false  |
+| returnVoiceRaw | Bool     | 是       | chat、write接口专属功能。合成语音时，是否输出原始wav文件（而不是wav的base64编码）由于各项目代码逻辑不同，您仍需在请求时传入此参数。 | true       | true   |
 
 实际请求时对数据类型的要求不是很严格。如若对timestamp传入字符串类型的时间戳，API将自动转换为整数。
 
@@ -239,7 +239,7 @@ Content-type: audio/x-pcm
     "groupId": "1919810",
     "signature": "no sign",
     "timestamp": "1671266252",
-    "returnVoice": true,
+    "returnVoice": true,    // returnVoice现已被/voice接口接管，无需传入
     "returnVoiceRaw": false
 }
 // 响应2：合成语音（Base64）
@@ -265,6 +265,40 @@ Content-type: audio/x-pcm
 {
     "success": true,
     "response": "，她叫玛丽。玛丽非常喜欢自然，特别是树木。每天，她都会去公园里散步，走在树林里，看着树叶的飘动和鸟儿的歌声。有时她也会在家里画一些树木的画作，表达对大自然的热爱之情。"
+}
+```
+
+### (POST)  /voice    语音合成开关
+
+```java
+// 请求1：切换语音合成
+{
+    "chatText": "无参，爱写啥写啥",
+    "chatId": "114514",
+    "groupId": "1919810",
+    "signature": "no sign",
+    "timestamp": "1671266252"
+}
+// 响应1：切换语音合成
+{
+    "success": true,
+    "response": "TTS Status: True"
+}
+
+// 请求2：合成语音（/chat）
+{
+    "chatText": "你好",
+    "chatId": "114514",
+    "groupId": "1919810",
+    "signature": "no sign",
+    "timestamp": "1671266252",
+    "returnVoiceRaw": false
+}
+// 响应2：合成语音（/chat）
+{
+    "success": true,
+    "response": "(wav语音Base64)",
+    "text": "你好哥哥！很高兴认识你！有什么可以与你分享的吗？"
 }
 ```
 
