@@ -225,11 +225,11 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f""  # f"{self._restart_sequence}让我们谈谈吧\n"
+            head = f"{self._restart_sequence}让我们谈谈吧。\n"
         if character is None:
-            character = ["educated", "clever", "friendly", "lovely", "talkative", "Romance"]
+            character = ["educated", "clever", "friendly", "lovely", "talkative", "浪漫"]
         _character = ",".join(character)
-        _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} Ai assistant.\n"
+        _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} 助手.\n"
         if role:
             if len(f"{role}") > 4:
                 _role = f"I am [{self._start_sequence}] following.\n我认为:{role}.\n"
