@@ -11,6 +11,7 @@ import App.Event as appe
 import time
 import os
 from API.FakeMessage import FakeTGBotMessage, FakeTGBot
+from API.Voice import VITS
 
 class ReqBody(BaseModel):
     chatText: str = ''
@@ -18,6 +19,8 @@ class ReqBody(BaseModel):
     groupId: int = 0
     timestamp: int = 0
     signature: str = ''
+    returnVoice: bool = False
+    returnVoiceRaw: bool = True
 
 if(not os.path.isfile(os.path.split(os.path.realpath(__file__))[0] + '/Config/api.toml')):
     logger.error('未检测到api.toml,请重新配置  api.toml not found, please reconfigure')
@@ -58,11 +61,18 @@ async def chat(body: ReqBody):
         return response
     try:
         if(body.chatId and body.chatText):
-            res = await Reply.load_response(user=body.chatId, 
+            global res
+            res = await Reply.load_response(user=body.chatId,
                                             group=body.groupId, 
                                             key=Api_keys.get_key()['OPENAI_API_KEY'], 
                                             prompt=body.chatText, 
                                             method='chat')
+            if(body.returnVoice):
+                vresp = VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
+                if(vresp):
+                    return vresp
+                else:
+                    return {'success': True, 'response': res, 'isVITSFailed': True}
             return {'success': True, 'response': res}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
@@ -76,12 +86,20 @@ async def write(body: ReqBody):
         return response
     try:
         if(body.chatId and body.chatText):
-                res = await Reply.load_response(user=body.chatId, 
-                                                group=body.groupId, 
-                                                key=Api_keys.get_key()['OPENAI_API_KEY'],
-                                                prompt=body.chatText, 
-                                                method='write')
-                return {'success': True, 'response':res}
+            global res
+            res = await Reply.load_response(user=body.chatId, 
+                                            group=body.groupId, 
+                                            key=Api_keys.get_key()['OPENAI_API_KEY'],
+                                            prompt=body.chatText,                                                 
+                                            method='write',
+                                            web_enhance_server=config['Enhance_Server'])
+            if(body.returnVoice):
+                vresp = VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
+                if(vresp):
+                    return vresp
+                else:
+                    return {'success': True, 'response': res, 'isVITSFailed': True}
+            return {'success': True, 'response':res}
         else:
             return {'success': False,'response':'INVAILD_CHATINFO'}
     except Exception as e:
