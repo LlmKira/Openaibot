@@ -70,6 +70,7 @@ def save_csonfig():
 
 
 def TTS_Support_Check(text, user_id):
+    global _tts_conf
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
