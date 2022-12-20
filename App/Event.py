@@ -69,38 +69,64 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
-def TTS_Support_Check(text, user_id):
+async def TTS_Support_Check(text, user_id):
     global _tts_conf
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
+    from openai_async.utils.Talk import Talk
     if not _tts_conf["status"]:
         return
+    lang_type = Talk.get_language(text)
+    if not lang_type in ["chinese"]:
+        return
     if _tts_conf["type"] == "vits":
-        from openai_async.utils.Talk import Talk
-        if Talk.get_language(text) != "chinese":
+        _vits_config = _tts_conf["vits"]
+        if len(text) > _vits_config["limit"]:
             return
-        if len(text) > _tts_conf["vits"]["limit"]:
-            return
+        # 简单处理文本
         _new_text = f"[ZH]{text}[ZH]"
-        result = TTS_Clint.request_vits_server(url=_tts_conf["vits"]["api"],
-                                               params=TTS_REQ(task_id=user_id,
-                                                              text=_new_text,
-                                                              model_name=_tts_conf["vits"]["model_name"],
-                                                              speaker_id=_tts_conf["vits"]["speaker_id"]))
+        # 接受数据
+        result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
+                                                        params=TTS_REQ(task_id=user_id,
+                                                                       text=_new_text,
+                                                                       model_name=_vits_config["model_name"],
+                                                                       speaker_id=_vits_config["speaker_id"]))
         if not result:
-            logger.error(f"RUN:{user_id} --vits: {text}:{len(text)} TTS failed")
+            logger.error(f"TTS:{user_id} --type:vits --content: {text}:{len(text)} --{e}")
             return
-        try:
-            data = TTS_Clint.decode_wav(result["audio"])
-        except:
-            logger.error(f"RUN:{user_id} --vits: {text}:{len(text)} decode tts data failed")
+        logger.info(f"TTS:{user_id} --type:vits --content: {text}:{len(text)}")
+        # 返回字节流
+        return result
+    # USE AZURE
+    elif _tts_conf["type"] == "azure":
+        _azure_config = _tts_conf["azure"]
+        _new_text = text
+        _speaker = _azure_config["speaker"].get(lang_type)
+
+        if len(text) > _azure_config["limit"]:
             return
-        else:
-            logger.info(f"RUN:{user_id} --vits: {text}:{len(text)}")
-            return data
-    return
+
+        if not _speaker:
+            logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --this type lang not supported")
+            return
+
+        result, e = await TTS_Clint.request_azure_server(key=_azure_config["key"],
+                                                         location=_azure_config["location"],
+                                                         text=_new_text,
+                                                         speaker=_speaker
+                                                         )
+        if not result:
+            logger.error(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --{e}")
+            return
+
+        logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)}")
+        # 返回字节流
+        return result
+    else:
+        # 啥也没有
+        return
 
 
 async def Forget(bot, message, config):
@@ -354,7 +380,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          start_name="Girl:",
                                          web_enhance_server=config.Enhance_Server
                                          )
-        voice = TTS_Support_Check(text=_req, user_id=message.from_user.id)
+        voice = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
         if voice:
             if not message.chat.is_forum:
                 msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")
@@ -413,7 +439,7 @@ async def private_Chat(bot, message, config):
                                              method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
-            voice = TTS_Support_Check(text=_req, user_id=message.from_user.id)
+            voice = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
             if voice:
                 if not message.chat.is_forum:
                     msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")

@@ -185,9 +185,17 @@ add_api_key - 增加 Api key
     "type": "vits",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
-      "limit": 20,
+      "limit": 70,
       "model_name": "some.pth",
-      "speaker_id": 1
+      "speaker_id": 0
+    },
+    "azure": {
+      "key": ["123"],
+      "limit": 70,
+      "speaker": {
+        "chinese": "zh-CN-XiaoxiaoNeural"
+      },
+      "location": "japanwest"
     }
   }
 }

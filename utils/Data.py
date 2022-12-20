@@ -35,92 +35,6 @@ class RedisConfig(BaseModel):
     password: str = None
 
 
-class Service_Data(object):
-    """
-    管理 Api
-    """
-
-    @staticmethod
-    def get_key(filePath: str = "./Config/service.json"):
-        now_table = DefaultData.defaultService()
-        if pathlib.Path(filePath).exists():
-            with open(filePath, encoding="utf-8") as f:
-                _config = json.load(f)
-                DictUpdate.dict_update(now_table, _config)
-                _config = now_table
-            return _config
-        else:
-            return now_table
-
-    @staticmethod
-    def save_key(_config, filePath: str = "./Config/service.json"):
-        with open(filePath, "w+", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
-
-
-class Api_keys(object):
-    """
-    管理 Api
-    """
-
-    @staticmethod
-    def get_key(filePath: str = "./Config/api_keys.json"):
-        now_table = DefaultData.defaultKeys()
-        if pathlib.Path(filePath).exists():
-            with open(filePath, encoding="utf-8") as f:
-                _config = json.load(f)
-                DictUpdate.dict_update(now_table, _config)
-                _config = now_table
-            return _config
-        else:
-            return now_table
-
-    @staticmethod
-    def save_key(_config, filePath: str = "./Config/api_keys.json"):
-        with open(filePath, "w+", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
-
-    @staticmethod
-    def add_key(key: str, filePath: str = "./Config/api_keys.json"):
-        _config = Api_keys.get_key()
-        _config['OPENAI_API_KEY'].append(key)
-        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open(filePath, "w", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
-        return key
-
-    @staticmethod
-    def pop_key(key: str, filePath: str = "./Config/api_keys.json"):
-        _config = Api_keys.get_key()
-        if key not in _config['OPENAI_API_KEY']:
-            return
-        _config['OPENAI_API_KEY'].remove(key)
-        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open(filePath, "w", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
-        return key
-
-    @staticmethod
-    def pop_api_key(resp, auth):
-        # 读取
-        _config = Api_keys.get_key()
-        _config: dict
-        # 弹出
-        ERROR = resp.get("error")
-        if ERROR:
-            if ERROR.get('type') == "insufficient_quota":
-                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
-                    _config["OPENAI_API_KEY"].remove(auth)
-                    logger.error(
-                        f"弹出过期ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
-                    # 存储
-            if ERROR.get('code') == "invalid_api_key":
-                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
-                    _config["OPENAI_API_KEY"].remove(auth)
-                    logger.error(f"弹出非法ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}")
-        Api_keys.save_key(_config)
-
-
 class DefaultData(object):
     """
     数据提供类
@@ -210,16 +124,110 @@ class DefaultData(object):
                 "password": None
             },
             "tts": {
-                "status": False,
+                "status": True,
                 "type": "vits",
                 "vits": {
                     "api": "http://127.0.0.1:9557/tts/generate",
-                    "limit": 20,
+                    "limit": 70,
                     "model_name": "some.pth",
                     "speaker_id": 0
+                },
+                "azure": {
+                    "key": [""],
+                    "limit": 70,
+                    "speaker": {
+                        "chinese": "zh-CN-XiaoxiaoNeural"
+                    },
+                    "location": "japanwest"
                 }
             }
         }
+
+
+class Service_Data(object):
+    """
+    管理 Api
+    """
+
+    @staticmethod
+    def get_key(filePath: str = "./Config/service.json"):
+        now_table = DefaultData.defaultService()
+        if pathlib.Path(filePath).exists():
+            with open(filePath, encoding="utf-8") as f:
+                _config = json.load(f)
+                DictUpdate.dict_update(now_table, _config)
+                _config = now_table
+            return _config
+        else:
+            return now_table
+
+    @staticmethod
+    def save_key(_config, filePath: str = "./Config/service.json"):
+        with open(filePath, "w+", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+
+
+class Api_keys(object):
+    """
+    管理 Api
+    """
+
+    @staticmethod
+    def get_key(filePath: str = "./Config/api_keys.json"):
+        now_table = DefaultData.defaultKeys()
+        if pathlib.Path(filePath).exists():
+            with open(filePath, encoding="utf-8") as f:
+                _config = json.load(f)
+                DictUpdate.dict_update(now_table, _config)
+                _config = now_table
+            return _config
+        else:
+            return now_table
+
+    @staticmethod
+    def save_key(_config, filePath: str = "./Config/api_keys.json"):
+        with open(filePath, "w+", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def add_key(key: str, filePath: str = "./Config/api_keys.json"):
+        _config = Api_keys.get_key()
+        _config['OPENAI_API_KEY'].append(key)
+        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
+        with open(filePath, "w", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+        return key
+
+    @staticmethod
+    def pop_key(key: str, filePath: str = "./Config/api_keys.json"):
+        _config = Api_keys.get_key()
+        if key not in _config['OPENAI_API_KEY']:
+            return
+        _config['OPENAI_API_KEY'].remove(key)
+        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
+        with open(filePath, "w", encoding="utf8") as f:
+            json.dump(_config, f, indent=4, ensure_ascii=False)
+        return key
+
+    @staticmethod
+    def pop_api_key(resp, auth):
+        # 读取
+        _config = Api_keys.get_key()
+        _config: dict
+        # 弹出
+        ERROR = resp.get("error")
+        if ERROR:
+            if ERROR.get('type') == "insufficient_quota":
+                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
+                    _config["OPENAI_API_KEY"].remove(auth)
+                    logger.error(
+                        f"弹出过期ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
+                    # 存储
+            if ERROR.get('code') == "invalid_api_key":
+                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
+                    _config["OPENAI_API_KEY"].remove(auth)
+                    logger.error(f"弹出非法ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}")
+        Api_keys.save_key(_config)
 
 
 class ExpiringDict(OrderedDict):
