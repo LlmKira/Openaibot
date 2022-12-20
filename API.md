@@ -51,7 +51,7 @@ INFO:     Application startup complete.
 
 
 
-注意：若您需要合成对话语音，您还应按照 https://github.com/sudoskys/MoeGoe 中README和本项目README所述内容配置好语音合成服务器。
+注意：若您需要合成对话语音，您还应按照 https://github.com/sudoskys/MoeGoe 中README和本项目README所述内容配置好语音合成服务器。语音合成目前仅支持中文。
 
 ## 接口签名
 
