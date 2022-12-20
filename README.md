@@ -302,6 +302,7 @@ kill -9 id
 | `/disable_change_head`             | 禁止设定头                | 再次设定会重置为空                        |
 | `/enable_change_head`              | 允许设定头                |                                  |
 | `/forgetme`                        | 忘记我                  |                                  |
+| `/tts`                             | VITS/AZURE  TTS      |                                  |
 
 ### 样表
 
@@ -310,6 +311,7 @@ chat - 交谈
 write - 续写
 forgetme - 重置记忆
 remind - 场景设定
+tts - 语音支持
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
@@ -380,7 +382,8 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 ### API
 
 请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
-API服务器与Telegram Bot服务开发进度不一，通常为Telegram Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
+API服务器与Telegram Bot服务开发进度不一，通常为Telegram
+Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
 
 ### 上一次的性能分析
 
