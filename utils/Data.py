@@ -39,7 +39,11 @@ class TTS_Clint(object):
             return None
 
     @staticmethod
-    def request_tts_server(url: str, params: TTS_REQ):
+    def request_azure_server():
+        pass
+
+    @staticmethod
+    def request_vits_server(url: str, params: TTS_REQ):
         import httpx
         headers = {'Content-type': 'application/json',
                    'Accept': 'text/plain'}
@@ -250,10 +254,13 @@ class DefaultData(object):
             },
             "tts": {
                 "status": False,
-                "api": "http://127.0.0.1:9557/tts/generate",
-                "limit": 20,
-                "model_name": "",
-                "speaker_id": 0
+                "type": "vits",
+                "vits": {
+                    "api": "http://127.0.0.1:9557/tts/generate",
+                    "limit": 20,
+                    "model_name": "some.pth",
+                    "speaker_id": 1
+                }
             }
         }
 
