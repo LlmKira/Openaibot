@@ -335,6 +335,9 @@ help - 帮助
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
+### API
+请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
+
 ### 上一次的性能分析
 
 **日常负载 316MB**

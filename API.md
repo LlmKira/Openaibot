@@ -41,7 +41,7 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
-访问API地址（默认为http://127.0.0.1:2333），您应当能看到如下内容：
+访问API地址（默认为 http://127.0.0.1:2333 ），您应当能看到如下内容：
 
 ```json
 {"HelloWorld":"OpenAIBot-ExtendedAPI"}
@@ -159,7 +159,7 @@ public class HMACSHA256Example {
 
 HTTP请求头不作要求，但应保证uvicorn可正常接收请求。可参照以下示例：
 
-（以向http://api.example.com:2333发起请求为例）
+（以向 http://api.example.com:2333 发起请求为例）
 
 ```
 Host: api.example.com:2333
