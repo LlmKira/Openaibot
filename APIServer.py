@@ -58,11 +58,12 @@ async def chat(body: ReqBody):
         return response
     try:
         if(body.chatId and body.chatText):
-            res = await Reply.load_response(user=body.chatId, 
+            res = await Reply.load_response(user=body.chatId,
                                             group=body.groupId, 
                                             key=Api_keys.get_key()['OPENAI_API_KEY'], 
                                             prompt=body.chatText, 
-                                            method='chat')
+                                            method='chat',
+                                            web_enhance_server=config['Enhance_Server'])
             return {'success': True, 'response': res}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
@@ -80,7 +81,8 @@ async def write(body: ReqBody):
                                                 group=body.groupId, 
                                                 key=Api_keys.get_key()['OPENAI_API_KEY'],
                                                 prompt=body.chatText, 
-                                                method='write')
+                                                method='write',
+                                                web_enhance_server=config['Enhance_Server'])
                 return {'success': True, 'response':res}
         else:
             return {'success': False,'response':'INVAILD_CHATINFO'}
