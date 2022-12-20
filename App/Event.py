@@ -14,7 +14,8 @@ import openai_async
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, TTS_Clint, TTS_REQ
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
+from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
 
 _service = Service_Data.get_key()
@@ -52,16 +53,18 @@ global _csonfig
 # IO
 def load_csonfig():
     global _csonfig
+    now_table = DefaultData.defaultConfig()
+    if not pathlib.Path("./Config/config.json").exist():
+        return now_table
     with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
-        now_table = DefaultData.defaultConfig()
         DictUpdate.dict_update(now_table, _csonfig)
         _csonfig = now_table
         return _csonfig
 
 
 def save_csonfig():
-    with open("./Config/config.json", "w", encoding="utf8") as f:
+    with open("./Config/config.json", "w+", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 

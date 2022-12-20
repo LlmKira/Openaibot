@@ -44,7 +44,7 @@ def load_csonfig():
 
 
 def save_csonfig():
-    with open("./Config/config.json", "w", encoding="utf8") as f:
+    with open("./Config/config.json", "w+", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
