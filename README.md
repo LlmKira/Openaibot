@@ -302,7 +302,7 @@ kill -9 id
 | `/disable_change_head`             | 禁止设定头                | 再次设定会重置为空                        |
 | `/enable_change_head`              | 允许设定头                |                                  |
 | `/forgetme`                        | 忘记我                  |                                  |
-| `/tts`                             | VITS/AZURE  TTS      |                                  |
+| `/voice`                           | VITS/AZURE  TTS      |                                  |
 
 ### 样表
 
@@ -311,7 +311,7 @@ chat - 交谈
 write - 续写
 forgetme - 重置记忆
 remind - 场景设定
-tts - 语音支持
+voice - 语音支持
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度

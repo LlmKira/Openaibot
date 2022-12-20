@@ -67,7 +67,7 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
         async def group_msg(message):
             global me_id
-            if message.text.startswith(("/chat", "/tts", "/write", "/forgetme", "/remind")):
+            if message.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
             else:
@@ -85,7 +85,7 @@ class BotRunner(object):
             if message.from_user.id in _config.master:
                 await Event.Master(bot, message, _config)
             if message.text.startswith(
-                    ("/chat", "/tts", "/write", "/forgetme", "/remind")) or not message.text.startswith("/"):
+                    ("/chat", "/voice", "/write", "/forgetme", "/remind")) or not message.text.startswith("/"):
                 await Event.Friends(bot, message, _config)
             request_timestamps.append(time.time())
 

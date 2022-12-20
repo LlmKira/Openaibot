@@ -339,7 +339,7 @@ async def Text(bot, message, config, reset: bool = False):
             return
         _prompt = _prompt_r[1]
         types = "write"
-    if message.text.startswith("/tts"):
+    if message.text.startswith("/voice"):
         _user = UserManger(int(message.from_user.id))
         _set = True
         if _user.read("voice"):
@@ -472,7 +472,7 @@ async def Friends(bot, message, config):
         await bot.reply_to(message, "BOT:Under Maintenance")
         return
     command = message.text
-    if command.startswith("/tts"):
+    if command.startswith("/voice"):
         _user = UserManger(int(message.from_user.id))
         _set = True
         if _user.read("voice"):
@@ -789,5 +789,5 @@ Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前�
 Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
-Use /tts 开启可能的 tts 支持。
+Use /voice 开启可能的 tts 支持。
 """)

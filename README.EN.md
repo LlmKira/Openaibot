@@ -298,7 +298,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
 | `/forgetme`                               | 忘记我                         |                                                                                                                                             |
-| `/tts`                                    | VITS/AZURE  TTS             |                                                                                                                                             |
+| `/voice`                                    | VITS/AZURE  TTS             |                                                                                                                                             |
 
 ### Sample table
 
@@ -307,7 +307,7 @@ chat - Talking
 write - complement
 remind - persona
 forgetme - reset
-tts - 语音支持
+voice - 语音支持
 set_user_cold - set user cooldown
 set_group_cold - sets the group cooldown time
 set_token_limit - set output limit length
