@@ -109,7 +109,7 @@ class UserManger(object):
         return self._renew(_reply)
 
     def read(self, key) -> Union[any]:
-        _item = _csonfig["User"].get(self._uid)
+        _item = self._user
         return _item.get(key)
 
 
@@ -147,7 +147,7 @@ class GroupManger(object):
         return self._renew(_reply)
 
     def read(self, key) -> Union[any]:
-        _item = _csonfig["Group"].get(self._uid)
+        _item = self._user
         return _item.get(key)
 
 
