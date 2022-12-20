@@ -79,7 +79,7 @@ async def TTS_Support_Check(text, user_id):
     if not _tts_conf["status"]:
         return
     lang_type = Talk.get_language(text)
-    if not lang_type in ["chinese"]:
+    if lang_type not in ["chinese"]:
         return
     if _tts_conf["type"] == "vits":
         _vits_config = _tts_conf["vits"]
@@ -317,6 +317,13 @@ async def Text(bot, message, config, reset: bool = False):
     # 拿到 prompt
     _prompt = message.text
     types = "chat"
+    # 启动状态
+    if not _csonfig.get("statu"):
+        await bot.reply_to(message, "BOT:Under Maintenance")
+        return
+    # 群组白名单检查
+    if await WhiteGroupCheck(bot, message, config.WHITE):
+        return
     if message.text.startswith("/forgetme"):
         await Forget(bot, message, config)
         return await bot.reply_to(message, f"Down,Miss you")
@@ -332,6 +339,14 @@ async def Text(bot, message, config, reset: bool = False):
             return
         _prompt = _prompt_r[1]
         types = "write"
+    if message.text.startswith("/tts"):
+        _user = UserManger(int(message.from_user.id))
+        _set = True
+        if _user.read("voice"):
+            _set = False
+        _user.save({"voice": _set})
+        await bot.reply_to(message, f"TTS:{_set}")
+        return
     if message.text.startswith("/remind"):
         _remind_r = message.text.split(" ", 1)
         if len(_remind_r) < 2:
@@ -359,13 +374,6 @@ async def Text(bot, message, config, reset: bool = False):
         if not str(Utils.checkMsg(f"{message.chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
             # 不是，那就傲娇点
             return
-    # 启动状态
-    if not _csonfig.get("statu"):
-        await bot.reply_to(message, "BOT:Under Maintenance")
-        return
-    # 群组白名单检查
-    if await WhiteGroupCheck(bot, message, config.WHITE):
-        return
     try:
         # 自动获取名字
         _name = f"{message.from_user.first_name}{message.from_user.last_name}"
@@ -380,18 +388,20 @@ async def Text(bot, message, config, reset: bool = False):
                                          start_name="Girl:",
                                          web_enhance_server=config.Enhance_Server
                                          )
-        voice = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
-        if voice:
-            if not message.chat.is_forum:
-                msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")
-            else:
-                detect = await bot.reply_to(message, f"{_req}")
-                msg = await bot.send_audio(chat_id=message.chat.id,
-                                           message_thread_id=detect.message_thread_id,
-                                           audio=voice,
-                                           title="Voice")
+        # 读取设施
+        _voice = UserManger(message.from_user.id).read("voice")
+        voice_data = False
+        if _voice:
+            voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
+        if voice_data:
+            msg = await bot.send_audio(chat_id=message.chat.id,
+                                       reply_to_message_id=message.id,
+                                       audio=voice_data,
+                                       title="Voice",
+                                       caption=_req)
         else:
-            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+            _info = "tts Unavailable" if _voice else ""
+            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
         logger.error(e)
@@ -400,6 +410,9 @@ async def Text(bot, message, config, reset: bool = False):
 
 async def private_Chat(bot, message, config):
     load_csonfig()
+    # 白名单用户检查
+    if await WhiteUserCheck(bot, message, config.WHITE):
+        return
     # 处理初始化
     types = "chat"
     _prompt = message.text
@@ -418,13 +431,7 @@ async def private_Chat(bot, message, config):
     if message.text.startswith("/forgetme"):
         await Forget(bot, message, config)
         return await bot.reply_to(message, f"Down,Miss you")
-    # 处理机器人开关
-    if not _csonfig.get("statu"):
-        await bot.reply_to(message, "BOT:Under Maintenance")
-        return
-    # 白名单用户检查
-    if await WhiteUserCheck(bot, message, config.WHITE):
-        return
+
     try:
         if len(_prompt) > 1:
             _name = f"{message.from_user.first_name}{message.from_user.last_name}"
@@ -439,18 +446,19 @@ async def private_Chat(bot, message, config):
                                              method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
-            voice = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
-            if voice:
-                if not message.chat.is_forum:
-                    msg = await bot.send_audio(chat_id=message.chat.id, audio=voice, title="Voice")
-                else:
-                    detect = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
-                    msg = await bot.send_audio(chat_id=message.chat.id,
-                                               message_thread_id=detect.message_thread_id,
-                                               audio=voice,
-                                               title="Voice")
+            _voice = UserManger(message.from_user.id).read("voice")
+            voice_data = False
+            if _voice:
+                voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
+            if voice_data:
+                msg = await bot.send_audio(chat_id=message.chat.id,
+                                           reply_to_message_id=message.id,
+                                           audio=voice_data,
+                                           title="Voice",
+                                           caption=_req)
             else:
-                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}")
+                _info = "tts Unavailable" if _voice else ""
+                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
             # await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
@@ -459,7 +467,19 @@ async def private_Chat(bot, message, config):
 
 async def Friends(bot, message, config):
     load_csonfig()
+    # 处理机器人开关
+    if not _csonfig.get("statu"):
+        await bot.reply_to(message, "BOT:Under Maintenance")
+        return
     command = message.text
+    if command.startswith("/tts"):
+        _user = UserManger(int(message.from_user.id))
+        _set = True
+        if _user.read("voice"):
+            _set = False
+        _user.save({"voice": _set})
+        await bot.reply_to(message, f"TTS:{_set}")
+        return
     if command.startswith("/remind"):
         _remind_r = message.text.split(" ", 1)
         if len(_remind_r) < 2:
@@ -769,4 +789,5 @@ Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前�
 Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
+Use /tts 开启可能的 tts 支持。
 """)

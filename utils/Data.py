@@ -103,7 +103,8 @@ class DefaultData(object):
     def defaultUser():
         return {"white": False,
                 "block": False,
-                "usage": 1
+                "usage": 1,
+                "voice": False
                 }
 
     # 单独配额，如果这里不是 1,优先按这这分配额度

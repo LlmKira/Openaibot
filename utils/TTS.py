@@ -3,6 +3,7 @@
 # @FileName: TTS.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import json
 import random
 
 from pydantic import BaseModel
@@ -76,7 +77,7 @@ class VITS_TTS(object):
         """
         headers = {'Content-type': 'application/json',
                    'Accept': 'text/plain'}
-        data = params.dict()
+        data = params.json()
         response = await self.__client.request(method="POST",
                                                url=self.__url,
                                                data=data,
