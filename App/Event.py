@@ -72,7 +72,7 @@ def TTS_Support_Check(text, user_id):
     """
     if not _tts_conf["status"]:
         return
-    if _tts_conf["vits"]:
+    if _tts_conf["type"] == "vits":
         from openai_async.utils.Talk import Talk
         if Talk.get_language(text) != "chinese":
             return

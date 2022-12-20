@@ -253,8 +253,9 @@ class DefaultData(object):
                 "password": None
             },
             "tts": {
+                "status": False,
+                "type": "vits",
                 "vits": {
-                    "status": False,
                     "api": "http://127.0.0.1:9557/tts/generate",
                     "limit": 20,
                     "model_name": "some.pth",

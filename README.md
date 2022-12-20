@@ -181,12 +181,13 @@ add_api_key - 增加 Api key
     "password": null
   },
   "tts": {
-    "status": true,
+    "status": false,
+    "type": "vits",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
-      "limit": 40,
+      "limit": 20,
       "model_name": "some.pth",
-      "speaker_id": 2
+      "speaker_id": 1
     }
   }
 }

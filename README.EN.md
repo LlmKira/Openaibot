@@ -182,11 +182,14 @@ that are not in the preset will not be completed.
     "password": null
   },
   "tts": {
-    "status": true,
-    "api": "http://127.0.0.1:9557/tts/generate",
-    "limit": 40,
-    "model_name": "some.pth",
-    "speaker_id": 2
+    "status": false,
+    "type": "vits",
+    "vits": {
+      "api": "http://127.0.0.1:9557/tts/generate",
+      "limit": 20,
+      "model_name": "some.pth",
+      "speaker_id": 1
+    }
   }
 }
 ```
