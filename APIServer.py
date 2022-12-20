@@ -68,7 +68,7 @@ async def chat(body: ReqBody):
                                             prompt=body.chatText, 
                                             method='chat')
             if(body.returnVoice):
-                vresp = VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
+                vresp = await VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
                 if(vresp):
                     return vresp
                 else:
@@ -94,7 +94,7 @@ async def write(body: ReqBody):
                                             method='write',
                                             web_enhance_server=config['Enhance_Server'])
             if(body.returnVoice):
-                vresp = VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
+                vresp = await VITS.get(text = res, task = body.chatId, doReturnRawAudio=body.returnVoiceRaw)
                 if(vresp):
                     return vresp
                 else:

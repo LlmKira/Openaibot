@@ -376,6 +376,11 @@ Peripheral Prompt trimming interface to give support to other projects.
 
 Quick Dev by MVC framework https://github.com/TelechaBot/BaseBot
 
+### API
+
+You can view the API documentation at https://github.com/sudoskys/Openaibot/blob/main/API.md .
+Since the development progress differs between the API server and Telegram Bot, the API server may not work properly when there are unadapted changes on some imported modules. In that case, you can use the apiserver branch to get a stable API server.
+
 ### Last performance analysis
 
 **Daily load 300MB**
