@@ -1,6 +1,7 @@
 import sys
 sys.path.append('..')
-from utils.Data import TTS_REQ, TTS_Clint, Service_Data
+from utils.Data import Service_Data
+from utils.TTS import TTS_Clint, TTS_REQ
 from openai_async.utils.Talk import Talk
 from fastapi.responses import Response
 from loguru import logger
