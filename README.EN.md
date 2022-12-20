@@ -194,7 +194,7 @@ that are not in the preset will not be completed.
 }
 ```
 
-#### VITS Voice Support Description
+#### VITS Voice Support Description(ONLY CN NOW)
 
 This technology provides an emulated voice interaction technique.
 

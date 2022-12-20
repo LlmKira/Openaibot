@@ -193,7 +193,19 @@ add_api_key - 增加 Api key
 }
 ```
 
-#### VITS 语音支持说明
+redis:
+
+- ?
+
+tts:
+
+- status 开关
+- type 类型
+- vits:limit 长度内的文本会被转换
+- vits:model_name 模型名字，some.pth,在 model 文件夹下的
+- vits:speaker_id 说话人的ID,具体看模型cofig
+
+#### VITS 语音支持说明(ONLY CN NOW)
 
 这项技术提供了一种仿真的语音交互技术。
 
