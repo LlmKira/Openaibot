@@ -95,7 +95,7 @@ async def TTS_Support_Check(text, user_id):
         # 合成
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
         _new_text = "".join(_spell)
-        _new_text = "[LENGTH]1.7[LENGTH]" + _new_text
+        _new_text = "[LENGTH]1.4[LENGTH]" + _new_text
         # 接受数据
         result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
                                                         params=TTS_REQ(task_id=user_id,
