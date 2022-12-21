@@ -403,11 +403,19 @@ async def Text(bot, message, config, reset: bool = False):
         if _voice:
             voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
         if voice_data:
-            msg = await bot.send_audio(chat_id=message.chat.id,
-                                       reply_to_message_id=message.id,
-                                       audio=voice_data,
-                                       title="Voice",
-                                       caption=_req)
+            try:
+                msg = await bot.send_voice(chat_id=message.chat.id,
+                                           reply_to_message_id=message.id,
+                                           voice=voice_data,
+                                           caption=_req
+                                           )
+            except Exception as e:
+                msg = await bot.send_audio(chat_id=message.chat.id,
+                                           reply_to_message_id=message.id,
+                                           audio=voice_data,
+                                           title="Voice failed",
+                                           caption=_req
+                                           )
         else:
             _info = "tts Unavailable" if _voice else ""
             msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
@@ -460,11 +468,19 @@ async def private_Chat(bot, message, config):
             if _voice:
                 voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
             if voice_data:
-                msg = await bot.send_audio(chat_id=message.chat.id,
-                                           reply_to_message_id=message.id,
-                                           audio=voice_data,
-                                           title="Voice",
-                                           caption=_req)
+                try:
+                    msg = await bot.send_voice(chat_id=message.chat.id,
+                                               reply_to_message_id=message.id,
+                                               voice=voice_data,
+                                               caption=_req
+                                               )
+                except Exception as e:
+                    msg = await bot.send_audio(chat_id=message.chat.id,
+                                               reply_to_message_id=message.id,
+                                               audio=voice_data,
+                                               title="Voice failed",
+                                               caption=_req
+                                               )
             else:
                 _info = "tts Unavailable" if _voice else ""
                 msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
