@@ -144,7 +144,7 @@ class webEnhance(object):
             if len(_list) == prev_len:
                 break
         # 关键词算法匹配
-        _key = Talk.tfidf_keywords(prompt, topK=5)
+        _key = Talk.tfidf_keywords(prompt, topK=7)
         for i in _list:
             for ir in _key:
                 if ir in i:

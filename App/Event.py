@@ -17,6 +17,8 @@ from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
+# fast text langdetect
+from ftlangdetect import detect
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
@@ -78,20 +80,22 @@ async def TTS_Support_Check(text, user_id):
     from openai_async.utils.Talk import Talk
     if not _tts_conf["status"]:
         return
-    lang_type = Talk.get_language(text)
-    if lang_type not in ["chinese"]:
+    # 初步判定
+    lang_type = detect(text=text, low_memory=True).get("lang").upper()
+    if lang_type not in ["ZH", "JA"]:
         return
-    if(_tts_conf['type'] == 'none'):
+    if _tts_conf['type'] == 'none':
         return
     if _tts_conf["type"] == "vits":
         _vits_config = _tts_conf["vits"]
         if len(text) > _vits_config["limit"]:
             return
-        # 简单处理文本
-        res = Talk.chinese_sentence_cut(text)
-        cn = {i: "[ZH]" for i in res}
+        cn_res = Talk.chinese_sentence_cut(text)
+        cn = {i: f"[{lang_type}]" for i in cn_res}
+        # 合成
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
         _new_text = "".join(_spell)
+        _new_text = "[LENGTH]1.7[LENGTH]" + _new_text
         # 接受数据
         result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
                                                         params=TTS_REQ(task_id=user_id,
