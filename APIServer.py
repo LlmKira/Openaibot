@@ -12,6 +12,7 @@ import time
 import os
 from API.FakeMessage import FakeTGBotMessage, FakeTGBot
 from API.Voice import VITS
+from utils.Chat import UserManger
 
 class ReqBody(BaseModel):
     chatText: str = ''
@@ -29,7 +30,9 @@ apicfg = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '
 config = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/Config/app.toml')
 _csonfig = appe.load_csonfig()
 
-def checkIllegal(reqbody):
+def preCheck(reqbody):
+    if(not _csonfig['statu']):
+        return {'success': False, 'message': 'DISABLED'}
     message = FakeTGBotMessage()
     message.from_user.id = reqbody.chatId
     message.chat.id = reqbody.groupId
@@ -44,6 +47,8 @@ def checkIllegal(reqbody):
     if(apicfg['doValidateTimestamp']):
         if(abs(int(time.time()) - reqbody.timestamp) > apicfg['RequestTimeout']):
             return {'success': False,'response': 'TIMESTAMP_OUTDATED'}
+    if(UserManger(int(reqbody.chatId)).read('voice')):
+        reqbody.returnVoice = True
     # Request body is NOT ILLEGAL, so false
     return False
 
@@ -57,7 +62,7 @@ def read_root():
 #### Chat
 @app.post('/chat')
 async def chat(body: ReqBody):
-    if(response := checkIllegal(body)):
+    if(response := preCheck(body)):
         return response
     try:
         if(body.chatId and body.chatText):
@@ -72,7 +77,7 @@ async def chat(body: ReqBody):
                 if(vresp):
                     return vresp
                 else:
-                    return {'success': True, 'response': res, 'isVITSFailed': True}
+                    return {'success': True, 'response': res, 'isTTSFailed': True}
             return {'success': True, 'response': res}
         else:
             return {'success': False, 'response':'INVAILD_CHATINFO'}
@@ -82,7 +87,7 @@ async def chat(body: ReqBody):
 #### Write
 @app.post('/write')
 async def write(body: ReqBody):
-    if(response := checkIllegal(body)):
+    if(response := preCheck(body)):
         return response
     try:
         if(body.chatId and body.chatText):
@@ -98,18 +103,31 @@ async def write(body: ReqBody):
                 if(vresp):
                     return vresp
                 else:
-                    return {'success': True, 'response': res, 'isVITSFailed': True}
+                    return {'success': True, 'response': res, 'isTTSFailed': True}
             return {'success': True, 'response':res}
         else:
             return {'success': False,'response':'INVAILD_CHATINFO'}
     except Exception as e:
             logger.error(e)
 
+#### Voice
+@app.post('/voice')
+async def voice(body: ReqBody):
+    if(response := preCheck(body)):
+        return response
+    try:
+        user = UserManger(int(body.chatId))
+        doUserVoice = False if user.read('voice') else True
+        user.save({'voice': doUserVoice})
+        return {'success': True, 'response': 'TTS Status: ' + str(doUserVoice)}
+    except Exception as e:
+        logger.error(e)
+        
 #### Forget
 @app.post('/forgetme')
 async def forgetme(body: ReqBody):
     try:
-        if(response := checkIllegal(body)):
+        if(response := preCheck(body)):
             return response
         message = FakeTGBotMessage()
         message.from_user.id = body.chatId
@@ -125,7 +143,7 @@ async def forgetme(body: ReqBody):
 @app.post('/remind')
 async def remind(body: ReqBody):
     try:
-        if(response := checkIllegal(body)):
+        if(response := preCheck(body)):
             return response
         if(not body.chatText):
             return {'success': False,'response': 'INVAILD_CHATINFO'}
@@ -152,7 +170,7 @@ async def remind(body: ReqBody):
 @app.post('/admin/{action}')
 async def admin(body: ReqBody, action: str):
     try:
-        if(response := checkIllegal(body)):
+        if(response := preCheck(body)):
             return response
         if(not body.chatId in config.bot.master):
             return {'success': False,'response': 'OPERATION_NOT_PERMITTED'}
