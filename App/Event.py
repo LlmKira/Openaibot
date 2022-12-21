@@ -6,6 +6,7 @@
 import json
 import pathlib
 import random
+import re
 import time
 from typing import Union
 from loguru import logger
@@ -81,7 +82,7 @@ async def TTS_Support_Check(text, user_id):
     if not _tts_conf["status"]:
         return
     # 初步判定
-    lang_type = detect(text=text, low_memory=True).get("lang").upper()
+    lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
     if lang_type not in ["ZH", "JA"]:
         return
     if _tts_conf['type'] == 'none':
@@ -397,28 +398,32 @@ async def Text(bot, message, config, reset: bool = False):
                                          start_name="Girl:",
                                          web_enhance_server=config.Enhance_Server
                                          )
-        # 读取设施
+        message_type = "text"
+        _info = []
+        # 语音消息
         _voice = UserManger(message.from_user.id).read("voice")
-        voice_data = False
-        if _voice:
-            voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
-        if voice_data:
+        voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id) if _voice else False
+        message_type = "voice" if _voice and voice_data else message_type
+        if not voice_data and _voice:
+            _info.append("TTS Unavailable")
+        # 发送特殊消息
+        send = False
+        msg = 0
+        if message_type == "voice":
+            # 如果成功返回消息体，没成功 raise
             try:
                 msg = await bot.send_voice(chat_id=message.chat.id,
                                            reply_to_message_id=message.id,
                                            voice=voice_data,
                                            caption=_req
                                            )
-            except Exception as e:
-                msg = await bot.send_audio(chat_id=message.chat.id,
-                                           reply_to_message_id=message.id,
-                                           audio=voice_data,
-                                           title="Voice failed",
-                                           caption=_req
-                                           )
-        else:
-            _info = "tts Unavailable" if _voice else ""
-            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
+            except:
+                _info.append("\nVOICE SEND FAILED,Check u voice setting")
+            else:
+                send = True
+        if not send:
+            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{''.join(_info)}")
+        # 记忆回复需要消息 id
         Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
     except Exception as e:
         logger.error(e)
@@ -463,27 +468,31 @@ async def private_Chat(bot, message, config):
                                              method=types,
                                              web_enhance_server=config.Enhance_Server
                                              )
+            message_type = "text"
+            _info = []
+            # 语音消息
             _voice = UserManger(message.from_user.id).read("voice")
-            voice_data = False
-            if _voice:
-                voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id)
-            if voice_data:
+            voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id) if _voice else False
+            message_type = "voice" if _voice and voice_data else message_type
+            if not voice_data and _voice:
+                _info.append("TTS Unavailable")
+            # 发送特殊消息
+            send = False
+            msg = 0
+            if message_type == "voice":
+                # 如果成功返回消息体，没成功 raise
                 try:
                     msg = await bot.send_voice(chat_id=message.chat.id,
                                                reply_to_message_id=message.id,
                                                voice=voice_data,
                                                caption=_req
                                                )
-                except Exception as e:
-                    msg = await bot.send_audio(chat_id=message.chat.id,
-                                               reply_to_message_id=message.id,
-                                               audio=voice_data,
-                                               title="Voice failed",
-                                               caption=_req
-                                               )
-            else:
-                _info = "tts Unavailable" if _voice else ""
-                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{_info}")
+                except:
+                    _info.append("\nVOICE SEND FAILED,Check u voice setting")
+                else:
+                    send = True
+            if not send:
+                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{''.join(_info)}")
             # await bot.reply_to(message, f"{_req}\n{config.INTRO}")
     except Exception as e:
         logger.error(e)
