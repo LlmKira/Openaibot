@@ -122,7 +122,7 @@ class GroupManger(object):
         self.user = _csonfig["Group"].get(self._uid)
         if not self.user:
             self.user = {}
-        self._user = DefaultData.defaultUser()
+        self._user = DefaultData.defaultGroup()
         DictUpdate.dict_update(self._user, self.user)
 
     def _renew(self, item):
