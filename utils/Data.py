@@ -126,7 +126,7 @@ class DefaultData(object):
             },
             "tts": {
                 "status": True,
-                "type": "vits",
+                "type": "none",
                 "vits": {
                     "api": "http://127.0.0.1:9557/tts/generate",
                     "limit": 70,

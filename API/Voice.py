@@ -54,3 +54,5 @@ class VITS:
             return await VITS.vits(text, task, doReturnRawAudio)
         elif(ttsType == 'azure'):
             return await VITS.azure(text, doReturnRawAudio)
+        else:
+            return False

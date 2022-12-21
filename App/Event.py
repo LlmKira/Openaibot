@@ -81,6 +81,8 @@ async def TTS_Support_Check(text, user_id):
     lang_type = Talk.get_language(text)
     if lang_type not in ["chinese"]:
         return
+    if(_tts_conf['type'] == 'none'):
+        return
     if _tts_conf["type"] == "vits":
         _vits_config = _tts_conf["vits"]
         if len(text) > _vits_config["limit"]:
