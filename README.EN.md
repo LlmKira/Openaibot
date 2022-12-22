@@ -227,7 +227,7 @@ that are not in the preset will not be completed.
 - auzre:location Server resource address
 - auzre:key api key
 
-#### VITS Voice Support Description(ONLY CN NOW)
+#### VITS Voice Support Description(Language types are determined by the model)
 
 This technology provides an emulated voice interaction technique.
 

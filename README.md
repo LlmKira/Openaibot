@@ -224,7 +224,7 @@ https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-serv
 - auzre:location 服务器资源地址
 - auzre:key api key
 
-#### VITS 语音支持说明(ONLY CN NOW)
+#### VITS 语音支持说明(ONLY CN/JA NOW)
 
 Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
 

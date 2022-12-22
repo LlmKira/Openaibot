@@ -16,6 +16,7 @@ class TTS_REQ(BaseModel):
     task_id: int = 1
     text: str = "[ZH]你好[ZH]"
     speaker_id: int = 0
+    audio_type: str = "ogg"
 
 
 class TTS_Clint(object):

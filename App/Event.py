@@ -8,7 +8,9 @@ import pathlib
 import random
 import re
 import time
+from io import BytesIO
 from typing import Union
+
 from loguru import logger
 
 import openai_async
@@ -102,7 +104,10 @@ async def TTS_Support_Check(text, user_id):
                                                         params=TTS_REQ(task_id=user_id,
                                                                        text=_new_text,
                                                                        model_name=_vits_config["model_name"],
-                                                                       speaker_id=_vits_config["speaker_id"]))
+                                                                       speaker_id=_vits_config["speaker_id"],
+                                                                       audio_type="ogg"
+                                                                       ))
+
         if not result:
             logger.error(f"TTS:{user_id} --type:vits --content: {text}:{len(text)} --{e}")
             return
