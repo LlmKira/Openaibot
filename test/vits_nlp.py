@@ -11,7 +11,7 @@ res = Talk().cut_chinese_sentence(
     "これから日本...大家好，我是可莉，我建议大家不要有其它的营养，所以不能只看它的热量就作为应急食品来使用。")
 
 print(res)
-from ftlangdetect import detect
+from fatlangdetect import detect
 
 t1 = time.time()
 result = detect(text="你好", low_memory=True)

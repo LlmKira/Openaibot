@@ -21,7 +21,7 @@ from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
 # fast text langdetect
-from ftlangdetect import detect
+from fatlangdetect import detect
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
