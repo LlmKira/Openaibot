@@ -19,5 +19,4 @@ scikit-learn
 transformers
 beautifulsoup4
 azure-cognitiveservices-speech
-fasttext-langdetect==1.0.3
 wget
