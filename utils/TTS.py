@@ -58,6 +58,10 @@ class TTS_Clint(object):
         except Exception as e:
             return False, e
         try:
+            if isinstance(result, bool):
+                return False, "No Api Result"
+            if not isinstance(result.get("audio"), str):
+                return False, "No Audio Data"
             data = TTS_Clint.decode_wav(result["audio"])
         except Exception as e:
             return False, e
