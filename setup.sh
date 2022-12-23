@@ -6,27 +6,34 @@ initVar() {
 }
 
 # 准备运行需要的软件包
-_os=`uname`
+_os=$(uname)
 echo "use system: ${_os}"
 
 if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" /etc/*-release; then
-	yum install -y git python3 python3-pip
+  yum install -y git python3 python3-pip
+  yum install -y ffmpeg
 elif grep -Eqi "Fedora" /etc/issue || grep -Eq "Fedora" /etc/*-release; then
-	yum install -y git python3 python3-pip
+  yum install -y git python3 python3-pip
+  yum install -y ffmpeg
 elif grep -Eqi "Rocky" /etc/issue || grep -Eq "Rocky" /etc/*-release; then
-	yum install -y git python3 python3-pip
+  yum install -y git python3 python3-pip
+  yum install -y ffmpeg
 elif grep -Eqi "AlmaLinux" /etc/issue || grep -Eq "AlmaLinux" /etc/*-release; then
-	yum install -y git python3 python3-pip
+  yum install -y git python3 python3-pip
+  yum install -y ffmpeg
 elif grep -Eqi "Amazon Linux" /etc/issue || grep -Eq "Amazon Linux" /etc/*-release; then
-	yum install -y git python3 python3-pip
+  yum install -y git python3 python3-pip
+  yum install -y ffmpeg
 elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" /etc/*-release; then
-	apt update -y
-	apt install -y git python3 python3-pip
+  apt update -y
+  apt install -y git python3 python3-pip
+  apt install -y ffmpeg
 elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" /etc/*-release; then
   apt update -y
-	apt install -y git python3 python3-pip
+  apt install -y git python3 python3-pip
+  apt install -y ffmpeg
 else
-	OSNAME='unknow'
+  OSNAME='unknow'
 fi
 
 initVar
