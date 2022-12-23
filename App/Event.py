@@ -388,9 +388,11 @@ async def Text(bot, message, config, reset: bool = False):
             return
     try:
         # 自动获取名字
-        _name = f"{message.from_user.first_name}{message.from_user.last_name}"
-        if len(_name) > 12 and len(f"{message.from_user.last_name}") < 6:
-            _name = f"{message.from_user.last_name}"
+        first_name = message.from_user.first_name if message.from_user.first_name else ""
+        last_name = message.from_user.last_name if message.from_user.last_name else ""
+        _name = f"{first_name}{last_name}"
+        if len(_name) > 12 and len(f"{last_name}") < 6:
+            _name = f"{last_name}"
         _req = await Reply.load_response(user=message.from_user.id,
                                          group=message.chat.id,
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
@@ -458,9 +460,11 @@ async def private_Chat(bot, message, config):
 
     try:
         if len(_prompt) > 1:
-            _name = f"{message.from_user.first_name}{message.from_user.last_name}"
-            if len(_name) > 12 and len(f"{message.from_user.last_name}") < 6:
-                _name = f"{message.from_user.last_name}"
+            first_name = message.from_user.first_name if message.from_user.first_name else ""
+            last_name = message.from_user.last_name if message.from_user.last_name else ""
+            _name = f"{first_name}{last_name}"
+            if len(_name) > 12 and len(f"{last_name}") < 6:
+                _name = f"{last_name}"
             _req = await Reply.load_response(user=message.from_user.id,
                                              group=message.chat.id,
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
