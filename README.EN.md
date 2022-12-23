@@ -196,7 +196,7 @@ that are not in the preset will not be completed.
       ],
       "limit": 70,
       "speaker": {
-        "chinese": "zh-CN-XiaoxiaoNeural"
+        "ZH": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }

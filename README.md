@@ -195,7 +195,7 @@ add_api_key - 增加 Api key
       ],
       "limit": 70,
       "speaker": {
-        "chinese": "zh-CN-XiaoxiaoNeural"
+        "ZH": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }

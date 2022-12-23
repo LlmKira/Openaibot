@@ -85,12 +85,12 @@ async def TTS_Support_Check(text, user_id):
         return
     # 初步判定
     lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
-    if lang_type not in ["ZH", "JA"]:
-        return
     if _tts_conf['type'] == 'none':
         return
     if _tts_conf["type"] == "vits":
         _vits_config = _tts_conf["vits"]
+        if lang_type not in ["ZH", "JA"]:
+            return
         if len(text) > _vits_config["limit"]:
             return
         cn_res = Talk.chinese_sentence_cut(text)
@@ -119,14 +119,11 @@ async def TTS_Support_Check(text, user_id):
         _azure_config = _tts_conf["azure"]
         _new_text = text
         _speaker = _azure_config["speaker"].get(lang_type)
-
         if len(text) > _azure_config["limit"]:
             return
-
         if not _speaker:
             logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --this type lang not supported")
             return
-
         result, e = await TTS_Clint.request_azure_server(key=_azure_config["key"],
                                                          location=_azure_config["location"],
                                                          text=_new_text,

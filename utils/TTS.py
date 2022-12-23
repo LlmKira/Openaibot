@@ -40,6 +40,13 @@ class TTS_Clint(object):
             return False, "Azure Key Empty"
         try:
             result = await Azure_TTS(key=_key, location=location).get_speech(text=text, speaker=speaker)
+            tmp_path = "tmp.ogg"
+            audio_path = "audio.ogg"
+            with open(tmp_path, "wb+") as f:
+                f.write(result)
+            subprocess.run(["ffmpeg", '-i', tmp_path, '-acodec', 'libopus', audio_path, '-y'])
+            with open(audio_path, 'rb') as f:
+                result = f.read()
         except Exception as e:
             return False, e
         else:
