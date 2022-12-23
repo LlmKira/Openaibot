@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 
 import random
+import subprocess
 
 from pydantic import BaseModel
 
@@ -21,7 +22,7 @@ class TTS_REQ(BaseModel):
 
 class TTS_Clint(object):
     @staticmethod
-    def decode_wav(encoded_data):
+    def decode_audio(encoded_data):
         import base64
         try:
             decoded_data = base64.b64decode(encoded_data)
@@ -62,7 +63,14 @@ class TTS_Clint(object):
                 return False, "No Api Result"
             if not isinstance(result.get("audio"), str):
                 return False, "No Audio Data"
-            data = TTS_Clint.decode_wav(result["audio"])
+            data = TTS_Clint.decode_audio(result["audio"])
+            tmp_path = "tmp.ogg"
+            audio_path = "audio.ogg"
+            with open(tmp_path, "wb+") as f:
+                f.write(data)
+            subprocess.run(["ffmpeg", '-i', tmp_path, '-acodec', 'libopus', audio_path, '-y'])
+            with open(audio_path, 'rb') as f:
+                data = f.read()
         except Exception as e:
             return False, e
         else:

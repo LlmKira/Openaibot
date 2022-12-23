@@ -236,6 +236,10 @@ Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 
 
 这项技术提供了一种仿真的语音交互技术。
 
+```shell
+apt-get install ffmpeg
+```
+
 安装依赖，运行 `server.py` 文件可以默认使用。
 
 模型下载请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
