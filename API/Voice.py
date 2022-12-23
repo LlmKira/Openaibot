@@ -6,12 +6,13 @@ from openai_async.utils.Talk import Talk
 from fastapi.responses import Response
 from loguru import logger
 from ftlangdetect import detect
+from typing import Union
 
 serviceCfg = Service_Data.get_key('./Config/service.json')
 ttsConf = serviceCfg['tts']
 
 class VITS:
-    async def vits(text, task:int = 1, doReturnRawAudio: bool = True):
+    async def vits(text, task:int = 1, doReturnRawAudio: bool = True, audioFormat = 'wav'):
         vitsConf = ttsConf['vits']
         lang = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
         if( lang not in ["ZH", "JA"]):
@@ -25,7 +26,8 @@ class VITS:
         reqbody = TTS_REQ(model_name = vitsConf['model_name'],
                           task_id = task,
                           text = newtext,
-                          speaker_id = vitsConf['speaker_id'])
+                          speaker_id = vitsConf['speaker_id'],
+                          audio_type = audioFormat)
         data,e = await VITS_TTS.get_speech(url = vitsConf['api'], params = reqbody)
         if(not data):
             logger.warning(e)
@@ -55,10 +57,10 @@ class VITS:
             base64audio = base64.b64encode(resp)
             return {'success': True,'response': base64audio, 'text': text}
         
-    async def get(self, text, task:int = 1, doReturnRawAudio:bool = True):
+    async def get(self, text, task:int = 1, doReturnRawAudio:bool = True, audioFormat: str = Union('wav', 'ogg', 'flac')):
         ttsType = ttsConf['type']
         if(ttsType == 'vits'):
-            return await VITS.vits(text, task, doReturnRawAudio)
+            return await VITS.vits(text, task, doReturnRawAudio, audioFormat=audioFormat)
         elif(ttsType == 'azure'):
             return await VITS.azure(text, doReturnRawAudio)
         else:
