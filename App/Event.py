@@ -460,6 +460,7 @@ async def private_Chat(bot, message, config):
 
     try:
         if len(_prompt) > 1:
+            # 自动获取名字
             first_name = message.from_user.first_name if message.from_user.first_name else ""
             last_name = message.from_user.last_name if message.from_user.last_name else ""
             _name = f"{first_name}{last_name}"
