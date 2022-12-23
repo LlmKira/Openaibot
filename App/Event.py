@@ -388,8 +388,8 @@ async def Text(bot, message, config, reset: bool = False):
             return
     try:
         # 自动获取名字
-        first_name = message.from_user.first_name if first_name else ""
-        last_name = message.from_user.last_name if last_name else ""
+        first_name = message.from_user.first_name if message.from_user.first_name else ""
+        last_name = message.from_user.last_name if message.from_user.last_name else ""
         _name = f"{first_name}{last_name}"
         if len(_name) > 12 and len(f"{last_name}") < 6:
             _name = f"{last_name}"
