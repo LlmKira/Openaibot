@@ -13,6 +13,7 @@ import os
 from API.FakeMessage import FakeTGBotMessage, FakeTGBot
 from API.Voice import VITS
 from utils.Chat import UserManger
+from typing import Union
 
 class ReqBody(BaseModel):
     chatText: str = ''
@@ -22,6 +23,7 @@ class ReqBody(BaseModel):
     signature: str = ''
     returnVoice: bool = False
     returnVoiceRaw: bool = True
+    audioFormat: str = Union('wav', 'ogg', 'flac')
 
 if(not os.path.isfile(os.path.split(os.path.realpath(__file__))[0] + '/Config/api.toml')):
     logger.error('未检测到api.toml,请重新配置  api.toml not found, please reconfigure')
