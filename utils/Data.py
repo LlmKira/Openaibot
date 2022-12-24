@@ -96,7 +96,7 @@ class DefaultData(object):
             with open("./analysis.json", encoding="utf-8") as f:
                 DictUpdate.dict_update(_Analysis, json.load(f))
         DictUpdate.dict_update(_Analysis, kwargs)
-        with open("./analysis.json", "w", encoding="utf8") as f:
+        with open("./analysis.json", "w+", encoding="utf8") as f:
             json.dump(_Analysis, f, indent=4, ensure_ascii=False)
 
     @staticmethod
