@@ -152,7 +152,7 @@ public class HMACSHA256Example {
 | signature      | String   | 是       | 接口签名                                                     | (略)       | ""     |
 | returnVoice    | Bool     | 是       | chat、write接口专属功能。是否将AI返回合成为语音。此项已被用户在/voice接口中的设置覆盖，您现在无需传入此参数。 | false      | false  |
 | returnVoiceRaw | Bool     | 是       | chat、write接口专属功能。合成语音时，是否输出原始音频文件（而不是base64编码）由于各项目代码逻辑不同，您仍需在请求时传入此参数。 | true       | true   |
-| audioFormat    | String   | 是       | chat、write接口专属功能。指定合成语音的音频格式（目前支持wav、ogg、flac）。此参数仅在使用VITS作为语音合成服务时有效，在Azure语音合成下音频格式始终为wav。 | "ogg"      | "wav"  |
+| audioFormat    | String   | 是       | chat、write接口专属功能。指定合成语音的音频格式（目前支持wav、ogg、flac）。此参数仅在使用VITS作为语音合成服务时有效，在Azure语音合成下音频格式始终为ogg。 | "ogg"      | "wav"  |
 
 实际请求时对数据类型的要求不是很严格。如若对timestamp传入字符串类型的时间戳，API将自动转换为整数。
 
