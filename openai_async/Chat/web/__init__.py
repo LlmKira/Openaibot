@@ -84,7 +84,7 @@ class webEnhance(object):
         # 匹配
         sret = {}
         if "html" in htmltext:
-            rs = BeautifulSoup(htmltext, "lxml")
+            rs = BeautifulSoup(htmltext, "html.parser")
             # print(rs.text)
             if "goog" in self._server:
                 target = ["html", rs.select("div > span")]
@@ -154,6 +154,6 @@ class webEnhance(object):
 
 
 if __name__ == '__main__':
-    re = webEnhance(server=["https://www.exp.com/web?ie=utf8&query={}"]).get_content(
-        prompt="joycon 的 蓝牙配对按钮 在哪里？")
+    re = webEnhance(server=["https://www.goo.com/search?ie=utf8&query={}"]).get_content(
+        prompt="明日方舟")
     print(re)
