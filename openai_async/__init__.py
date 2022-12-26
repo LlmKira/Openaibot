@@ -19,3 +19,4 @@ class RedisConfig(BaseModel):
 redis = RedisConfig()
 api_key = None
 proxy_url = ""
+webServerUrlFilter = False

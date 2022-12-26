@@ -3,11 +3,11 @@
 # @FileName: __init__.py.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import gzip
+# import gzip
 import random
 import httpx
 from urllib.parse import urlparse
-
+import openai_async
 from openai_async.utils.Talk import Talk
 
 info_cache = {}
@@ -32,17 +32,18 @@ class webEnhance(object):
         for ir in stop_sentence:
             if ir in sentence:
                 skip = True
-        pas = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-        _link = re.findall(pas, sentence)
-        if _link:
-            for i in _link:
-                sentence = sentence.replace(i, "")
-        _link = re.findall("(?:[\w-]+\.)+[\w-]+", sentence)
-        if _link:
-            if len("".join(_link)) / len(sentence) > 0.7:
-                skip = True
-            for i in _link:
-                sentence = sentence.replace(i, "")
+        if openai_async.webServerUrlFilter:
+            pas = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+            _link = re.findall(pas, sentence)
+            if _link:
+                for i in _link:
+                    sentence = sentence.replace(i, "")
+            _link = re.findall("(?:[\w-]+\.)+[\w-]+", sentence)
+            if _link:
+                if len("".join(_link)) / len(sentence) > 0.7:
+                    skip = True
+                for i in _link:
+                    sentence = sentence.replace(i, "")
         if skip:
             return ""
         # 处理数据
