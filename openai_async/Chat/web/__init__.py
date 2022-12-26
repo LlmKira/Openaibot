@@ -23,11 +23,13 @@ class webEnhance(object):
     @staticmethod
     def deal_res(query, sentence):
         import re
-        stop_sentence = ["下面就让我们",
-                         "小编", "一起来看一下", "小伙伴们",
-                         "究竟是什么意思", "看影片", "看人次", "？", "?", "是什么", "什么意思", "意思介绍", " › ",
-                         "游侠", "_哔哩哔哩_bilibili", "为您提供", "在线观看", "今日推荐", "線上看", "线上看", "知乎",
-                         "高清观看"]
+        stop_sentence = openai_async.webServerStopSentence
+        if not isinstance(stop_sentence, list):
+            stop_sentence = ["下面就让我们",
+                             "小编", "一起来看一下", "小伙伴们",
+                             "究竟是什么意思", "看影片", "看人次", "？", "是什么", "什么意思", "意思介绍", " › ",
+                             "游侠", "为您提供", "在线观看", "今日推荐", "線上看", "线上看",
+                             "高清观看", "?", "_哔哩哔哩_bilibili", "知乎"]  #
         skip = False
         for ir in stop_sentence:
             if ir in sentence:
