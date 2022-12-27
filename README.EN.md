@@ -227,12 +227,6 @@ Provides external link support for plugins in ``openai_async/Chat/module/plugin`
 
 `search` is a search plugin that comes with us, the engines are all to be filled in by yourselves.
 
-| plugins  | desc       | server                                 |
-|----------|------------|----------------------------------------|
-| `time`   | now time   | `""`,no need                           |
-| `week`   | week time  | `""`,no need                           |
-| `search` | web search | `["some.com?searchword={}"]`,must need |
-
 #### Redis
 
 ```json
@@ -392,6 +386,14 @@ server.
 
 There is a middleware between the memory pool and the analytics that provides some networked retrieval support and
 operational support. It can be spiked with services that interface to other Api's.
+
+**Table**
+
+| plugins  | desc       | server                                 |
+|----------|------------|----------------------------------------|
+| `time`   | now time   | `""`,no need                           |
+| `week`   | week time  | `""`,no need                           |
+| `search` | web search | `["some.com?searchword={}"]`,must need |
 
 **Prompt Injection**
 
