@@ -181,7 +181,7 @@ that are not in the preset will not be completed.
     "db": 0,
     "password": null
   },
-  "plugin_server": {
+  "plugin": {
     "search": [
       "https://www.exp.com/search?word={}"
     ],
@@ -217,7 +217,7 @@ Provides external link support for plugins in ``openai_async/Chat/module/plugin`
 
 ```json
 {
-  "plugin_server": {
+  "plugin": {
     "search": [
       "https://www.exp.com/search?word={}"
     ]

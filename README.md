@@ -182,7 +182,7 @@ add_api_key - 增加 Api key
     "db": 0,
     "password": null
   },
-  "plugin_server": {
+  "plugin": {
     "search": [
       "https://www.exp.com/search?word={}"
     ],
@@ -229,7 +229,7 @@ add_api_key - 增加 Api key
 
 ```json
 {
-  "plugin_server": {
+  "plugin": {
     "search": [
       "https://www.exp.com/search?word={}"
     ]
