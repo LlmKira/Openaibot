@@ -8,20 +8,12 @@ import json
 import os
 import random
 import openai_async
-from .web import webEnhance
-
-# import loguru
-# import jiagu
-
 
 # 基于 Completion 上层
 from ..resouce import Completion
+# Tool
 from ..utils.Talk import Talk
-
 from ..utils.data import MsgFlow
-
-
-# 聊天类
 
 
 class Chatbot(object):
@@ -214,7 +206,7 @@ class Chatbot(object):
                                 web_enhance_server: list = None) -> dict:
         """
         异步的，得到对话上下文
-        :param web_enhance_server: ["https://www.exp.com/search?q={}"] 格式如此
+        :param web_enhance_server: {"type":["https://www.exp.com/search?q={}"]} 格式如此
         :param role:
         :param head: 预设技巧
         :param max_tokens: 限制返回字符数量
@@ -245,9 +237,9 @@ class Chatbot(object):
             Talk.tokenizer(_header + _prompt_s[0]))
         _prompt_list = []
         # 中间件
-        _appenx = self.Prehance(prompt=prompt, web_enhance_server=web_enhance_server)
-        start_token = int(Talk.tokenizer(_appenx))
-        _prompt_list.append(_appenx)
+        _appendix = self.Prehance(prompt=prompt, table=web_enhance_server)
+        start_token = int(Talk.tokenizer(_appendix))
+        _prompt_list.append(_appendix)
         # 记忆池
         _prompt_apple = self.Summer(prompt=prompt,
                                     start_token=start_token,
@@ -293,22 +285,6 @@ class Chatbot(object):
         return filtered_result
 
     @staticmethod
-    def isIN(prompt: str, keywords: list):
-        isIn = False
-        for i in keywords:
-            if i in prompt:
-                isIn = True
-        return isIn
-
-    @staticmethod
-    def isALLIN(prompt: str, keywords: list):
-        isIn = True
-        for i in keywords:
-            if i not in prompt:
-                isIn = False
-        return isIn
-
-    @staticmethod
     def server(server, key):
         if isinstance(server, list):
             return server
@@ -319,68 +295,12 @@ class Chatbot(object):
                     _now.append(i)
             return _now
 
-    @staticmethod
-    def match_enhance(prompt):
-        import re
-        match = re.findall(r"\[(.*?)\]", prompt)
-        match2 = re.findall(r"\"(.*?)\"", prompt)
-        match3 = re.findall(r"\((.*?)\)", prompt)
-        match.extend(match2)
-        match.extend(match3)
-        return match
-
-    def Prehance(self, prompt, web_enhance_server):
-        _appenx = ""
-        # 提取内容
-        re = []
-
-        # TIME
-        from datetime import datetime, timedelta, timezone
-        utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
-        bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
-        _time = ["time", "多少天", "几天", "时间", "几点", "今天", "昨天", "明天", "几月", "几月", "几号", "几个月",
-                 "天前"]
-        if self.isIN(prompt=prompt, keywords=_time):
-            now = bj_dt.strftime("%Y-%m-%d %H:%M")
-            re.append(f"Current Time UTC8 {now}")
-
-        # WEEK
-        _week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
-        _week_key = ["星期", "星期几", "时间", "周几", "周一", "周二", "周三", "周四", "周五", "周六"]
-        if self.isIN(prompt=prompt, keywords=_week_list + _week_key):
-            onw = bj_dt.weekday()
-            re.append(f"Now {_week_list[onw]}")
-        # WEB
-        if web_enhance_server:
-            if len(prompt) < 80:
-                if (prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道")
-                    or "2022年" in prompt or "2023年" in prompt) \
-                        or (len(prompt) < 20 and "?" in prompt or "？" in prompt):
-                    try:
-                        match = self.match_enhance(prompt)
-                        if match:
-                            prompt = match[0]
-                        else:
-                            if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
-                                prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
-                        _info = webEnhance(server=self.server(web_enhance_server, "auto")).get_content(prompt=prompt)
-                        _pre = 0
-                        info = []
-                        for i in _info:
-                            if _pre > 100:
-                                break
-                            info.append(i)
-                            _pre += Talk.tokenizer(i)
-                    except Exception as e:
-                        print("Web Enhance", e)
-                        info = []
-                    re.extend(info)
-        _pre = 0
-        _return_list = []
-        for i in re:
-            if _pre > 200:
-                break
-            _return_list.append(i)
-            _pre += Talk.tokenizer(i)
-        _appenx = "\n".join(_return_list)
-        return _appenx
+    def Prehance(self, table, prompt):
+        _append = "-"
+        if not all([table, prompt]):
+            return _append
+        from .module.platform import ChatPlugin, PluginParam
+        processor = ChatPlugin()
+        processed = processor.process(param=PluginParam(text=prompt, server=table))  # , plugins=('search'))
+        reply = "\n".join(processed) if processed else ""
+        return reply

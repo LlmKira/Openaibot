@@ -26,6 +26,7 @@ from fatlangdetect import detect
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
+_plugin_server = _service["plugin_server"]
 openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
 urlForm = {
@@ -251,7 +252,7 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
-                                                            web_enhance_server=web_enhance_server
+                                                            web_enhance_server=_plugin_server
                                                             )
             else:
                 return "NO SUPPORT METHOD"
