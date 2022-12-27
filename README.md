@@ -185,7 +185,9 @@ add_api_key - 增加 Api key
   "plugin_server": {
     "search": [
       "https://www.exp.com/search?word={}"
-    ]
+    ],
+    "time": "",
+    "week": ""
   },
   "tts": {
     "status": false,
@@ -236,6 +238,12 @@ add_api_key - 增加 Api key
 ```
 
 `search` 就是我们自带的一个搜索插件，引擎都是要自己填写的。
+
+| plugins  | desc      | server                                 |
+|----------|-----------|----------------------------------------|
+| `time`   | now time  | `""`,no need                           |
+| `week`   | week time | `""`,no need                           |
+| `search` | 搜索引擎支持    | `["some.com?searchword={}"]`,must need |
 
 #### TTS
 

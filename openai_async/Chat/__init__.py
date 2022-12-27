@@ -295,12 +295,15 @@ class Chatbot(object):
                     _now.append(i)
             return _now
 
-    def Prehance(self, table, prompt):
+    def Prehance(self, table: dict, prompt: str) -> str:
         _append = "-"
+        _return = []
         if not all([table, prompt]):
             return _append
         from .module.platform import ChatPlugin, PluginParam
         processor = ChatPlugin()
-        processed = processor.process(param=PluginParam(text=prompt, server=table))  # , plugins=('search'))
-        reply = "\n".join(processed) if processed else ""
+        for plugin in table.keys():
+            processed = processor.process(param=PluginParam(text=prompt, server=table), plugins=[plugin])
+            _return.extend(processed)
+        reply = "\n".join(_return) if _return else ""
         return reply

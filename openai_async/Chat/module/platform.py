@@ -21,9 +21,11 @@ class PluginConfig(BaseModel):
 class ChatPlugin(object):
     PLUGINS = {}
 
-    def process(self, param: PluginParam, plugins=()) -> list:
+    def process(self, param: PluginParam, plugins=None) -> list:
+        if plugins is None:
+            plugins = []
         _return = []
-        if plugins == ():
+        if not plugins:
             plugins = self.PLUGINS.keys()
         for plugin_name in plugins:
             obj = self.PLUGINS[plugin_name]()
