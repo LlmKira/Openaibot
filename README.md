@@ -182,6 +182,11 @@ add_api_key - 增加 Api key
     "db": 0,
     "password": null
   },
+  "plugin_server": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ]
+  },
   "tts": {
     "status": false,
     "type": "vits",
@@ -215,6 +220,22 @@ add_api_key - 增加 Api key
   "password": null
 }
 ```
+
+#### 中间件网络表
+
+为 `openai_async/Chat/module/plugin` 的插件提供外部链接支持。
+
+```json
+{
+  "plugin_server": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ]
+  }
+}
+```
+
+`search` 就是我们自带的一个搜索插件，引擎都是要自己填写的。
 
 #### TTS
 
@@ -350,9 +371,13 @@ enable_change_head - 禁止设定头
 help - 帮助
 ```
 
-## 其他
+## API
 
-### 中间件
+请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
+API服务器与Telegram Bot服务开发进度不一，通常为Telegram
+Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
+
+## 中间件开发
 
 在记忆池和分析 之间有一个 中间件，可以提供一定的联网检索支持和操作支持。可以对接其他 Api 的服务进行加料。
 
@@ -360,6 +385,58 @@ help - 帮助
 
 使用 `“”` `[]` 来强调内容。触发方式有正式提问的问句，`介绍`，`查询`请求，小于 80 字等要求。
 触发是隐式的，短的正式问句会触发。
+
+### 开发技巧
+
+首先在 `openai_async/Chat/module/plugin` 创建一个文件，文件名不要带下划线（`_`）。
+
+**模板**
+
+```python
+from ..platform import ChatPlugin, PluginConfig
+from ._plugin_tool import PromptTool
+import os
+
+modulename = os.path.basename(__file__).strip(".py")
+
+
+# 注册插件
+@ChatPlugin.plugin_register(modulename)
+class Week(object):
+    def __init__(self):
+        """属性"""
+        self._server = None
+        self._text = None
+        self._week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+        self._week_key = ["星期", "星期几", "时间", "周几", "周一", "周二", "周三", "周四", "周五", "周六"]
+
+    def check(self, params: PluginConfig) -> bool:
+        """
+        条件方法
+        """
+        if PromptTool.isStrIn(prompt=params.text, keywords=self._week_list + self._week_key):
+            return True
+        return False
+
+    def process(self, params: PluginConfig) -> list:
+        """处理数据，返回列表，请自行进行错误处理！"""
+        _return = []
+        self._text = params.text
+        # 校验
+        if not all([self._text]):
+            return []
+        # GET
+        from datetime import datetime, timedelta, timezone
+        utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+        bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+        onw = bj_dt.weekday()
+        _return.append(f"Now {self._week_list[onw]}")
+        return _return
+```
+
+`openai_async/Chat/module/plugin/_plugin_tool.py` 提供了一些工具类，欢迎 PR
+
+## 其他
 
 ### 统计 `analysis.json`
 
@@ -386,12 +463,6 @@ help - 帮助
 ### QuickDev
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
-
-### API
-
-请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
-API服务器与Telegram Bot服务开发进度不一，通常为Telegram
-Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
 
 ### 上一次的性能分析
 
