@@ -19,7 +19,6 @@ async def main():
                                                       prompt="Say this is a test",
                                                       temperature=0,
                                                       max_tokens=20)
-
     # TEST
     print(response)
     print(type(response))

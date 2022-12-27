@@ -143,7 +143,7 @@ def keyphrase_extract(topk=100, method='tfidf', with_word=True, save_pic="./word
     :param with_mask: 生成图片是否使用背景
     :return:
     """
-    test="""
+    test = """
     该研究主持者之一、波士顿大学地球与环境科学系博士陈池（音）表示，“尽管中国和印度国土面积仅占全球陆地的9%，但两国为这一绿化过程贡献超过三分之一。考虑到人口过多的国家一般存在对土地过度利用的问题，这个发现令人吃惊。”
 NASA埃姆斯研究中心的科学家拉玛·内曼尼（Rama Nemani）说，“这一长期数据能让我们深入分析地表绿化背后的影响因素。我们一开始以为，植被增加是由于更多二氧化碳排放，导致气候更加温暖、潮湿，适宜生长。”
 “MODIS的数据让我们能在非常小的尺度上理解这一现象，我们发现人类活动也作出了贡献。”
@@ -209,7 +209,7 @@ def tfidf_summarization(ratio=0.2):
     print("tfidf summarization result: {}\n".format(summ))
 
 
-def textrank_summarization(sentence,ratio=0.2):
+def textrank_summarization(sentence, ratio=0.2):
     """
     采用tfidf进行摘要抽取
     :param ratio: 摘要占文本长度的比例
@@ -275,9 +275,9 @@ def fasttext_classification():
     save_model_path = "fasttext.model.bin"
     fasttext = Fasttext(save_model_path=save_model_path, type="predict", k=2, threshold=0.0)
     ret = fasttext.predict([
-                               "黄蜂 vs 湖人 首发 ： 科比 冲击 七 连胜   火箭 两旧 将 登场 新浪 体育讯 北京 时间 3 月 28 日 ， NBA 常规赛 洛杉矶 湖人",
-                               "历届 华表奖 新人 浮沉 录 ： 曾经 新 丁 今何在 ？ 新浪 娱乐 讯   近日 ， 第十四届 华表奖 十八个 奖项 提名 名单 公布 "],
-                           )
+        "黄蜂 vs 湖人 首发 ： 科比 冲击 七 连胜   火箭 两旧 将 登场 新浪 体育讯 北京 时间 3 月 28 日 ， NBA 常规赛 洛杉矶 湖人",
+        "历届 华表奖 新人 浮沉 录 ： 曾经 新 丁 今何在 ？ 新浪 娱乐 讯   近日 ， 第十四届 华表奖 十八个 奖项 提名 名单 公布 "],
+    )
     print(ret)
 
 
@@ -349,7 +349,7 @@ if __name__ == "__main__":
     # synonym_dict()
     # triple_extraction()
     # simhash_similarity()
-    doc="""
+    doc = """
     LDA（Latent Dirichlet Allocation）是一种主题建模方法，它根据文档库中主题的出现概率分配词语，使用LDA模型可以把文档集分成不同的主题。MMR（Maximal Marginal Relevance）是一种检索算法，可以根据文档中关键词的相似性来提取最相关的句子。TextRank是基于图的排序算法，可以根据文本内容之间的关系来提取文章的关键片段。Text_teaser是一种基于聚类的摘要算法，可以根据文本的内容进行聚类，并生成摘要。
     """
     textrank_summarization(sentence=doc)
