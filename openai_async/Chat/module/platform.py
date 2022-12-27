@@ -28,8 +28,10 @@ class ChatPlugin(object):
         if not plugins:
             plugins = self.PLUGINS.keys()
         for plugin_name in plugins:
-            obj = self.PLUGINS[plugin_name]()
             try:
+                if not self.PLUGINS.get(plugin_name):
+                    raise LookupError(f"{plugin_name} not installed!")
+                obj = self.PLUGINS[plugin_name]()
                 if obj.check(param):
                     config = param.dict()
                     config.update({"server": param.server.get(plugin_name) if param.server.get(plugin_name) else []})
