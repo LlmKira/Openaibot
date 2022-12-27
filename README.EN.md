@@ -204,42 +204,49 @@ that are not in the preset will not be completed.
 }
 ```
 
-**Redis**
+#### Redis
 
-- slightly
+```json
+{
+  "host": "localhost",
+  "port": 6379,
+  "db": 0,
+  "password": null
+}
+```
 
-**TTS**
-
-- status switch
-- type Type
-
-*VITS*
-
-- vits:limit text within length will be converted
-- vits:model_name The name of the model, some.pth, in the model folder
-- vits:speaker_id The ID of the speaker, see the model config
-
-*Azure*
-
-- azure:limit The text within the length will be converted
-- azure:
-  speaker[list-of-all-sound-engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
-- auzre:location Server resource address
-- auzre:key api key
-
-#### VITS Voice Support Description(Language types are determined by the model)
+#### TTS
 
 ```shell
 apt-get install ffmpeg
 ```
 
-This technology provides an emulated voice interaction technique.
+- status switch
+- type Type
 
-The Api backend is my packaged adaptation of MoeGoe https://github.com/sudoskys/MoeGoe
+The Azure/Vits language type codes are all two-case abbreviated letters.
 
-Install the dependencies and run `server.py` to use it by default.
+**Azure support notes**
 
-Please consult the MoeGoe project's Readme under Models and note the corresponding protocols for the models.
+[specific notes](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/)
+
+- azure:limit Text within length will be converted
+- azure:speaker
+  speaker, [list of all sound engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
+- auzre:location Server resource address
+- auzre:key api key
+
+**VITS voice support instructions**
+
+Api backend please use my packaged and modified MoeGoe https://github.com/sudoskys/MoeGoe running natively
+
+- vits:limit Text within length will be converted
+- vits:model_name model name, some.pth, in the model folder
+- vits:speaker_id The ID of the speaker, see the model config
+
+Install the dependencies and run the `server.py` file to use them by default.
+To download the model, please find it yourself and note the appropriate protocol for the model. If it doesn't work, the
+text may be longer than the set limit(`len()`).
 
 ## Run
 
@@ -346,26 +353,36 @@ help - help
 
 ## Other
 
-### Statistics
+### Middleware support/Prompt Injection
 
-``analysis.json`` is the frequency statistic, the number of requests in 60s.
+There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
+operational support. Services that can interface with other Api's can be spiked.
 
-And total usage, which doesn't contain all the usage data, it's just pulled from redis
+**Prompt Injection**
 
-### Config.json
+Use `""` `[]` to emphasise content. Triggers are required for formal question interrogatives, `introductions`, `query`
+requests, less than 80 words, etc.
+Triggering is implicit, short formal interrogatives will trigger.
 
-will automatically merge the missing keys to fix them.
+### Statistics `analysis.json`
+
+If you don't have one, please populate it with `{}`
+
+This file is a frequency statistic, the number of requests made in 60s.
+
+As users use it, `total usage` will be updated to this file. If you want to back up usage data, please back up the Redis
+database.
+
+### Configuration file `Config.json`
+
+needs to be backed up frequently using the command. If not please create a new populated `{}` or delete it and it will
+automatically merge the missing keys for repair.
 
 ### Default parameters
 
 - Group revert memory to 48 hours
 - Usage limit is 15000/h
 - Memory capacity of 80 dialogue pairs
-
-### Middleware support/Prompt Injection
-
-There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
-operational support. Services that can interface with other Api's can be spiked.
 
 ### prompt_server.py
 

@@ -170,7 +170,9 @@ add_api_key - 增加 Api key
 
 ### 配置 `service.json`
 
-在 `Config/service.json` 下面。如果没有此文件，会使用默认值。如果有会深度覆盖。不会补全预设中没有的键。
+在 `Config/service.json` 下面。如果没有此文件，会使用默认值补全。
+
+**实例**
 
 ```json
 {
@@ -203,20 +205,31 @@ add_api_key - 增加 Api key
 }
 ```
 
-**Redis**
+#### Redis
 
-- 略
+```json
+{
+  "host": "localhost",
+  "port": 6379,
+  "db": 0,
+  "password": null
+}
+```
 
-**TTS**
+#### TTS
+
+```shell
+apt-get install ffmpeg
+```
 
 - status 开关
 - type 类型
 
-#### Azure 支持说明
+Azure/Vits 语言类型代码均为二位大写缩写字母。
 
-https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
+**Azure 支持说明**
 
-*Azure*
+[具体说明](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/)
 
 - azure:limit 长度内的文本会被转换
 - azure:speaker
@@ -224,27 +237,16 @@ https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-serv
 - auzre:location 服务器资源地址
 - auzre:key api key
 
-#### VITS 语音支持说明(ONLY CN/JA NOW)
+**VITS 语音支持说明**
 
 Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
-
-*VITS*
 
 - vits:limit 长度内的文本会被转换
 - vits:model_name 模型名字，some.pth,在 model 文件夹下的
 - vits:speaker_id 说话人的ID,具体看模型config
 
-这项技术提供了一种仿真的语音交互技术。
-
-```shell
-apt-get install ffmpeg
-```
-
 安装依赖，运行 `server.py` 文件可以默认使用。
-
-模型下载请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
-如果不生效，可能是文本的长度超过了设定的 limit 。
-长度为直接取 `len()`
+模型下载请自行寻找，并注意模型相应的协议。 如果不生效，可能是文本的长度超过了设定的 limit(`len()`) 。
 
 ## 运行
 
@@ -356,18 +358,20 @@ help - 帮助
 
 **Prompt Injection**
 
-使用 `“”` `[]` 来强调内容。触发方式有正式提问的问句，介绍，询问，查询请求，小于 80 字等要求。
+使用 `“”` `[]` 来强调内容。触发方式有正式提问的问句，`介绍`，`查询`请求，小于 80 字等要求。
 触发是隐式的，短的正式问句会触发。
 
-### 统计
+### 统计 `analysis.json`
 
-``analysis.json`` 是频率统计，60s 内的请求次数。
+如果没有请新建填充`{}`
 
-还有 total usage ，这个不包含所有用量数据，只是从 redis 拉取下来了而已
+此文件为频率统计，为 60s 内的请求次数。
 
-### Config.json
+用户在使用时， `total usage`会被更新到此文件。如果你要备份用量数据，请备份 Redis 数据库。
 
-会自动合并缺失的键值进行修复。
+### 配置文件 `Config.json`
+
+需要经常使用命令备份。如果没有请新建填充`{}`或删除，会自动合并缺失的键值进行修复。
 
 ### 默认参数
 
