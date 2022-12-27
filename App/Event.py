@@ -167,8 +167,7 @@ class Reply(object):
                             userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
-                            restart_name: str = "Human:",
-                            web_enhance_server: list = None
+                            restart_name: str = "Human:"
                             ):
         """
         发起请求
@@ -400,8 +399,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Girl:",
-                                         web_enhance_server=config.Enhance_Server
+                                         start_name="Girl:"
                                          )
         message_type = "text"
         _info = []
@@ -473,8 +471,7 @@ async def private_Chat(bot, message, config):
                                              prompt=_prompt,
                                              restart_name=_name,
                                              start_name="Girl:",
-                                             method=types,
-                                             web_enhance_server=config.Enhance_Server
+                                             method=types
                                              )
             message_type = "text"
             _info = []
