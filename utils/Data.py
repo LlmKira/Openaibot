@@ -124,6 +124,8 @@ class DefaultData(object):
                 "db": 0,
                 "password": None
             },
+            "plugin_server": {
+            },
             "tts": {
                 "status": True,
                 "type": "none",

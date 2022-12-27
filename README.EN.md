@@ -181,6 +181,13 @@ that are not in the preset will not be completed.
     "db": 0,
     "password": null
   },
+  "plugin_server": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ],
+    "time": "",
+    "week": ""
+  },
   "tts": {
     "status": false,
     "type": "vits",
@@ -203,6 +210,28 @@ that are not in the preset will not be completed.
   }
 }
 ```
+
+#### Middleware web server list
+
+Provides external link support for plugins in ``openai_async/Chat/module/plugin``.
+
+```json
+{
+  "plugin_server": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ]
+  }
+}
+```
+
+`search` is a search plugin that comes with us, the engines are all to be filled in by yourselves.
+
+| plugins  | desc       | server                                 |
+|----------|------------|----------------------------------------|
+| `time`   | now time   | `""`,no need                           |
+| `week`   | week time  | `""`,no need                           |
+| `search` | web search | `["some.com?searchword={}"]`,must need |
 
 #### Redis
 
@@ -351,18 +380,71 @@ enable_change_head - disable_change_head
 help - help
 ```
 
-## Other
+## API
 
-### Middleware support/Prompt Injection
+Please see https://github.com/sudoskys/Openaibot/blob/main/API.md for open API documentation.
+The API server and Telegram Bot service are not at the same pace of development, usually Telegram
+The API server adapts after a new commit has been made to the Bot. The API server may not function properly when certain
+import modules are changed. In this case, you can switch to the apiserver branch to get a stable version of the API
+server.
 
-There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
-operational support. Services that can interface with other Api's can be spiked.
+## Middleware development
+
+There is a middleware between the memory pool and the analytics that provides some networked retrieval support and
+operational support. It can be spiked with services that interface to other Api's.
 
 **Prompt Injection**
 
-Use `""` `[]` to emphasise content. Triggers are required for formal question interrogatives, `introductions`, `query`
-requests, less than 80 words, etc.
+Use `""` `[]` to emphasise content. Triggers have requirements for formal question
+interrogatives, `introductions`, `query` requests, less than 80 characters, etc.
 Triggering is implicit, short formal interrogatives will trigger.
+
+### Development tips
+
+First create a file in `openai_async/Chat/module/plugin` without underscores (`_`) in the file name.
+
+**Template**
+
+```python
+from ..platform import ChatPlugin, PluginConfig
+from ._plugin_tool import PromptTool
+import os
+
+modulename = os.path.basename(__file__).strip(".py")
+
+
+@ChatPlugin.plugin_register(modulename)
+class Week(object):
+    def __init__(self):
+        self._server = None
+        self._text = None
+        self._time = ["time", "多少天", "几天", "时间", "几点", "今天", "昨天", "明天", "几月", "几月", "几号",
+                      "几个月",
+                      "天前"]
+
+    def check(self, params: PluginConfig) -> bool:
+        if PromptTool.isStrIn(prompt=params.text, keywords=self._time):
+            return True
+        return False
+
+    def process(self, params: PluginConfig) -> list:
+        _return = []
+        self._text = params.text
+        # 校验
+        if not all([self._text]):
+            return []
+        # GET
+        from datetime import datetime, timedelta, timezone
+        utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+        bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+        now = bj_dt.strftime("%Y-%m-%d %H:%M")
+        _return.append(f"Current Time UTC8 {now}")
+        return _return
+```
+
+`openai_async/Chat/module/plugin/_plugin_tool.py` provides some tool classes, PR is welcome
+
+## Other
 
 ### Statistics `analysis.json`
 
