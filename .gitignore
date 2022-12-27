@@ -6,7 +6,7 @@ Config/*.toml
 __pycache__/
 *.py[cod]
 *$py.class
-
+Assistants/*.wav
 analysis.json
 
 # C extensions
@@ -139,3 +139,5 @@ dmypy.json
 
 analysis.json
 Config/config.json
+/Assistants/record.wav
+/Assistants/recording.wav
