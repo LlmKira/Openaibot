@@ -26,7 +26,7 @@ logger.info("新闻: Enhance_Server 升级为配件库，请根据 readme 配置
 
 logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 
-logger.info("新闻：app.toml Enhance_Server 配置变动为 dict")
+# logger.info("新闻：app.toml Enhance_Server 配置变动为 dict")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 App = BotRunner(config)
