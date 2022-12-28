@@ -3,6 +3,7 @@
 # @FileName: Network.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
 from typing import Any
 
 import httpx
@@ -14,6 +15,9 @@ class NetworkClient(object):
         if proxy:
             proxies = {"all://": proxy}
         self.__client = httpx.AsyncClient(timeout=timeout, proxies=proxies)
+
+    def get_client(self):
+        return self.__client
 
     async def request(self,
                       method: str,
