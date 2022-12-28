@@ -231,11 +231,11 @@ Plugins that are placed in the `plugin` field will only be enabled.
 
 **Table**
 
-| plugins  | desc       | server                                 |
-|----------|------------|----------------------------------------|
-| `time`   | now time   | `""`,no need                           |
-| `week`   | week time  | `""`,no need                           |
-| `search` | web search | `["some.com?searchword={}"]`,must need |
+| plugins  | desc      | value/server                           | use                                   |
+|----------|-----------|----------------------------------------|---------------------------------------|
+| `time`   | now time  | `""`,no need                           | `明昨今天`....                            |
+| `week`   | week time | `""`,no need                           | `周几` .....                            |
+| `search` | 搜索引擎支持    | `["some.com?searchword={}"]`,must need | `查询` `你知道` len<80 / end with`?`len<15 |
 
 #### Redis
 
@@ -399,9 +399,7 @@ operational support. It can be spiked with services that interface to other Api'
 
 **Prompt Injection**
 
-Use `""` `[]` to emphasise content. Triggers have requirements for formal question
-interrogatives, `introductions`, `query` requests, less than 80 characters, etc.
-Triggering is implicit, short formal interrogatives will trigger.
+Use `""` `[]` to emphasise content.
 
 ### Development tips
 
