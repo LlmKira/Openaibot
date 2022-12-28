@@ -306,4 +306,5 @@ class Chatbot(object):
             processed = processor.process(param=PluginParam(text=prompt, server=table), plugins=[plugin])
             _return.extend(processed)
         reply = "\n".join(_return) if _return else ""
+        reply = reply[:1500]
         return reply

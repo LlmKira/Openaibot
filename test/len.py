@@ -9,3 +9,5 @@ print(_len_)
 print(json.dumps(0))
 r = [1]
 print(isinstance(r, list))
+reply = "1122"
+print(reply[:1000])
