@@ -429,12 +429,12 @@ class Week(object):
     def requirements(self):
         return []
 
-    def check(self, params: PluginConfig) -> bool:
+    async def check(self, params: PluginConfig) -> bool:
         if PromptTool.isStrIn(prompt=params.text, keywords=self._time):
             return True
         return False
 
-    def process(self, params: PluginConfig) -> list:
+    async def process(self, params: PluginConfig) -> list:
         _return = []
         self._text = params.text
         # 校验

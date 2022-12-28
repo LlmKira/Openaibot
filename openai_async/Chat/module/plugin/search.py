@@ -6,16 +6,14 @@
 # import gzip
 import os
 import random
-import httpx
 from urllib.parse import urlparse
 from loguru import logger
 
 from ..platform import ChatPlugin, PluginConfig
 from bs4 import BeautifulSoup
-from ._plugin_tool import NlP, PromptTool, gpt_tokenizer
+from ._plugin_tool import NlP, PromptTool, gpt_tokenizer, netTool
 
 info_cache = {}
-client = httpx.Client()
 
 modulename = os.path.basename(__file__).strip(".py")
 
@@ -64,13 +62,13 @@ class Search(object):
         sentence = sentence.replace("/v", '').replace("/s", '').replace("/p", '').replace("/a", '').replace("/d", '')
         sentence = sentence.replace("，", ",").replace("。", ".").replace("\n", ".")
         if 18 < len(sentence):
-            return sentence
+            return sentence.strip(".")
         else:
             return ""
 
-    def get_resource(self,
-                     query: str = "KKSK 是什么意思？"
-                     ) -> list:
+    async def get_resource(self,
+                           query: str = "KKSK 是什么意思？"
+                           ) -> list:
         def get_tld(url):
             """
             获取顶级域名
@@ -96,7 +94,7 @@ class Search(object):
             "Sec-Fetch-Mode": "navigate",
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0"
         }
-        html = client.get(_url, headers=headers, follow_redirects=True, timeout=10)
+        html = await netTool.request("GET", url=_url, headers=headers, follow_redirects=True, timeout=10)
         htmltext = html.text
         # 匹配
         sret = {}
@@ -125,7 +123,7 @@ class Search(object):
                     sret[cr] = 0
         return list(sret.keys())
 
-    def check(self, params: PluginConfig) -> bool:
+    async def check(self, params: PluginConfig) -> bool:
         prompt = params.text
         if len(prompt) < 80:
             if (prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道")
@@ -134,7 +132,7 @@ class Search(object):
                 return True
         return False
 
-    def process(self, params: PluginConfig) -> list:
+    async def process(self, params: PluginConfig) -> list:
         global info_cache
 
         # Prompt
@@ -158,7 +156,7 @@ class Search(object):
             return []
         # GET
         _returner = []
-        _list = self.get_resource(self._text)
+        _list = await self.get_resource(self._text)
         _returner = NlP.nlp_filter_list(prompt=self._text, material=_list)
         logger.trace(_returner)
         info_cache[self._text] = _returner

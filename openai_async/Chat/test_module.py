@@ -3,6 +3,8 @@
 # @FileName: test_module.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import asyncio
+
 from module.main import test_plugin
 # 日志追踪调试
 from loguru import logger
@@ -16,11 +18,16 @@ handler_id = logger.add(sys.stderr, level="TRACE")
 prompt = "孤独摇滚作者？"
 table = {
     "search": [
-        "https://www.gle.com/search?client=firefox-b-d&q={}"
+        "https://www.baidu.com/baidu?tn=monline_7_dg&ie=utf-8&wd={}"
     ]
 }
-plugins = ["search"]
+plugins = ["duckgo"]
+
 
 # Exec
-result = test_plugin(prompt=prompt, table=table, plugins=plugins)
-print(result)
+async def main():
+    result = await test_plugin(prompt=prompt, table=table, plugins=plugins)
+    print(result)
+
+
+asyncio.run(main())

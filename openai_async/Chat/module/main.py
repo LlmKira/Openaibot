@@ -3,18 +3,18 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from .platform import ChatPlugin, PluginParam, PluginConfig
+from .platform import ChatPlugin, PluginParam
 
 
-def get_reply(prompt: str, table: dict) -> str:
+async def get_reply(prompt: str, table: dict) -> str:
     processor = ChatPlugin()
-    processed = processor.process(param=PluginParam(text=prompt, server=table))  # , plugins=['search'])
+    processed = await processor.process(param=PluginParam(text=prompt, server=table))  # , plugins=['search'])
     reply = "\n".join(processed) if processed else ""
     return reply
 
 
-def test_plugin(prompt: str, table: dict, plugins: list) -> str:
+async def test_plugin(prompt: str, table: dict, plugins: list) -> str:
     processor = ChatPlugin()
-    processed = processor.process(param=PluginParam(text=prompt, server=table), plugins=plugins)
+    processed = await processor.process(param=PluginParam(text=prompt, server=table), plugins=plugins)
     reply = "\n".join(processed) if processed else ""
     return reply

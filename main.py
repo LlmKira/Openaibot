@@ -11,7 +11,7 @@ from loguru import logger
 import sys
 
 logger.remove()
-handler_id = logger.add(sys.stderr, level="INFO")
+handler_id = logger.add(sys.stderr, level="DEBUG")
 
 # 日志机器
 logger.add(sink='run.log',
@@ -20,7 +20,7 @@ logger.add(sink='run.log',
            rotation="500 MB",
            enqueue=True)
 # logger.info("新闻：api key 只能通过 机器人命令配置")
-logger.debug("some")
+logger.debug("Debug Mode On")
 
 logger.info("新闻: Enhance_Server 升级为配件库，请根据 readme 配置 service json 来使用这个功能")
 

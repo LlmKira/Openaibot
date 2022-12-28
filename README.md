@@ -426,7 +426,7 @@ class Week(object):
     def requirements(self):
         return []
 
-    def check(self, params: PluginConfig) -> bool:
+    async def check(self, params: PluginConfig) -> bool:
         """
         条件方法
         """
@@ -434,7 +434,7 @@ class Week(object):
             return True
         return False
 
-    def process(self, params: PluginConfig) -> list:
+    async def process(self, params: PluginConfig) -> list:
         """处理数据，返回列表，请自行进行错误处理！"""
         _return = []
         self._text = params.text

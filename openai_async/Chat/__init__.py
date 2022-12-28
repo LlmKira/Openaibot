@@ -14,6 +14,7 @@ from ..resouce import Completion
 # Tool
 from ..utils.Talk import Talk
 from ..utils.data import MsgFlow
+from loguru import logger
 
 
 class Chatbot(object):
@@ -203,7 +204,7 @@ class Chatbot(object):
 
     async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
                                 character: list = None, head: str = None, role: str = "",
-                                web_enhance_server: list = None) -> dict:
+                                web_enhance_server: dict = None) -> dict:
         """
         异步的，得到对话上下文
         :param web_enhance_server: {"type":["https://www.exp.com/search?q={}"]} 格式如此
@@ -237,7 +238,7 @@ class Chatbot(object):
             Talk.tokenizer(_header + _prompt_s[0]))
         _prompt_list = []
         # 中间件
-        _appendix = self.Prehance(prompt=prompt, table=web_enhance_server)
+        _appendix = await self.Prehance(prompt=prompt, table=web_enhance_server)
         start_token = int(Talk.tokenizer(_appendix))
         _prompt_list.append(_appendix)
         # 记忆池
@@ -295,7 +296,7 @@ class Chatbot(object):
                     _now.append(i)
             return _now
 
-    def Prehance(self, table: dict, prompt: str) -> str:
+    async def Prehance(self, table: dict, prompt: str) -> str:
         _append = "-"
         _return = []
         if not all([table, prompt]):
@@ -303,8 +304,9 @@ class Chatbot(object):
         from .module.platform import ChatPlugin, PluginParam
         processor = ChatPlugin()
         for plugin in table.keys():
-            processed = processor.process(param=PluginParam(text=prompt, server=table), plugins=[plugin])
+            processed = await processor.process(param=PluginParam(text=prompt, server=table), plugins=[plugin])
             _return.extend(processed)
         reply = "\n".join(_return) if _return else ""
         reply = reply[:700]
+        logger.debug(f"AllPluginReturn:{reply}")
         return reply
