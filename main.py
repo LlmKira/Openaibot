@@ -11,7 +11,7 @@ from loguru import logger
 import sys
 
 logger.remove()
-handler_id = logger.add(sys.stderr, level="DEBUG")
+handler_id = logger.add(sys.stderr, level="INFO")
 
 # 日志机器
 logger.add(sink='run.log',
