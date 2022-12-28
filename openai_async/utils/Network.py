@@ -14,10 +14,8 @@ class NetworkClient(object):
         proxies = None
         if proxy:
             proxies = {"all://": proxy}
-        self.__client = httpx.AsyncClient(timeout=timeout, proxies=proxies)
-
-    def get_client(self):
-        return self.__client
+        self.timeout = timeout
+        self.proxies = proxies
 
     async def request(self,
                       method: str,
@@ -35,7 +33,7 @@ class NetworkClient(object):
             "headers": headers,
         }
         param.update(kwargs)
-        async with self.__client as client:
+        async with httpx.AsyncClient(timeout=self.timeout, proxies=self.proxies) as client:
             resp = await client.request(**param)
         content_length = resp.headers.get("content-length")
         if content_length and int(content_length) == 0:

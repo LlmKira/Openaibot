@@ -21,7 +21,7 @@ table = {
         "https://www.baidu.com/baidu?tn=monline_7_dg&ie=utf-8&wd={}"
     ]
 }
-plugins = ["duckgo"]
+plugins = ["search"]
 
 
 # Exec
