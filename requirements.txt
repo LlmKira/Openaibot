@@ -18,7 +18,6 @@ numpy
 scikit-learn
 transformers
 beautifulsoup4
-azure-cognitiveservices-speech
 wget
 fasttext >= 0.9.1
 requests >= 2.22.0
