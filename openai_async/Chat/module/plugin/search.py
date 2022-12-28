@@ -94,7 +94,7 @@ class Search(object):
             "Sec-Fetch-Mode": "navigate",
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0"
         }
-        html = await netTool.request("GET", url=_url, headers=headers, allow_redirects=True, timeout=10)
+        html = await netTool.request("GET", url=_url, headers=headers, timeout=10)
         htmltext = html.text
         # 匹配
         sret = {}
