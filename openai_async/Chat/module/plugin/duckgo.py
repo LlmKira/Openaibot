@@ -71,7 +71,7 @@ class Duckgo(object):
 
 
 @ChatPlugin.plugin_register(modulename)
-class Week(object):
+class DuckGo(object):
     def __init__(self):
         self._server = None
         self._text = None
