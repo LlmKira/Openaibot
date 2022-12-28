@@ -425,6 +425,9 @@ class Week(object):
                       "几个月",
                       "天前"]
 
+    def requirements(self):
+        return []
+
     def check(self, params: PluginConfig) -> bool:
         if PromptTool.isStrIn(prompt=params.text, keywords=self._time):
             return True
