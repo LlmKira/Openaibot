@@ -46,7 +46,7 @@ class BotRunner(object):
 
     def run(self):
         # print(self.bot)
-        logger.info("APP:Bot Start")
+        logger.success("APP:Bot Start")
         bot, _config = self.botCreate()
         if self.proxy.status:
             from telebot import asyncio_helper
@@ -107,7 +107,7 @@ class BotRunner(object):
             global me_id
             _me = await bot.get_me()
             me_id = _me.id
-            logger.info(f"Init Bot id:{me_id}")
+            logger.success(f"Init Bot id:{me_id}")
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)

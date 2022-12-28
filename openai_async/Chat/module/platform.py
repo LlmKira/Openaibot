@@ -47,6 +47,7 @@ class ChatPlugin(object):
     @classmethod
     def plugin_register(cls, plugin_name):
         def wrapper(plugin):
+            logger.success(f"LoadPlugin:{plugin_name}")
             cls.PLUGINS.update({plugin_name: plugin})
             return plugin
 

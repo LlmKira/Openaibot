@@ -413,6 +413,7 @@ First create a file in `openai_async/Chat/module/plugin` without underscores (`_
 from ..platform import ChatPlugin, PluginConfig
 from ._plugin_tool import PromptTool
 import os
+from loguru import logger
 
 modulename = os.path.basename(__file__).strip(".py")
 
@@ -443,10 +444,20 @@ class Week(object):
         bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
         now = bj_dt.strftime("%Y-%m-%d %H:%M")
         _return.append(f"Current Time UTC8 {now}")
+        # LOGGER
+        logger.trace(_return)
         return _return
 ```
 
 `openai_async/Chat/module/plugin/_plugin_tool.py` provides some tool classes, PR is welcome
+
+**Testing**
+
+You cannot test directly from within the module package, please run the `openai_async/Chat/test_module.py` file to test
+the module, with the prompt matching check.
+
+Alternatively, you can safely use `from loguru import logger` + `logger.trace(_return)` in the module to debug the
+module variables and the trace level logs will not be output by the production environment.
 
 ## Other
 

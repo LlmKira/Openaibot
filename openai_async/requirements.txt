@@ -9,3 +9,4 @@ jieba
 transformers
 beautifulsoup4
 pydantic
+loguru

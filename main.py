@@ -6,7 +6,12 @@
 from pathlib import Path
 from App.Controller import BotRunner
 from utils.Base import ReadConfig
+# 日志
 from loguru import logger
+import sys
+
+logger.remove()
+handler_id = logger.add(sys.stderr, level="INFO")
 
 # 日志机器
 logger.add(sink='run.log',
@@ -14,8 +19,9 @@ logger.add(sink='run.log',
            level="INFO",
            rotation="500 MB",
            enqueue=True)
-
 # logger.info("新闻：api key 只能通过 机器人命令配置")
+logger.debug("some")
+
 logger.info("新闻: Enhance_Server 升级为配件库，请根据 readme 配置 service json 来使用这个功能")
 
 logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")

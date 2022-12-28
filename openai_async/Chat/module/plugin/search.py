@@ -8,7 +8,7 @@ import os
 import random
 import httpx
 from urllib.parse import urlparse
-
+from loguru import logger
 from transformers import GPT2TokenizerFast
 
 from ..platform import ChatPlugin, PluginConfig
@@ -144,7 +144,6 @@ class Search(object):
             if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
                 prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
         self._text = prompt
-
         # Server
         self._server = params.server
         if isinstance(params.server, list):
@@ -159,6 +158,7 @@ class Search(object):
         _returner = []
         _list = self.get_resource(self._text)
         _returner = NlP.nlp_filter_list(prompt=self._text, material=_list)
+        logger.trace(_returner)
         info_cache[self._text] = _returner
         _pre = 0
         info = []

@@ -8,7 +8,7 @@ import pathlib
 import random
 import re
 import time
-from io import BytesIO
+# from io import BytesIO
 from typing import Union
 
 from loguru import logger
@@ -261,7 +261,7 @@ class Reply(object):
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
             _time = int(time.time() * 1000)
-            logger.info(f"RUN:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
+            logger.success(f"CHAT:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0

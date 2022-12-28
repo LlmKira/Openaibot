@@ -6,7 +6,7 @@
 
 from ..platform import ChatPlugin, PluginConfig
 from ._plugin_tool import PromptTool
-
+from loguru import logger
 import os
 
 modulename = os.path.basename(__file__).strip(".py")
@@ -37,4 +37,5 @@ class Week(object):
         bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
         onw = bj_dt.weekday()
         _return.append(f"Now {self._week_list[onw]}")
+        logger.trace(_return)
         return _return

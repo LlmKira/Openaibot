@@ -408,6 +408,7 @@ Bot出现新commit后API服务器随后适配。当某些导入模块发生变�
 from ..platform import ChatPlugin, PluginConfig
 from ._plugin_tool import PromptTool
 import os
+from loguru import logger
 
 modulename = os.path.basename(__file__).strip(".py")
 
@@ -443,10 +444,19 @@ class Week(object):
         bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
         onw = bj_dt.weekday()
         _return.append(f"Now {self._week_list[onw]}")
+        # LOGGER
+        logger.trace(_return)
         return _return
 ```
 
 `openai_async/Chat/module/plugin/_plugin_tool.py` 提供了一些工具类，欢迎 PR
+
+**测试**
+
+你无法在模块包内直接测试，请运行 `openai_async/Chat/test_module.py` 文件测试模块，prompt 要符合 check。
+
+另外，你可以在模块中放心使用 `from loguru import logger` + `logger.trace(_return)` 来调试查看模块变量，trace
+等级的日志不会被生产环境输出。
 
 ## 其他
 

@@ -7,6 +7,7 @@
 from ..platform import ChatPlugin, PluginConfig
 from ._plugin_tool import PromptTool
 import os
+from loguru import logger
 
 modulename = os.path.basename(__file__).strip(".py")
 
@@ -37,4 +38,5 @@ class Week(object):
         bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
         now = bj_dt.strftime("%Y-%m-%d %H:%M")
         _return.append(f"Current Time UTC8 {now}")
+        logger.trace(_return)
         return _return

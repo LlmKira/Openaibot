@@ -34,5 +34,5 @@ class NetworkClient(object):
         resp = await self.__client.request(**param)
         content_length = resp.headers.get("content-length")
         if content_length and int(content_length) == 0:
-            raise Exception("CONTENT LENGTH 0")
+            raise Exception("CONTENT LENGTH 0:Server Maybe Not Connected")
         return resp
