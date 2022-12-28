@@ -68,7 +68,14 @@ class Week(object):
 
     def process(self, params: PluginConfig) -> list:
         _return = []
-        self._text = params.text
+        prompt = params.text
+        match = PromptTool.match_enhance(prompt)
+        if match:
+            prompt = match[0]
+        else:
+            if prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道"):
+                prompt.replace("介绍", "").replace("查询", "").replace("你知道", "").replace("吗？", "")
+        self._text = prompt
         # 校验
         if not all([self._text]):
             return []
