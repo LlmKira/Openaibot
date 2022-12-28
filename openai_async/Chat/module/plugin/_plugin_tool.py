@@ -8,11 +8,12 @@ from loguru import logger
 from transformers import GPT2TokenizerFast
 
 import openai_async
-from openai_async.utils.Network import NetworkClient
+from openai_async.utils import Network
 from openai_async.utils.Talk import Talk
 
 gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-netTool = NetworkClient()
+
+netTool = Network
 
 
 class PromptTool(object):
