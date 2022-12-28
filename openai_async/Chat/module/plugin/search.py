@@ -9,13 +9,10 @@ import random
 import httpx
 from urllib.parse import urlparse
 from loguru import logger
-from transformers import GPT2TokenizerFast
 
 from ..platform import ChatPlugin, PluginConfig
 from bs4 import BeautifulSoup
-from ._plugin_tool import NlP, PromptTool
-
-gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+from ._plugin_tool import NlP, PromptTool, gpt_tokenizer
 
 info_cache = {}
 client = httpx.Client()
@@ -29,6 +26,9 @@ class Search(object):
         self._server = None
         self._text = None
 
+    def requirements(self):
+        return ["httpx", "beautifulsoup4"]
+
     @staticmethod
     def filter_sentence(query, sentence) -> str:
         import re
@@ -37,8 +37,10 @@ class Search(object):
             stop_sentence = ["下面就让我们",
                              "小编", "一起来看一下", "小伙伴们",
                              "究竟是什么意思", "看影片", "看人次", "？", "是什么", "什么意思", "意思介绍", " › ",
-                             "游侠", "为您提供", "在线观看", "今日推荐", "線上看", "线上看",
-                             "高清观看", "?", "_哔哩哔哩_bilibili", "知乎", "点击下载"]  #
+                             "游侠", "为您提供", "今日推荐", "線上看", "线上看",
+                             "高清观看", "点击下载", "带来不一样的", "..去看看",
+                             "最新章节", "电影网", "资源下载：", "高清全集在线",
+                             "在线观看地址"]  # "?","_哔哩哔哩_bilibili","知乎",
         skip = False
         for ir in stop_sentence:
             if ir in sentence:

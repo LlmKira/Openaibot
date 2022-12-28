@@ -13,13 +13,14 @@ handler_id = logger.add(sys.stderr, level="TRACE")
 # 日志追踪调试
 
 
-prompt = "孤独摇滚?"
+prompt = "孤独摇滚作者？"
 table = {
     "search": [
-        "https://www.bihu.com/search?type=content&q={}"
+        "https://www.gle.com/search?client=firefox-b-d&q={}"
     ]
 }
 plugins = ["search"]
+
 # Exec
 result = test_plugin(prompt=prompt, table=table, plugins=plugins)
 print(result)

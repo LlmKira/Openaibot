@@ -26,6 +26,9 @@ class Week(object):
             return True
         return False
 
+    def requirements(self):
+        return []
+
     def process(self, params: PluginConfig) -> list:
         _return = []
         self._text = params.text

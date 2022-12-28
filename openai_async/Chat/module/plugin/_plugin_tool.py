@@ -3,8 +3,14 @@
 # @FileName: plugins.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+from collections import OrderedDict
+
 import openai_async
 from openai_async.utils.Talk import Talk
+from transformers import GPT2TokenizerFast
+from loguru import logger
+
+gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
 
 class PromptTool(object):
@@ -45,22 +51,28 @@ class NlP(object):
         return openai_async.webServerUrlFilter
 
     @staticmethod
+    def summary(text: str, ratio: float = 0.5) -> str:
+        return Talk.tfidf_summarization(sentence=text, ratio=ratio)
+
+    @staticmethod
     def nlp_filter_list(prompt, material: list):
         if not material or not isinstance(material, list):
             return []
-        # list 互相匹配
-        while len(material) >= 2:
+        logger.trace(f"NLP")
+        # 双匹配去重
+        while len(material) > 2:
             prev_len = len(material)
             _pre = material[0]
             _afe = material[1]
             sim = Talk.simhash_similarity(pre=_pre, aft=_afe)
-            if sim < 15:
+            if sim < 12:
                 _remo = _afe if len(_afe) > len(_pre) else _pre
                 # 移除过于相似的
                 material.remove(_remo)
             if len(material) == prev_len:
                 break
-        while len(material) >= 2:
+
+        while len(material) > 2:
             prev_len = len(material)
             material_len = len(material)
             for i in range(0, len(material), 2):
@@ -69,18 +81,32 @@ class NlP(object):
                 _pre = material[i]
                 _afe = material[i + 1]
                 sim = Talk.cosion_sismilarity(pre=_pre, aft=_afe)
-                if sim > 0.6:
+                if sim > 0.7:
                     _remo = _afe if len(_afe) > len(_pre) else _pre
                     # 移除过于相似的
                     material.remove(_remo)
                     material_len = material_len - 1
             if len(material) == prev_len:
                 break
-        # 关键词算法匹配
+
+        # 去重排序+删除无关
+        material_ = {item: -1 for item in material}
+        material = list(material_.keys())
+        _top_table = {}
+        for item in material:
+            _top_table[item] = Talk.cosion_sismilarity(pre=prompt, aft=item)
+        material = {k: v for k, v in _top_table.items() if v > 0.15}
+        # 搜索引擎比相似度算法靠谱所以注释掉了
+        # material = OrderedDict(sorted(material.items(), key=lambda t: t[1]))
+        # logger.trace(material)
+
+        # 关联度指数计算
         _key = Talk.tfidf_keywords(prompt, topK=7)
-        _returner = []
-        for i in material:
+        _score = 0
+        for k, i in material.items():
             for ir in _key:
-                if ir in i:
-                    _returner.append(i)
-        return _returner
+                if ir in k:
+                    _score += 1
+            if _score / len(_key) < 0.3:
+                material.pop(k)
+        return list(material.keys())
