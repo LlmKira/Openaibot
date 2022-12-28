@@ -22,7 +22,12 @@ class Duckgo(object):
         page_results = []
         page_data = []
         payload["s"] = max(self.PAGINATION_STEP * (page - 1), 0)
-
+        try:
+            resp = await netTool.request("POST", "https://links.duckduckgo.com/d.js", params=payload)
+            resp.raise_for_status()
+            page_data = resp.json().get("results", None)
+        except Exception as e:
+            logger.error("Duckgo Client Error")
         if not page_data:
             return page_results
         for row in page_data:
