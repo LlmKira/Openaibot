@@ -142,9 +142,6 @@ botToken = 'key' # 机器人密钥
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
-Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
-# 联网中间件支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
-
 # 设置的代理，但是不代理 openai api, 只代理 bot
 [proxy]
 status = false
