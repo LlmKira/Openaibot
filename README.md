@@ -243,11 +243,12 @@ add_api_key - 增加 Api key
 
 **目前的插件**
 
-| plugins  | desc      | value/server                           | use                                   |
-|----------|-----------|----------------------------------------|---------------------------------------|
-| `time`   | now time  | `""`,no need                           | `明昨今天`....                            |
-| `week`   | week time | `""`,no need                           | `周几` .....                            |
-| `search` | 搜索引擎支持    | `["some.com?searchword={}"]`,must need | `查询` `你知道` len<80 / end with`?`len<15 |
+| plugins  | desc      | value/server                                  | use                                   |
+|----------|-----------|-----------------------------------------------|---------------------------------------|
+| `time`   | now time  | `""`,no need                                  | `明昨今天`....                            |
+| `week`   | week time | `""`,no need                                  | `周几` .....                            |
+| `search` | 搜索引擎支持    | `["some.com?searchword={}"]`,must need        | `查询` `你知道` len<80 / end with`?`len<15 |
+| `duckgo` | 搜索引擎支持    | `""`,no need,must install `duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
 
 #### TTS
 
@@ -421,8 +422,10 @@ class Week(object):
         self._text = None
         self._week_list = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
         self._week_key = ["星期", "星期几", "时间", "周几", "周一", "周二", "周三", "周四", "周五", "周六"]
+
     def requirements(self):
         return []
+
     def check(self, params: PluginConfig) -> bool:
         """
         条件方法
@@ -502,5 +505,6 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 1. 此项目不是 Openai 的官方项目。
 2. 不对机器人生成的任何内容负责。
 3. 部分套件可能无法商业使用，请自担风险。
+4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
 ```
 
