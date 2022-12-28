@@ -106,10 +106,13 @@ class NlP(object):
         # 关联度指数计算
         _key = Talk.tfidf_keywords(prompt, topK=7)
         _score = 0
+        _del_keys = []
         for k, i in material.items():
             for ir in _key:
                 if ir in k:
                     _score += 1
             if _score / len(_key) < 0.3:
-                material.pop(k)
+                _del_keys.append(k)
+        for k in _del_keys:
+            material.pop(k)
         return list(material.keys())
