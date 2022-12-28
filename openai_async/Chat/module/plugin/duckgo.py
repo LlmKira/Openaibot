@@ -3,12 +3,71 @@
 # @FileName: duckgo.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from ..platform import ChatPlugin, PluginConfig
-from ._plugin_tool import PromptTool, NlP, gpt_tokenizer
-from loguru import logger
+
 import os
 
+from loguru import logger
+from ..platform import ChatPlugin, PluginConfig
+from ._plugin_tool import PromptTool, NlP, gpt_tokenizer, netTool
+
 modulename = os.path.basename(__file__).strip(".py")
+
+
+class Duckgo(object):
+    cache = set()
+    PAGINATION_STEP = 25
+
+    async def get_page(self, payload, page):
+        from duckduckgo_search.utils import _normalize
+        page_results = []
+        page_data = []
+        payload["s"] = max(self.PAGINATION_STEP * (page - 1), 0)
+
+        if not page_data:
+            return page_results
+        for row in page_data:
+            if "n" not in row and row["u"] not in self.cache:
+                self.cache.add(row["u"])
+                body = _normalize(row["a"])
+                if body:
+                    page_results.append(
+                        {
+                            "title": _normalize(row["t"]),
+                            "href": row["u"],
+                            "body": body,
+                        }
+                    )
+        return page_results
+
+    async def get_result(self,
+                         keywords,
+                         region="wt-wt",
+                         safesearch="moderate",
+                         max_results=None,
+                         time=None,
+                         page=1
+                         ):
+        from duckduckgo_search.utils import _get_vqd
+        if not keywords:
+            return None
+        vqd = _get_vqd(keywords)
+        if not vqd:
+            return None
+
+        # prepare payload
+        safe_search_base = {"On": 1, "Moderate": -1, "Off": -2}
+        payload = {
+            "q": keywords,
+            "l": region,
+            "p": safe_search_base[safesearch.capitalize()],
+            "s": 0,
+            "df": time,
+            "o": "json",
+            "vqd": vqd,
+        }
+        results = await self.get_page(page=page, payload=payload)
+        results = results[:max_results]
+        return results
 
 
 @ChatPlugin.plugin_register(modulename)
@@ -57,7 +116,7 @@ class Week(object):
     def requirements(self):
         return ["duckduckgo_search"]
 
-    def check(self, params: PluginConfig) -> bool:
+    async def check(self, params: PluginConfig) -> bool:
         prompt = params.text
         if len(prompt) < 80:
             if (prompt.startswith("介绍") or prompt.startswith("查询") or prompt.startswith("你知道")
@@ -66,7 +125,7 @@ class Week(object):
                 return True
         return False
 
-    def process(self, params: PluginConfig) -> list:
+    async def process(self, params: PluginConfig) -> list:
         _return = []
         prompt = params.text
         match = PromptTool.match_enhance(prompt)
@@ -86,7 +145,9 @@ class Week(object):
             logger.error("You Need Install:`pip install duckduckgo_search`")
             return []
         # GET
-        _results = ddg(self._text, region='wt-wt', safesearch='Off', time='y')
+        _results = await Duckgo().get_result(keywords=self._text, region='wt-wt', safesearch='Off', time='y')
+        if not _results:
+            return []
         _list = [self.filter_sentence(query=self._text, sentence=i["body"]) for i in _results]
         _list = [x for x in _list if x]
         logger.trace(f"初步筛选：{_list}")
