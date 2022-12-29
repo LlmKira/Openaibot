@@ -29,6 +29,8 @@ _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
 openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
+STARTNAME = "Neko:"
+
 urlForm = {
     "Danger.form": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
@@ -399,7 +401,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Girl:"
+                                         start_name=STARTNAME
                                          )
         message_type = "text"
         _info = []
@@ -470,7 +472,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="Girl:",
+                                             start_name=STARTNAME,
                                              method=types
                                              )
             message_type = "text"
