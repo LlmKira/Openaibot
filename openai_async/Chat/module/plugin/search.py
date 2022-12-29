@@ -157,6 +157,7 @@ class Search(object):
         # GET
         _returner = []
         _list = await self.get_resource(self._text)
+        _list = _list[:10]
         _returner = NlP.nlp_filter_list(prompt=self._text, material=_list)
         logger.trace(_returner)
         info_cache[self._text] = _returner

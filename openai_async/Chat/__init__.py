@@ -18,7 +18,7 @@ from loguru import logger
 
 
 class Chatbot(object):
-    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3505,
+    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3700,
                  restart_sequ: str = "\nSomeone:",
                  start_sequ: str = "\nReply:",
                  call_func=None):
@@ -202,7 +202,7 @@ class Chatbot(object):
         _msg_return.extend(_msg_flow_list)
         return _msg_flow_list
 
-    async def get_chat_response(self, prompt: str, max_tokens: int = 200, model: str = "text-davinci-003",
+    async def get_chat_response(self, prompt: str, max_tokens: int = 500, model: str = "text-davinci-003",
                                 character: list = None, head: str = None, role: str = "",
                                 web_enhance_server: dict = None) -> dict:
         """
@@ -218,14 +218,15 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"{self._restart_sequence}让我们谈谈吧。\n"
+            head = f"Here is Line book of the play.\n{self._restart_sequence}Let us begin.\n"
         if character is None:
-            character = ["educated", "clever", "friendly", "lovely", "talkative", "浪漫"]
+            character = ["educated", "clever", "friendly", "lovely", "talkative",
+                         "omniscient", "awesome"]
         _character = ",".join(character)
-        _role = f"我代表 [{self._start_sequence}] following.\nI am a {_character} 助手.\n"
+        _role = f"[{self._start_sequence}] is a {_character} 助手 following.\n"
         if role:
-            if len(f"{role}") > 4:
-                _role = f"I am [{self._start_sequence}] following.\n我认为:{role}.\n"
+            if 7 < len(f"{role}") < 300:
+                _role = f"awesome clever 的 [{self._start_sequence}] says:{role}.\n"
         _header = f"{_role}{head}"
         # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
@@ -268,7 +269,7 @@ class Chatbot(object):
             frequency_penalty=0,
             presence_penalty=0.5,
             user=str(self.get_hash()),
-            stop=[f"{self._start_sequence}:", f"{self._restart_sequence}:"],
+            stop=[f"{self._start_sequence}", f"{self._restart_sequence}"],
         )
         self.record_ai(prompt=prompt, response=response)
         return response

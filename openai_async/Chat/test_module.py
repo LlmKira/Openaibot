@@ -15,13 +15,13 @@ handler_id = logger.add(sys.stderr, level="TRACE")
 # 日志追踪调试
 
 
-prompt = "孤独摇滚作者？"
+prompt = "评价孤独摇滚？"
 table = {
     "search": [
         "https://www.baidu.com/baidu?tn=monline_7_dg&ie=utf-8&wd={}"
     ]
 }
-plugins = ["duckgo"]
+plugins = ["zhihu"]
 
 
 # Exec
