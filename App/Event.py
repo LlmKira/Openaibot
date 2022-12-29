@@ -14,6 +14,7 @@ from typing import Union
 from loguru import logger
 
 import openai_async
+from utils import Setting
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
@@ -29,7 +30,20 @@ _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
 openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
-STARTNAME = "Neko:"
+
+def get_start_name(prompt: str):
+    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
+    STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
+    return STARTNAME
+
 
 urlForm = {
     "Danger.form": [
@@ -401,7 +415,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name=STARTNAME
+                                         start_name=get_start_name(_prompt)
                                          )
         message_type = "text"
         _info = []
@@ -472,7 +486,7 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name=STARTNAME,
+                                             start_name=get_start_name(prompt=_prompt),
                                              method=types
                                              )
             message_type = "text"
