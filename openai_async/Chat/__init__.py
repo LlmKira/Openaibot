@@ -218,15 +218,15 @@ class Chatbot(object):
         """
         # 预设
         if head is None:
-            head = f"Here is Line book of the play.\n{self._restart_sequence}Let us begin.\n"
+            head = f"This is a record of talk.\n{self._restart_sequence}让我们开始.\n"
         if character is None:
             character = ["educated", "clever", "friendly", "lovely", "talkative",
                          "omniscient", "awesome"]
         _character = ",".join(character)
-        _role = f"[{self._start_sequence}] is a {_character} 助手 following.\n"
+        _role = f"下面 {self._start_sequence.strip(':')} 是一个 {_character}的助手.\n"
         if role:
             if 7 < len(f"{role}") < 300:
-                _role = f"awesome clever 的 [{self._start_sequence}] says:{role}.\n"
+                _role = f"awesome clever 的 {self._start_sequence}:{role}.\n"
         _header = f"{_role}{head}"
         # 构建主体
         _prompt_s = [f"{self._restart_sequence}{prompt}."]
