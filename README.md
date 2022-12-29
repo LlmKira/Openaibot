@@ -148,7 +148,11 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
+### 配置 BotToken
+
 [Telegram botToken 申请](https://t.me/BotFather)
+
+然后关闭隐私模式或者提拔机器人为管理员后才能使用。
 
 ### 配置 key
 

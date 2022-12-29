@@ -148,7 +148,12 @@ status = false
 url = "http://127.0.0.1:7890"
 ```
 
+### Configure the BotToken
+
 [get Telegram botToken](https://t.me/BotFather)
+
+Go to Telegram BotFather and apply for it. Then turn off the privacy mode or promote the robot as an administrator
+before use.
 
 ### configure key
 
