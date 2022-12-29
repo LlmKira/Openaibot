@@ -37,7 +37,7 @@ def get_start_name(prompt: str):
     STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
 
-    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.15) else "Engineer:"
+    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
     STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
                                               r=0.01) else "Teacher:"
 
