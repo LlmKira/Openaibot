@@ -16,7 +16,7 @@ from loguru import logger
 import openai_async
 from utils import Setting
 # from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig
+from utils.Base import ReadConfig, Tool
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
@@ -32,8 +32,14 @@ openai_async.redis = openai_async.RedisConfig(**_redis_conf)
 
 
 def get_start_name(prompt: str):
+    _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
+                    "补全", "代码", "数据包"]
     STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
+
+    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.15) else "Engineer:"
+    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
+                                              r=0.01) else "Teacher:"
 
     STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
