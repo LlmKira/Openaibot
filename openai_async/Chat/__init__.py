@@ -225,7 +225,7 @@ class Chatbot(object):
         _character = ",".join(character)
         _role = f"下面 {self._start_sequence.strip(':')} 是一个 {_character}的助手.\n"
         if role:
-            if 7 < len(f"{role}") < 300:
+            if 7 < len(f"{role}") < 500:
                 _role = f"awesome clever 的 {self._start_sequence}:{role}.\n"
         _header = f"{_role}{head}"
         # 构建主体
