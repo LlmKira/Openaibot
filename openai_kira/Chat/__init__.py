@@ -170,14 +170,15 @@ class Chatbot(object):
                 memory[i]["content"]["weight"].append(-100)
 
         # 相似度检索
-        for i in range(0, len(memory) - attention + 1):
+        for i in range(0, len(memory)):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
             _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
             _diff = _diff1 if _diff1 > _diff2 else _diff2
             score = _diff * 100
-            score = score if score < 95 else 0
-            memory[i]["content"]["weight"].append(score)
+            score = score if score < 95 else 1
+            if score != 0:
+                memory[i]["content"]["weight"].append(score)
 
         # 主题检索
         _key = Talk.tfidf_keywords(prompt, topK=5)
@@ -210,12 +211,9 @@ class Chatbot(object):
         for i in range(0, len(memory)):
             total = len(memory[i]["content"]["weight"])
             full_score = total * 100
-            print(memory[i]["content"]["weight"])
             score = sum(memory[i]["content"]["weight"])
             level = (score / full_score) * 100
             ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
-            print(level)
-            print(ask, reply)
             if level > 50:
                 _now_token += Talk.tokenizer(f"{ask}{reply}")
                 if _now_token > _create_token:
