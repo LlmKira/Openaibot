@@ -7,9 +7,9 @@
 from loguru import logger
 from transformers import GPT2TokenizerFast
 
-import openai_async
-from openai_async.utils import Network
-from openai_async.utils.Talk import Talk
+import openai_kira
+from openai_kira.utils import Network
+from openai_kira.utils.Talk import Talk
 
 gpt_tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
@@ -47,11 +47,11 @@ class PromptTool(object):
 class NlP(object):
     @staticmethod
     def get_webServerStopSentence():
-        return openai_async.webServerStopSentence
+        return openai_kira.webServerStopSentence
 
     @staticmethod
     def get_is_filter_url():
-        return openai_async.webServerUrlFilter
+        return openai_kira.webServerUrlFilter
 
     @staticmethod
     def summary(text: str, ratio: float = 0.5) -> str:

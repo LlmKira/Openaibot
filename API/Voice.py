@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 from utils.Data import Service_Data
 from utils.TTS import VITS_TTS, TTS_REQ, TTS_Clint
-from openai_async.utils.Talk import Talk
+from openai_kira.utils.Talk import Talk
 from fastapi.responses import Response
 from loguru import logger
 from ftlangdetect import detect

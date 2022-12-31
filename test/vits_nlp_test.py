@@ -5,7 +5,7 @@
 # @Github    ：sudoskys
 import time
 
-from openai_async.utils.Talk import Talk
+from openai_kira.utils.Talk import Talk
 
 res = Talk().cut_chinese_sentence(
     "これから日本...大家好，我是可莉，我建议大家不要有其它的营养，所以不能只看它的热量就作为应急食品来使用。")
