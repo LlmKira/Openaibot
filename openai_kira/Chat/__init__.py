@@ -152,8 +152,12 @@ class Chatbot(object):
 
         def forgetting_curve(x):
             _weight = numpy.exp(-x / 5) * 100
+            # 低谷值
             _weight = _weight if _weight > 0 else 0
+            # 高度线
             _weight = _weight if _weight < 100 else 100
+            # 推底值，防止无法唤起
+            _weight = _weight if _weight > 15 else 15
             return _weight
 
         # 计算初始保留比并初始化

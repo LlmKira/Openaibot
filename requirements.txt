@@ -14,6 +14,7 @@ uvicorn
 jieba
 Pillow
 pathlib
+elara
 numpy
 scikit-learn
 transformers
@@ -21,3 +22,4 @@ beautifulsoup4
 wget
 fasttext >= 0.9.1
 requests >= 2.22.0
+elara

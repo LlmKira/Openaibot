@@ -17,6 +17,7 @@ class RedisConfig(BaseModel):
 
 
 redis = RedisConfig()
+filedb = "openai_msg.db"
 api_key = None
 proxy_url = ""
 webServerUrlFilter = False
