@@ -4,7 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 from prompt_server import create_item
-from openai_async.Chat import Chatbot
+from openai_kira.Chat import Chatbot
 import nltk
 
 nltk.download('punkt')

@@ -6,19 +6,19 @@
 import asyncio
 
 # 最小单元测试
-import openai_async
+import openai_kira
 from utils.Data import Api_keys
 
-openai_async.api_key = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
+openai_kira.api_key = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
 
-print(openai_async.api_key)
+print(openai_kira.api_key)
 
 
 async def main():
-    response = await openai_async.Completion().create(model="text-davinci-003",
-                                                      prompt="Say this is a test",
-                                                      temperature=0,
-                                                      max_tokens=20)
+    response = await openai_kira.Completion().create(model="text-davinci-003",
+                                                     prompt="Say this is a test",
+                                                     temperature=0,
+                                                     max_tokens=20)
     # TEST
     print(response)
     print(type(response))

@@ -13,7 +13,7 @@ from typing import Union
 
 from loguru import logger
 
-import openai_async
+import openai_kira
 from utils import Setting
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig, Tool
@@ -28,7 +28,7 @@ _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
-openai_async.redis = openai_async.RedisConfig(**_redis_conf)
+openai_kira.redis = openai_kira.RedisConfig(**_redis_conf)
 
 
 def get_start_name(prompt: str):
@@ -103,7 +103,7 @@ async def TTS_Support_Check(text, user_id):
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
-    from openai_async.utils.Talk import Talk
+    from openai_kira.utils.Talk import Talk
     if not _tts_conf["status"]:
         return
     # 初步判定
@@ -172,7 +172,7 @@ async def Forget(bot, message, config):
     :param config:
     :return:
     """
-    from openai_async.utils.data import MsgFlow
+    from openai_kira.utils.data import MsgFlow
     _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
     return MsgFlow(uid=_cid).forget()
 
@@ -235,8 +235,8 @@ class Reply(object):
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
-            # import openai_async
-            openai_async.api_key = key
+            # import openai_kira
+            openai_kira.api_key = key
             # Openai_python
             # import openai
             # openai.api_key = key
@@ -244,7 +244,7 @@ class Reply(object):
             #                                     max_tokens=int(_csonfig["token_limit"]))
             if method == "write":
                 # OPENAI
-                response = await openai_async.Completion(call_func=Api_keys.pop_api_key).create(
+                response = await openai_kira.Completion(call_func=Api_keys.pop_api_key).create(
                     model="text-davinci-003",
                     prompt=str(prompt),
                     temperature=0.2,
@@ -253,7 +253,7 @@ class Reply(object):
                 )
             elif method == "chat":
                 # CHAT
-                from openai_async import Chat
+                from openai_kira import Chat
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
                 # 启用单人账户桶
                 if len(start_name) > 12:

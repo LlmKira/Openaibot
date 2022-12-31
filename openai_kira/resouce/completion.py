@@ -5,7 +5,7 @@
 # @Github    ：sudoskys
 import random
 from typing import Union
-import openai_async
+import openai_kira
 from ..api.api_utils import load_api
 from ..api.network import request
 
@@ -15,7 +15,7 @@ API = load_api()
 class Completion(object):
     def __init__(self, api_key: Union[str, list] = None, proxy_url: str = "", call_func=None):
         if api_key is None:
-            api_key = openai_async.api_key
+            api_key = openai_kira.api_key
         if isinstance(api_key, list):
             api_key: list
             if not api_key:
@@ -26,7 +26,7 @@ class Completion(object):
             raise RuntimeError("NO KEY")
         self.__api_key = api_key
         if not proxy_url:
-            proxy_url = openai_async.proxy_url
+            proxy_url = openai_kira.proxy_url
         self.__proxy = proxy_url
         self.__call_func = call_func
 
