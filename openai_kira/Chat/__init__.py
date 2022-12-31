@@ -7,7 +7,10 @@
 import json
 import os
 import random
-import openai_async
+
+import numpy
+
+import openai_kira
 
 # 基于 Completion 上层
 from ..resouce import Completion
@@ -29,7 +32,7 @@ class Chatbot(object):
         :param call_func: 回调
         """
         if api_key is None:
-            api_key = openai_async.api_key
+            api_key = openai_kira.api_key
         if isinstance(api_key, list):
             api_key: list
             if not api_key:
@@ -65,7 +68,7 @@ class Chatbot(object):
         if not REPLY:
             REPLY = [""]
         # 构建一轮对话场所
-        _msg = {"weight": 0, "ask": f"{self._restart_sequence}{prompt}", "reply": f"{self._start_sequence}{REPLY[0]}"}
+        _msg = {"weight": [], "ask": f"{self._restart_sequence}{prompt}", "reply": f"{self._start_sequence}{REPLY[0]}"}
         # 存储成对的对话
         self._MsgFlow.saveMsg(msg=_msg)
         # 拒绝分条存储
@@ -146,34 +149,50 @@ class Chatbot(object):
         # 入口检查
         if len(memory) - attention < 0:
             return self.convert_msgflow_to_list(memory)
-        # 组建
-        for i in range(len(memory) - attention, len(memory)):
-            memory[i]["content"]["weight"] = 1000
-        # 筛选标准发言机器
+
+        def forgetting_curve(x):
+            _weight = numpy.exp(-x / 5) * 100
+            _weight = _weight if _weight > 0 else 0
+            _weight = _weight if _weight < 100 else 100
+            return _weight
+
+        # 计算初始保留比并初始化
+        memory = list(reversed(memory))
+        for i in range(0, len(memory)):
+            memory[i]["content"]["weight"] = [forgetting_curve(i)]
+        memory = list(reversed(memory))
+
+        # 筛选标准发言
         _index = []
         for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             if len(ask) < 1 or len(reply) < 1:
-                memory[i]["content"]["weight"] = 0
+                memory[i]["content"]["weight"].append(-100)
+
         # 相似度检索
-        for i in range(0, len(memory) - attention):
+        for i in range(0, len(memory) - attention + 1):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             _diff1 = Talk.cosion_sismilarity(pre=prompt, aft=ask)
             _diff2 = Talk.cosion_sismilarity(pre=prompt, aft=reply)
             _diff = _diff1 if _diff1 > _diff2 else _diff2
             score = _diff * 100
-            memory[i]["content"]["weight"] = score + 10 if score < 90 else 0  # 额外置信度 10 ，得分区间 0.9 以上置信 0
+            score = score if score < 95 else 0
+            memory[i]["content"]["weight"].append(score)
+
         # 主题检索
         _key = Talk.tfidf_keywords(prompt, topK=5)
         # print(_key)
-        for i in range(0, len(memory) - attention):
+        for i in range(0, len(memory)):
             score = 0
             full_score = len(_key) if len(_key) != 0 else 1
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
             for ir in _key:
                 if ir in f"{ask}{reply}":
                     score += 1
-            memory[i]["content"]["weight"] = (score / full_score) * 100  # 基准数据，置信为 0.5 百分比
+            _get = (score / full_score) * 100
+            if _get:
+                memory[i]["content"]["weight"].append(_get)  # 基准数据，置信为 0.5 百分比
+
         # 预处理
         for i in range(0, len(memory) - attention):
             ask, reply = self._MsgFlow.get_content(memory[i], sign=False)
@@ -189,8 +208,15 @@ class Chatbot(object):
         _now_token = start_token
         memory = sorted(memory, key=lambda x: x['time'], reverse=True)
         for i in range(0, len(memory)):
-            if memory[i]["content"]["weight"] > 50:
-                ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
+            total = len(memory[i]["content"]["weight"])
+            full_score = total * 100
+            print(memory[i]["content"]["weight"])
+            score = sum(memory[i]["content"]["weight"])
+            level = (score / full_score) * 100
+            ask, reply = self._MsgFlow.get_content(memory[i], sign=True)
+            print(level)
+            print(ask, reply)
+            if level > 50:
                 _now_token += Talk.tokenizer(f"{ask}{reply}")
                 if _now_token > _create_token:
                     # print(f"{ask}-> {_now_token}")
