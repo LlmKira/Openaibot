@@ -18,7 +18,7 @@ handler_id = logger.add(sys.stderr, level="TRACE")
 prompt = "评价孤独摇滚？"
 table = {
     "search": [
-        "https://www.baidu.com/baidu?tn=monline_7_dg&ie=utf-8&wd={}"
+        "https://www.1.com/baidu?tn=monline_7_dg&ie=utf-8&wd={}"
     ]
 }
 plugins = ["zhihu"]

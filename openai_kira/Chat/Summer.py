@@ -9,6 +9,7 @@ from __future__ import division, print_function, unicode_literals
 
 # NO USE
 
+pip install sumy
 
 from snownlp import SnowNLP
 
