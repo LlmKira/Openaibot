@@ -19,6 +19,7 @@ class Details(object):
         self._text = None
         self._keywords = ["怎么做",
                           "How to",
+                          "how to",
                           "如何做",
                           "帮我",
                           "帮助我",

@@ -233,12 +233,13 @@ Plugins that are placed in the `plugin` field will only be enabled.
 
 **Table**
 
-| plugins  | desc       | value/server                                  | use                                   |
-|----------|------------|-----------------------------------------------|---------------------------------------|
-| `time`   | now time   | `""`,no need                                  | `明昨今天`....                            |
-| `week`   | week time  | `""`,no need                                  | `周几` .....                            |
-| `search` | Web Search | `["some.com?searchword={}"]`,must need        | `查询` `你知道` len<80 / end with`?`len<15 |
-| `duckgo` | Web Search | `""`,no need,must install `duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| plugins   | desc              | value/server                                          | use                                   |
+|-----------|-------------------|-------------------------------------------------------|---------------------------------------|
+| `time`    | now time          | `""`,no need                                          | `明昨今天`....                            |
+| `week`    | week time         | `""`,no need                                          | `周几` .....                            |
+| `search`  | Web Search        | `["some.com?searchword={}"]`,must need                | `查询` `你知道` len<80 / end with`?`len<15 |
+| `duckgo`  | Web Search        | `""`,no need,but need `pip install duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| `details` | answer with steps | `""`,no need                                          | Ask for help `how to`                 |
 
 #### Redis
 

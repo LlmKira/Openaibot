@@ -244,12 +244,13 @@ add_api_key - 增加 Api key
 
 **目前的插件**
 
-| plugins  | desc      | value/server                                  | use                                   |
-|----------|-----------|-----------------------------------------------|---------------------------------------|
-| `time`   | now time  | `""`,no need                                  | `明昨今天`....                            |
-| `week`   | week time | `""`,no need                                  | `周几` .....                            |
-| `search` | 搜索引擎支持    | `["some.com?searchword={}"]`,must need        | `查询` `你知道` len<80 / end with`?`len<15 |
-| `duckgo` | 搜索引擎支持    | `""`,no need,must install `duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| plugins   | desc      | value/server                                          | use                                   |
+|-----------|-----------|-------------------------------------------------------|---------------------------------------|
+| `time`    | now time  | `""`,no need                                          | `明昨今天`....                            |
+| `week`    | week time | `""`,no need                                          | `周几` .....                            |
+| `search`  | 搜索引擎支持    | `["some.com?searchword={}"]`,must need                | `查询` `你知道` len<80 / end with`?`len<15 |
+| `duckgo`  | 搜索引擎支持    | `""`,no need,but need `pip install duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| `details` | 分步回答问题    | `""`,no need                                          | Ask for help `how to`                 |
 
 #### TTS
 
