@@ -52,6 +52,6 @@ class Details(object):
         if not all([self._text]):
             return []
         # GET
-        _return.append(f"think carefully and show your step.")
+        _return.append(f"仔细思考 and show your step.")
         logger.trace(_return)
         return _return
