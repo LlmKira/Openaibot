@@ -9,9 +9,9 @@ import asyncio
 import openai_kira
 from utils.Data import Api_keys
 
-openai_kira.api_key = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
+openai_kira.setting.openaiApiKey = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
 
-print(openai_kira.api_key)
+print(openai_kira.setting.openaiApiKey)
 
 
 async def main():

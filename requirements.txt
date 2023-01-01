@@ -16,10 +16,11 @@ Pillow
 pathlib
 elara
 numpy
+openai_kira
 scikit-learn
 transformers
 beautifulsoup4
 wget
-fasttext >= 0.9.1
-requests >= 2.22.0
+fasttext>=0.9.1
+requests>=2.22.0
 elara

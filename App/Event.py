@@ -21,13 +21,16 @@ from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
 
+#
+
 # fast text langdetect
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
-openai_kira.redis = openai_kira.RedisConfig(**_redis_conf)
+
+openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
 
 
 def get_start_name(prompt: str):
@@ -228,7 +231,7 @@ class Reply(object):
         # 请求
         try:
             # import openai_kira
-            openai_kira.api_key = key
+            openai_kira.setting.openaiApiKey = key
             # Openai_python
             # import openai
             # openai.api_key = key
