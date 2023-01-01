@@ -20,3 +20,24 @@
 
 目前的插件的弱点是引入第三方库麻烦。如果独立为插件包会更好。然后注册到同一域内。
 
+## Some refer
+
+*InstructGPT 论文*
+
+https://arxiv.org/pdf/2203.02155.pdf
+https://www.bilibili.com/video/BV1hd4y187CR
+
+*解释ChatGpt*
+
+https://www.assemblyai.com/blog/how-chatgpt-actually-works/
+
+## Info
+
+ChatGPT 基于原始的 GPT-3 模型，但经过进一步训练，使用人工反馈来指导学习过程，具体目标是减轻模型的错位问题。
+所使用的具体技术，称为从人类反馈中强化学习，是基于 先前的学术研究 。 ChatGPT 代表了 第一个将这种技术用于生产模型的案例。
+根据 OpenAI 的说法，ChatGPT 已经 “使用与 InstructGPT 相同的方法进行训练，但数据收集设置略有不同”，ChatGPT 的论文尚未公开。
+*原始 GPT3*
+缺乏帮助：不遵循用户的明确指示。
+幻觉：模型编造了不存在的或错误的事实。
+缺乏可解释性：人类很难理解模型是如何做出特定决定或预测的。
+生成有偏见或有毒的输出：在有偏见/有毒数据上训练的语言模型可能会在其输出中重现该结果，即使没有明确指示这样做。 

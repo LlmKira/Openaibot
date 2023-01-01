@@ -21,14 +21,20 @@ from loguru import logger
 
 
 class Chatbot(object):
-    def __init__(self, api_key: str = None, conversation_id: int = 1, token_limit: int = 3700,
+    def __init__(self,
+                 api_key: str = None,
+                 conversation_id: int = 1,
+                 token_limit: int = 3700,
                  restart_sequ: str = "\nSomeone:",
                  start_sequ: str = "\nReply:",
                  call_func=None):
         """
         chatGPT 的实现由上下文实现，所以我会做一个存储器来获得上下文
-        :param api_key:
-        :param conversation_id: 独立ID,每个场景需要独一个
+        :param api_key: api key
+        :param conversation_id: 对话 ID
+        :param token_limit: 总限制
+        :param restart_sequ: Human
+        :param start_sequ: Ai
         :param call_func: 回调
         """
         if api_key is None:
