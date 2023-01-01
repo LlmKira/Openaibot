@@ -17,6 +17,7 @@ class Details(object):
     def __init__(self):
         self._server = None
         self._text = None
+        # 绝望列表
         self._keywords = ["怎么做",
                           "How to",
                           "how to",
@@ -32,6 +33,8 @@ class Details(object):
                           "如何",
                           "帮朋友",
                           "怎么",
+                          "需要什么",
+                          "注意什么",
                           "怎么办"]
 
     async def check(self, params: PluginConfig) -> bool:
