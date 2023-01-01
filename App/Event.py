@@ -20,8 +20,8 @@ from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
+
 # fast text langdetect
-from fatlangdetect import detect
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
@@ -106,6 +106,7 @@ async def TTS_Support_Check(text, user_id):
     if not _tts_conf["status"]:
         return
     # 初步判定
+    from fatlangdetect import detect
     lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
     if _tts_conf['type'] == 'none':
         return
