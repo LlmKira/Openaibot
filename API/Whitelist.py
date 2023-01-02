@@ -1,10 +1,12 @@
 from utils.Chat import UserManger, GroupManger
 
+
 class Whitelist:
     def __init__(self, _message, csonfig):
         global message
         message = _message
         self._csonfig = csonfig
+
     def checkPerson(self):
         if UserManger(message.from_user.id).read('block'):
             return False
@@ -15,6 +17,7 @@ class Whitelist:
                 return False
         else:
             return True
+
     def checkGroup(self):
         if GroupManger(message.chat.id).read('block'):
             return False
@@ -25,6 +28,7 @@ class Whitelist:
                 return False
         else:
             return True
+
     def checkAll(self):
         if message.chat.id:
             if self.checkGroup():
