@@ -56,7 +56,8 @@ def get_start_name(prompt: str):
 urlForm = {
     "Danger.form": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
-        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt"
+        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt",
+        "https://raw.githubusercontent.com/cjh0613/strict-sensitive-word/master/strict-sensitive-word.txt"
     ]
 }
 
@@ -222,9 +223,10 @@ class Reply(object):
             return "TOO LONG"
         # 内容审计
         if ContentDfa.exists(str(prompt)):
-            _info = DefaultData.getRefuseAnswer()
-            time.sleep(random.randint(3, 6))
-            return _info
+            prompt = ContentDfa.filter_all(prompt)
+            # _info = DefaultData.getRefuseAnswer()
+            # time.sleep(random.randint(3, 6))
+            # return _info
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
