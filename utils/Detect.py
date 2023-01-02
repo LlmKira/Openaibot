@@ -152,7 +152,7 @@ class DFA:
                 break
             now_dict = now_dict[filter_str[i]]
         num = end_str - pos + 1
-        filter_str = filter_str[:pos] + '*' * num + filter_str[end_str + 1:]
+        filter_str = filter_str[:pos] + '喵' * num + filter_str[end_str + 1:]
         return filter_str
 
     def filter_all(self, s):
@@ -164,14 +164,14 @@ class DFA:
             illegal_pos = self.find_illegal(ss)
         i = 0
         while i < len(ss):
-            if ss[i] == '*':
+            if ss[i] == '喵':
                 start = pos_list[i]
-                while i < len(ss) and ss[i] == '*':
+                while i < len(ss) and ss[i] == '喵':
                     i += 1
                 i -= 1
                 end = pos_list[i]
                 num = end - start + 1
-                s = s[:start] + '*' * num + s[end + 1:]
+                s = s[:start] + '喵' * num + s[end + 1:]
             i += 1
         return s
 
