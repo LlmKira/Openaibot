@@ -16,7 +16,7 @@ class FakeTGBotMessage:  # 信
 
 class FakeTGBot:
 
-    def __init__(self, reply_to_callback):
+    def __init__(self, reply_to_callback=None):
         self.callback = reply_to_callback  # breakpoint here
         # logger.info('fake tg bot class')
 
