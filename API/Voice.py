@@ -15,7 +15,7 @@ ttsConf = serviceCfg['tts']
 
 
 class VITS:
-    async def vits(self, text: str, task: int = 1, doReturnRawAudio: bool = True, audioFormat='wav'):
+    async def vits(self, text: str, task: int = 1, doReturnRawAudio: bool = True, audioFormat='ogg'):
         vits_Conf = ttsConf['vits']
         lang = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
         if lang not in ["ZH", "JA"]:

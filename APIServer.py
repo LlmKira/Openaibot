@@ -80,7 +80,9 @@ async def chat(body: ReqBody):
                                             group=body.groupId,
                                             key=Api_keys.get_key()['OPENAI_API_KEY'],
                                             prompt=body.chatText,
-                                            method='chat')
+                                            method='chat',
+                                            start_name=appe.get_start_name(body.chatText),
+                                            restart_name=body.chatName)
             if body.returnVoice:
                 vresp = await VITS().get(text=res, task=body.chatId, doReturnRawAudio=body.returnVoiceRaw)
                 if vresp:
@@ -107,7 +109,9 @@ async def write(body: ReqBody):
                                             group=body.groupId,
                                             key=Api_keys.get_key()['OPENAI_API_KEY'],
                                             prompt=body.chatText,
-                                            method='write')
+                                            method='write',
+                                            start_name=appe.get_start_name(body.chatText),
+                                            restart_name=body.chatName)
             if body.returnVoice:
                 vresp = await VITS().get(text=res, task=body.chatId, doReturnRawAudio=body.returnVoiceRaw)
                 if vresp:
