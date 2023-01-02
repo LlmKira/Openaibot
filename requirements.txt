@@ -14,11 +14,13 @@ uvicorn
 jieba
 Pillow
 pathlib
+elara
 numpy
+openai-kira
 scikit-learn
 transformers
 beautifulsoup4
-azure-cognitiveservices-speech
 wget
-fasttext >= 0.9.1
-requests >= 2.22.0
+fasttext>=0.9.1
+requests>=2.22.0
+elara

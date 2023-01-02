@@ -142,16 +142,18 @@ botToken = 'key'
 INTRO = "POWER BY OPENAI" # suffix
 ABOUT = "Created by github.com/sudoskys/Openaibot"
 WHITE = "Group NOT in WHITE list"
-Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
-# 联网支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
-
 # for bot , not openai
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
 ```
 
+### Configure the BotToken
+
 [get Telegram botToken](https://t.me/BotFather)
+
+Go to Telegram BotFather and apply for it. Then turn off the privacy mode or promote the robot as an administrator
+before use.
 
 ### configure key
 
@@ -181,6 +183,13 @@ that are not in the preset will not be completed.
     "db": 0,
     "password": null
   },
+  "plugin": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ],
+    "time": "",
+    "week": ""
+  },
   "tts": {
     "status": false,
     "type": "vits",
@@ -204,42 +213,76 @@ that are not in the preset will not be completed.
 }
 ```
 
-**Redis**
+#### Middleware web server list
 
-- slightly
+```json
+{
+  "plugin": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ]
+  }
+}
+```
 
-**TTS**
+`search` is a search plugin that comes with us, the engines are all to be filled in by yourselves.
 
-- status switch
-- type Type
+Plugins that are placed in the `plugin` field will only be enabled.
 
-*VITS*
+| plugins   | desc              | value/server                                          | use                                   |
+|-----------|-------------------|-------------------------------------------------------|---------------------------------------|
+| `time`    | now time          | `""`,no need                                          | `明昨今天`....                            |
+| `week`    | week time         | `""`,no need                                          | `周几` .....                            |
+| `search`  | Web Search        | `["some.com?searchword={}"]`,must need                | `查询` `你知道` len<80 / end with`?`len<15 |
+| `duckgo`  | Web Search        | `""`,no need,but need `pip install duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| `details` | answer with steps | `""`,no need                                          | Ask for help `how to`                 |
 
-- vits:limit text within length will be converted
-- vits:model_name The name of the model, some.pth, in the model folder
-- vits:speaker_id The ID of the speaker, see the model config
+[Plugin Table](https://github.com/sudoskys/openai-kira#plugin)
 
-*Azure*
 
-- azure:limit The text within the length will be converted
-- azure:
-  speaker[list-of-all-sound-engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
-- auzre:location Server resource address
-- auzre:key api key
+#### Redis
 
-#### VITS Voice Support Description(Language types are determined by the model)
+```json
+{
+  "host": "localhost",
+  "port": 6379,
+  "db": 0,
+  "password": null
+}
+```
+
+#### TTS
 
 ```shell
 apt-get install ffmpeg
 ```
 
-This technology provides an emulated voice interaction technique.
+- status switch
+- type Type
 
-The Api backend is my packaged adaptation of MoeGoe https://github.com/sudoskys/MoeGoe
+The Azure/Vits language type codes are all two-case abbreviated letters.
 
-Install the dependencies and run `server.py` to use it by default.
+**Azure support notes**
 
-Please consult the MoeGoe project's Readme under Models and note the corresponding protocols for the models.
+[specific notes](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/)
+
+- azure:limit Text within length will be converted
+- azure:speaker
+  speaker, [list of all sound engines](https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=stt-tts)
+- auzre:location Server resource address
+- auzre:key api key
+
+**VITS voice support instructions**
+
+Api backend please use my packaged and modified MoeGoe https://github.com/sudoskys/MoeGoe running natively
+
+- vits:limit Text within length will be converted
+- vits:model_name model name, some.pth, in the model folder
+- vits:speaker_id The ID of the speaker, see the model config
+
+Install the dependencies and run the `server.py` file to use them by default.
+To download the model, please find it yourself and note the appropriate protocol for the model. If it doesn't work, the
+text may be longer than the set limit(`len()`).
 
 ## Run
 
@@ -344,17 +387,36 @@ enable_change_head - disable_change_head
 help - help
 ```
 
+## API
+
+Please see https://github.com/sudoskys/Openaibot/blob/main/API.md for open API documentation.
+The API server and Telegram Bot service are not at the same pace of development, usually Telegram
+The API server adapts after a new commit has been made to the Bot. The API server may not function properly when certain
+import modules are changed. In this case, you can switch to the apiserver branch to get a stable version of the API
+server.
+
+## Middleware development
+
+There is a middleware between the memory pool and the analytics that provides some networked retrieval support and
+operational support. It can be spiked with services that interface to other Api's.
+
+https://github.com/sudoskys/openai-kira#plugin-dev
+
 ## Other
 
-### Statistics
+### Statistics `analysis.json`
 
-``analysis.json`` is the frequency statistic, the number of requests in 60s.
+If you don't have one, please populate it with `{}`
 
-And total usage, which doesn't contain all the usage data, it's just pulled from redis
+This file is a frequency statistic, the number of requests made in 60s.
 
-### Config.json
+As users use it, `total usage` will be updated to this file. If you want to back up usage data, please back up the Redis
+database.
 
-will automatically merge the missing keys to fix them.
+### Configuration file `Config.json`
+
+needs to be backed up frequently using the command. If not please create a new populated `{}` or delete it and it will
+automatically merge the missing keys for repair.
 
 ### Default parameters
 
@@ -362,22 +424,9 @@ will automatically merge the missing keys to fix them.
 - Usage limit is 15000/h
 - Memory capacity of 80 dialogue pairs
 
-### Middleware support/Prompt Injection
-
-There is a middleware between the memory pool and the analysis that can provide some networking retrieval support and
-operational support. Services that can interface with other Api's can be spiked.
-
 ### prompt_server.py
 
 Peripheral Prompt trimming interface to give support to other projects.
-
-### Declarations
-
-```markdown
-1. This project is not an official Openai project.
-2. is not responsible for any content generated by the bot.
-3. 部分套件可能无法商业使用，请自担风险。
-```
 
 ### QuickDev
 
@@ -403,3 +452,12 @@ stable API server.
 ## FOSSA
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
+
+### Declarations
+
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 不对机器人生成的任何内容负责。
+3. 部分套件可能无法商业使用，请自担风险。
+4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
+```

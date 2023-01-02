@@ -3,7 +3,7 @@
 # @FileName: prompt_cutter.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from openai_async import Chat
+from openai_kira import Chat
 
 import uvicorn
 from fastapi import FastAPI, Depends, status, HTTPException

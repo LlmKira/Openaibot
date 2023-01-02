@@ -30,6 +30,26 @@ class Tool(object):
             d[k] = self.dictToObj(v)
         return d
 
+    @staticmethod
+    def isStrIn(prompt: str, keywords: list, r: float):
+        isIn = False
+        full = len(keywords)
+        score = 0
+        for i in keywords:
+            if i in prompt:
+                score += 1
+        if score / full > r:
+            isIn = True
+        return isIn
+
+    @staticmethod
+    def isStrAllIn(prompt: str, keywords: list):
+        isIn = True
+        for i in keywords:
+            if i not in prompt:
+                isIn = False
+        return isIn
+
 
 class ReadConfig(object):
     def __init__(self, config=None):

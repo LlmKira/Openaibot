@@ -27,7 +27,7 @@ class TTS_Clint(object):
         try:
             decoded_data = base64.b64decode(encoded_data)
             return decoded_data
-        except Exception:
+        except Exception as e:
             return None
 
     @staticmethod

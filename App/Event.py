@@ -6,27 +6,52 @@
 import json
 import pathlib
 import random
-import re
 import time
-from io import BytesIO
+# from io import BytesIO
 from typing import Union
 
 from loguru import logger
 
-import openai_async
+import openai_kira
+from utils import Setting
 # from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig
+from utils.Base import ReadConfig, Tool
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor
+
+#
+
 # fast text langdetect
-from fatlangdetect import detect
 
 _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
-openai_async.redis = openai_async.RedisConfig(**_redis_conf)
+_plugin_table = _service["plugin"]
+
+openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
+
+
+def get_start_name(prompt: str):
+    _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
+                    "补全", "代码", "数据包"]
+    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
+
+    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
+    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
+                                              r=0.01) else "Teacher:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
+    STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
+
+    STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
+    return STARTNAME
+
 
 urlForm = {
     "Danger.form": [
@@ -80,13 +105,19 @@ async def TTS_Support_Check(text, user_id):
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
-    from openai_async.utils.Talk import Talk
+    from openai_kira.utils.Talk import Talk
     if not _tts_conf["status"]:
         return
-    # 初步判定
-    lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
     if _tts_conf['type'] == 'none':
         return
+
+    try:
+        from fatlangdetect import detect
+        lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
+    except Exception as e:
+        from langdetect import detect
+        lang_type = detect(text=text.replace("\n", "").replace("\r", ""))[0][0].upper()
+
     if _tts_conf["type"] == "vits":
         _vits_config = _tts_conf["vits"]
         if lang_type not in ["ZH", "JA"]:
@@ -149,7 +180,7 @@ async def Forget(bot, message, config):
     :param config:
     :return:
     """
-    from openai_async.utils.data import MsgFlow
+    from openai_kira.utils.data import MsgFlow
     _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
     return MsgFlow(uid=_cid).forget()
 
@@ -166,8 +197,7 @@ class Reply(object):
                             userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
-                            restart_name: str = "Human:",
-                            web_enhance_server: list = None
+                            restart_name: str = "Human:"
                             ):
         """
         发起请求
@@ -192,16 +222,8 @@ class Reply(object):
             return "TOO LONG"
         # 内容审计
         if ContentDfa.exists(str(prompt)):
-            _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "我不好说，", "害怕，", "这是理所当然的，",
-                             "我可以说的是……", "我想说的是……", "我想强调的是……", "我想补充的是……", "我想指出的是……",
-                             "我想重申的是……", "我想强调的是……""什么事儿呀，", "是啊，是啊。", "你猜啊，", "就是啊，",
-                             "哎呀，真的吗？",
-                             "啊哈哈哈。", "你知道的。"]
-            _censor = ["有点离谱，不想回答", "累了，歇会儿", "能不能换个话题？", "我不想说话。", "没什么好说的。",
-                       "现在不是说话的时候。", "我没有什么可说的。", "我不喜欢说话。",
-                       "我不想接受问题。", "我不喜欢被问问题。", "我觉得这个问题并不重要。", "我不想谈论这个话题。",
-                       "我不想对这个问题发表意见。"]
-            _info = f"{random.choice(_censor_child)} {random.choice(_censor)} --"
+            _info = DefaultData.getRefuseAnswer()
+            time.sleep(random.randint(3, 6))
             return _info
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
@@ -213,8 +235,8 @@ class Reply(object):
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
-            # import openai_async
-            openai_async.api_key = key
+            # import openai_kira
+            openai_kira.setting.openaiApiKey = key
             # Openai_python
             # import openai
             # openai.api_key = key
@@ -222,7 +244,7 @@ class Reply(object):
             #                                     max_tokens=int(_csonfig["token_limit"]))
             if method == "write":
                 # OPENAI
-                response = await openai_async.Completion(call_func=Api_keys.pop_api_key).create(
+                response = await openai_kira.Completion(call_func=Api_keys.pop_api_key).create(
                     model="text-davinci-003",
                     prompt=str(prompt),
                     temperature=0.2,
@@ -231,7 +253,7 @@ class Reply(object):
                 )
             elif method == "chat":
                 # CHAT
-                from openai_async import Chat
+                from openai_kira import Chat
                 _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
                 # 启用单人账户桶
                 if len(start_name) > 12:
@@ -251,7 +273,7 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
-                                                            web_enhance_server=web_enhance_server
+                                                            web_enhance_server=_plugin_table
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -261,7 +283,7 @@ class Reply(object):
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
             _time = int(time.time() * 1000)
-            logger.info(f"RUN:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
+            logger.success(f"CHAT:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
@@ -399,8 +421,7 @@ async def Text(bot, message, config, reset: bool = False):
                                          prompt=_prompt,
                                          method=types,
                                          restart_name=_name,
-                                         start_name="Girl:",
-                                         web_enhance_server=config.Enhance_Server
+                                         start_name=get_start_name(_prompt)
                                          )
         message_type = "text"
         _info = []
@@ -471,9 +492,8 @@ async def private_Chat(bot, message, config):
                                              key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                              prompt=_prompt,
                                              restart_name=_name,
-                                             start_name="Girl:",
-                                             method=types,
-                                             web_enhance_server=config.Enhance_Server
+                                             start_name=get_start_name(prompt=_prompt),
+                                             method=types
                                              )
             message_type = "text"
             _info = []

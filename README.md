@@ -142,16 +142,17 @@ botToken = 'key' # 机器人密钥
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
-Enhance_Server = { "https://www.expserver.com?q={}" = "auto", "http:/exp?q={}" = "auto" }
-# 联网中间件支持，自己找 server,{}将被替换为搜索词,目前联网回答的标识键为 Auto
-
 # 设置的代理，但是不代理 openai api, 只代理 bot
 [proxy]
 status = false
 url = "http://127.0.0.1:7890"
 ```
 
+### 配置 BotToken
+
 [Telegram botToken 申请](https://t.me/BotFather)
+
+然后关闭隐私模式或者提拔机器人为管理员后才能使用。
 
 ### 配置 key
 
@@ -170,7 +171,9 @@ add_api_key - 增加 Api key
 
 ### 配置 `service.json`
 
-在 `Config/service.json` 下面。如果没有此文件，会使用默认值。如果有会深度覆盖。不会补全预设中没有的键。
+在 `Config/service.json` 下面。如果没有此文件，会使用默认值补全。
+
+**实例**
 
 ```json
 {
@@ -179,6 +182,13 @@ add_api_key - 增加 Api key
     "port": 6379,
     "db": 0,
     "password": null
+  },
+  "plugin": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ],
+    "time": "",
+    "week": ""
   },
   "tts": {
     "status": false,
@@ -203,20 +213,58 @@ add_api_key - 增加 Api key
 }
 ```
 
-**Redis**
+#### Redis
 
-- 略
+```json
+{
+  "host": "localhost",
+  "port": 6379,
+  "db": 0,
+  "password": null
+}
+```
 
-**TTS**
+#### 插件
+
+```json
+{
+  "plugin": {
+    "search": [
+      "https://www.exp.com/search?word={}"
+    ]
+  }
+}
+```
+
+`search` 就是我们自带的一个搜索插件，引擎都是要自己填写的。
+
+放入 `plugin` 字段的插件才会被启用。
+**部分插件**
+
+| plugins   | desc              | value/server                                          | use                                   |
+|-----------|-------------------|-------------------------------------------------------|---------------------------------------|
+| `time`    | now time          | `""`,no need                                          | `明昨今天`....                            |
+| `week`    | week time         | `""`,no need                                          | `周几` .....                            |
+| `search`  | Web Search        | `["some.com?searchword={}"]`,must need                | `查询` `你知道` len<80 / end with`?`len<15 |
+| `duckgo`  | Web Search        | `""`,no need,but need `pip install duckduckgo_search` | `查询` `你知道` len<80 / end with`?`len<15 |
+| `details` | answer with steps | `""`,no need                                          | Ask for help `how to`                 |
+
+[所有插件](https://github.com/sudoskys/openai-kira#plugin)
+
+#### TTS
+
+```shell
+apt-get install ffmpeg
+```
 
 - status 开关
 - type 类型
 
-#### Azure 支持说明
+Azure/Vits 语言类型代码均为二位大写缩写字母。
 
-https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/
+**Azure 支持说明**
 
-*Azure*
+[具体说明](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-services/)
 
 - azure:limit 长度内的文本会被转换
 - azure:speaker
@@ -224,27 +272,16 @@ https://azure.microsoft.com/en-us/pricing/details/cognitive-services/speech-serv
 - auzre:location 服务器资源地址
 - auzre:key api key
 
-#### VITS 语音支持说明(ONLY CN/JA NOW)
+**VITS 语音支持说明**
 
 Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
-
-*VITS*
 
 - vits:limit 长度内的文本会被转换
 - vits:model_name 模型名字，some.pth,在 model 文件夹下的
 - vits:speaker_id 说话人的ID,具体看模型config
 
-这项技术提供了一种仿真的语音交互技术。
-
-```shell
-apt-get install ffmpeg
-```
-
 安装依赖，运行 `server.py` 文件可以默认使用。
-
-模型下载请查询 MoeGoe 项目的 Readme,并注意模型相应的协议。
-如果不生效，可能是文本的长度超过了设定的 limit 。
-长度为直接取 `len()`
+模型下载请自行寻找，并注意模型相应的协议。 如果不生效，可能是文本的长度超过了设定的 limit(`len()`) 。
 
 ## 运行
 
@@ -348,26 +385,31 @@ enable_change_head - 禁止设定头
 help - 帮助
 ```
 
-## 其他
+## API
 
-### 中间件
+请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
+API服务器与Telegram Bot服务开发进度不一，通常为Telegram
+Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
+
+## 中间件开发
 
 在记忆池和分析 之间有一个 中间件，可以提供一定的联网检索支持和操作支持。可以对接其他 Api 的服务进行加料。
 
-**Prompt Injection**
+https://github.com/sudoskys/openai-kira#plugin-dev
 
-使用 `“”` `[]` 来强调内容。触发方式有正式提问的问句，介绍，询问，查询请求，小于 80 字等要求。
-触发是隐式的，短的正式问句会触发。
+## 其他
 
-### 统计
+### 统计 `analysis.json`
 
-``analysis.json`` 是频率统计，60s 内的请求次数。
+如果没有请新建填充`{}`
 
-还有 total usage ，这个不包含所有用量数据，只是从 redis 拉取下来了而已
+此文件为频率统计，为 60s 内的请求次数。
 
-### Config.json
+用户在使用时， `total usage`会被更新到此文件。如果你要备份用量数据，请备份 Redis 数据库。
 
-会自动合并缺失的键值进行修复。
+### 配置文件 `Config.json`
+
+需要经常使用命令备份。如果没有请新建填充`{}`或删除，会自动合并缺失的键值进行修复。
 
 ### 默认参数
 
@@ -382,12 +424,6 @@ help - 帮助
 ### QuickDev
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
-
-### API
-
-请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
-API服务器与Telegram Bot服务开发进度不一，通常为Telegram
-Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
 
 ### 上一次的性能分析
 
@@ -405,5 +441,6 @@ Bot出现新commit后API服务器随后适配。当某些导入模块发生变�
 1. 此项目不是 Openai 的官方项目。
 2. 不对机器人生成的任何内容负责。
 3. 部分套件可能无法商业使用，请自担风险。
+4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
 ```
 

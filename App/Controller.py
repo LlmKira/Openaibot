@@ -14,9 +14,8 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
+from utils import Setting
 from utils.Data import DefaultData
-
-global me_id
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -46,7 +45,7 @@ class BotRunner(object):
 
     def run(self):
         # print(self.bot)
-        logger.info("APP:Bot Start")
+        logger.success("APP:Bot Start")
         bot, _config = self.botCreate()
         if self.proxy.status:
             from telebot import asyncio_helper
@@ -66,13 +65,12 @@ class BotRunner(object):
         # 群聊
         @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
         async def group_msg(message):
-            global me_id
             if message.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 await Event.Text(bot, message, _config, reset=True)
                 request_timestamps.append(time.time())
             else:
                 if message.reply_to_message:
-                    if message.reply_to_message.from_user.id == me_id:
+                    if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                         await Event.Text(bot, message, _config, reset=False)
                         request_timestamps.append(time.time())
             if message.text.startswith("/help"):
@@ -104,10 +102,7 @@ class BotRunner(object):
             return request_frequency
 
         async def main():
-            global me_id
-            _me = await bot.get_me()
-            me_id = _me.id
-            logger.info(f"Init Bot id:{me_id}")
+            await Setting.bot_profile_init(bot)
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)

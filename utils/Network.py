@@ -13,7 +13,8 @@ class NetworkClient(object):
         proxies = None
         if proxy:
             proxies = {"all://": proxy}
-        self.__client = httpx.AsyncClient(timeout=timeout, proxies=proxies)
+        self.timeout = timeout
+        self.proxies = proxies
 
     async def request(self,
                       method: str,
@@ -31,8 +32,9 @@ class NetworkClient(object):
             "headers": headers,
         }
         param.update(kwargs)
-        resp = await self.__client.request(**param)
+        async with httpx.AsyncClient(timeout=self.timeout, proxies=self.proxies) as client:
+            resp = await client.request(**param)
         content_length = resp.headers.get("content-length")
         if content_length and int(content_length) == 0:
-            raise Exception("CONTENT LENGTH 0")
+            raise Exception("CONTENT LENGTH 0:Server Maybe Not Connected")
         return resp
