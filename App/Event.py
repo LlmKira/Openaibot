@@ -224,9 +224,13 @@ class Reply(object):
         # 内容审计
         if ContentDfa.exists(str(prompt)):
             prompt = ContentDfa.filter_all(prompt)
-            # _info = DefaultData.getRefuseAnswer()
-            # time.sleep(random.randint(3, 6))
-            # return _info
+            rin = random.randint(1, 10)
+            if rin > 8:
+                _info = DefaultData.getRefuseAnswer()
+                time.sleep(random.randint(3, 6))
+                return _info
+        # 处理
+
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
