@@ -152,7 +152,7 @@ class DFA:
                 break
             now_dict = now_dict[filter_str[i]]
         num = end_str - pos + 1
-        filter_str = filter_str[:pos] + '*' * num + filter_str[end_str + 1:]
+        filter_str = filter_str[:pos] + '喵' * num + filter_str[end_str + 1:]
         return filter_str
 
     def filter_all(self, s):
