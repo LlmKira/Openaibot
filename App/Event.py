@@ -449,7 +449,9 @@ async def Text(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = await TTSSupportCheck(text=_req, user_id=_user_id) if _voice else False
+        voice_data = False
+        if _voice:
+            voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         message_type = "voice" if _voice and voice_data else message_type
@@ -522,7 +524,9 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = await TTSSupportCheck(text=_req, user_id=_user_id) if _voice else False
+        voice_data = False
+        if _voice:
+            voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         message_type = "voice" if _voice and voice_data else message_type

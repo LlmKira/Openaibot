@@ -104,7 +104,7 @@ class BotRunner(object):
                 if _friends_message.status:
                     if _friends_message.type == "Reply":
                         _type = _friends_message.data.get("type")
-                        _caption = f"{_friends_message.data.get('text')}\n{_config.INTRO}"
+                        _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{_config.INTRO}"
                         if _type == "voice":
                             msg = await bot.send_voice(chat_id=message.chat.id,
                                                        reply_to_message_id=message.id,
@@ -135,7 +135,7 @@ class BotRunner(object):
                 if _friends_message.status:
                     if _friends_message.type == "Reply":
                         _type = _friends_message.data.get("type")
-                        _caption = f"{_friends_message.data.get('text')}\n{_config.INTRO}"
+                        _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{_config.INTRO}"
                         if _type == "voice":
                             await bot.send_voice(chat_id=message.chat.id,
                                                  reply_to_message_id=message.id,
