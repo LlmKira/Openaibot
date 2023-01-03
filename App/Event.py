@@ -61,19 +61,19 @@ urlForm = {
 }
 
 
-def InitCensor():
+def initCensor():
     config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/app.toml")
     if config.proxy.status:
         proxies = {
             'all://': config.proxy.url,
         }  # 'http://127.0.0.1:7890'  # url
-        return Censor.InitWords(url=urlForm, home_dir="./Data/", proxy=proxies)
+        return Censor.initWords(url=urlForm, home_dir="./Data/", proxy=proxies)
     else:
-        return Censor.InitWords(url=urlForm, home_dir="./Data/")
+        return Censor.initWords(url=urlForm, home_dir="./Data/")
 
 
 if not pathlib.Path("./Data/Danger.form").exists():
-    InitCensor()
+    initCensor()
 # 过滤器
 ContentDfa = DFA(path="./Data/Danger.form")
 
@@ -753,7 +753,7 @@ async def Master(bot, message, config):
 
             # UPDATE
             if command == "/update_detect":
-                keys, _error = InitCensor()
+                keys, _error = initCensor()
                 if _error:
                     error = '\n'.join(_error)
                     errors = f"Error:\n{error}"

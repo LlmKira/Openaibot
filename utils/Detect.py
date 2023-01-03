@@ -35,7 +35,7 @@ class Cn(object):
 
 class Censor:
     @staticmethod
-    def InitWords(url: dict, home_dir: str = "./", proxy=None):
+    def initWords(url: dict, home_dir: str = "./", proxy=None):
         error = []
         for item in url:
             _Words = []
