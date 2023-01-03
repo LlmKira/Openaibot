@@ -74,11 +74,13 @@ class BotRunner(object):
         # 私聊起动机
         @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
         async def handle_command(message):
-            if "/start" in message.text:
+            _hand = get_message(message)
+            _hand: User_Message
+            if "/start" in _hand.text:
                 await bot.reply_to(message, await Event.Start(_config))
-            elif "/about" in message.text:
+            elif "/about" in _hand.text:
                 await bot.reply_to(message, await Event.About(_config))
-            elif "/help" in message.text:
+            elif "/help" in _hand.text:
                 await bot.reply_to(message, await Event.Help(_config))
 
         # 群聊
@@ -86,17 +88,22 @@ class BotRunner(object):
         async def group_msg(message):
             _hand = get_message(message)
             _hand: User_Message
+
             request_timestamps.append(time.time())
             started = False
-            if message.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
+            #
             if message.reply_to_message:
                 if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                     if str(Utils.checkMsg(
-                            f"{message.chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
+                            f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
+                        if not _hand.text.startswith("/"):
+                            _hand.text = f"/chat {_hand.text}"
                         started = True
+            #
             # 分发指令
-            if message.text.startswith("/help"):
+            if _hand.text.startswith("/help"):
                 await bot.reply_to(message, await Event.Help(_config))
             if started:
                 _friends_message = await Event.Text(_hand, _config)
@@ -111,13 +118,13 @@ class BotRunner(object):
                                                        voice=_friends_message.data.get("voice"),
                                                        caption=_caption
                                                        )
-                            Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
+                            Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
                         elif _type == "text":
                             msg = await bot.reply_to(message, _caption)
-                            Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
+                            Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
                     else:
                         msg = await bot.reply_to(message, _friends_message.msg)
-                        Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
+                        Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
         # 私聊
         @bot.message_handler(content_types=['text'], chat_types=['private'])
@@ -147,7 +154,7 @@ class BotRunner(object):
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             # 检查管理员指令
-            if message.from_user.id in _config.master:
+            if _hand.from_user.id in _config.master:
                 _reply = await Event.MasterCommand(Message=_hand, config=_config)
                 # 检查管理员指令
                 if _hand.text == "/config":
