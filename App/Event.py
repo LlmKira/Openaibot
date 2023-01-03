@@ -42,13 +42,10 @@ def get_start_name(prompt: str):
     STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
     STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
                                               r=0.01) else "Teacher:"
-
     STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
     STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
-
     STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
-
     STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
     return STARTNAME
 
@@ -204,7 +201,6 @@ class Reply(object):
                             ):
         """
         发起请求
-        :param web_enhance_server:
         :param start_name: 称呼自己
         :param restart_name: 称呼请求发起人
         :param user:
