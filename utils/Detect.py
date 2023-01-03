@@ -6,6 +6,26 @@
 import base64
 import httpx
 
+from utils import Setting
+from utils.Base import StrListTool
+
+
+def get_start_name(prompt: str):
+    _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
+                    "补全", "代码", "数据包"]
+    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
+
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
+                                              r=0.01) else "Teacher:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
+    STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
+    STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
+    STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
+    return STARTNAME
+
 
 def strToBase64(s):
     strEncode = base64.b64encode(s.encode('utf8'))

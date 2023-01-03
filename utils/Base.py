@@ -30,6 +30,8 @@ class Tool(object):
             d[k] = self.dictToObj(v)
         return d
 
+
+class StrListTool(object):
     @staticmethod
     def isStrIn(prompt: str, keywords: list, r: float):
         isIn = False
