@@ -7,10 +7,11 @@ import ast
 import json
 import pathlib
 import random
+import time
 # 缓冲
 from collections import OrderedDict
 from datetime import datetime, timedelta
-
+from typing import List, Optional, Union
 from loguru import logger
 from pydantic import BaseModel
 
@@ -20,6 +21,48 @@ try:
     from redis import Redis, ConnectionPool
 except Exception:
     redis_installed = False
+
+
+class from_chat(BaseModel):
+    id: int
+    name: str = "作业群"
+
+
+class from_user(BaseModel):
+    id: int
+    name = "猫娘"
+    admin: bool = False
+
+
+class User_Message(BaseModel):
+    id: int = 0
+    from_user: from_user
+    from_chat: from_chat
+    text: str
+    date: int = int(time.time() * 1000)
+
+
+def create_message(
+        user_id,
+        user_name,
+        group_id,
+        group_name,
+        text,
+        date=time.time()):
+    message = {
+        "text": text,
+        "from_user": from_user(id=user_id, name=user_name),
+        "from_chat": from_chat(id=group_id, name=group_name),
+        "date": date
+    }
+    return User_Message(**message)
+
+
+class PublicReturn(BaseModel):
+    status: bool = False
+    msg: str = ""
+    data: Union[str, dict, bytes, list] = None
+    type: str = ""
 
 
 class Usage_Data(BaseModel):

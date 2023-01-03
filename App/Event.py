@@ -9,17 +9,14 @@ import random
 import time
 # from io import BytesIO
 from typing import Union
-
 from loguru import logger
-
 import openai_kira
-from utils import Setting
 # from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig, Tool
+from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn
 from utils.TTS import TTS_Clint, TTS_REQ
-from utils.Detect import DFA, Censor
+from utils.Detect import DFA, Censor, get_start_name
 
 #
 
@@ -31,24 +28,6 @@ _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
 
 openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
-
-
-def get_start_name(prompt: str):
-    _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
-                    "补全", "代码", "数据包"]
-    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
-
-    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
-    STARTNAME = STARTNAME if not Tool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
-                                              r=0.01) else "Teacher:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
-    STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
-    STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
-    STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
-    return STARTNAME
-
 
 urlForm = {
     "Danger.form": [
@@ -99,7 +78,7 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
-async def TTS_Support_Check(text, user_id):
+async def TTSSupportCheck(text, user_id):
     global _tts_conf
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
@@ -172,16 +151,15 @@ async def TTS_Support_Check(text, user_id):
         return
 
 
-async def Forget(bot, message, config):
+async def Forget(user_id: int, chat_id: int):
     """
     重置消息流
-    :param bot:
-    :param message:
-    :param config:
+    :param chat_id:
+    :param user_id:
     :return:
     """
     from openai_kira.utils.data import MsgFlow
-    _cid = DefaultData.composing_uid(user_id=message.from_user.id, chat_id=message.chat.id)
+    _cid = DefaultData.composing_uid(user_id=user_id, chat_id=chat_id)
     return MsgFlow(uid=_cid).forget()
 
 
@@ -191,14 +169,15 @@ class Reply(object):
     """
 
     @staticmethod
-    async def load_response(user, group,
+    async def load_response(user,
+                            group,
                             key: Union[str, list],
                             prompt: str = "Say this is a test",
                             userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
                             restart_name: str = "Human:"
-                            ):
+                            ) -> str:
         """
         发起请求
         :param start_name: 称呼自己
@@ -238,13 +217,16 @@ class Reply(object):
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
-            # import openai_kira
             openai_kira.setting.openaiApiKey = key
-            # Openai_python
-            # import openai
-            # openai.api_key = key
-            # response = openai.Completion.create(model="text-davinci-003", prompt=str(prompt), temperature=0,
-            #                                     max_tokens=int(_csonfig["token_limit"]))
+            from openai_kira import Chat
+            _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
+            # 启用单人账户桶
+            if len(start_name) > 12:
+                start_name = start_name[-10:]
+            if len(restart_name) > 12:
+                restart_name = restart_name[-10:]
+
+            # 分发类型
             if method == "write":
                 # OPENAI
                 response = await openai_kira.Completion(call_func=Api_keys.pop_api_key).create(
@@ -254,24 +236,30 @@ class Reply(object):
                     frequency_penalty=1,
                     max_tokens=int(_csonfig["token_limit"])
                 )
-            elif method == "chat":
-                # CHAT
-                from openai_kira import Chat
-                _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
-                # 启用单人账户桶
-                if len(start_name) > 12:
-                    start_name = start_name[-10:]
-                if len(restart_name) > 12:
-                    restart_name = restart_name[-10:]
+            elif method == "catch":
                 receiver = Chat.Chatbot(
                     conversation_id=int(_cid),
                     call_func=Api_keys.pop_api_key,
+                    token_limit=1500,
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
+                response = await receiver.get_chat_response(model="text-curie-001",
+                                                            prompt=str(prompt),
+                                                            max_tokens=int(_csonfig["token_limit"]),
+                                                            web_enhance_server=_plugin_table
+                                                            )
+            elif method == "chat":
                 _head = Header(uid=user).get()
                 if _head:
                     _head = ContentDfa.filter_all(_head)
+                receiver = Chat.Chatbot(
+                    conversation_id=int(_cid),
+                    call_func=Api_keys.pop_api_key,
+                    token_limit=3751,
+                    start_sequ=start_name,
+                    restart_sequ=restart_name,
+                )
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
@@ -282,7 +270,6 @@ class Reply(object):
                 return "NO SUPPORT METHOD"
             # print(response)
             _deal_rq = rqParser.get_response_text(response)
-            # print(_deal_rq)
             _deal = _deal_rq[0]
             _usage = rqParser.get_response_usage(response)
             _time = int(time.time() * 1000)
@@ -290,291 +277,270 @@ class Reply(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"Api Outline or too long prompt \n {prompt}"
+            _deal = f"OH no,api Outline or crash? \n {prompt}"
         # 更新额度
         _AnalysisUsage = _UsageManger.renewUsage(usage=_usage)
-        # 统计
+        # 更新统计
         DefaultData().setAnalysis(usage={f"{user}": _AnalysisUsage.total_usage})
-        _deal = ContentDfa.filter_all(_deal)
         # 人性化处理
+        _deal = ContentDfa.filter_all(_deal)
         _deal = Utils.Humanization(_deal)
         return _deal
 
 
-async def WhiteUserCheck(bot, message, WHITE: str = ""):
+async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     """
-
-    :param bot: 机器人对象
-    :param message: 消息流
+    :param user_id: user id
     :param WHITE: 白名单提示
-    :return:
+    :return: TRUE,msg -> 在白名单
     """
-    if UserManger(message.from_user.id).read("block"):
-        await bot.send_message(message.chat.id,
-                               f"You are blocked!...\n\n{WHITE}")
-        return
+    #
     if _csonfig.get("whiteUserSwitch"):
         # 没有在白名单里！
-        if not UserManger(message.from_user.id).read("white"):
-            try:
-                await bot.reply_to(message, f"{message.from_user.id}:Check the settings to find that you is not "
-                                            f"whitelisted!...{WHITE}")
-            except Exception as e:
-                logger.error(e)
-            finally:
-                return True
-    else:
-        if _csonfig.get("whiteUserSwitch") is None:
-            return True
-    return False
+        if UserManger(user_id).read("white"):
+            return PublicReturn(status=True, type="WhiteUserCheck")
+    # False
+    msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
+    if UserManger(user_id).read("block"):
+        msg = f"{user_id}:Blocked!...{WHITE}"
+    return PublicReturn(status=False,
+                        type="WhiteUserCheck",
+                        msg=msg)
 
 
-async def WhiteGroupCheck(bot, message, WHITE):
-    if GroupManger(message.chat.id).read("block"):
-        await bot.reply_to(message, f"Group{message.chat.id} is blocked!...\n\n{WHITE}")
-        return True
+async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
+    """
+    :param group_id: group id
+    :param WHITE:
+    :return: TRUE,msg -> 在白名单
+    """
+    #
     if _csonfig.get("whiteGroupSwitch"):
         # 没有在白名单里！
-        if not GroupManger(message.chat.id).read("white"):
-            try:
-                await bot.reply_to(message, f"Group {message.chat.id} is not whitelisted!...\n\n{WHITE}")
-            except Exception as e:
-                logger.error(e)
-            finally:
-                logger.info(f"RUN:non-whitelisted groups:{abs(message.chat.id)}")
-                return True  # await bot.leave_chat(message.chat.id)
-    else:
-        if _csonfig.get("whiteUserSwitch") is None:
-            return True
-    return False
+        if GroupManger(group_id).read("white"):
+            return PublicReturn(status=True, type="WhiteGroupCheck")
+    # False
+    msg = f"{group_id}:Check the settings to find that group is not whitelisted!...{WHITE}"
+    if GroupManger(group_id).read("block"):
+        msg = f"{group_id}:Blocked!...{WHITE}"
+    return PublicReturn(status=False,
+                        type="WhiteGroupCheck",
+                        msg=msg)
 
 
-async def Text(bot, message, config, reset: bool = False):
+async def RemindSet(user_id, text) -> PublicReturn:
+    """
+    :param user_id:
+    :param text:
+    :return: Ture 代表设定成功
+    """
+    _text = text
+    _user_id = user_id
+    _remind_r = _text.split(" ", 1)
+    if len(_remind_r) < 2:
+        return PublicReturn(status=False, msg=f"", type="Remind")
+    _remind = _remind_r[1]
+    if Utils.tokenizer(_remind) > 333:
+        return PublicReturn(status=False, msg=f"过长:{_remind}", type="Remind")
+    _remind = ContentDfa.filter_all(_remind)
+    if _csonfig.get("allow_change_head"):
+        # _remind = _remind.replace("你是", "ME*扮演")
+        _remind = _remind.replace("你", "ME*")
+        _remind = _remind.replace("我", "YOU*")
+        _remind = _remind.replace("YOU*", "你")
+        _remind = _remind.replace("ME*", "我")
+        Header(uid=_user_id).set(_remind)
+        return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", type="Remind")
+    Header(uid=_user_id).set({})
+    return PublicReturn(status=True, msg=f"I refuse Remind Command", type="Remind")
+
+
+async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
+    """
+    消息预处理，命令识别和与配置的交互层
+    :param text:
+    :param types:
+    :return: TRUE,msg -> 继续执行
+    """
     load_csonfig()
     # 拿到 prompt
-    _prompt = message.text
-    types = "chat"
-    # 启动状态
+    _prompt = text
+    _prompt_types = "unknown"
+    # 不会重复的流程组
+    # Chat
+    if _prompt.startswith("/chat"):
+        _prompt_r = _prompt.split(" ", 1)
+        if len(_prompt_r) > 1:
+            _prompt = _prompt_r[1]
+        _prompt_types = "chat"
+    # Write
+    if _prompt.startswith("/write"):
+        _prompt_r = _prompt.split(" ", 1)
+        if len(_prompt_r) > 1:
+            _prompt = _prompt_r[1]
+        _prompt_types = "write"
+    # 处置空，也许是多余的
+    if len(_prompt) < 1:
+        _prompt_types = "unknown"
+    # 校验结果
+    if _prompt_types == "unknown":
+        # 不执行
+        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], type=types)
+    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], type=types)
+
+
+async def Text(Message: User_Message, config) -> PublicReturn:
+    """
+    根据文本特征分发决策
+    :param Message:
+    :param config:
+    :return: True 回复用户
+    """
+    load_csonfig()
+    _text = Message.text
+    _user_id = Message.from_user.id
+    _chat_id = Message.from_chat.id
+    _user_name = Message.from_user.name
+    # 状态
     if not _csonfig.get("statu"):
-        await bot.reply_to(message, "BOT:Under Maintenance")
-        return
-    # 群组白名单检查
-    if await WhiteGroupCheck(bot, message, config.WHITE):
-        return
-    if message.text.startswith("/forgetme"):
-        await Forget(bot, message, config)
-        return await bot.reply_to(message, f"Down,Miss you")
-    if message.text.startswith("/chat"):
-        _prompt_r = message.text.split(" ", 1)
-        if len(_prompt_r) < 2:
-            return
-        _prompt = _prompt_r[1]
-        types = "chat"
-    if message.text.startswith("/write"):
-        _prompt_r = message.text.split(" ", 1)
-        if len(_prompt_r) < 2:
-            return
-        _prompt = _prompt_r[1]
-        types = "write"
-    if message.text.startswith("/voice"):
-        _user = UserManger(int(message.from_user.id))
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+    # 白名单检查
+    _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
+    _white_user_check: PublicReturn
+    if not _white_user_check.status:
+        return PublicReturn(status=True,
+                            type="WhiteGroupCheck",
+                            msg=_white_user_check.msg)
+    # 线性决策
+    if _text.startswith("/remind"):
+        _remind_set = await RemindSet(user_id=_user_id, text=_text)
+        _remind_set: PublicReturn
+        return PublicReturn(status=True,
+                            type="WhiteGroupCheck",
+                            msg=_remind_set.msg)
+    if _text.startswith("/forgetme"):
+        await Forget(user_id=_user_id, chat_id=_chat_id)
+        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+    if _text.startswith("/voice"):
+        _user_manger = UserManger(_user_id)
         _set = True
-        if _user.read("voice"):
+        if _user_manger.read("voice"):
             _set = False
-        _user.save({"voice": _set})
-        await bot.reply_to(message, f"TTS:{_set}")
-        return
-    if message.text.startswith("/remind"):
-        _remind_r = message.text.split(" ", 1)
-        if len(_remind_r) < 2:
-            return
-        _remind = _remind_r[1]
-        if Utils.tokenizer(_remind) > 333:
-            return await bot.reply_to(message, f"过长:{_remind}")
-        if _csonfig["allow_change_head"]:
-            # _remind = _remind.replace("你是", "ME*扮演")
-            _remind = _remind.replace("你", "ME*")
-            _remind = _remind.replace("我", "YOU*")
-            _remind = _remind.replace("YOU*", "你")
-            _remind = _remind.replace("ME*", "我")
-            await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
-            Header(uid=message.from_user.id).set(_remind)
-        else:
-            await bot.reply_to(message, f"禁止设定")
-            Header(uid=message.from_user.id).set({})
-        return True
-    # 处理是否忘记
-    if reset:
-        await Forget(bot, message, config)
-    else:
-        # 加判定上文是否为此人的消息
-        if not str(Utils.checkMsg(f"{message.chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
-            # 不是，那就傲娇点
-            return
+        _user_manger.save({"voice": _set})
+        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+    _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
+    _prompt_preprocess: PublicReturn
+    if not _prompt_preprocess.status:
+        # 预处理失败，不符合任何触发条件，不回复捏
+        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+    _prompt = _prompt_preprocess.data[0]
+    _reply_type = _prompt_preprocess.data[1]
     try:
-        # 自动获取名字
-        first_name = message.from_user.first_name if message.from_user.first_name else ""
-        last_name = message.from_user.last_name if message.from_user.last_name else ""
-        _name = f"{first_name}{last_name}"
-        if len(_name) > 12 and len(f"{last_name}") < 6:
-            _name = f"{last_name}"
-        _req = await Reply.load_response(user=message.from_user.id,
-                                         group=message.chat.id,
+        _name = f"{_user_name}"
+        _req = await Reply.load_response(user=_user_id,
+                                         group=_chat_id,
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
-                                         method=types,
                                          restart_name=_name,
-                                         start_name=get_start_name(_prompt)
+                                         start_name=get_start_name(prompt=_prompt),
+                                         method=_reply_type
                                          )
+
         message_type = "text"
         _info = []
         # 语音消息
-        _voice = UserManger(message.from_user.id).read("voice")
-        voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id) if _voice else False
-        message_type = "voice" if _voice and voice_data else message_type
+        _voice = UserManger(_user_id).read("voice")
+        voice_data = await TTSSupportCheck(text=_req, user_id=_user_id) if _voice else False
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
-        # 发送特殊消息
-        send = False
-        msg = 0
-        if message_type == "voice":
-            # 如果成功返回消息体，没成功 raise
-            try:
-                msg = await bot.send_voice(chat_id=message.chat.id,
-                                           reply_to_message_id=message.id,
-                                           voice=voice_data,
-                                           caption=_req
-                                           )
-            except:
-                _info.append("\nVOICE SEND FAILED,Check u voice setting")
-            else:
-                send = True
-        if not send:
-            msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{''.join(_info)}")
-        # 记忆回复需要消息 id
-        Utils.trackMsg(f"{message.chat.id}{msg.id}", user_id=message.from_user.id)
+        message_type = "voice" if _voice and voice_data else message_type
+        # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
+        _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
+        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
     except Exception as e:
         logger.error(e)
-        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def private_Chat(bot, message, config):
+async def Friends(Message: User_Message, config) -> PublicReturn:
+    """
+    根据文本特征分发决策
+    :param Message:
+    :param config:
+    :return: True 回复用户
+    """
     load_csonfig()
-    # 白名单用户检查
-    if await WhiteUserCheck(bot, message, config.WHITE):
-        return
-    # 处理初始化
-    types = "chat"
-    _prompt = message.text
-    if message.text.startswith("/chat"):
-        _prompt_r = message.text.split(" ", 1)
-        if len(_prompt_r) < 2:
-            return
-        _prompt = _prompt_r[1]
-        types = "chat"
-    if message.text.startswith("/write"):
-        _prompt_r = message.text.split(" ", 1)
-        if len(_prompt_r) < 2:
-            return
-        _prompt = _prompt_r[1]
-        types = "write"
-    if message.text.startswith("/forgetme"):
-        await Forget(bot, message, config)
-        return await bot.reply_to(message, f"Down,Miss you")
-
-    try:
-        if len(_prompt) > 1:
-            # 自动获取名字
-            first_name = message.from_user.first_name if message.from_user.first_name else ""
-            last_name = message.from_user.last_name if message.from_user.last_name else ""
-            _name = f"{first_name}{last_name}"
-            if len(_name) > 12 and len(f"{last_name}") < 6:
-                _name = f"{last_name}"
-            _req = await Reply.load_response(user=message.from_user.id,
-                                             group=message.chat.id,
-                                             key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
-                                             prompt=_prompt,
-                                             restart_name=_name,
-                                             start_name=get_start_name(prompt=_prompt),
-                                             method=types
-                                             )
-            message_type = "text"
-            _info = []
-            # 语音消息
-            _voice = UserManger(message.from_user.id).read("voice")
-            voice_data = await TTS_Support_Check(text=_req, user_id=message.from_user.id) if _voice else False
-            message_type = "voice" if _voice and voice_data else message_type
-            if not voice_data and _voice:
-                _info.append("TTS Unavailable")
-            # 发送特殊消息
-            send = False
-            msg = 0
-            if message_type == "voice":
-                # 如果成功返回消息体，没成功 raise
-                try:
-                    msg = await bot.send_voice(chat_id=message.chat.id,
-                                               reply_to_message_id=message.id,
-                                               voice=voice_data,
-                                               caption=_req
-                                               )
-                except:
-                    _info.append("\nVOICE SEND FAILED,Check u voice setting")
-                else:
-                    send = True
-            if not send:
-                msg = await bot.reply_to(message, f"{_req}\n{config.INTRO}\n{''.join(_info)}")
-            # await bot.reply_to(message, f"{_req}\n{config.INTRO}")
-    except Exception as e:
-        logger.error(e)
-        await bot.reply_to(message, f"Error Occur~Maybe Api request rate limit~nya")
-
-
-async def Friends(bot, message, config):
-    load_csonfig()
-    # 处理机器人开关
+    _text = Message.text
+    _user_id = Message.from_user.id
+    _chat_id = Message.from_chat.id
+    _user_name = Message.from_user.name
+    # 状态
     if not _csonfig.get("statu"):
-        await bot.reply_to(message, "BOT:Under Maintenance")
-        return
-    command = message.text
-    if command.startswith("/voice"):
-        _user = UserManger(int(message.from_user.id))
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+    # 白名单检查
+    _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
+    _white_user_check: PublicReturn
+    if not _white_user_check.status:
+        return PublicReturn(status=True,
+                            type="WhiteGroupCheck",
+                            msg=_white_user_check.msg)
+    # 线性决策
+    if _text.startswith("/remind"):
+        _remind_set = await RemindSet(user_id=_user_id, text=_text)
+        _remind_set: PublicReturn
+        return PublicReturn(status=True,
+                            type="WhiteGroupCheck",
+                            msg=_remind_set.msg)
+    if _text.startswith("/forgetme"):
+        await Forget(user_id=_user_id, chat_id=_chat_id)
+        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+    if _text.startswith("/voice"):
+        _user_manger = UserManger(_user_id)
         _set = True
-        if _user.read("voice"):
+        if _user_manger.read("voice"):
             _set = False
-        _user.save({"voice": _set})
-        await bot.reply_to(message, f"TTS:{_set}")
-        return
-    if command.startswith("/remind"):
-        _remind_r = message.text.split(" ", 1)
-        if len(_remind_r) < 2:
-            return
-        _remind = _remind_r[1]
-        if Utils.tokenizer(_remind) > 333:
-            return await bot.reply_to(message, f"过长:{_remind}")
-        _remind = ContentDfa.filter_all(_remind)
-        if _csonfig["allow_change_head"]:
-            # _remind = _remind.replace("你是", "ME*扮演")
-            _remind = _remind.replace("你", "ME*")
-            _remind = _remind.replace("我", "YOU*")
-            _remind = _remind.replace("YOU*", "你")
-            _remind = _remind.replace("ME*", "我")
-            await bot.reply_to(message, f"设定:{_remind}\nNo reply this msg")
-            Header(uid=message.from_user.id).set(_remind)
-        else:
-            await bot.reply_to(message, f"禁止设定")
-            Header(uid=message.from_user.id).set({})
-        return
-        # 启动函数
-    if command.startswith("/chat") or command.startswith("/forgetme") or command.startswith(
-            "/write") or not command.startswith("/"):
-        await private_Chat(bot, message, config)
+        _user_manger.save({"voice": _set})
+        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+    _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
+    _prompt_preprocess: PublicReturn
+    if not _prompt_preprocess.status:
+        # 预处理失败，不符合任何触发条件，不回复捏
+        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+    _prompt = _prompt_preprocess.data[0]
+    _reply_type = _prompt_preprocess.data[1]
+    try:
+        _name = f"{_user_name}"
+        _req = await Reply.load_response(user=_user_id,
+                                         group=_chat_id,
+                                         key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
+                                         prompt=_prompt,
+                                         restart_name=_name,
+                                         start_name=get_start_name(prompt=_prompt),
+                                         method=_reply_type
+                                         )
+
+        message_type = "text"
+        _info = []
+        # 语音消息
+        _voice = UserManger(_user_id).read("voice")
+        voice_data = await TTSSupportCheck(text=_req, user_id=_user_id) if _voice else False
+        if not voice_data and _voice:
+            _info.append("TTS Unavailable")
+        message_type = "voice" if _voice and voice_data else message_type
+        # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
+        _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
+        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
+    except Exception as e:
+        logger.error(e)
+        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def Master(bot, message, config):
+async def MasterCommand(Message: User_Message, config):
     load_csonfig()
-    if message.from_user.id in config.master:
+    _reply = []
+    if Message.from_user.id in config.master:
         try:
-            command = message.text
+            command = Message.text
             # SET
             if command.startswith("/set_user_cold"):
                 # 用户冷静时间
@@ -582,7 +548,7 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["usercold_time"] = int(_len_)
-                    await bot.reply_to(message, f"user cooltime:{_len_}")
+                    _reply.append(f"user cooltime:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
@@ -592,7 +558,7 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["groupcold_time"] = int(_len_)
-                    await bot.reply_to(message, f"group cooltime:{_len_}")
+                    _reply.append(f"group cooltime:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
@@ -601,7 +567,7 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["per_user_limit"] = int(_len_)
-                    await bot.reply_to(message, f"set_hour_limit:{_len_}")
+                    _reply.append(f"set_hour_limit:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset per_user_limit to{_len_}")
 
@@ -611,7 +577,7 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["hour_limit"] = int(_len_)
-                    await bot.reply_to(message, f"hour_limit:{_len_}")
+                    _reply.append(f"hour_limit:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset hour_limit to{_len_}")
 
@@ -624,7 +590,7 @@ async def Master(bot, message, config):
                 __limit = int("".join(list(filter(str.isdigit, _len[1]))))
                 if __user_id > 0 and __limit > 0:
                     UserManger(__user_id).save({"usage": __limit})
-                    await bot.reply_to(message, f"user_limit:{__limit}")
+                    _reply.append(f"user_limit:{__limit}")
                     logger.info(f"SETTING:promote user_limit to{__limit}")
 
             if command.startswith("/reset_user_usage"):
@@ -635,7 +601,7 @@ async def Master(bot, message, config):
                     if _len_:
                         Usage(uid=_len_).resetTotalUsage()
                         logger.info(f"SETTING:resetTotalUsage {_len_} limit to 0")
-                        await bot.reply_to(message, f"hour_limit:{_len}")
+                        _reply.append(f"hour_limit:{_len}")
 
             if command.startswith("/set_token_limit"):
                 # 返回多少？
@@ -643,7 +609,7 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["token_limit"] = int(_len_)
-                    await bot.reply_to(message, f"tokenlimit:{_len_}")
+                    _reply.append(f"tokenlimit:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
@@ -653,19 +619,9 @@ async def Master(bot, message, config):
                 _len_ = "".join(list(filter(str.isdigit, _len)))
                 if _len_:
                     _csonfig["input_limit"] = int(_len_)
-                    await bot.reply_to(message, f"input limit:{_len_}")
+                    _reply.append(f"input limit:{_len_}")
                     save_csonfig()
                     logger.info(f"SETTING:reset input limit to{_len_}")
-
-            if command == "/config":
-                # 配置文件
-                save_csonfig()
-                path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
-                if pathlib.Path(path).exists():
-                    doc = open(path, 'rb')
-                    await bot.send_document(message.chat.id, doc)
-                else:
-                    await bot.reply_to(message, "没有找到配置文件")
 
             if "/add_block_group" in command:
                 # 重置用户的用量总数据
@@ -675,7 +631,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:add block group {_len_}"
                         GroupManger(int(_len_)).save({"block": True})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             if "/del_block_group" in command:
@@ -686,7 +642,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:del block group {_len_}"
                         GroupManger(int(_len_)).save({"block": False})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             if "/add_block_user" in command:
@@ -696,7 +652,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:add_block_userp {_len_}"
                         UserManger(int(_len_)).save({"block": True})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             if "/del_block_user" in command:
@@ -706,7 +662,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:del_block_user {_len_}"
                         UserManger(int(_len_)).save({"block": False})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             # whiteGroup
@@ -717,7 +673,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:add_white_group {_len_}"
                         GroupManger(int(_len_)).save({"white": True})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             if "/del_white_group" in command:
@@ -727,7 +683,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:del_white_group {_len_}"
                         GroupManger(int(_len_)).save({"white": False})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             # whiteUser
@@ -738,7 +694,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:add_white_user {_len_}"
                         UserManger(int(_len_)).save({"white": True})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             if "/del_white_user" in command:
@@ -748,7 +704,7 @@ async def Master(bot, message, config):
                     if _len_:
                         _ev = f"SETTING:del_white_user {_len_}"
                         UserManger(int(_len_)).save({"white": False})
-                        await bot.reply_to(message, _ev)
+                        _reply.append(_ev)
                         logger.info(_ev)
 
             # UPDATE
@@ -761,32 +717,31 @@ async def Master(bot, message, config):
                     # 重载 Danger 库
                     ContentDfa.change_words(path="./Data/Danger.form")
                     errors = "Success"
-                if message:
-                    await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
+                _reply.append(f"{'|'.join(keys)}\n\n{errors}")
 
             # USER White
             if command == "/open_user_white_mode":
                 _csonfig["whiteUserSwitch"] = True
-                await bot.reply_to(message, "SETTING:whiteUserSwitch ON")
+                _reply.append("SETTING:whiteUserSwitch ON")
                 save_csonfig()
                 logger.info("SETTING:whiteUser ON")
 
             if command == "/close_user_white_mode":
                 _csonfig["whiteUserSwitch"] = False
-                await bot.reply_to(message, "SETTING:whiteUserSwitch OFF")
+                _reply.append("SETTING:whiteUserSwitch OFF")
                 save_csonfig()
                 logger.info("SETTING:whiteUser OFF")
 
             # GROUP White
             if command == "/open_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = True
-                await bot.reply_to(message, "ON:whiteGroup")
+                _reply.append("ON:whiteGroup")
                 save_csonfig()
                 logger.info("SETTING:whiteGroup ON")
 
             if command == "/close_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = False
-                await bot.reply_to(message, "SETTING:whiteGroup OFF")
+                _reply.append("SETTING:whiteGroup OFF")
                 save_csonfig()
                 logger.info("SETTING:whiteGroup OFF")
 
@@ -797,61 +752,61 @@ async def Master(bot, message, config):
                 for i in keys["OPENAI_API_KEY"]:
                     _key.append(DefaultData.mask_middle(i, 10))
                 _info = '\n'.join(_key)
-                await bot.reply_to(message, f"Now Have \n{_info}")
+                _reply.append(f"Now Have \n{_info}")
 
             if "/add_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
                     Api_keys.add_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:ADD API KEY")
-                await bot.reply_to(message, "SETTING:ADD API KEY")
+                _reply.append("SETTING:ADD API KEY")
 
             if "/del_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
                     Api_keys.pop_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:DEL API KEY")
-                await bot.reply_to(message, "SETTING:DEL API KEY")
+                _reply.append("SETTING:DEL API KEY")
             if "/enable_change_head" in command:
                 _csonfig["allow_change_head"] = True
-                await bot.reply_to(message, "SETTING:allow_change_head ON")
+                _reply.append("SETTING:allow_change_head ON")
                 save_csonfig()
                 logger.info("SETTING:BOT ON")
 
             if "/disable_change_head" in command:
                 _csonfig["allow_change_head"] = False
-                await bot.reply_to(message, "SETTING:allow_change_head OFF")
+                _reply.append("SETTING:allow_change_head OFF")
                 save_csonfig()
                 logger.info("SETTING:BOT ON")
 
             if command == "/open":
                 _csonfig["statu"] = True
-                await bot.reply_to(message, "SETTING:BOT ON")
+                _reply.append("SETTING:BOT ON")
                 save_csonfig()
                 logger.info("SETTING:BOT ON")
 
             if command == "/close":
                 _csonfig["statu"] = False
-                await bot.reply_to(message, "SETTING:BOT OFF")
+                _reply.append("SETTING:BOT OFF")
                 save_csonfig()
                 logger.info("SETTING:BOT OFF")
         except Exception as e:
             logger.error(e)
 
 
-async def Start(bot, message, config):
-    await bot.reply_to(message, f"Ping，Use /chat start a new chat loop")
+async def Start(_):
+    return f"Ping，Use /chat start a new chat loop"
 
 
-async def About(bot, message, config):
-    await bot.reply_to(message, f"{config.ABOUT}")
+async def About(config):
+    return f"{config.ABOUT}"
 
 
-async def Help(bot, message, config):
-    await bot.reply_to(message, f"""
+async def Help(_):
+    return """
 Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前的消息不能回复。
 Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
 Use /voice 开启可能的 tts 支持。
-""")
+"""
