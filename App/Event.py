@@ -55,12 +55,11 @@ def get_start_name(prompt: str):
 
 urlForm = {
     "Danger.form": [
-        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
-        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt",
-        "https://raw.githubusercontent.com/nonecares/-/master/ban.txt",
-        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/政治类.txt",
-        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
-        "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
+        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2Z3d2RuL3NlbnNpdGl2ZS1zdG9wLXdvcmRzL21hc3Rlci8lRTYlOTQlQkYlRTYlQjIlQkIlRTclQjElQkIudHh0",
+        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1RlbGVjaGFCb3QvQW50aVNwYW0vbWFpbi9EYW5nZXIudHh0",
+        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25vbmVjYXJlcy8tL21hc3Rlci9iYW4udHh0",
+        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FkbGVyZWQvRGFuZ2Vyb3VzU3BhbVdvcmRzL21hc3Rlci9EYW5nZXJvdXNTcGFtV29yZHMvR2VuZXJhbF9TcGFtV29yZHNfVjEuMC4xX0NOLm1pbi50eHQ=",
+        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0phaW1pbjEzMDQvc2Vuc2l0aXZlLXdvcmQtZGV0ZWN0b3IvbWFpbi9zYW1wbGVfZmlsZXMvc2FtcGxlX2Jhbm5lZF93b3Jkcy50eHQ=",
     ]
 }
 
@@ -228,7 +227,7 @@ class Reply(object):
         prompt = ContentDfa.filter_all(prompt)
         if ContentDfa.exists(prompt):
             rin = random.randint(1, 10)
-            if rin > 8:
+            if rin > 5:
                 _info = DefaultData.getRefuseAnswer()
                 time.sleep(random.randint(3, 6))
                 return _info
