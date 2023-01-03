@@ -42,6 +42,10 @@ class Censor:
             _Item_url = url[item]
             for _url in _Item_url:
                 try:
+                    _url = str(base64.b64decode(_url), 'utf-8')
+                except Exception:
+                    _url = _url
+                try:
                     response = httpx.get(_url, proxies=proxy)
                     # response.encoding = response.charset_encoding
                 except Exception as e:
