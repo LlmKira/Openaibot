@@ -17,34 +17,52 @@ def base64ToStr(s):
     return str(strDecode, encoding='utf8')
 
 
+class Cn(object):
+    @staticmethod
+    def is_chinese(word):
+        for ch in word:
+            if '\u4e00' <= ch <= '\u9fff':
+                return True
+        return False
+
+    @staticmethod
+    def is_contain_chinese(check_str):
+        for ch in check_str:
+            if u'\u4e00' <= ch <= u'\u9fff':
+                return True
+        return False
+
+
 class Censor:
     @staticmethod
     def InitWords(url: dict, home_dir: str = "./", proxy=None):
         error = []
-        for ir in url:
-            Words = []
-            wordlist = url[ir]
-            for i in wordlist:
+        for item in url:
+            _Words = []
+            _Item_url = url[item]
+            for _url in _Item_url:
                 try:
-                    response = httpx.get(i, proxies=proxy)
+                    response = httpx.get(_url, proxies=proxy)
                     # response.encoding = response.charset_encoding
-                except Exception:
-                    print(f"初始化失败 -> {i}")
-                    error.append({i})
+                except Exception as e:
+                    print(f"词库请求失败 -> {_url}")
+                    error.append({e})
                 else:
                     if response.status_code == 200:
                         tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
                         for sid in tmpList:
-                            item = sid.strip(",").strip("\n")
-                            if item and len(item) > 1:
-                                Words.append(item)
+                            censor_words = str(sid.strip(",").strip("\n"))
+                            if censor_words and Cn.is_contain_chinese(censor_words) and len(censor_words) > 2:
+                                _Words.append(censor_words)
                     else:
-                        print(f"初始化失败 -> {i}")
-                        error.append({i})
-            if Words:
-                with open(home_dir + ir, "w+", encoding='utf-8') as code:
-                    code.write("\n".join(list(set(Words))))
-            print(f"初始化 -> {ir}")
+                        print(f"词库初始化失败 -> {_url}")
+                        error.append({_url})
+            if _Words:
+                with open(home_dir + item, "w+", encoding='utf-8') as code:
+                    code.write("\n".join(list(set(_Words))))
+                print(f"初始化写入 -> {item}-{len(_Words)}")
+            else:
+                print(f"写入了空白? -> {item}")
         return url.keys(), error
 
 

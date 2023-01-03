@@ -57,10 +57,10 @@ urlForm = {
     "Danger.form": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E6%94%BF%E6%B2%BB%E7%B1%BB.txt",
         "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Danger.txt",
-        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
         "https://raw.githubusercontent.com/nonecares/-/master/ban.txt",
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/政治类.txt",
-        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/广告.txt"
+        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
+        "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
     ]
 }
 
