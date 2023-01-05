@@ -15,6 +15,7 @@ from API.Voice import VITS
 from utils.Chat import UserManger
 from typing import Union
 
+
 class ReqBody(BaseModel):
     chatText: str = ''
     chatId: int
@@ -217,7 +218,7 @@ async def admin(body: ReqBody, action: str):
 
         # bot = FakeTGBot()
         bot = FakeTGBot(reply_to_callback=admin_callback)
-        await appe.Master(bot, message, config.bot)
+        await appe.MasterCommand(bot, message, config.bot)
         if resp == {}:
             return {'success': False, 'response': 'GENERAL_FAILURE'}
         return resp
