@@ -4,7 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 from pathlib import Path
-from App.Controller import BotRunner
+from App.QController import BotRunner
 from utils.Base import ReadConfig
 # 日志
 from loguru import logger
