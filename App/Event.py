@@ -294,17 +294,18 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     #
-    if _csonfig.get("whiteUserSwitch"):
+    if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
             return PublicReturn(status=True, type="WhiteUserCheck")
-    # False
-    msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
-    if UserManger(user_id).read("block"):
-        msg = f"{user_id}:Blocked!...{WHITE}"
-    return PublicReturn(status=False,
-                        type="WhiteUserCheck",
-                        msg=msg)
+        msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
+        if UserManger(user_id).read("block"):
+            msg = f"{user_id}:Blocked!...{WHITE}"
+        return PublicReturn(status=False,
+                            type="WhiteUserCheck",
+                            msg=msg)
+    else:
+        return PublicReturn(status=True, type="WhiteUserCheck")
 
 
 async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
@@ -314,17 +315,18 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     #
-    if _csonfig.get("whiteGroupSwitch"):
+    if _csonfig["whiteGroupSwitch"]:
         # 没有在白名单里！
         if GroupManger(group_id).read("white"):
-            return PublicReturn(status=True, type="WhiteGroupCheck")
-    # False
-    msg = f"{group_id}:Check the settings to find that group is not whitelisted!...{WHITE}"
-    if GroupManger(group_id).read("block"):
-        msg = f"{group_id}:Blocked!...{WHITE}"
-    return PublicReturn(status=False,
-                        type="WhiteGroupCheck",
-                        msg=msg)
+            return PublicReturn(status=True, type="WhiteUserCheck")
+        msg = f"{group_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
+        if GroupManger(group_id).read("block"):
+            msg = f"{group_id}:Blocked!...{WHITE}"
+        return PublicReturn(status=False,
+                            type="WhiteUserCheck",
+                            msg=msg)
+    else:
+        return PublicReturn(status=True, type="WhiteUserCheck")
 
 
 async def RemindSet(user_id, text) -> PublicReturn:
@@ -388,7 +390,7 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], type=types)
 
 
-async def Text(Message: User_Message, config) -> PublicReturn:
+async def Group(Message: User_Message, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param Message:
@@ -532,10 +534,15 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
-        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
+        return PublicReturn(status=True,
+                            msg=f"OK",
+                            type="Reply",
+                            data=_data)
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"Error Occur~Maybe Api request rate limit~nya",
+                            type="Error",
+                            data="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def MasterCommand(Message: User_Message, config):

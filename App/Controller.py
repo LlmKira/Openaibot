@@ -106,7 +106,7 @@ class BotRunner(object):
             if _hand.text.startswith("/help"):
                 await bot.reply_to(message, await Event.Help(_config))
             if started:
-                _friends_message = await Event.Text(_hand, _config)
+                _friends_message = await Event.Group(_hand, _config)
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.type == "Reply":
