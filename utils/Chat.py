@@ -86,6 +86,7 @@ class UserManger(object):
             self.user = {}
         self._user = DefaultData.defaultUser()
         DictUpdate.dict_update(self._user, self.user)
+        self._renew(self._user)
 
     def _renew(self, item):
         """
@@ -124,6 +125,7 @@ class GroupManger(object):
             self.user = {}
         self._user = DefaultData.defaultGroup()
         DictUpdate.dict_update(self._user, self.user)
+        self._renew(self._user)
 
     def _renew(self, item):
         """

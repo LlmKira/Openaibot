@@ -795,6 +795,7 @@ async def MasterCommand(Message: User_Message, config):
                 logger.info("SETTING:BOT OFF")
         except Exception as e:
             logger.error(e)
+        return _reply
 
 
 async def Start(_):
