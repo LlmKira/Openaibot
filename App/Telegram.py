@@ -58,11 +58,11 @@ class BotRunner(object):
         self.bot = config
         self.proxy = config.proxy
 
-    def botCreate(self):
+    async def botCreate(self):
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
-    def run(self):
+    async def run(self):
         # print(self.bot)
         logger.success("APP:Telegram Bot Start")
         bot, _config = self.botCreate()

@@ -8,7 +8,7 @@ from utils.Base import ReadConfig
 # 日志
 from loguru import logger
 import sys
-import threading
+import asyncio
 import importlib
 
 logger.remove()
@@ -27,21 +27,17 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 # 配置分发
-threads = []  # 线程池
+tasks = set()  # asyncio任务池，保持对所有协程任务的强引用，避免被回收。https://www.bilibili.com/read/cv17261955/
 ctrlConfig = config.Controller
 try:
-    for ctrl in ctrlConfig:
-        filepath = 'App/' + ctrl + '.py'
-        if not Path(filepath).exists():
-            logger.warning(f"Controller {filepath} Do Not Exist.")
+    for starter in ctrlConfig:
+        if not Path(f"App/{starter}.py").exists():
+            logger.warning(f"Controller {starter} Do Not Exist.")
             continue
-        module = importlib.import_module('App.' + ctrl)
-        t = threading.Thread(target=module.BotRunner(ctrlConfig.get(ctrl)).run)
-        t.start()
-        threads.append(t)
-    for t in threads:
-        t.join()  # 等待所有线程退出
-    logger.info('主线程退出')
+        module = importlib.import_module('App.' + starter)
+        t = asyncio.create_task(module.BotRunner(ctrlConfig.get(starter)).run())
+        t.add_done_callback(tasks.discard)
+    # logger.info('Main thread exiting')
 except KeyboardInterrupt:
-    logger.info('主线程退出')
+    logger.info('Main thread exiting')
     exit(0)
