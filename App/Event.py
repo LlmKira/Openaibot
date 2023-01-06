@@ -298,13 +298,14 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
             return PublicReturn(status=True, type="WhiteUserCheck")
-    # False
-    msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
-    if UserManger(user_id).read("block"):
-        msg = f"{user_id}:Blocked!...{WHITE}"
-    return PublicReturn(status=False,
+        msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
+        if UserManger(user_id).read("block"):
+            msg = f"{user_id}:Blocked!...{WHITE}"
+        return PublicReturn(status=False,
                         type="WhiteUserCheck",
                         msg=msg)
+    else:
+        return PublicReturn(status=True, type="WhiteUserCheck")
 
 
 async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
@@ -314,17 +315,18 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     #
-    if _csonfig.get("whiteGroupSwitch"):
+    if _csonfig.get("whiteUserSwitch"):
         # 没有在白名单里！
         if GroupManger(group_id).read("white"):
-            return PublicReturn(status=True, type="WhiteGroupCheck")
-    # False
-    msg = f"{group_id}:Check the settings to find that group is not whitelisted!...{WHITE}"
-    if GroupManger(group_id).read("block"):
-        msg = f"{group_id}:Blocked!...{WHITE}"
-    return PublicReturn(status=False,
-                        type="WhiteGroupCheck",
+            return PublicReturn(status=True, type="WhiteUserCheck")
+        msg = f"{group_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
+        if GroupManger(group_id).read("block"):
+            msg = f"{group_id}:Blocked!...{WHITE}"
+        return PublicReturn(status=False,
+                        type="WhiteUserCheck",
                         msg=msg)
+    else:
+        return PublicReturn(status=True, type="WhiteUserCheck")
 
 
 async def RemindSet(user_id, text) -> PublicReturn:
