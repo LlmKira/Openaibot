@@ -4,6 +4,8 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 
+# 热力扳机
+
 class Vitality(object):
     def __init__(self):
         pass
