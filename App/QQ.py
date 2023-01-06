@@ -37,9 +37,8 @@ def get_user_message(
 
 class BotRunner:
     def __init__(self, _config):
-        self.config = _config.bot
-
-        self.app = Ariadne(config(verify_key=_config.bot.qq.verify_key, account=_config.bot.qq.account))
+        self.config = _config
+        self.app = Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 
     def run(self):
         bot = self.app

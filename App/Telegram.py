@@ -55,7 +55,7 @@ def get_message(message: types.Message):
 
 class BotRunner(object):
     def __init__(self, config):
-        self.bot = config.bot
+        self.bot = config
         self.proxy = config.proxy
 
     def botCreate(self):
@@ -64,12 +64,12 @@ class BotRunner(object):
 
     def run(self):
         # print(self.bot)
-        logger.success("APP:Bot Start")
+        logger.success("APP:Telegram Bot Start")
         bot, _config = self.botCreate()
         if self.proxy.status:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
-            logger.info("USE PROXY！")
+            logger.info("Telegram Bot Using proxy!")
 
         # 私聊起动机
         @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
