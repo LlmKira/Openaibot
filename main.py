@@ -2,7 +2,8 @@
 # @Time    : 9/22/22 10:07 PM
 # @FileName: main.py
 # @Software: PyCharm
-# @Github    ：sudoskys
+# @Github    ：sudoskys,ElvinStarry
+
 from pathlib import Path
 from utils.Base import ReadConfig
 # 日志

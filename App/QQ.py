@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# @Time    : 9/22/22 11:04 PM
+# @FileName: Controller.py.py
+# @Software: PyCharm
+# @Github: purofle
+
 import time
 from collections import deque
 from typing import Union, Optional
@@ -5,7 +11,7 @@ from typing import Union, Optional
 from graia.amnesia.message import MessageChain
 from graia.ariadne import Ariadne
 from graia.ariadne.connection.config import config
-from graia.ariadne.message import Source
+from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
 from graia.ariadne.model import Group, Member, Friend
@@ -15,7 +21,7 @@ from loguru import logger
 from App import Event
 from utils import Setting
 from utils.Chat import Utils
-from utils.Data import create_message, User_Message
+from utils.Data import create_message, User_Message, PublicReturn
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -38,10 +44,17 @@ def get_user_message(
 class BotRunner:
     def __init__(self, _config):
         self.config = _config
-        self.app = Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
+
+    def botCreate(self):
+        if all([self.config.verify_key, self.config.account]):
+            return None
+        return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 
     def run(self):
-        bot = self.app
+        bot = self.botCreate()
+        if not bot:
+            return
+        logger.success("APP:QQ Bot Start")
 
         @bot.broadcast.receiver("FriendMessage", dispatchers=[UnionMatch("/about", "/start", "/help")])
         async def starter(app: Ariadne, message: MessageChain, friend: Friend, source: Source):
@@ -85,9 +98,7 @@ class BotRunner:
 
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
-
             _hand = get_user_message(msg, member=friend, group=None)
-
             if friend.id in self.config.master:
                 _reply = await Event.MasterCommand(Message=_hand, config=self.config)
                 if _reply:
@@ -96,8 +107,52 @@ class BotRunner:
             message_chain = await get_message_chain(_hand)
             if message_chain:
                 active_msg = await app.send_message(friend, message_chain, quote=source)
+                # Utils.trackMsg(f"{_hand.from_chat.id}{active_msg.id}", user_id=_hand.from_user.id)
 
-                Utils.trackMsg(f"{_hand.from_chat.id}{active_msg.id}", user_id=_hand.from_user.id)
+        @bot.broadcast.receiver("GroupMessage")
+        async def group_chat(app: Ariadne,
+                             msg: MessageChain,
+                             quote: Optional[Quote],
+                             member: Member,
+                             group: Group,
+                             source: Source):
+            _hand = get_user_message(msg, member=member, group=group)
+            _hand: User_Message
+            started = False
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+                started = True
+            if quote:
+                if str(Utils.checkMsg(
+                        f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":
+                    if not _hand.text.startswith("/"):
+                        _hand.text = f"/chat {_hand.text}"
+                    started = True
+
+            # 分发指令
+            if _hand.text.startswith("/help"):
+                await bot.send_message(group, await Event.Help(self.config))
+            if started:
+                request_timestamps.append(time.time())
+                _friends_message = await Event.Group(_hand, self.config)
+                _friends_message: PublicReturn
+
+                if not _friends_message.status:
+                    return None
+                if not _friends_message.type == "Reply":
+                    return MessageChain([Plain(str(_friends_message.data))])
+                _type = _friends_message.data.get("type")
+                _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{self.config.INTRO}"
+                if _type == "voice":
+                    # 转换格式
+                    voice = await silkcoder.async_encode(_friends_message.data.get("voice"), audio_format="ogg")
+                    message_chain = MessageChain([Voice(data_bytes=voice)])
+                elif _type == "text":
+                    message_chain = MessageChain([Plain(_caption)])
+                else:
+                    message_chain = MessageChain([Plain(_friends_message.msg)])
+                if message_chain:
+                    active_msg = await app.send_message(group, message_chain, quote=source)
+                    Utils.trackMsg(f"QQ{_hand.from_chat.id}{active_msg.id}", user_id=_hand.from_user.id)
 
         Setting.qqbot_profile_init()
         Ariadne.launch_blocking()

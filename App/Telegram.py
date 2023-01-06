@@ -2,7 +2,8 @@
 # @Time    : 9/22/22 11:04 PM
 # @FileName: Controller.py.py
 # @Software: PyCharm
-# @Github    ：sudoskys
+# @Github: sudoskys
+
 import asyncio
 import pathlib
 import time
@@ -59,13 +60,17 @@ class BotRunner(object):
         self.proxy = config.proxy
 
     def botCreate(self):
+        if not self.bot.botToken:
+            return None, None
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
     def run(self):
         # print(self.bot)
-        logger.success("APP:Telegram Bot Start")
         bot, _config = self.botCreate()
+        if not bot:
+            return
+        logger.success("APP:Telegram Bot Start")
         if self.proxy.status:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
@@ -104,7 +109,7 @@ class BotRunner(object):
                 await bot.reply_to(message, await Event.Help(_config))
             if started:
                 request_timestamps.append(time.time())
-                _friends_message = await Event.Text(_hand, _config)
+                _friends_message = await Event.Group(_hand, _config)
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.type == "Reply":

@@ -390,7 +390,7 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], type=types)
 
 
-async def Text(Message: User_Message, config) -> PublicReturn:
+async def Group(Message: User_Message, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param Message:
