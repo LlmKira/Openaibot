@@ -27,7 +27,9 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 # 配置分发
-tasks = set()  # asyncio任务池，保持对所有协程任务的强引用，避免被回收。https://www.bilibili.com/read/cv17261955/
+tasks = set()
+# asyncio任务池，保持对所有协程任务的强引用，避免被回收
+# https://www.bilibili.com/read/cv17261955/
 ctrlConfig = config.Controller
 try:
     for starter in ctrlConfig:

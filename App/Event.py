@@ -294,7 +294,7 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     #
-    if _csonfig.get("whiteUserSwitch"):
+    if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
             return PublicReturn(status=True, type="WhiteUserCheck")
@@ -302,8 +302,8 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
         if UserManger(user_id).read("block"):
             msg = f"{user_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                        type="WhiteUserCheck",
-                        msg=msg)
+                            type="WhiteUserCheck",
+                            msg=msg)
     else:
         return PublicReturn(status=True, type="WhiteUserCheck")
 
@@ -315,7 +315,7 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     #
-    if _csonfig.get("whiteUserSwitch"):
+    if _csonfig["whiteGroupSwitch"]:
         # 没有在白名单里！
         if GroupManger(group_id).read("white"):
             return PublicReturn(status=True, type="WhiteUserCheck")
@@ -323,8 +323,8 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
         if GroupManger(group_id).read("block"):
             msg = f"{group_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                        type="WhiteUserCheck",
-                        msg=msg)
+                            type="WhiteUserCheck",
+                            msg=msg)
     else:
         return PublicReturn(status=True, type="WhiteUserCheck")
 
@@ -534,10 +534,15 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
-        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
+        return PublicReturn(status=True,
+                            msg=f"OK",
+                            type="Reply",
+                            data=_data)
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"Error Occur~Maybe Api request rate limit~nya",
+                            type="Error",
+                            data="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def MasterCommand(Message: User_Message, config):
