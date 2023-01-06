@@ -55,7 +55,7 @@ def get_message(message: types.Message):
 
 class BotRunner(object):
     def __init__(self, config):
-        self.bot = config
+        self.bot = config.bot
         self.proxy = config.proxy
 
     def botCreate(self):
@@ -88,12 +88,9 @@ class BotRunner(object):
         async def group_msg(message):
             _hand = get_message(message)
             _hand: User_Message
-
-            request_timestamps.append(time.time())
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
-            #
             if message.reply_to_message:
                 if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                     if str(Utils.checkMsg(
@@ -101,11 +98,12 @@ class BotRunner(object):
                         if not _hand.text.startswith("/"):
                             _hand.text = f"/chat {_hand.text}"
                         started = True
-            #
+
             # 分发指令
             if _hand.text.startswith("/help"):
                 await bot.reply_to(message, await Event.Help(_config))
             if started:
+                request_timestamps.append(time.time())
                 _friends_message = await Event.Text(_hand, _config)
                 _friends_message: PublicReturn
                 if _friends_message.status:
