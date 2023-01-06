@@ -55,7 +55,7 @@ def get_message(message: types.Message):
 
 class BotRunner(object):
     def __init__(self, config):
-        self.bot = config.bot
+        self.bot = config
         self.proxy = config.proxy
 
     def botCreate(self):
