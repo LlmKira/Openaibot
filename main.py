@@ -31,3 +31,6 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 App = BotRunner(config)
 App.run()
+
+
+
