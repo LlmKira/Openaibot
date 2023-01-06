@@ -69,6 +69,7 @@ class BotRunner(object):
         # print(self.bot)
         bot, _config = self.botCreate()
         if not bot:
+            logger.info("APP:Telegram Bot Close")
             return
         logger.success("APP:Telegram Bot Start")
         if self.proxy.status:

@@ -28,7 +28,7 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 # 配置分发
-tasks = set()
+client_tasks = set()
 # asyncio任务池，保持对所有协程任务的强引用，避免被回收
 # https://www.bilibili.com/read/cv17261955/
 ctrlConfig = config.Controller
@@ -38,10 +38,9 @@ try:
             logger.warning(f"Controller {starter} Do Not Exist.")
             continue
         module = importlib.import_module('App.' + starter)
-        t = asyncio.create_task(module.BotRunner(ctrlConfig.get(starter)).run())
-        tasks.add(t)
-        t.add_done_callback(tasks.discard)
-    # logger.info('Main thread exiting')
+        task = asyncio.create_task(module.BotRunner(ctrlConfig.get(starter)).run())
+        client_tasks.add(task)
+        task.add_done_callback(client_tasks.discard)
 except KeyboardInterrupt:
     logger.info('Main thread exiting')
     exit(0)

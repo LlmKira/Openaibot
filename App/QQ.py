@@ -46,14 +46,15 @@ class BotRunner:
         self.config = _config
 
     def botCreate(self):
-        if all([self.config.verify_key, self.config.account]):
+        if not self.config.verify_key or not self.config.account:
             return None
         return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 
     def run(self):
         bot = self.botCreate()
         if not bot:
-            return
+            logger.info("APP:QQ Bot Close")
+            return None
         logger.success("APP:QQ Bot Start")
 
         @bot.broadcast.receiver("FriendMessage", dispatchers=[UnionMatch("/about", "/start", "/help")])
