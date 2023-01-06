@@ -36,6 +36,7 @@ try:
             continue
         module = importlib.import_module('App.' + starter)
         t = asyncio.create_task(module.BotRunner(ctrlConfig.get(starter)).run())
+        tasks.add(t)
         t.add_done_callback(tasks.discard)
     # logger.info('Main thread exiting')
 except KeyboardInterrupt:
