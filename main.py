@@ -29,8 +29,8 @@ config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 
 def main():
+    # pool = multiprocessing.Pool(processes=len(ctrlConfig))   # 进程池
     ctrlConfig = config.Controller
-    pool = multiprocessing.Pool(processes=len(ctrlConfig))   # 进程池
     pLock = multiprocessing.Lock()
     try:
         for starter in ctrlConfig:
@@ -38,11 +38,13 @@ def main():
                 logger.warning(f"Controller {starter} Do Not Exist.")
                 continue
             module = importlib.import_module('App.' + starter)
-            pool.apply_async(func=module.BotRunner(ctrlConfig.get(starter)).run, args=(pLock,))
+            p = multiprocessing.Process(target=module.BotRunner(ctrlConfig.get(starter)).run, args=(pLock,))
+            p.start()
             # threads.append(t)
         # for t in threads:
             # t.join()  # 等待所有线程退出
-        pool.close()   # 关池，防止新进程插入
+        # pool.close()
+        # pool.join()
     except KeyboardInterrupt:
         logger.info('Exiting.')
         exit(0)
