@@ -22,8 +22,9 @@ from App import Event
 from utils import Setting
 from utils.Chat import Utils
 from utils.Data import create_message, User_Message, PublicReturn
+from utils.Frequency import Vitality
 
-time_interval = 60*5
+time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
 
@@ -48,7 +49,8 @@ class BotRunner:
     def botCreate(self):
         if not self.config.verify_key:
             return None
-        return Ariadne(config(self.config.account, self.config.verify_key, HttpClientConfig(host=self.config.http_host), WebsocketClientConfig(host=self.config.ws_host)))
+        return Ariadne(config(self.config.account, self.config.verify_key, HttpClientConfig(host=self.config.http_host),
+                              WebsocketClientConfig(host=self.config.ws_host)))
 
     def run(self, pLock=None):
         bot = self.botCreate()
@@ -117,6 +119,13 @@ class BotRunner:
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
+            else:
+                _GroupTigger = Vitality(group_id=_hand.from_chat.id)
+                _GroupTigger.tigger(Message=_hand, config=self.config)
+                _check = _GroupTigger.check()
+                if _check:
+                    _hand.text = f"/catch {_hand.text}"
+                    started = True
             if quote:
                 if str(Utils.checkMsg(
                         f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":

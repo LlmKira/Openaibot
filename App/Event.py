@@ -222,7 +222,10 @@ class Reply(object):
         try:
             openai_kira.setting.openaiApiKey = key
             from openai_kira import Chat
+            # 计算唯一消息桶 ID
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
+            # 群组公用桶 ID
+            _oid = f"-{abs(group)}"
             # 启用单人账户桶
             if len(start_name) > 12:
                 start_name = start_name[-10:]
@@ -241,7 +244,7 @@ class Reply(object):
                 )
             elif method == "catch":
                 receiver = Chat.Chatbot(
-                    conversation_id=int(_cid),
+                    conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
                     token_limit=1500,
                     start_sequ=start_name,
@@ -378,6 +381,12 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
         if len(_prompt_r) > 1:
             _prompt = _prompt_r[1]
         _prompt_types = "chat"
+    # Write
+    if _prompt.startswith("/catch"):
+        _prompt_r = _prompt.split(" ", 1)
+        if len(_prompt_r) > 1:
+            _prompt = _prompt_r[1]
+        _prompt_types = "catch"
     # Write
     if _prompt.startswith("/write"):
         _prompt_r = _prompt.split(" ", 1)

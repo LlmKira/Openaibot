@@ -19,6 +19,7 @@ from App import Event
 from utils import Setting
 from utils.Chat import Utils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn
+from utils.Frequency import Vitality
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -97,6 +98,13 @@ class BotRunner(object):
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
+            else:
+                _GroupTigger = Vitality(group_id=_hand.from_chat.id)
+                _GroupTigger.tigger(Message=_hand, config=_config)
+                _check = _GroupTigger.check()
+                if _check:
+                    _hand.text = f"/catch {_hand.text}"
+                    started = True
             if message.reply_to_message:
                 if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                     if str(Utils.checkMsg(
