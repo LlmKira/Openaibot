@@ -65,7 +65,7 @@ class BotRunner(object):
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
-    def run(self, pLock):
+    def run(self, pLock=None):
         # print(self.bot)
         bot, _config = self.botCreate()
         if not bot:
