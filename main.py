@@ -9,7 +9,7 @@ from utils.Base import ReadConfig
 # 日志
 from loguru import logger
 import sys
-import threading
+import multiprocessing
 import importlib
 
 logger.remove()
@@ -28,7 +28,7 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 def main():
-    threads = []  # 线程池
+    # processes = []  # 进程池
     ctrlConfig = config.Controller
     try:
         for starter in ctrlConfig:
@@ -36,11 +36,11 @@ def main():
                 logger.warning(f"Controller {starter} Do Not Exist.")
                 continue
             module = importlib.import_module('App.' + starter)
-            t = threading.Thread(target=module.BotRunner(ctrlConfig.get(starter)).run)
-            t.start()
-            threads.append(t)
-        for t in threads:
-            t.join()  # 等待所有线程退出
+            p = multiprocessing.Process(target=module.BotRunner(ctrlConfig.get(starter)).run)
+            p.start()
+            # threads.append(t)
+        # for t in threads:
+            # t.join()  # 等待所有线程退出
     except KeyboardInterrupt:
         logger.info('Main thread exiting')
         exit(0)
