@@ -29,22 +29,23 @@ config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 
 def main():
-    # processes = []  # 进程池
     ctrlConfig = config.Controller
+    pool = multiprocessing.Pool(processes=len(ctrlConfig))   # 进程池
+    pLock = multiprocessing.Lock()
     try:
         for starter in ctrlConfig:
             if not Path(f"App/{starter}.py").exists():
                 logger.warning(f"Controller {starter} Do Not Exist.")
                 continue
             module = importlib.import_module('App.' + starter)
-            p = multiprocessing.Process(target=module.BotRunner(ctrlConfig.get(starter)).run)
-            p.start()
+            pool.apply_async(func=module.BotRunner(ctrlConfig.get(starter)).run, args=(pLock,))
             # threads.append(t)
         # for t in threads:
             # t.join()  # 等待所有线程退出
+        pool.close()   # 关池，防止新进程插入
     except KeyboardInterrupt:
-        logger.info('Main thread exiting')
+        logger.info('Exiting.')
         exit(0)
 
-
-main()
+if __name__ == '__main__':  # 兼容Windows multiprocessing
+    main()

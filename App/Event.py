@@ -75,9 +75,10 @@ def load_csonfig():
     return _csonfig
 
 
-def save_csonfig():
-    with open("./Config/config.json", "w+", encoding="utf8") as f:
-        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+def save_csonfig(pLock=None):
+    with pLock:
+        with open("./Config/config.json", "w+", encoding="utf8") as f:
+            json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
 async def TTSSupportCheck(text, user_id):
@@ -549,7 +550,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
                             reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def MasterCommand(Message: User_Message, config):
+async def MasterCommand(Message: User_Message, config, pLock):
     load_csonfig()
     _reply = []
     if Message.from_user.id in config.master:
@@ -563,7 +564,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["usercold_time"] = int(_len_)
                     _reply.append(f"user cooltime:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
             if command.startswith("/set_group_cold"):
@@ -573,7 +574,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["groupcold_time"] = int(_len_)
                     _reply.append(f"group cooltime:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
             if command.startswith("/set_per_user_limit"):
@@ -582,7 +583,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["per_user_limit"] = int(_len_)
                     _reply.append(f"set_hour_limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset per_user_limit to{_len_}")
 
             if command.startswith("/set_per_hour_limit"):
@@ -592,7 +593,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["hour_limit"] = int(_len_)
                     _reply.append(f"hour_limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset hour_limit to{_len_}")
 
             if command.startswith("/promote_user_limit"):
@@ -624,7 +625,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["token_limit"] = int(_len_)
                     _reply.append(f"tokenlimit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
             if command.startswith("/set_input_limit"):
@@ -634,7 +635,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["input_limit"] = int(_len_)
                     _reply.append(f"input limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset input limit to{_len_}")
 
             if "/add_block_group" in command:
@@ -737,26 +738,26 @@ async def MasterCommand(Message: User_Message, config):
             if command == "/open_user_white_mode":
                 _csonfig["whiteUserSwitch"] = True
                 _reply.append("SETTING:whiteUserSwitch ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteUser ON")
 
             if command == "/close_user_white_mode":
                 _csonfig["whiteUserSwitch"] = False
                 _reply.append("SETTING:whiteUserSwitch OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteUser OFF")
 
             # GROUP White
             if command == "/open_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = True
                 _reply.append("ON:whiteGroup")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup ON")
 
             if command == "/close_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = False
                 _reply.append("SETTING:whiteGroup OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup OFF")
 
             if command == "/see_api_key":
@@ -784,25 +785,25 @@ async def MasterCommand(Message: User_Message, config):
             if "/enable_change_head" in command:
                 _csonfig["allow_change_head"] = True
                 _reply.append("SETTING:allow_change_head ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if "/disable_change_head" in command:
                 _csonfig["allow_change_head"] = False
                 _reply.append("SETTING:allow_change_head OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if command == "/open":
                 _csonfig["statu"] = True
                 _reply.append("SETTING:BOT ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if command == "/close":
                 _csonfig["statu"] = False
                 _reply.append("SETTING:BOT OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT OFF")
         except Exception as e:
             logger.error(e)

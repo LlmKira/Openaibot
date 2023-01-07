@@ -65,7 +65,7 @@ class BotRunner(object):
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
-    def run(self):
+    def run(self, pLock):
         # print(self.bot)
         bot, _config = self.botCreate()
         if not bot:
@@ -155,7 +155,7 @@ class BotRunner(object):
                         await bot.reply_to(message, _friends_message.msg)
             # 检查管理员指令
             if _hand.from_user.id in _config.master:
-                _reply = await Event.MasterCommand(Message=_hand, config=_config)
+                _reply = await Event.MasterCommand(Message=_hand, config=_config, pLock=pLock)
                 # 检查管理员指令
                 if _hand.text == "/config":
                     path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
