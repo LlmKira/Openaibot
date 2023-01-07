@@ -42,12 +42,13 @@ def main():
             p.start()
             # threads.append(t)
         # for t in threads:
-            # t.join()  # 等待所有线程退出
+        # t.join()  # 等待所有线程退出
         # pool.close()
         # pool.join()
     except KeyboardInterrupt:
         logger.info('Exiting.')
         exit(0)
+
 
 if __name__ == '__main__':  # 兼容Windows multiprocessing
     main()

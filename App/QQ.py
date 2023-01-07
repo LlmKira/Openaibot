@@ -23,7 +23,7 @@ from utils import Setting
 from utils.Chat import Utils
 from utils.Data import create_message, User_Message, PublicReturn
 
-time_interval = 60
+time_interval = 60*5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
 
@@ -50,7 +50,7 @@ class BotRunner:
             return None
         return Ariadne(config(self.config.account, self.config.verify_key, HttpClientConfig(host=self.config.http_host), WebsocketClientConfig(host=self.config.ws_host)))
 
-    def run(self, pLock):
+    def run(self, pLock=None):
         bot = self.botCreate()
         if not bot:
             logger.info("APP:QQ Bot Close")
