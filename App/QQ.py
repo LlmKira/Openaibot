@@ -46,7 +46,7 @@ class BotRunner:
         self.config = _config
 
     def botCreate(self):
-        if not self.config.verify_key or not self.config.account:
+        if not self.config.verify_key:
             return None
         return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 
@@ -79,17 +79,12 @@ class BotRunner:
             if not _friends_message.status:
                 return None
 
-            if not _friends_message.type == "Reply":
-                return MessageChain([Plain(str(_friends_message.data))])
-
-            _type: str = _friends_message.data.get("type")
-            _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{self.config.INTRO}"
-
-            if _type == "voice":
+            _caption = f"{_friends_message.reply}\n{self.config.INTRO}"
+            if _friends_message.voice:
                 # 转换格式
                 voice = await silkcoder.async_encode(_friends_message.data.get("voice"), audio_format="ogg")
                 message_chain = MessageChain([Voice(data_bytes=voice)])
-            elif _type == "text":
+            elif _friends_message.reply:
                 message_chain = MessageChain([Plain(_caption)])
             else:
                 message_chain = MessageChain([Plain(_friends_message.msg)])
@@ -137,17 +132,12 @@ class BotRunner:
                 _friends_message = await Event.Group(_hand, self.config)
                 _friends_message: PublicReturn
 
-                if not _friends_message.status:
-                    return None
-                if not _friends_message.type == "Reply":
-                    return MessageChain([Plain(str(_friends_message.data))])
-                _type = _friends_message.data.get("type")
-                _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{self.config.INTRO}"
-                if _type == "voice":
+                _caption = f"{_friends_message.reply}\n{self.config.INTRO}"
+                if _friends_message.voice:
                     # 转换格式
                     voice = await silkcoder.async_encode(_friends_message.data.get("voice"), audio_format="ogg")
                     message_chain = MessageChain([Voice(data_bytes=voice)])
-                elif _type == "text":
+                elif _friends_message.reply:
                     message_chain = MessageChain([Plain(_caption)])
                 else:
                     message_chain = MessageChain([Plain(_friends_message.msg)])

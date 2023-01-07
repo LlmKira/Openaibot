@@ -17,13 +17,15 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现 chat ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 由本机器人自实现。
+本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 由本机器人自实现。
 
-*复刻的 chatGPT ，体验基本一样 (?)，就是 Api 要钱*
+*是复刻 chatGPT，chatGPT 并未开放接口。*
 
-*自制异步依赖库提速，自制上下文优化策略*
+*依赖库由官方的同步切换为自维护异步库*
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
+
+*有问题请更新，然后提交 Issue*
 
 ## 特性
 
@@ -32,8 +34,8 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * 设定固定头人设
 * 多主人管理
 * 多 Api key 负载，超额弹出。
-* chatGPT api 版本实现，不逆向 preview 的 api
 * 支持私聊
+* 实验性的多平台
 * 支持群聊
 * 支持速率限制
 * 支持用量管理
@@ -43,7 +45,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 动态裁剪上下文，防止超额
-* 网络中间件支持， Prompt Injection，对Chat更友好
+* 网络中间件支持，实时内容支持， Prompt Injection，对Chat更友好
 
 见 https://github.com/sudoskys/Openaibot/issues/1
 
@@ -137,24 +139,39 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 
 **配置文件**
 
+多平台是实验性的
+
 ```toml
+# QQ
+[Controller.QQ]
+master = [222111, 11424] # master user id , 账号 ID
+account = ""
+verify_key = ""
+INTRO = "POWER BY OPENAI"  # 后缀
+ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
+WHITE = "Group NOT in WHITE list" # 黑白名单提示
+
+
+# Telegram
 [Controller.Telegram]
-master = [114,514] # master user id , 账号 ID
+master = [114, 514] # master user id , 账号 ID
 botToken = '' # 机器人密钥
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
 # 设置的代理，但是不代理 openai api, 只代理 bot
-proxy = {status = false, url = "http://127.0.0.1:7890"}
+proxy = { status = false, url = "http://127.0.0.1:7890" }
 ```
 
-### 配置 BotToken
+### 配置 Telegram 设置
+
+#### BotToken
 
 [Telegram botToken 申请](https://t.me/BotFather)
 
 然后关闭隐私模式或者提拔机器人为管理员后才能使用。
 
-### 配置 key
+### 配置 Openai Api key
 
 在机器人私聊中配置 key
 
@@ -427,7 +444,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ### 上一次的性能分析
 
-**日常负载 316MB**
+**日常负载内存 316MB**
 
 ## 感谢
 

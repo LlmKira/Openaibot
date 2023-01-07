@@ -1,7 +1,7 @@
 # QQ
 [Controller.QQ]
 master = [222111, 11424] # master user id , 账号 ID
-account = ""
+account = 0
 verify_key = ""
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
