@@ -7,7 +7,7 @@ from utils.TTS import VITS_TTS, TTS_REQ, TTS_Clint
 from openai_kira.utils.Talk import Talk
 from fastapi.responses import Response
 from loguru import logger
-from ftlangdetect import detect
+from API.LangDetect import *
 from typing import Union
 
 serviceCfg = Service_Data.get_key('./Config/service.json')
@@ -17,7 +17,7 @@ ttsConf = serviceCfg['tts']
 class VITS:
     async def vits(self, text: str, task: int = 1, doReturnRawAudio: bool = True, audioFormat='ogg'):
         vits_Conf = ttsConf['vits']
-        lang = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
+        lang = detect_lang(text)
         if lang not in ["ZH", "JA"]:
             logger.warning('语言不支持,语音合成目前仅支持合成中文、日语')
             return False
@@ -41,7 +41,7 @@ class VITS:
 
     async def azure(self, text, doReturnRawAudio: bool = False):
         azureConf = ttsConf['azure']
-        lang = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
+        lang = detect_lang(text)
         speaker = azureConf["speaker"].get(lang)
         if not speaker:
             logger.warning('语言不支持。语音合成目前仅支持合成中文、日语')
