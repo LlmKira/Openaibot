@@ -140,7 +140,7 @@ class BotRunner:
                 if not _friends_message.status:
                     return None
                 if not _friends_message.type == "Reply":
-                    return MessageChain([Plain(str(_friends_message.data))])
+                    return MessageChain([Plain(str(_friends_message.msg))])
                 _type = _friends_message.data.get("type")
                 _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{self.config.INTRO}"
                 if _type == "voice":

@@ -428,7 +428,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+        return PublicReturn(status=True, msg=f"TTS:{_set}", type="VoiceSet")
     _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
