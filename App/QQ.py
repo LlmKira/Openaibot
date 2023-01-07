@@ -46,7 +46,7 @@ class BotRunner:
         self.config = _config
 
     def botCreate(self):
-        if not self.config.verify_key or not self.config.account:
+        if not self.config.verify_key:
             return None
         return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 

@@ -27,6 +27,7 @@ logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
+
 def main():
     threads = []  # 线程池
     ctrlConfig = config.Controller
@@ -44,5 +45,6 @@ def main():
     except KeyboardInterrupt:
         logger.info('Main thread exiting')
         exit(0)
+
 
 main()
