@@ -10,7 +10,7 @@ from typing import Union, Optional
 
 from graia.amnesia.message import MessageChain
 from graia.ariadne import Ariadne
-from graia.ariadne.connection.config import config
+from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
 from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
@@ -30,7 +30,7 @@ request_timestamps = deque()
 
 def get_user_message(
         message: MessageChain,
-        member: Union[Member, Friend, Group],
+        member: Union[Member, Friend],
         group: Optional[Group] = None) -> User_Message:
     return create_message(
         user_id=member.id,  # qq 号
@@ -48,7 +48,7 @@ class BotRunner:
     def botCreate(self):
         if not self.config.verify_key:
             return None
-        return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
+        return Ariadne(config(self.config.account, self.config.verify_key, HttpClientConfig(host=self.config.http_host), WebsocketClientConfig(host=self.config.ws_host)))
 
     def run(self, pLock):
         bot = self.botCreate()
