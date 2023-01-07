@@ -30,11 +30,11 @@ request_timestamps = deque()
 
 def get_user_message(
         message: MessageChain,
-        member: Union[Member, Friend],
+        member: Union[Member, Friend, Group],
         group: Optional[Group] = None) -> User_Message:
     return create_message(
         user_id=member.id,  # qq 号
-        user_name=member.name if isinstance(member, Group) else member.nickname,
+        user_name=member.name if isinstance(member, Member) else member.nickname,
         group_id=group.id if group else member.id,
         text=str(message),
         group_name=group.name if group else "Group"
@@ -50,7 +50,7 @@ class BotRunner:
             return None
         return Ariadne(config(verify_key=self.config.verify_key, account=self.config.account))
 
-    def run(self):
+    def run(self, pLock):
         bot = self.botCreate()
         if not bot:
             logger.info("APP:QQ Bot Close")
@@ -96,7 +96,7 @@ class BotRunner:
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
             _hand = get_user_message(msg, member=friend, group=None)
             if friend.id in self.config.master:
-                _reply = await Event.MasterCommand(Message=_hand, config=self.config)
+                _reply = await Event.MasterCommand(Message=_hand, config=self.config, pLock=pLock)
                 if _reply:
                     await app.send_message(friend, "".join(_reply), quote=source)
 
