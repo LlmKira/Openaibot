@@ -113,22 +113,19 @@ class BotRunner(object):
                 _friends_message = await Event.Group(_hand, _config)
                 _friends_message: PublicReturn
                 if _friends_message.status:
-                    if _friends_message.type == "Reply":
-                        _type = _friends_message.data.get("type")
-                        _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{_config.INTRO}"
-                        if _type == "voice":
-                            msg = await bot.send_voice(chat_id=message.chat.id,
-                                                       reply_to_message_id=message.id,
-                                                       voice=_friends_message.data.get("voice"),
-                                                       caption=_caption
-                                                       )
-                            Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
-                        elif _type == "text":
-                            msg = await bot.reply_to(message, _caption)
-                            Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
+                    if _friends_message.voice:
+                        _caption = f"{_friends_message.reply}\n{_config.INTRO}"
+                        msg = await bot.send_voice(chat_id=message.chat.id,
+                                                   reply_to_message_id=message.id,
+                                                   voice=_friends_message.data.get("voice"),
+                                                   caption=_caption
+                                                   )
+                    elif _friends_message.reply:
+                        _caption = f"{_friends_message.reply}\n{_config.INTRO}"
+                        msg = await bot.reply_to(message, _caption)
                     else:
                         msg = await bot.reply_to(message, _friends_message.msg)
-                        Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
+                    Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
         # 私聊
         @bot.message_handler(content_types=['text'], chat_types=['private'])
@@ -144,17 +141,16 @@ class BotRunner(object):
                 _friends_message = await Event.Friends(_hand, _config)
                 _friends_message: PublicReturn
                 if _friends_message.status:
-                    if _friends_message.type == "Reply":
-                        _type = _friends_message.data.get("type")
-                        _caption = f"{_friends_message.data.get('text')}\n{_friends_message.data.get('msg')}\n{_config.INTRO}"
-                        if _type == "voice":
-                            await bot.send_voice(chat_id=message.chat.id,
-                                                 reply_to_message_id=message.id,
-                                                 voice=_friends_message.data.get("voice"),
-                                                 caption=_caption
-                                                 )
-                        elif _type == "text":
-                            await bot.reply_to(message, _caption)
+                    if _friends_message.voice:
+                        _caption = f"{_friends_message.reply}\n{_config.INTRO}"
+                        await bot.send_voice(chat_id=message.chat.id,
+                                             reply_to_message_id=message.id,
+                                             voice=_friends_message.data.get("voice"),
+                                             caption=_caption
+                                             )
+                    elif _friends_message.reply:
+                        _caption = f"{_friends_message.reply}\n{_config.INTRO}"
+                        await bot.reply_to(message, _caption)
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             # 检查管理员指令

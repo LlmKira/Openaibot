@@ -3,6 +3,9 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
+# 事件，完全隔离的
+
 import json
 import pathlib
 import random
@@ -297,15 +300,15 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
-            return PublicReturn(status=True, type="WhiteUserCheck")
+            return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
         if UserManger(user_id).read("block"):
             msg = f"{user_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                            type="WhiteUserCheck",
+                            trace="WhiteUserCheck",
                             msg=msg)
     else:
-        return PublicReturn(status=True, type="WhiteUserCheck")
+        return PublicReturn(status=True, trace="WhiteUserCheck")
 
 
 async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
@@ -318,15 +321,15 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     if _csonfig["whiteGroupSwitch"]:
         # 没有在白名单里！
         if GroupManger(group_id).read("white"):
-            return PublicReturn(status=True, type="WhiteUserCheck")
+            return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{group_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
         if GroupManger(group_id).read("block"):
             msg = f"{group_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                            type="WhiteUserCheck",
+                            trace="WhiteUserCheck",
                             msg=msg)
     else:
-        return PublicReturn(status=True, type="WhiteUserCheck")
+        return PublicReturn(status=True, trace="WhiteUserCheck")
 
 
 async def RemindSet(user_id, text) -> PublicReturn:
@@ -339,10 +342,10 @@ async def RemindSet(user_id, text) -> PublicReturn:
     _user_id = user_id
     _remind_r = _text.split(" ", 1)
     if len(_remind_r) < 2:
-        return PublicReturn(status=False, msg=f"", type="Remind")
+        return PublicReturn(status=False, msg=f"", trace="Remind")
     _remind = _remind_r[1]
     if Utils.tokenizer(_remind) > 333:
-        return PublicReturn(status=False, msg=f"过长:{_remind}", type="Remind")
+        return PublicReturn(status=True, msg=f"过长:{_remind}", trace="Remind")
     _remind = ContentDfa.filter_all(_remind)
     if _csonfig.get("allow_change_head"):
         # _remind = _remind.replace("你是", "ME*扮演")
@@ -351,9 +354,9 @@ async def RemindSet(user_id, text) -> PublicReturn:
         _remind = _remind.replace("YOU*", "你")
         _remind = _remind.replace("ME*", "我")
         Header(uid=_user_id).set(_remind)
-        return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", type="Remind")
+        return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", trace="Remind")
     Header(uid=_user_id).set({})
-    return PublicReturn(status=True, msg=f"I refuse Remind Command", type="Remind")
+    return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
 
 
 async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
@@ -386,8 +389,8 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     # 校验结果
     if _prompt_types == "unknown":
         # 不执行
-        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], type=types)
-    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], type=types)
+        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
+    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
 
 
 async def Group(Message: User_Message, config) -> PublicReturn:
@@ -404,36 +407,36 @@ async def Group(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_remind_set.msg)
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", type="VoiceSet")
+        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="VoiceSet")
     _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
         # 预处理失败，不符合任何触发条件，不回复捏
-        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _prompt = _prompt_preprocess.data[0]
     _reply_type = _prompt_preprocess.data[1]
     try:
@@ -451,18 +454,17 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = False
+        voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
-        _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
-        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=_req + "\n".join(_info))
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def Friends(Message: User_Message, config) -> PublicReturn:
@@ -479,36 +481,36 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_remind_set.msg)
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="Voice")
     _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
         # 预处理失败，不符合任何触发条件，不回复捏
-        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _prompt = _prompt_preprocess.data[0]
     _reply_type = _prompt_preprocess.data[1]
     try:
@@ -526,7 +528,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = False
+        voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
@@ -536,13 +538,15 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
         return PublicReturn(status=True,
                             msg=f"OK",
-                            type="Reply",
-                            data=_data)
+                            trace="Reply",
+                            reply=_req + "\n".join(_info),
+                            voice=voice_data
+                            )
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"Error Occur~Maybe Api request rate limit~nya",
-                            type="Error",
-                            data="Error Occur~Maybe Api request rate limit~nya")
+                            trace="Error",
+                            reply="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def MasterCommand(Message: User_Message, config):
