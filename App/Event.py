@@ -254,7 +254,7 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
-                                                            head=".",
+                                                            head="下面是一段对话。",
                                                             role=".",
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             web_enhance_server=_plugin_table

@@ -21,6 +21,49 @@ Tigger = DataWorker(host=redis_config.host,
                     prefix="Open_Ai_bot_tigger_")
 
 
+class CheckSeq(object):
+    def __init__(self):
+        self._help_keywords = ["怎么",
+                               "How",
+                               "?",
+                               "？",
+                               "什么",
+                               "知道",
+                               "无聊",
+                               "啊",
+                               "What",
+                               "Who",
+                               "Where",
+                               "谁能",
+                               "呢",
+                               "吗",
+                               "怎么",
+                               "How to",
+                               "how to",
+                               "如何做",
+                               "帮我",
+                               "帮助我",
+                               "请给我",
+                               "给出建议",
+                               "给建议",
+                               "给我",
+                               "给我一些",
+                               "请教",
+                               "如何",
+                               "帮朋友",
+                               "需要什么",
+                               "注意什么",
+                               "怎么办"
+                               ]
+
+    def help(self, text):
+        has = False
+        for item in self._help_keywords:
+            if item in text:
+                has = True
+        return has
+
+
 class Vitality(object):
     def __init__(self, group_id: int):
         self.group_id = str(group_id)
@@ -68,41 +111,52 @@ class Vitality(object):
         self._grow_request_vitality()
         self.receiver.record_message(ask=_text, reply="")
 
-    def check(self):
-        # 检查频次锁
+    def check(self, Message: User_Message):
+        _text = Message.text
+        _min = random.randint(7, 50)
+        # 检查频次锁，提前返回
         if Tigger.getKey(self.group_id):
             return False
-        # 抽签
-        _lucky = random.randint(1, 100)
-        if _lucky < 5:
-            Tigger.setKey(self.group_id, "True", exN=60 * 20)
-            return True
 
         # 频次计算机器
         _frequency = self._get_chat_vitality()
-        # 一分钟内的次数
-        if _frequency > 20:
-            Tigger.setKey(self.group_id, "True", exN=60 * 10)
-            return True
+        # 提前返回
+        if 2 < _frequency < 10:
+            return False
 
+        # 合格检查，上下文阶段
+        status = False
+        # 抽签检查
+        _lucky = random.randint(1, 100)
+        if _lucky < 5:
+            status = True
         # 计算初始
         message_cache = self.receiver.read_memory(plain_text=True, sign=False)
         message_cache: list
         message_cache = [item for item in message_cache if item]
         if not len(message_cache) > 20:
             return False
-
         _cache = message_cache[:20]
         from openai_kira.utils.Talk import Talk
         _keywords = []
         for items in _cache:
             _keywords.extend(Talk.tfidf_keywords(keywords=items, delete_stopwords=True, topK=5, withWeight=False))
-        if len(_keywords) < 5:
+        # 提前返回
+        if len(_keywords) < 4:
             return False
         _get_score = len(list(set(_keywords))) / len(_keywords)
         # 得分越低代表越相似
         if _get_score < 0.5:
-            Tigger.setKey(self.group_id, "True", exN=60 * 20)
-            return True
+            status = True
 
-        return False
+        # 内容检查
+        if status:
+            _check = CheckSeq()
+            if _check.help(_text):
+                status = True
+            else:
+                status = False
+
+        if status:
+            Tigger.setKey(self.group_id, "True", exN=60 * _min)
+        return status
