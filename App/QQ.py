@@ -152,7 +152,7 @@ class BotRunner:
                 if self.config.tigger:
                     _GroupTigger = Vitality(group_id=_hand.from_chat.id)
                     _GroupTigger.tigger(Message=_hand, config=self.config)
-                    _check = _GroupTigger.check()
+                    _check = _GroupTigger.check(Message=_hand)
                     if _check:
                         _hand.text = f"/catch {_hand.text}"
                         started = True
