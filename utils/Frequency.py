@@ -3,6 +3,7 @@
 # @FileName: Frequency.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import random
 import time
 
 from openai_kira import Chat
@@ -20,22 +21,41 @@ Tigger = DataWorker(host=redis_config.host,
                     prefix="Open_Ai_bot_tigger_")
 
 
-# 热力扳机
-
 class Vitality(object):
-    def __init__(self, group_id):
-
+    def __init__(self, group_id: int):
         self.group_id = str(group_id)
-        self.message_cache = Tigger.getList(self.group_id)
         self.time_interval = 60 * 10
-        # 使用 deque 存储请求时间戳
-        self.request_timestamps = Tigger.getList(f"group_{self.group_id}")
+        _oid = f"-{abs(group_id)}"
+        self.receiver = Chat.Chatbot(
+            api_key="1",
+            conversation_id=int(_oid),
+            token_limit=1500,
+        )
 
-    def get_request_frequency(self):
-        while self.request_timestamps and self.request_timestamps[0] < time.time() - self.time_interval:
-            self.request_timestamps.pop(0)
-        request_frequency = len(self.request_timestamps)
-        return request_frequency
+    def __tid(self):
+        return self.group_id + str(time.strftime("%Y%m%d%H%M", time.localtime()))
+
+    def _grow_request_vitality(self):
+        _tid = self.__tid()
+        _time_matrix = Tigger.getKey(_tid)
+        if _time_matrix:
+            if not isinstance(_time_matrix, list):
+                matrix = []
+            matrix = _time_matrix
+        else:
+            matrix = []
+        matrix.append(time.time())
+        Tigger.setKey(_tid, matrix, exN=60 * 5)
+
+    def _get_chat_vitality(self):
+        _tid = self.__tid()
+        _time_matrix = Tigger.getKey(_tid)
+        if not isinstance(_time_matrix, list):
+            return len([])
+        if _time_matrix:
+            return len(_time_matrix)
+        else:
+            return len([])
 
     def tigger(self, Message: User_Message, config):
         """
@@ -45,54 +65,47 @@ class Vitality(object):
         :return:
         """
         _text = Message.text
-        self.request_timestamps.append(time.time())
-        Tigger.addToList(f"group_{self.group_id}", listData=list(self.request_timestamps))
-        self.message_cache.append(_text)
-        Tigger.addToList(f"{self.group_id}", listData=[_text])
-
-        _oid = f"-{abs(Message.from_chat.id)}"
-        receiver = Chat.Chatbot(
-            api_key="1",
-            conversation_id=int(_oid),
-            token_limit=1500,
-        )
-        receiver.record_message(ask=_text, reply="")
+        self._grow_request_vitality()
+        self.receiver.record_message(ask=_text, reply="")
 
     def check(self):
-        tagger = False
+        # 抽签
+        _unlucky = random.randint(1, 100)
+        if _unlucky > 85:
+            return False
+        if _unlucky < 5:
+            Tigger.setKey(self.group_id, True, exN=60 * 10)
+            return True
+
         # 检查频次锁
         if Tigger.getKey(self.group_id):
             return False
-        print(self.message_cache)
-        if not len(self.message_cache) > 10:
-            return False
-        # 上下文
-        _cache = self.message_cache[:10]
-        # 计算
-        from openai_kira.utils.Talk import Talk
-        _CHA = []
-        _max = 0
-        _index = 0
-        for item in range(len(_cache)):
-            if len(_cache[item]) > _max:
-                _max = len(_cache[item])
-                _index = item
-        _theme = Talk.tfidf_keywords(keywords=_cache[_index], delete_stopwords=True, topK=5, withWeight=False)
-        _score = []
-        _cache.remove(_cache[_index])
-        for items in _cache:
-            _now = Talk.tfidf_keywords(keywords=items, delete_stopwords=True, topK=5, withWeight=False)
-            _know = [item for item in _now if item in _theme]
-            _score.append(len(_know))
-        _get_score = sum(_score) / len(_score) * 5
-        if _get_score > 0.5:
-            tagger = True
+
         # 频次计算机器
-        _fr = self.get_request_frequency()
-        print(_fr)
-        if 5 > _fr or _fr > 100:
-            tagger = True
-        if tagger:
-            # 注册频次锁
-            Tigger.setKey(self.group_id, True, exN=60 * 10)
-        return tagger
+        _frequency = self._get_chat_vitality()
+        # 一分钟内的次数
+        if _frequency > 20:
+            Tigger.setKey(self.group_id, True, exN=60 * 6)
+            return True
+
+        # 计算初始
+        message_cache = self.receiver.read_memory(plain_text=True, sign=False)
+        message_cache: list
+        message_cache = [item for item in message_cache if item]
+        if not len(message_cache) > 20:
+            return False
+
+        _cache = message_cache[:20]
+        from openai_kira.utils.Talk import Talk
+        _keywords = []
+        for items in _cache:
+            _keywords.extend(Talk.tfidf_keywords(keywords=items, delete_stopwords=True, topK=5, withWeight=False))
+        if len(_keywords) < 5:
+            return False
+        _get_score = len(list(set(_keywords))) / len(_keywords)
+        # 得分越低代表越相似
+        if _get_score < 0.5:
+            Tigger.setKey(self.group_id, True, exN=60 * 20)
+            return True
+
+        return False

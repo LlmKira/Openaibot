@@ -23,7 +23,9 @@ logger.add(sink='run.log',
            enqueue=True)
 # logger.info("新闻：api key 只能通过 机器人命令配置")
 logger.debug("Debug Mode On")
-logger.info("新闻：vits 需要 apt install ffmpeg 安装 ffmpeg！")
+
+logger.info("新闻:配置文件大改，请更新 app.toml ，配置文件已经备份至 `~/tmp`")
+logger.info("新闻:vits 需要 apt install ffmpeg 安装 ffmpeg！")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 

@@ -7,6 +7,7 @@ account = 0
 http_host = 'localhost:8080'   # Mirai http服务器
 ws_host = 'localhost:8080'   # Mirai Websocket服务器
 verify_key = ""
+tigger = false
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
@@ -15,6 +16,7 @@ WHITE = "Group NOT in WHITE list" # 黑白名单提示
 [Controller.Telegram]
 master = [114, 514] # master user id , 账号 ID
 botToken = '' # 机器人密钥
+tigger = false
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示

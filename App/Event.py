@@ -224,14 +224,11 @@ class Reply(object):
             from openai_kira import Chat
             # 计算唯一消息桶 ID
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
-            # 群组公用桶 ID
-            _oid = f"-{abs(group)}"
             # 启用单人账户桶
             if len(start_name) > 12:
                 start_name = start_name[-10:]
             if len(restart_name) > 12:
                 restart_name = restart_name[-10:]
-
             # 分发类型
             if method == "write":
                 # OPENAI
@@ -243,6 +240,8 @@ class Reply(object):
                     max_tokens=int(_csonfig["token_limit"])
                 )
             elif method == "catch":
+                # 群组公用桶 ID
+                _oid = f"-{abs(group)}"
                 receiver = Chat.Chatbot(
                     conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
@@ -252,6 +251,8 @@ class Reply(object):
                 )
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
+                                                            head="下面是一段搭讪对话。给出建议，而不问好。喜欢附和。",
+                                                            role="我是浪漫，俏皮，有创造性的，可爱的，喵喵叫的。",
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             web_enhance_server=_plugin_table
                                                             )

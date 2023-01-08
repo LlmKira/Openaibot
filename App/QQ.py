@@ -119,13 +119,6 @@ class BotRunner:
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
-            else:
-                _GroupTigger = Vitality(group_id=_hand.from_chat.id)
-                _GroupTigger.tigger(Message=_hand, config=self.config)
-                _check = _GroupTigger.check()
-                if _check:
-                    _hand.text = f"/catch {_hand.text}"
-                    started = True
             if quote:
                 if str(Utils.checkMsg(
                         f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":
@@ -136,6 +129,16 @@ class BotRunner:
             # 分发指令
             if _hand.text.startswith("/help"):
                 await bot.send_message(group, await Event.Help(self.config))
+
+            # 热力扳机
+            if not started:
+                if self.config.tigger:
+                    _GroupTigger = Vitality(group_id=_hand.from_chat.id)
+                    _GroupTigger.tigger(Message=_hand, config=self.config)
+                    _check = _GroupTigger.check()
+                    if _check:
+                        _hand.text = f"/catch {_hand.text}"
+                        started = True
             if started:
                 request_timestamps.append(time.time())
                 _friends_message = await Event.Group(_hand, self.config)
