@@ -169,7 +169,7 @@ class BotRunner(object):
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             # 检查管理员指令
-            if _hand.from_user.id in _config.master:
+            if message.from_user.id in _config.master:
                 _reply = await Event.MasterCommand(Message=_hand, config=_config, pLock=pLock)
                 # 检查管理员指令
                 if _hand.text == "/config":
