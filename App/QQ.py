@@ -48,6 +48,7 @@ def get_user_message(
         member: Union[Member, Friend],
         group: Optional[Group] = None) -> User_Message:
     return create_message(
+        state=2222,
         user_id=member.id,  # qq 号
         user_name=member.name if isinstance(member, Member) else member.nickname,
         group_id=group.id if group else member.id,

@@ -47,12 +47,14 @@ def get_message(message: types.Message):
         _name = f"{last_name}"
     group_name = message.chat.title if message.chat.title else message.chat.last_name
     group_name = group_name if group_name else "Group"
-    return create_message(user_id=message.from_user.id,
-                          user_name=_name,
-                          group_id=message.chat.id,
-                          text=message.text,
-                          group_name=group_name
-                          )
+    return create_message(
+        state=0,
+        user_id=message.from_user.id,
+        user_name=_name,
+        group_id=message.chat.id,
+        text=message.text,
+        group_name=group_name
+    )
 
 
 class BotRunner(object):

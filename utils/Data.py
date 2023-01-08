@@ -43,12 +43,16 @@ class User_Message(BaseModel):
 
 
 def create_message(
-        user_id,
+        user_id: int,
         user_name,
-        group_id,
+        group_id: int,
         group_name,
         text,
+        state: int,
         date=time.time()):
+    if state != 0:
+        group_id = int(f"{state}{group_id}")
+        user_id = int(f"{state}{user_id}")
     message = {
         "text": text,
         "from_user": from_user(id=user_id, name=user_name),
