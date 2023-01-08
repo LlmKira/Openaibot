@@ -116,7 +116,7 @@ class Vitality(object):
         _text = Message.text
         _name = Message.from_user.name
         self._grow_request_vitality()
-        self.receiver.record_message(ask=f"{_name}:{_text}", reply=".")
+        self.receiver.record_message(ask=f"{_name}:{_text}", reply=".:.")
 
     def check(self, Message: User_Message):
         _text = Message.text
