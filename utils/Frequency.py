@@ -109,7 +109,7 @@ class Vitality(object):
         """
         _text = Message.text
         self._grow_request_vitality()
-        self.receiver.record_message(ask=_text, reply="")
+        self.receiver.record_message(ask=_text, reply="Group")
 
     def check(self, Message: User_Message):
         _text = Message.text
