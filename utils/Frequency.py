@@ -113,7 +113,7 @@ class Vitality(object):
 
     def check(self, Message: User_Message):
         _text = Message.text
-        _min = random.randint(7, 50)
+        _min = random.randint(7, 40)
         # 检查频次锁，提前返回
         if Tigger.getKey(self.group_id):
             return False
@@ -128,7 +128,7 @@ class Vitality(object):
         status = False
         # 抽签检查
         _lucky = random.randint(1, 100)
-        if _lucky < 5:
+        if _lucky < 20:
             status = True
         # 计算初始
         message_cache = self.receiver.read_memory(plain_text=True, sign=False)
