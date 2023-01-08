@@ -103,7 +103,7 @@ class BotRunner(object):
             if message.reply_to_message:
                 if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                     if str(Utils.checkMsg(
-                            f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{message.from_user.id}":
+                            f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
                         if not _hand.text.startswith("/"):
                             _hand.text = f"/chat {_hand.text}"
                         started = True
@@ -146,6 +146,8 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text'], chat_types=['private'])
         async def handle_private_msg(message):
             _hand = get_message(message)
+            # 检查管理员指令
+            _real_id = message.from_user.id
             _hand: User_Message
             request_timestamps.append(time.time())
             if not _hand.text.startswith("/"):
@@ -168,8 +170,6 @@ class BotRunner(object):
                         await bot.reply_to(message, _caption)
                     else:
                         await bot.reply_to(message, _friends_message.msg)
-            # 检查管理员指令
-            _real_id = message.from_user.id
             if _real_id in _config.master:
                 _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config, pLock=pLock)
                 # 检查管理员指令
