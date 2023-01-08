@@ -119,7 +119,7 @@ class Vitality(object):
 
     def check(self, Message: User_Message):
         _text = Message.text
-        _min = random.randint(7, 40)
+        _min = random.randint(10, 40)
         # 检查频次锁，提前返回
         if Tigger.getKey(self.group_id):
             return False
@@ -127,11 +127,12 @@ class Vitality(object):
         # 频次计算机器
         _frequency = self._get_chat_vitality()
         # 提前返回
-        if 4 < _frequency < 10:
+        if 1 < _frequency < 20:
             return False
 
         # 合格检查，上下文阶段
         status = False
+
         # 抽签检查
         _lucky = random.randint(1, 100)
         if _lucky < 20:
@@ -148,7 +149,7 @@ class Vitality(object):
         for items in _cache:
             _keywords.extend(Talk.tfidf_keywords(keywords=items, delete_stopwords=True, topK=5, withWeight=False))
         # 提前返回
-        if len(_keywords) < 4:
+        if len(_keywords) < 8:
             return False
         _get_score = len(list(set(_keywords))) / len(_keywords)
         # 得分越低代表越相似
