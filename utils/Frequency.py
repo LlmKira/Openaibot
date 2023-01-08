@@ -74,8 +74,6 @@ class Vitality(object):
             return False
         # 抽签
         _lucky = random.randint(1, 100)
-        if _lucky > 60:
-            return False
         if _lucky < 5:
             Tigger.setKey(self.group_id, "True", exN=60 * 20)
             return True
