@@ -563,10 +563,10 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
                             reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def MasterCommand(Message: User_Message, config, pLock):
+async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
     load_csonfig()
     _reply = []
-    if Message.from_user.id in config.master:
+    if user_id in config.master:
         try:
             command = Message.text
             # SET

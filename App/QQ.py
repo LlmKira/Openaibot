@@ -99,7 +99,7 @@ class BotRunner:
             _caption = f"{_friends_message.reply}\n{self.config.INTRO}"
             if _friends_message.voice:
                 # 转换格式
-                voice = await silkcoder.async_encode(_friends_message.data.get("voice"), audio_format="ogg")
+                voice = await silkcoder.async_encode(_friends_message.voice, audio_format="ogg")
                 message_chain = MessageChain([Voice(data_bytes=voice)])
             elif _friends_message.reply:
                 message_chain = MessageChain([Plain(_caption)])
@@ -112,8 +112,9 @@ class BotRunner:
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
             _hand = get_user_message(msg, member=friend, group=None)
-            if friend.id in self.config.master:
-                _reply = await Event.MasterCommand(Message=_hand, config=self.config, pLock=pLock)
+            _read_id = friend.id
+            if _read_id in self.config.master:
+                _reply = await Event.MasterCommand(user_id=_read_id, Message=_hand, config=self.config, pLock=pLock)
                 if _reply:
                     await app.send_message(friend, "".join(_reply), quote=source)
 
@@ -163,7 +164,7 @@ class BotRunner:
                 _caption = f"{_friends_message.reply}\n{self.config.INTRO}"
                 if _friends_message.voice:
                     # 转换格式
-                    voice = await silkcoder.async_encode(_friends_message.data.get("voice"), audio_format="ogg")
+                    voice = await silkcoder.async_encode(_friends_message.voice, audio_format="ogg")
                     message_chain = MessageChain([Voice(data_bytes=voice)])
                 elif _friends_message.reply:
                     message_chain = MessageChain([Plain(_caption)])

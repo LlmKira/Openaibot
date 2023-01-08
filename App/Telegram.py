@@ -160,7 +160,7 @@ class BotRunner(object):
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
                         await bot.send_voice(chat_id=message.chat.id,
                                              reply_to_message_id=message.id,
-                                             voice=_friends_message.data.get("voice"),
+                                             voice=_friends_message.voice,
                                              caption=_caption
                                              )
                     elif _friends_message.reply:
@@ -169,8 +169,9 @@ class BotRunner(object):
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             # 检查管理员指令
-            if message.from_user.id in _config.master:
-                _reply = await Event.MasterCommand(Message=_hand, config=_config, pLock=pLock)
+            _real_id = message.from_user.id
+            if _real_id in _config.master:
+                _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config, pLock=pLock)
                 # 检查管理员指令
                 if _hand.text == "/config":
                     path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
