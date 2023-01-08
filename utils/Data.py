@@ -62,7 +62,9 @@ class PublicReturn(BaseModel):
     status: bool = False
     msg: str = ""
     data: Union[str, dict, bytes, list] = None
-    type: str = ""
+    voice: Optional[bytes] = None
+    reply: Optional[str] = None
+    trace: str = ""
 
 
 class Usage_Data(BaseModel):

@@ -3,6 +3,9 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
+# 事件，完全隔离的
+
 import json
 import pathlib
 import random
@@ -72,9 +75,10 @@ def load_csonfig():
     return _csonfig
 
 
-def save_csonfig():
-    with open("./Config/config.json", "w+", encoding="utf8") as f:
-        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+def save_csonfig(pLock=None):
+    with pLock:
+        with open("./Config/config.json", "w+", encoding="utf8") as f:
+            json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
 async def TTSSupportCheck(text, user_id):
@@ -218,13 +222,13 @@ class Reply(object):
         try:
             openai_kira.setting.openaiApiKey = key
             from openai_kira import Chat
+            # 计算唯一消息桶 ID
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
             # 启用单人账户桶
             if len(start_name) > 12:
                 start_name = start_name[-10:]
             if len(restart_name) > 12:
                 restart_name = restart_name[-10:]
-
             # 分发类型
             if method == "write":
                 # OPENAI
@@ -236,8 +240,10 @@ class Reply(object):
                     max_tokens=int(_csonfig["token_limit"])
                 )
             elif method == "catch":
+                # 群组公用桶 ID
+                _oid = f"-{abs(group)}"
                 receiver = Chat.Chatbot(
-                    conversation_id=int(_cid),
+                    conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
                     token_limit=1500,
                     start_sequ=start_name,
@@ -245,6 +251,8 @@ class Reply(object):
                 )
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
+                                                            head="下面是一段搭讪对话。给出建议，而不问好。喜欢附和。",
+                                                            role="我是浪漫，俏皮，有创造性的，可爱的，喵喵叫的。",
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             web_enhance_server=_plugin_table
                                                             )
@@ -297,15 +305,15 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
-            return PublicReturn(status=True, type="WhiteUserCheck")
+            return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
         if UserManger(user_id).read("block"):
             msg = f"{user_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                            type="WhiteUserCheck",
+                            trace="WhiteUserCheck",
                             msg=msg)
     else:
-        return PublicReturn(status=True, type="WhiteUserCheck")
+        return PublicReturn(status=True, trace="WhiteUserCheck")
 
 
 async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
@@ -318,15 +326,15 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     if _csonfig["whiteGroupSwitch"]:
         # 没有在白名单里！
         if GroupManger(group_id).read("white"):
-            return PublicReturn(status=True, type="WhiteUserCheck")
+            return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{group_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
         if GroupManger(group_id).read("block"):
             msg = f"{group_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
-                            type="WhiteUserCheck",
+                            trace="WhiteUserCheck",
                             msg=msg)
     else:
-        return PublicReturn(status=True, type="WhiteUserCheck")
+        return PublicReturn(status=True, trace="WhiteUserCheck")
 
 
 async def RemindSet(user_id, text) -> PublicReturn:
@@ -339,10 +347,10 @@ async def RemindSet(user_id, text) -> PublicReturn:
     _user_id = user_id
     _remind_r = _text.split(" ", 1)
     if len(_remind_r) < 2:
-        return PublicReturn(status=False, msg=f"", type="Remind")
+        return PublicReturn(status=False, msg=f"", trace="Remind")
     _remind = _remind_r[1]
     if Utils.tokenizer(_remind) > 333:
-        return PublicReturn(status=False, msg=f"过长:{_remind}", type="Remind")
+        return PublicReturn(status=True, msg=f"过长:{_remind}", trace="Remind")
     _remind = ContentDfa.filter_all(_remind)
     if _csonfig.get("allow_change_head"):
         # _remind = _remind.replace("你是", "ME*扮演")
@@ -351,9 +359,9 @@ async def RemindSet(user_id, text) -> PublicReturn:
         _remind = _remind.replace("YOU*", "你")
         _remind = _remind.replace("ME*", "我")
         Header(uid=_user_id).set(_remind)
-        return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", type="Remind")
+        return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", trace="Remind")
     Header(uid=_user_id).set({})
-    return PublicReturn(status=True, msg=f"I refuse Remind Command", type="Remind")
+    return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
 
 
 async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
@@ -375,6 +383,12 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
             _prompt = _prompt_r[1]
         _prompt_types = "chat"
     # Write
+    if _prompt.startswith("/catch"):
+        _prompt_r = _prompt.split(" ", 1)
+        if len(_prompt_r) > 1:
+            _prompt = _prompt_r[1]
+        _prompt_types = "catch"
+    # Write
     if _prompt.startswith("/write"):
         _prompt_r = _prompt.split(" ", 1)
         if len(_prompt_r) > 1:
@@ -386,8 +400,8 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     # 校验结果
     if _prompt_types == "unknown":
         # 不执行
-        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], type=types)
-    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], type=types)
+        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
+    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
 
 
 async def Group(Message: User_Message, config) -> PublicReturn:
@@ -404,36 +418,36 @@ async def Group(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_remind_set.msg)
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="VoiceSet")
     _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
         # 预处理失败，不符合任何触发条件，不回复捏
-        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _prompt = _prompt_preprocess.data[0]
     _reply_type = _prompt_preprocess.data[1]
     try:
@@ -451,18 +465,17 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = False
+        voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
-        _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
-        return PublicReturn(status=True, msg=f"OK", type="Reply", data=_data)
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=_req + "\n".join(_info))
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", type="Error", data="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def Friends(Message: User_Message, config) -> PublicReturn:
@@ -479,36 +492,36 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", type="Statu")
+        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            type="WhiteGroupCheck",
+                            trace="WhiteGroupCheck",
                             msg=_remind_set.msg)
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", type="ForgetMe")
+        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", type="Voice")
+        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="Voice")
     _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
         # 预处理失败，不符合任何触发条件，不回复捏
-        return PublicReturn(status=False, msg=f"No Match Type", type="PromptPreprocess")
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _prompt = _prompt_preprocess.data[0]
     _reply_type = _prompt_preprocess.data[1]
     try:
@@ -526,7 +539,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
-        voice_data = False
+        voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
@@ -536,16 +549,18 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
         return PublicReturn(status=True,
                             msg=f"OK",
-                            type="Reply",
-                            data=_data)
+                            trace="Reply",
+                            reply=_req + "\n".join(_info),
+                            voice=voice_data
+                            )
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"Error Occur~Maybe Api request rate limit~nya",
-                            type="Error",
-                            data="Error Occur~Maybe Api request rate limit~nya")
+                            trace="Error",
+                            reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def MasterCommand(Message: User_Message, config):
+async def MasterCommand(Message: User_Message, config, pLock):
     load_csonfig()
     _reply = []
     if Message.from_user.id in config.master:
@@ -559,7 +574,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["usercold_time"] = int(_len_)
                     _reply.append(f"user cooltime:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset user cold time limit to{_len_}")
 
             if command.startswith("/set_group_cold"):
@@ -569,7 +584,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["groupcold_time"] = int(_len_)
                     _reply.append(f"group cooltime:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset group cold time limit to{_len_}")
 
             if command.startswith("/set_per_user_limit"):
@@ -578,7 +593,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["per_user_limit"] = int(_len_)
                     _reply.append(f"set_hour_limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset per_user_limit to{_len_}")
 
             if command.startswith("/set_per_hour_limit"):
@@ -588,7 +603,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["hour_limit"] = int(_len_)
                     _reply.append(f"hour_limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset hour_limit to{_len_}")
 
             if command.startswith("/promote_user_limit"):
@@ -620,7 +635,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["token_limit"] = int(_len_)
                     _reply.append(f"tokenlimit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset tokenlimit limit to{_len_}")
 
             if command.startswith("/set_input_limit"):
@@ -630,7 +645,7 @@ async def MasterCommand(Message: User_Message, config):
                 if _len_:
                     _csonfig["input_limit"] = int(_len_)
                     _reply.append(f"input limit:{_len_}")
-                    save_csonfig()
+                    save_csonfig(pLock)
                     logger.info(f"SETTING:reset input limit to{_len_}")
 
             if "/add_block_group" in command:
@@ -733,26 +748,26 @@ async def MasterCommand(Message: User_Message, config):
             if command == "/open_user_white_mode":
                 _csonfig["whiteUserSwitch"] = True
                 _reply.append("SETTING:whiteUserSwitch ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteUser ON")
 
             if command == "/close_user_white_mode":
                 _csonfig["whiteUserSwitch"] = False
                 _reply.append("SETTING:whiteUserSwitch OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteUser OFF")
 
             # GROUP White
             if command == "/open_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = True
                 _reply.append("ON:whiteGroup")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup ON")
 
             if command == "/close_group_white_mode":
                 _csonfig["whiteGroupSwitch"] = False
                 _reply.append("SETTING:whiteGroup OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup OFF")
 
             if command == "/see_api_key":
@@ -780,25 +795,25 @@ async def MasterCommand(Message: User_Message, config):
             if "/enable_change_head" in command:
                 _csonfig["allow_change_head"] = True
                 _reply.append("SETTING:allow_change_head ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if "/disable_change_head" in command:
                 _csonfig["allow_change_head"] = False
                 _reply.append("SETTING:allow_change_head OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if command == "/open":
                 _csonfig["statu"] = True
                 _reply.append("SETTING:BOT ON")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
             if command == "/close":
                 _csonfig["statu"] = False
                 _reply.append("SETTING:BOT OFF")
-                save_csonfig()
+                save_csonfig(pLock)
                 logger.info("SETTING:BOT OFF")
         except Exception as e:
             logger.error(e)

@@ -23,4 +23,6 @@ beautifulsoup4
 wget
 fasttext>=0.9.1
 requests>=2.22.0
-elara
+graiax-silkcoder
+graia-broadcast
+graia-ariadne

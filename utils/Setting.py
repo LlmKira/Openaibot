@@ -4,9 +4,20 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # 全局共享管理器
+from graia.ariadne import Ariadne
+from graia.ariadne.model import Profile
 from loguru import logger
 
 global _bot_profile
+
+
+def qqbot_profile_init():
+    global _bot_profile
+    # _me: Profile = await bot.get_bot_profile()
+    _name = "None"
+    _bot_profile = {"id": 3552600542, "name": _name[:6]}
+    logger.success(f"Init QQ Bot:{_bot_profile}")
+    return bot_profile
 
 
 async def bot_profile_init(bot):
@@ -16,7 +27,7 @@ async def bot_profile_init(bot):
     last_name = _me.last_name if _me.last_name else ""
     _name = f"{first_name}{last_name}"
     _bot_profile = {"id": _me.id, "name": _name[:6]}
-    logger.success(f"Init Bot:{_bot_profile}")
+    logger.success(f"Init Telegram Bot:{_bot_profile}")
     return bot_profile
 
 
