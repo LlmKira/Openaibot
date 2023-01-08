@@ -254,8 +254,8 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
-                                                            head="下面是一段搭讪对话。给出建议，而不问好。喜欢附和。",
-                                                            role="我是浪漫，俏皮，有创造性的，可爱的，喵喵叫的。",
+                                                            head=".",
+                                                            role=".",
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             web_enhance_server=_plugin_table
                                                             )

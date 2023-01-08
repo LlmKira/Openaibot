@@ -69,23 +69,22 @@ class Vitality(object):
         self.receiver.record_message(ask=_text, reply="")
 
     def check(self):
-        # 抽签
-        _unlucky = random.randint(1, 100)
-        if _unlucky > 85:
-            return False
-        if _unlucky < 5:
-            Tigger.setKey(self.group_id, True, exN=60 * 10)
-            return True
-
         # 检查频次锁
         if Tigger.getKey(self.group_id):
             return False
+        # 抽签
+        _lucky = random.randint(1, 100)
+        if _lucky > 60:
+            return False
+        if _lucky < 5:
+            Tigger.setKey(self.group_id, "True", exN=60 * 20)
+            return True
 
         # 频次计算机器
         _frequency = self._get_chat_vitality()
         # 一分钟内的次数
         if _frequency > 20:
-            Tigger.setKey(self.group_id, True, exN=60 * 6)
+            Tigger.setKey(self.group_id, "True", exN=60 * 10)
             return True
 
         # 计算初始
@@ -105,7 +104,7 @@ class Vitality(object):
         _get_score = len(list(set(_keywords))) / len(_keywords)
         # 得分越低代表越相似
         if _get_score < 0.5:
-            Tigger.setKey(self.group_id, True, exN=60 * 20)
+            Tigger.setKey(self.group_id, "True", exN=60 * 20)
             return True
 
         return False
