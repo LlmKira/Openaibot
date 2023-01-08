@@ -470,6 +470,17 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
-## EULA
+#### 声明
 
-https://github.com/sudoskys/Openaibot/blob/main/EULA.md
+```markdown
+1. 此项目不是 Openai 的官方项目。
+2. 贡献者不对程序生成的任何内容负责，责任由使用者负责。
+3. 本仓库是是一个多人维护的项目，使用时自行评估风险，维护者没有义务或责任保证你使用造成的任何问题。
+```
+
+```markdown
+1. 部分套件可能无法商业使用，请自担风险。
+2. 拒绝 未经授权的 非项目重要贡献者的 专利/软著 相关用途。
+3. 项目依赖包插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，在此告知您风险。贡献者不对使用导致的问题负责。
+4. 虽然开源协议允许随意的商业使用，但是开源协议不能保证公平。为了公平，禁止交易本项目源码。
+```
