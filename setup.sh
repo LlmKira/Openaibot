@@ -83,8 +83,8 @@ dependenceInit() {
     exit 1
   )
   pip3 install --upgrade pip
-  pip install -U openai-kira
-  pip install -r requirements.txt # -i https://pypi.tuna.tsinghua.edu.cn/simple
+  pip3 install -U openai-kira
+  pip3 install -r requirements.txt # -i https://pypi.tuna.tsinghua.edu.cn/simple
   # while read -r requirement; do pip3 install "${requirement}" -i https://pypi.tuna.tsinghua.edu.cn/simple; done <requirements.txt || echox yellow "===pip install failed,please check it====="
   echox yellow "========Down=========="
 }
