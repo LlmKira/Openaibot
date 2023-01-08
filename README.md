@@ -1,4 +1,4 @@
-![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/coverv2.png)
+![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/cover.png)
 
 
 ------------------------------------
