@@ -24,6 +24,8 @@ logger.add(sink='run.log',
 # logger.info("新闻：api key 只能通过 机器人命令配置")
 logger.debug("Debug Mode On")
 
+logger.info("新闻:因为state变动，Telegram的config群组ID和个人ID需要全部加上 100 后缀！")
+
 logger.info("新闻:配置文件大改，请更新 app.toml ，配置文件已经备份至 `~/tmp`")
 logger.info("新闻:vits 需要 apt install ffmpeg 安装 ffmpeg！")
 

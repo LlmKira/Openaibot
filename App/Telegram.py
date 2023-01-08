@@ -48,7 +48,7 @@ def get_message(message: types.Message):
     group_name = message.chat.title if message.chat.title else message.chat.last_name
     group_name = group_name if group_name else "Group"
     return create_message(
-        state=0,
+        state=100,
         user_id=message.from_user.id,
         user_name=_name,
         group_id=message.chat.id,
