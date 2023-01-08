@@ -54,6 +54,7 @@ class CheckSeq(object):
                                "给我",
                                "给我一些",
                                "请教",
+                               "介绍",
                                "如何",
                                "帮朋友",
                                "需要什么",
@@ -113,8 +114,9 @@ class Vitality(object):
         :return:
         """
         _text = Message.text
+        _name = Message.from_user.name
         self._grow_request_vitality()
-        self.receiver.record_message(ask=_text, reply="Group")
+        self.receiver.record_message(ask=f"{_name}:{_text}", reply=".")
 
     def check(self, Message: User_Message):
         _text = Message.text

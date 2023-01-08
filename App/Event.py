@@ -248,7 +248,7 @@ class Reply(object):
                     conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
                     token_limit=1500,
-                    start_sequ=start_name,
+                    start_sequ=restart_name,  # start_name,
                     restart_sequ=restart_name,
                 )
                 response = await receiver.get_chat_response(model="text-curie-001",
