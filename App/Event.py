@@ -376,24 +376,25 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     """
     load_csonfig()
     # 拿到 prompt
-    _prompt = text
+    _raw_prompt = text
     _prompt_types = "unknown"
+    _prompt = ""
     # 不会重复的流程组
     # Chat
-    if _prompt.startswith("/chat"):
-        _prompt_r = _prompt.split(" ", 1)
+    if _raw_prompt.startswith("/chat"):
+        _prompt_r = _raw_prompt.split(" ", 1)
         if len(_prompt_r) > 1:
             _prompt = _prompt_r[1]
         _prompt_types = "chat"
     # Write
-    if _prompt.startswith("/catch"):
-        _prompt_r = _prompt.split(" ", 1)
+    if _raw_prompt.startswith("/catch"):
+        _prompt_r = _raw_prompt.split(" ", 1)
         if len(_prompt_r) > 1:
             _prompt = _prompt_r[1]
         _prompt_types = "catch"
     # Write
-    if _prompt.startswith("/write"):
-        _prompt_r = _prompt.split(" ", 1)
+    if _raw_prompt.startswith("/write"):
+        _prompt_r = _raw_prompt.split(" ", 1)
         if len(_prompt_r) > 1:
             _prompt = _prompt_r[1]
         _prompt_types = "write"
@@ -446,7 +447,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
             _set = False
         _user_manger.save({"voice": _set})
         return PublicReturn(status=True, msg=f"TTS:{_set}", trace="VoiceSet")
-    _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
+    _prompt_preprocess = await PromptPreprocess(text=_text, types="group")
     _prompt_preprocess: PublicReturn
     if not _prompt_preprocess.status:
         # 预处理失败，不符合任何触发条件，不回复捏
@@ -464,7 +465,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
                                          method=_reply_type
                                          )
 
-        message_type = "text"
+        # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
@@ -473,9 +474,10 @@ async def Group(Message: User_Message, config) -> PublicReturn:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
-        message_type = "voice" if _voice and voice_data else message_type
+        # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
-        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=_req + "\n".join(_info))
+        _log = '\n'.join(_info)
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")

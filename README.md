@@ -171,6 +171,7 @@ WHITE = "Group NOT in WHITE list" # 黑白名单提示
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 [Controller.BaseServer]
+port = 9559
 # 提供基础Api接口供Web使用
 ```
 
