@@ -14,6 +14,8 @@ import time
 from typing import Union
 from loguru import logger
 import openai_kira
+from openai_kira.Chat import Optimizer
+
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
@@ -251,6 +253,7 @@ class Reply(object):
                 )
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
+                                                            optimizer=Optimizer.MatrixPoint,
                                                             head="下面是一段搭讪对话。给出建议，而不问好。喜欢附和。",
                                                             role="我是浪漫，俏皮，有创造性的，可爱的，喵喵叫的。",
                                                             max_tokens=int(_csonfig["token_limit"]),
