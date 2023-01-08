@@ -80,6 +80,11 @@ class BotRunner(object):
             asyncio_helper.proxy = self.proxy.url
             logger.info("Telegram Bot Using proxy!")
 
+        # 管理员权限
+        async def is_admin(message: types.Message):
+            _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
+            return _got.status in ['administrator', 'creator']
+
         # 私聊起动机
         @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
         async def handle_command(message):
@@ -98,8 +103,18 @@ class BotRunner(object):
             _hand = get_message(message)
             _hand: User_Message
             started = False
+
+            # 命令解析
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
+            elif _hand.text.startswith("/"):
+                _is_admin = await is_admin(message)
+                if _is_admin:
+                    _reply = await Event.GroupAdminCommand(Message=_hand, config=_config, pLock=pLock)
+                    if _reply:
+                        await bot.reply_to(message, "".join(_reply))
+
+            # 回复逻辑判定
             if message.reply_to_message:
                 if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
                     if str(Utils.checkMsg(
@@ -114,7 +129,8 @@ class BotRunner(object):
 
             # 热力扳机
             if not started:
-                if _config.tigger:
+                _tigger_message = await Event.Tigger(_hand, _config)
+                if _tigger_message.status:
                     _GroupTigger = Vitality(group_id=_hand.from_chat.id)
                     _GroupTigger.tigger(Message=_hand, config=_config)
                     _check = _GroupTigger.check(Message=_hand)

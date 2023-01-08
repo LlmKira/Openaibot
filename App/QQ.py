@@ -15,7 +15,7 @@ from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketC
 from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
-from graia.ariadne.model import Group, Member, Friend
+from graia.ariadne.model import Group, Member, Friend, MemberPerm
 from graiax import silkcoder
 from loguru import logger
 
@@ -136,6 +136,13 @@ class BotRunner:
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
+            elif _hand.text.startswith("/"):
+                _is_admin = member.permission
+                if _is_admin in [MemberPerm.Owner, MemberPerm.Administrator]:
+                    _reply = await Event.GroupAdminCommand(Message=_hand, config=self.config, pLock=pLock)
+                    if _reply:
+                        message_chain = MessageChain([Plain("".join(_reply))])
+                        await app.send_message(group, message_chain, quote=source)
             if quote:
                 if str(Utils.checkMsg(
                         f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":
@@ -149,7 +156,8 @@ class BotRunner:
 
             # 热力扳机
             if not started:
-                if self.config.tigger:
+                _tigger_message = await Event.Tigger(_hand, self.config)
+                if _tigger_message.status:
                     _GroupTigger = Vitality(group_id=_hand.from_chat.id)
                     _GroupTigger.tigger(Message=_hand, config=self.config)
                     _check = _GroupTigger.check(Message=_hand)

@@ -377,6 +377,7 @@ kill -9 id
 | `/enable_change_head`              | 允许设定头                |                                  |
 | `/forgetme`                        | 忘记我                  |                                  |
 | `/voice`                           | VITS/AZURE  TTS      |                                  |
+| `/tigger`                          | 主动回复模式               | 全局设置或/只有管理组成员可以启动本群模式            |
 
 ### 样表
 
@@ -386,6 +387,7 @@ write - 续写
 forgetme - 重置记忆
 remind - 场景设定
 voice - 语音支持
+tigger - 管理员启动主动回复
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度

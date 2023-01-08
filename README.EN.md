@@ -370,6 +370,7 @@ Restricted class setting set to ``1`` means no effect.
 | `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
 | `/forgetme`                               | 忘记我                         |                                                                                                                                             |
 | `/voice`                                  | VITS/AZURE  TTS             |                                                                                                                                             |
+| `/tigger`                                 | Active reply mode           | Global settings or/and only admin group members can activate this group mode                                                                |
 
 ### Sample table
 
@@ -378,7 +379,8 @@ chat - Talking
 write - complement
 remind - persona
 forgetme - reset
-voice - 语音支持
+voice - talk to me
+tigger - AdminCommand Active reply mode
 set_user_cold - set user cooldown
 set_group_cold - sets the group cooldown time
 set_token_limit - set output limit length
