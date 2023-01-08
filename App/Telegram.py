@@ -132,7 +132,7 @@ class BotRunner(object):
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
                         msg = await bot.send_voice(chat_id=message.chat.id,
                                                    reply_to_message_id=message.id,
-                                                   voice=_friends_message.data.get("voice"),
+                                                   voice=_friends_message.voice,
                                                    caption=_caption
                                                    )
                     elif _friends_message.reply:
