@@ -3,11 +3,12 @@
 # @FileName: Controller.py.py
 # @Software: PyCharm
 # @Github: purofle
-
+import asyncio
 import time
 from collections import deque
 from typing import Union, Optional
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from graia.amnesia.message import MessageChain
 from graia.ariadne import Ariadne
 from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
@@ -21,8 +22,21 @@ from loguru import logger
 from App import Event
 from utils import Setting
 from utils.Chat import Utils
-from utils.Data import create_message, User_Message, PublicReturn
+from utils.Data import create_message, User_Message, PublicReturn, DefaultData
 from utils.Frequency import Vitality
+
+
+async def set_cron(funcs, second: int):
+    """
+    启动一个异步定时器
+    :param funcs: 回调函数
+    :param second: 秒数
+    :return:
+    """
+    tick_scheduler = AsyncIOScheduler()
+    tick_scheduler.add_job(funcs, trigger='interval', max_instances=10, seconds=second)
+    tick_scheduler.start()
+
 
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
@@ -116,6 +130,7 @@ class BotRunner:
                              source: Source):
             _hand = get_user_message(msg, member=member, group=group)
             _hand: User_Message
+            get_request_frequency()
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
                 started = True
@@ -156,6 +171,15 @@ class BotRunner:
                 if message_chain:
                     active_msg = await app.send_message(group, message_chain, quote=source)
                     Utils.trackMsg(f"QQ{_hand.from_chat.id}{active_msg.id}", user_id=_hand.from_user.id)
+
+        def get_request_frequency():
+            # 检查队列头部是否过期
+            while request_timestamps and request_timestamps[0] < time.time() - time_interval:
+                request_timestamps.popleft()
+            # 计算请求频率
+            request_frequency = len(request_timestamps)
+            DefaultData().setAnalysis(qq=request_frequency)
+            return request_frequency
 
         Setting.qqbot_profile_init()
         Ariadne.launch_blocking()

@@ -1,4 +1,4 @@
-![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/covers.png)
+![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/coverv2.png)
 
 ------------------------------------
 <p align="center">
@@ -8,10 +8,11 @@
 </p>
 
 <h2 align="center">Openaibot</h2>
-
-OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
-
 > Translate by deepl (wink~
+
+OpenAI Chat Bot For IM. Use OpenAi Interaction on IM.
+
+*If you don't have your own IM platform, you can develop a new Controller by scheduling a generic event layer.*
 
 This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
 the **Python implementation** of the chatGPT-like is self-implemented by this bot.
@@ -25,6 +26,7 @@ The **Python implementation** of chatGPT **functionality** is implemented by thi
 * chat (chat) chatGpt replica + NLP enhancements
 * write independent speculation, continuation
 * Set a constant story set point
+* Multi IM
 * Multi maneger
 * Multi Api key load, overrun popup.
 * chatGPT api version implementation, not reverse preview's api
@@ -136,24 +138,48 @@ You can turn this filter off by placing a one-line list, but I don't favour you 
 **Configuration files**
 
 ```toml
+# 不想启动就注释掉那一部分
+
+# QQ
+[Controller.QQ]
+master = [114, 514] # master user id , 账号 ID
+account = 0
+http_host = 'localhost:8080'   # Mirai http服务器
+ws_host = 'localhost:8080'   # Mirai Websocket服务器
+verify_key = ""
+tigger = false # 合适的时候主动回复
+INTRO = "POWER BY OPENAI"  # 后缀
+ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
+WHITE = "Group NOT in WHITE list" # 黑白名单提示
+
+# Telegram
 [Controller.Telegram]
-master = [114,514] # master user id , 账号 ID
+master = [114, 514] # master user id , 账号 ID
 botToken = '' # 机器人密钥
+tigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
 # 设置的代理，但是不代理 openai api, 只代理 bot
-proxy = {status = false, url = "http://127.0.0.1:7890"}
+proxy = { status = false, url = "http://127.0.0.1:7890" }
+
+[Controller.BaseServer]
+# 提供基础Api接口供Web使用
 ```
 
-### Configure the BotToken
+### Configure Telegram Bot
 
-[get Telegram botToken](https://t.me/BotFather)
+#### BotToken
 
-Go to Telegram BotFather and apply for it. Then turn off the privacy mode or promote the robot as an administrator
-before use.
+[Telegram botToken](https://t.me/BotFather)
 
-### configure key
+Then turn off privacy mode or raise the bot to administrator before it can be used.
+
+### Configuring QQ bot
+
+[Configure bot backend](https://graiax.cn/before/install_mirai.html)
+
+### Set Openai Api Key
 
 Configure key in bot private chat
 
@@ -236,7 +262,6 @@ Plugins that are placed in the `plugin` field will only be enabled.
 | `details` | answer with steps | `""`,no need                                          | Ask for help `how to`                 |
 
 [Plugin Table](https://github.com/sudoskys/openai-kira#plugin)
-
 
 #### Redis
 
@@ -451,11 +476,13 @@ stable API server.
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
-### Declarations
+#### EULA
 
 ```markdown
 1. 此项目不是 Openai 的官方项目。
 2. 不对机器人生成的任何内容负责。
 3. 部分套件可能无法商业使用，请自担风险。
 4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
+5. 拒绝未经授权的专利/软著相关用途。
+6. 禁止贩卖本项目 衍生源码/源码。
 ```

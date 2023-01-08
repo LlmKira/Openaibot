@@ -30,7 +30,7 @@ logger.info("新闻:vits 需要 apt install ffmpeg 安装 ffmpeg！")
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 
-def main():
+def start():
     # pool = multiprocessing.Pool(processes=len(ctrlConfig))   # 进程池
     ctrlConfig = config.Controller
     pLock = multiprocessing.Lock()
@@ -53,4 +53,4 @@ def main():
 
 
 if __name__ == '__main__':  # 兼容Windows multiprocessing
-    main()
+    start()

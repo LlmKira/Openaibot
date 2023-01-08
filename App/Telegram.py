@@ -191,7 +191,7 @@ class BotRunner(object):
                 request_timestamps.popleft()
             # 计算请求频率
             request_frequency = len(request_timestamps)
-            DefaultData().setAnalysis(frequency=request_frequency)
+            DefaultData().setAnalysis(telegram=request_frequency)
             return request_frequency
 
         async def main():

@@ -1,4 +1,4 @@
-![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/covers.png)
+![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/coverv2.png)
 
 
 ------------------------------------
@@ -13,7 +13,9 @@
 
 <h2 align="center">OpenaiBot</h2>
 
-OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
+OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
+
+如果没有您的即时通信平台，您可以通过调度通用事件层开发一个新的 Controller。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
@@ -33,6 +35,7 @@ OpenAI Chat Bot For Telegram. 在 Telegram 上使用 OpenAi 交互。
 * 续写 (write)  独立推测，续写
 * 设定固定头人设
 * 多主人管理
+* 多平台
 * 多 Api key 负载，超额弹出。
 * 支持私聊
 * 实验性的多平台
@@ -139,28 +142,36 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 
 **配置文件**
 
-多平台是实验性的
+多平台。
 
 ```toml
+# 不想启动就注释掉那一部分
+
 # QQ
 [Controller.QQ]
-master = [222111, 11424] # master user id , 账号 ID
-account = ""
+master = [114, 514] # master user id , 账号 ID
+account = 0
+http_host = 'localhost:8080'   # Mirai http服务器
+ws_host = 'localhost:8080'   # Mirai Websocket服务器
 verify_key = ""
+tigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
-
 
 # Telegram
 [Controller.Telegram]
 master = [114, 514] # master user id , 账号 ID
 botToken = '' # 机器人密钥
+tigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
 # 设置的代理，但是不代理 openai api, 只代理 bot
 proxy = { status = false, url = "http://127.0.0.1:7890" }
+
+[Controller.BaseServer]
+# 提供基础Api接口供Web使用
 ```
 
 ### 配置 Telegram 设置
@@ -170,6 +181,10 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 [Telegram botToken 申请](https://t.me/BotFather)
 
 然后关闭隐私模式或者提拔机器人为管理员后才能使用。
+
+### 配置 QQ 机器人
+
+[配置机器人后端](https://graiax.cn/before/install_mirai.html)
 
 ### 配置 Openai Api key
 
@@ -452,7 +467,7 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
-#### 声明
+#### EULA
 
 ```markdown
 1. 此项目不是 Openai 的官方项目。
@@ -460,5 +475,6 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 3. 部分套件可能无法商业使用，请自担风险。
 4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
 5. 拒绝未经授权的专利/软著相关用途。
+6. 禁止贩卖本项目 衍生源码/源码。
 ```
 
