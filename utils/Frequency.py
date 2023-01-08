@@ -14,11 +14,11 @@ service = Service_Data.get_key()
 redis_conf = service["redis"]
 redis_config = RedisConfig(**redis_conf)
 # 工具数据类型
-Tigger = DataWorker(host=redis_config.host,
+Trigger = DataWorker(host=redis_config.host,
                     port=redis_config.port,
                     db=redis_config.db,
                     password=redis_config.password,
-                    prefix="Open_Ai_bot_tigger_")
+                    prefix="Open_Ai_bot_trigger_")
 
 
 class CheckSeq(object):
@@ -85,7 +85,7 @@ class Vitality(object):
 
     def _grow_request_vitality(self):
         _tid = self.__tid()
-        _time_matrix = Tigger.getKey(_tid)
+        _time_matrix = Trigger.getKey(_tid)
         if _time_matrix:
             if not isinstance(_time_matrix, list):
                 matrix = []
@@ -93,11 +93,11 @@ class Vitality(object):
         else:
             matrix = []
         matrix.append(time.time())
-        Tigger.setKey(_tid, matrix, exN=60 * 5)
+        Trigger.setKey(_tid, matrix, exN=60 * 5)
 
     def _get_chat_vitality(self):
         _tid = self.__tid()
-        _time_matrix = Tigger.getKey(_tid)
+        _time_matrix = Trigger.getKey(_tid)
         if not isinstance(_time_matrix, list):
             return len([])
         if _time_matrix:
@@ -105,7 +105,7 @@ class Vitality(object):
         else:
             return len([])
 
-    def tigger(self, Message: User_Message, config):
+    def trigger(self, Message: User_Message, config):
         """
         追踪群组消息上下文为 Catch 提供养分
         :param Message:
@@ -121,7 +121,7 @@ class Vitality(object):
         _text = Message.text
         _min = random.randint(5, 20)
         # 检查频次锁，提前返回
-        if Tigger.getKey(self.group_id):
+        if Trigger.getKey(self.group_id):
             return False
 
         # 频次计算机器
@@ -168,5 +168,5 @@ class Vitality(object):
                 status = False
         # 检查
         if status:
-            Tigger.setKey(self.group_id, "True", exN=60 * _min)
+            Trigger.setKey(self.group_id, "True", exN=60 * _min)
         return status
