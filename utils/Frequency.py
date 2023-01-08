@@ -121,7 +121,7 @@ class Vitality(object):
         # 频次计算机器
         _frequency = self._get_chat_vitality()
         # 提前返回
-        if 2 < _frequency < 10:
+        if 4 < _frequency < 10:
             return False
 
         # 合格检查，上下文阶段
