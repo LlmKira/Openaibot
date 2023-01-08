@@ -50,9 +50,10 @@ def create_message(
         text,
         state: int,
         date=time.time()):
+    state = abs(state)
     if state != 0:
-        group_id = int(f"{state}{group_id}")
-        user_id = int(f"{state}{user_id}")
+        group_id = int(f"{group_id}{state}")
+        user_id = int(f"{user_id}{state}")
     message = {
         "text": text,
         "from_user": from_user(id=user_id, name=user_name),
