@@ -203,7 +203,7 @@ class DefaultData(object):
         return {
             "white": False,
             "block": False,
-            "tigger": False
+            "trigger": False
         }
 
     @staticmethod

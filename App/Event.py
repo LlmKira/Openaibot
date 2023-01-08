@@ -565,17 +565,17 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
                             reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def Tigger(Message: User_Message, config) -> PublicReturn:
+async def Trigger(Message: User_Message, config) -> PublicReturn:
     """
     :param Message: group id
     :param config:
     :return: TRUE,msg -> 在白名单
     """
     group_id = Message.from_chat.id
-    if config.tigger:
-        if GroupManger(group_id).read("tigger"):
+    if config.trigger:
+        if GroupManger(group_id).read("trigger"):
             return PublicReturn(status=True, trace="WhiteUserCheck")
-    return PublicReturn(status=False, trace="No tigger")
+    return PublicReturn(status=False, trace="No trigger")
 
 
 async def GroupAdminCommand(Message: User_Message, config, pLock):
@@ -584,13 +584,13 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
     group_id = Message.from_chat.id
     try:
         command = Message.text
-        if command.startswith("/tigger"):
+        if command.startswith("/trigger"):
             _group_manger = GroupManger(int(group_id))
             _set = True
-            if _group_manger.read("tigger"):
+            if _group_manger.read("trigger"):
                 _set = False
-            _group_manger.save({"tigger": _set})
-            _ev = f"Group Admin:GroupTigger {_set}"
+            _group_manger.save({"trigger": _set})
+            _ev = f"Group Admin:GroupTrigger {_set}"
             _reply.append(_ev)
             logger.info(_ev)
         #
@@ -874,5 +874,5 @@ Use /write +句子 进行空白的续写。
 Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
 Use /voice 开启可能的 tts 支持。
-Use /tigger Admin 可以开启主动回复模式。
+Use /trigger Admin 可以开启主动回复模式。
 """
