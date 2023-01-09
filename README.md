@@ -470,7 +470,9 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
-#### 声明
+#### 附属协议
+
+本协议为了确保公平而存在。
 
 ```markdown
 1. 此项目不是 Openai 的官方项目。
@@ -480,7 +482,8 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ```markdown
 1. 部分套件可能无法商业使用，请自担风险。
-2. 拒绝 未经授权的 非项目重要贡献者的 专利/软著 相关用途。
+2. 拒绝 未经授权的 非项目重要贡献者的 专利/软件著作权 相关用途。
 3. 项目依赖包插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，在此告知您风险。贡献者不对使用导致的问题负责。
-4. 虽然开源协议允许随意的商业使用，但是开源协议不能保证公平。为了公平，禁止交易本项目源码。
+4. 虽然开源协议允许随意的商业使用，但是开源协议不能保证公平。为了确保自由公平和减少反欺诈，禁止交易本项目源码(包含衍生)。
+5. 对于云服务，除原样运行外，要求主动开源其所做的改进到本仓库分支。
 ```
