@@ -470,6 +470,8 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
-## 附属协议
+## CLAUSE
 
-![附属协议](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)
+CLAUSE 说明了如何授权，声明，附加条款等内容。
+
+![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)

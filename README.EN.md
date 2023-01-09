@@ -481,4 +481,6 @@ stable API server.
 
 ## CLAUSE
 
+CLAUSE 说明了如何授权，声明，附加条款等内容。
+
 ![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)
