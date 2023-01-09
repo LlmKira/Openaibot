@@ -215,6 +215,10 @@ class DefaultData(object):
                 "db": 0,
                 "password": None
             },
+            "proxy": {
+                "status": False,
+                "url": "localhost:7890"
+            },
             "plugin": {
             },
             "tts": {

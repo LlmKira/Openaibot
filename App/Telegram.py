@@ -18,7 +18,7 @@ from telebot.asyncio_storage import StateMemoryStorage
 from App import Event
 from utils import Setting
 from utils.Chat import Utils
-from utils.Data import DefaultData, User_Message, create_message, PublicReturn
+from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
 time_interval = 60
@@ -60,7 +60,7 @@ def get_message(message: types.Message):
 class BotRunner(object):
     def __init__(self, config):
         self.bot = config
-        self.proxy = config.proxy
+        self.proxy = Service_Data.get_key()['proxy']
 
     def botCreate(self):
         if not self.bot.botToken:

@@ -31,6 +31,7 @@ _service = Service_Data.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
+_proxy_conf = _service["proxy"]
 
 openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
 
@@ -46,7 +47,7 @@ urlForm = {
 
 def initCensor():
     config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/app.toml")
-    if config.proxy.status:
+    if _proxy_conf.status:
         proxies = {
             'all://': config.proxy.url,
         }  # 'http://127.0.0.1:7890'  # url
