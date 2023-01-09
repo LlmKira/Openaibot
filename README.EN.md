@@ -481,4 +481,4 @@ stable API server.
 
 ## CLAUSE
 
-![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE)
+![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)

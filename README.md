@@ -472,4 +472,4 @@ Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
 
 ## 附属协议
 
-![附属协议](https://github.com/sudoskys/Openaibot/main/CLAUSE)
+![附属协议](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)
