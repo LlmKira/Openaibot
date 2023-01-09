@@ -3,12 +3,12 @@ rtoml
 rich
 aiohttp
 openai
-redis
+redis==4.4.1
 loguru
-httpx
+httpx==0.23.3
 apscheduler
-nltk
-fastapi
+nltk>=3.8
+fastapi>=0.88.0
 pydantic
 uvicorn
 jieba
@@ -16,7 +16,7 @@ Pillow
 pathlib
 elara
 numpy
-openai-kira>=0.1.5
+openai-kira>=0.1.6
 scikit-learn
 transformers
 beautifulsoup4
@@ -25,4 +25,5 @@ fasttext>=0.9.1
 requests>=2.22.0
 graiax-silkcoder
 graia-broadcast
-graia-ariadne
+graia-ariadne==0.10.3
+discord.py[voice]
