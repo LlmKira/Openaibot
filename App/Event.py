@@ -574,7 +574,7 @@ async def Trigger(Message: User_Message, config) -> PublicReturn:
     group_id = Message.from_chat.id
     if config.trigger:
         if GroupManger(group_id).read("trigger"):
-            return PublicReturn(status=True, trace="WhiteUserCheck")
+            return PublicReturn(status=True, trace="TriggerCheck")
     return PublicReturn(status=False, trace="No trigger")
 
 

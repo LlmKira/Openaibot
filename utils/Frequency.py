@@ -15,10 +15,10 @@ redis_conf = service["redis"]
 redis_config = RedisConfig(**redis_conf)
 # 工具数据类型
 Trigger = DataWorker(host=redis_config.host,
-                    port=redis_config.port,
-                    db=redis_config.db,
-                    password=redis_config.password,
-                    prefix="Open_Ai_bot_trigger_")
+                     port=redis_config.port,
+                     db=redis_config.db,
+                     password=redis_config.password,
+                     prefix="Open_Ai_bot_trigger_")
 
 
 class CheckSeq(object):
@@ -127,7 +127,7 @@ class Vitality(object):
         # 频次计算机器
         _frequency = self._get_chat_vitality()
         # 提前返回
-        if 3 < _frequency < 15:
+        if _frequency < 5:
             return False
 
         # 合格检查，上下文阶段
