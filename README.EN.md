@@ -333,44 +333,44 @@ kill -9
 
 Restricted class setting set to ``1`` means no effect.
 
-| command                                   | function                    | extra                                                        |
-| ----------------------------------------- | --------------------------- | ------------------------------------------------------------ |
-| `/set_user_cold`                          | set user cooldown time      | can not send within the time 1 is unlimited                  |
-| `/set_group_cold`                         | Set group cooling time      | Cannot send within the time 1 is unlimited                   |
-| `/set_token_limit`                        | Set the output limit length | Api's 4095 limit is input + output, if it exceeds the limit, please reduce the output |
-| `/set_input_limit`                        | Set input limit length      |                                                              |
-| `/config`                                 | get/backup config.json file | send file                                                    |
-| `/add_block_group` +id absolute value     | Prohibited                  | Effective directly Can be followed by multiple parameters, separated by spaces |
-| `/del_block_group` + absolute value of id | Unban                       | Effective directly Can be separated with multiple parameters and spaces |
-| `/add_block_user` +Absolute value of id   | Forbidden                   | Effective directly Can be followed by multiple parameters, separated by spaces |
-| `/del_block_user` + absolute value of id  | Unban                       | Effective directly Can be separated with multiple parameters and spaces |
-| `/add_white_group` +id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces |
-| `/add_white_user` + id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces |
-| `/del_white_group` +id absolute value     | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces |
-| `/del_white_user` + absolute value of id  | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces |
-| `/update_detect`                          | Update sensitive words      |                                                              |
-| `/open_user_white_mode`                   | Open user whitelist         |                                                              |
-| `/open_group_white_mode`                  | Open group whitelist        |                                                              |
-| `/close_user_white_mode`                  | close user whitelist        |                                                              |
-| `/close_group_white_mode`                 | close group whitelist       |                                                              |
-| `/open`                                   | Open the robot              |                                                              |
-| `/close`                                  | close the robot             |                                                              |
+| command                                   | function                    | extra                                                                                                                                       |
+|-------------------------------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `/set_user_cold`                          | set user cooldown time      | can not send within the time 1 is unlimited                                                                                                 |
+| `/set_group_cold`                         | Set group cooling time      | Cannot send within the time 1 is unlimited                                                                                                  |
+| `/set_token_limit`                        | Set the output limit length | Api's 4095 limit is input + output, if it exceeds the limit, please reduce the output                                                       |
+| `/set_input_limit`                        | Set input limit length      |                                                                                                                                             |
+| `/config`                                 | get/backup config.json file | send file                                                                                                                                   |
+| `/add_block_group` +id absolute value     | Prohibited                  | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
+| `/del_block_group` + absolute value of id | Unban                       | Effective directly Can be separated with multiple parameters and spaces                                                                     |
+| `/add_block_user` +Absolute value of id   | Forbidden                   | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
+| `/del_block_user` + absolute value of id  | Unban                       | Effective directly Can be separated with multiple parameters and spaces                                                                     |
+| `/add_white_group` +id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/add_white_user` + id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/del_white_group` +id absolute value     | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/del_white_user` + absolute value of id  | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/update_detect`                          | Update sensitive words      |                                                                                                                                             |
+| `/open_user_white_mode`                   | Open user whitelist         |                                                                                                                                             |
+| `/open_group_white_mode`                  | Open group whitelist        |                                                                                                                                             |
+| `/close_user_white_mode`                  | close user whitelist        |                                                                                                                                             |
+| `/close_group_white_mode`                 | close group whitelist       |                                                                                                                                             |
+| `/open`                                   | Open the robot              |                                                                                                                                             |
+| `/close`                                  | close the robot             |                                                                                                                                             |
 | `/chat`                                   | Conversation                | Each time /chat starts over, forgetting the record. Replies cannot be indexed after 24 hours in the group, and private chats are permanent. |
-| `/write`                                  | continue writing            | continue writing.                                            |
-| `/see_api_key`                            | Several Api keys now        |                                                              |
-| `/remind`                                 | Persona                     | Fixed reminder.                                              |
-| `/del_api_key` +key                       | Delete Api key              | Can follow multiple parameters, separated by spaces          |
-| `/add_api_key` +key                       | Add Api key                 | Can follow multiple parameters, separated by spaces          |
-| `/set_per_user_limit`                     | total user allocation limit | 1 is unlimited per user                                      |
-| `/set_per_hour_limit`                     | user hour usage             | 1 is unlimited, per user                                     |
-| `/reset_user_usage`+userID                | Reset user quota            | Measured by user Can be followed by multiple parameters, separated by spaces |
-| `/promote_user_limit`+userID+limit        | Promote the user's limit    | Measured by user 1 is the default, can be followed by multiple parameters, separated by spaces |
-| `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                            |
-| `/enable_change_head`                     | enable head setting         |                                                              |
-| `/remind`                                 | how ai perform self         | Fixed cue words                                              |
-| `/forgetme`                               | 忘记我                      |                                                              |
-| `/voice`                                  | VITS/AZURE  TTS             |                                                              |
-| `/trigger`                                | Active reply mode           | Global settings or/and only admin group members can activate this group mode |
+| `/write`                                  | continue writing            | continue writing.                                                                                                                           |
+| `/see_api_key`                            | Several Api keys now        |                                                                                                                                             |
+| `/remind`                                 | Persona                     | Fixed reminder.                                                                                                                             |
+| `/del_api_key` +key                       | Delete Api key              | Can follow multiple parameters, separated by spaces                                                                                         |
+| `/add_api_key` +key                       | Add Api key                 | Can follow multiple parameters, separated by spaces                                                                                         |
+| `/set_per_user_limit`                     | total user allocation limit | 1 is unlimited per user                                                                                                                     |
+| `/set_per_hour_limit`                     | user hour usage             | 1 is unlimited, per user                                                                                                                    |
+| `/reset_user_usage`+userID                | Reset user quota            | Measured by user Can be followed by multiple parameters, separated by spaces                                                                |
+| `/promote_user_limit`+userID+limit        | Promote the user's limit    | Measured by user 1 is the default, can be followed by multiple parameters, separated by spaces                                              |
+| `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                                                                                                           |
+| `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
+| `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
+| `/forgetme`                               | 忘记我                         |                                                                                                                                             |
+| `/voice`                                  | VITS/AZURE  TTS             |                                                                                                                                             |
+| `/trigger`                                | Active reply mode           | Global settings or/and only admin group members can activate this group mode                                                                |
 
 ### Sample table
 
@@ -479,13 +479,17 @@ stable API server.
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
-#### EULA
+#### 声明
 
 ```markdown
 1. 此项目不是 Openai 的官方项目。
-2. 不对机器人生成的任何内容负责。
-3. 部分套件可能无法商业使用，请自担风险。
-4. 插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，请自行评定风险。
-5. 拒绝未经授权的专利/软著相关用途。
-6. 禁止贩卖本项目 衍生源码/源码。
+2. 贡献者不对程序生成的任何内容负责，责任由使用者负责。
+3. 本仓库是是一个多人维护的项目，使用时自行评估风险，维护者没有义务或责任保证你使用造成的任何问题。
+```
+
+```markdown
+1. 部分套件可能无法商业使用，请自担风险。
+2. 拒绝 未经授权的 非项目重要贡献者的 专利/软著 相关用途。
+3. 项目依赖包插件所使用的数据可能涉及版权数据，可能只能用于个人非商业使用，在此告知您风险。贡献者不对使用导致的问题负责。
+4. 虽然开源协议允许随意的商业使用，但是开源协议不能保证公平。为了公平，禁止交易本项目源码。
 ```
