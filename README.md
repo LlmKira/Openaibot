@@ -151,8 +151,8 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 [Controller.QQ]
 master = [114, 514] # master user id , 账号 ID
 account = 0
-http_host = 'localhost:8080'   # Mirai http服务器
-ws_host = 'localhost:8080'   # Mirai Websocket服务器
+http_host = 'http://localhost:8080'   # Mirai http服务器
+ws_host = 'http://localhost:8080'   # Mirai Websocket服务器
 verify_key = ""
 trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀

@@ -4,8 +4,8 @@
 [Controller.QQ]
 master = [222111, 11424] # master user id , 账号 ID
 account = 0
-http_host = 'localhost:8080'   # Mirai http服务器
-ws_host = 'localhost:8080'   # Mirai Websocket服务器
+http_host = 'http://localhost:8080'   # Mirai http服务器
+ws_host = 'http://localhost:8080'   # Mirai Websocket服务器
 verify_key = ""
 trigger = false
 INTRO = "POWER BY OPENAI"  # 后缀
