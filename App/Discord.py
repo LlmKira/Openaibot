@@ -4,6 +4,11 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 
+########
+# ONGOING
+# https://github.com/Rapptz/discord.py
+########
+
 import asyncio
 import pathlib
 import time
