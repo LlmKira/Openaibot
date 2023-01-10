@@ -156,7 +156,7 @@ class Vitality(object):
         _get_score = len(list(set(_keywords))) / len(_keywords)
 
         # 得分越低代表越相似
-        if _get_score < 0.5:
+        if _get_score < 0.7:
             status = True
 
         # 内容检查
