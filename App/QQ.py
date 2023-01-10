@@ -144,10 +144,24 @@ class BotRunner:
                         message_chain = MessageChain([Plain("".join(_reply))])
                         await app.send_message(group, message_chain, quote=source)
             if quote:
+                #logger.warning(quote)
+                #logger.warning('Quoted!')
+                #logger.warning(str(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}")))
+                #logger.warning(f"QQ{quote.group_id}101{quote.id}")
+                #logger.warning(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}"))
+                #logger.warning(f"{_hand.from_user.id}")
                 if str(Utils.checkMsg(
-                        f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":
+                        f"QQ{quote.group_id}101{quote.id}")) == f"{_hand.from_user.id}":
+                    #logger.warning('Detect passed!')
+                    #logger.warning(_hand.text)
                     if not _hand.text.startswith("/"):
                         _hand.text = f"/chat {_hand.text}"
+                        #logger.warning(_hand.text)
+                    if _hand.text.startswith('@'):    #去除QQ回复时的自动at
+                        p1 = _hand.text.index('@')
+                        p2 = _hand.text.index(' ') + 1
+                        t = _hand.text[p1:p2]
+                        _hand.text = _hand.text.replace(t, '')
                     started = True
 
             # 分发指令
