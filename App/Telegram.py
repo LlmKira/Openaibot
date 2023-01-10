@@ -20,6 +20,7 @@ from utils import Setting
 from utils.Chat import Utils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
+from utils.Base import Tool
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -60,7 +61,7 @@ def get_message(message: types.Message):
 class BotRunner(object):
     def __init__(self, config):
         self.bot = config
-        self.proxy = Service_Data.get_key()['proxy']
+        self.proxy = Tool().dictToObj(Service_Data.get_key()['proxy'])
 
     def botCreate(self):
         if not self.bot.botToken:

@@ -257,7 +257,7 @@ class Reply(object):
                                                             optimizer=Optimizer.MatrixPoint,
                                                             head="下面是一段对话。",
                                                             role=".",
-                                                            max_tokens=int(_csonfig["token_limit"]),
+                                                            max_tokens=200,
                                                             web_enhance_server=_plugin_table
                                                             )
             elif method == "chat":
