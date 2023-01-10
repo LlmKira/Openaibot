@@ -11,15 +11,16 @@ from collections import deque
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
-from telebot import util, types
-from telebot.async_telebot import AsyncTeleBot
-from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
 from utils import Setting
 from utils.Chat import Utils
-from utils.Data import DefaultData, User_Message, create_message, PublicReturn
 from utils.Frequency import Vitality
+from utils.Data import DefaultData, User_Message, create_message, PublicReturn
+
+from telebot import util, types
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -72,9 +73,9 @@ class BotRunner(object):
         # print(self.bot)
         bot, _config = self.botCreate()
         if not bot:
-            logger.info("APP:Telegram Bot Close")
+            logger.info("Controller:Telegram Bot Close")
             return
-        logger.success("APP:Telegram Bot Start")
+        logger.success("Controller:Telegram Bot Start")
         if self.proxy.status:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
