@@ -202,7 +202,7 @@ class Reply(object):
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
         # 长度限定
-        if _csonfig["input_limit"] < len(str(prompt)) / 4:
+        if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
             return "TOO LONG"
         # 内容审计
         prompt = ContentDfa.filter_all(prompt)
