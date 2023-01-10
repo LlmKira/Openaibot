@@ -25,6 +25,8 @@ time_interval = 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
 
+lock = None
+
 
 def get_message(message):
     # 自动获取名字
@@ -45,6 +47,20 @@ def get_message(message):
     )
 
 
+class MyClient(discord.Client):
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+
+    async def on_message(self, message):
+        # we do not want the bot to reply to itself
+        if message.author.id == self.user.id:
+            return
+
+        if message.content.startswith('!hello'):
+            await message.reply('Hello!', mention_author=True)
+
+
 class BotRunner(object):
     def __init__(self, config):
         self.config = config
@@ -53,21 +69,19 @@ class BotRunner(object):
     def botCreate(self):
         if not self.config.botToken:
             return None
+
         intents = discord.Intents.default()
         intents.message_content = True
-        bot = commands.Bot(command_prefix='>', intents=intents)
-        return bot
+        client = MyClient(intents=intents)
+        return client, self.config.botToken
 
     def run(self, pLock=None):
+        global lock
         # print(self.bot)
-        bot, _ = self.botCreate()
-        if not bot:
+        client, token = self.botCreate()
+        if not client:
             logger.info("Controller:Discord Bot Close")
             return
         logger.success("Controller:Discord Bot Start")
-
-        @bot.command(name="")
-        async def ping(ctx):
-            await ctx.send('pong')
-
-        bot.run(self.config.botToken)
+        lock = pLock
+        client.run(token)
