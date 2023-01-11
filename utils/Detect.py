@@ -77,7 +77,7 @@ class Censor:
                         tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
                         for sid in tmpList:
                             censor_words = str(sid.strip(",").strip("\n"))
-                            if censor_words and Cn.is_contain_chinese(censor_words) and len(censor_words) > 2:
+                            if censor_words and Cn.is_contain_chinese(censor_words) and len(censor_words) >= 2:
                                 _Words.append(censor_words)
                     else:
                         print(f"词库初始化失败 -> {_url}")
