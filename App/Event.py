@@ -235,7 +235,7 @@ class Reply(object):
                 if item in HARM_TYPE:
                     _harm = item
         except Exception as e:
-            logger.error(f"_Moderation：{prompt}:{e}")
+            logger.error(f"Moderation：{prompt}:{e}")
             _harm = False
         if _harm:
             _info = DefaultData.getRefuseAnswer()

@@ -53,6 +53,11 @@ class Prompt(BaseModel):
     role: str = ""
 
 
+class Filter(BaseModel):
+    prompt: str
+    moderation: bool = True
+
+
 class Reply(BaseModel):
     status: bool
     data: Optional[bytes] = None
@@ -65,18 +70,17 @@ class FilterReply(BaseModel):
 
 
 @app.post("/filter")
-def filter_str(strs):
+def filter_str(check: Filter):
     # 内容审计
-    try:
-        _harm = False
-        _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
-        _moderation_result = _Moderation_rep["results"][0]
-        _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
-    except Exception as e:
-        _harm_result = []
-        logger.error(f"_Moderation:{strs}-{e}")
-        _harm = False
-    return FilterReply(dfa=ContentDfa.filter_all(strs), flagged=_harm_result)
+    _harm_result = []
+    if check.moderation:
+        try:
+            _Moderation_rep = await openai_kira.Moderations().create(input=check.prompt)
+            _moderation_result = _Moderation_rep["results"][0]
+            _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+        except Exception as e:
+            logger.error(f"Moderation:{check.prompt}-{e}")
+    return FilterReply(dfa=ContentDfa.filter_all(check.prompt), flagged=_harm_result)
 
 
 @app.post("/getreply")
