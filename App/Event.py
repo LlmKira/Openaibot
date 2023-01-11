@@ -17,7 +17,6 @@ import openai_kira
 from openai_kira.Chat import Optimizer
 
 # from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.TTS import TTS_Clint, TTS_REQ
@@ -200,7 +199,6 @@ class Reply(object):
         :param group:
         :param key:
         :param prompt:
-        :param userlimit:
         :param method:
         :return:
         """

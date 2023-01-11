@@ -33,6 +33,7 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
 * 聊天 (chat) chatGpt 自实现 + NLP 增强
 * 续写 (write)  独立推测，续写
+* 完善的内容安全功能
 * 设定固定头人设
 * 多主人管理
 * 多平台
