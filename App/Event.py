@@ -210,6 +210,7 @@ class Reply(object):
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
         openai_kira.setting.openaiApiKey = key
+
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group):
             return "TOO FAST"
@@ -217,6 +218,12 @@ class Reply(object):
         # 长度限定
         if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
             return "TOO LONG"
+
+        # 用量检测
+        _UsageManger = Usage(uid=user)
+        _Usage = _UsageManger.isOutUsage()
+        if _Usage["status"]:
+            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
 
         # 内容审计
         try:
@@ -243,11 +250,7 @@ class Reply(object):
                 await asyncio.sleep(random.randint(3, 6))
                 return _info
         prompt = ContentDfa.filter_all(prompt)
-        # 用量检测
-        _UsageManger = Usage(uid=user)
-        _Usage = _UsageManger.isOutUsage()
-        if _Usage["status"]:
-            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+
         # 请求
         try:
             from openai_kira import Chat
