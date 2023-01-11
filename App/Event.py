@@ -3,7 +3,7 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-
+import asyncio
 # 事件，完全隔离的
 
 import json
@@ -19,7 +19,7 @@ from openai_kira.Chat import Optimizer
 # from App.chatGPT import PrivateChat
 from utils.Base import ReadConfig
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, get_start_name
 
@@ -28,12 +28,22 @@ from utils.Detect import DFA, Censor, get_start_name
 # fast text langdetect
 
 _service = Service_Data.get_key()
-_redis_conf = _service["redis"]
-_tts_conf = _service["tts"]
-_plugin_table = _service["plugin"]
-_proxy_conf = _service["proxy"]
+REDIS_CONF = _service["redis"]
+TTS_CONF = _service["tts"]
+PLUGIN_TABLE = _service["plugin"]
+PROXY_CONF = ProxyConfig(**_service["proxy"])
+HARM_TYPE = _service["moderation_type"]
+HARM_TYPE.extend([
+    'violence',
+    'violence/graphic'
+])
+HARM_TYPE = list(set(HARM_TYPE))
 
-openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
+# Proxy
+
+if PROXY_CONF.status:
+    openai_kira.setting.proxyUrl = PROXY_CONF.url,
+openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**REDIS_CONF)
 
 urlForm = {
     "Danger.form": [
@@ -46,9 +56,9 @@ urlForm = {
 
 
 def initCensor():
-    if _proxy_conf.get('status'):
+    if PROXY_CONF.status:
         proxies = {
-            'all://': _proxy_conf.get('status'),
+            'all://': PROXY_CONF.url,
         }  # 'http://127.0.0.1:7890'  # url
         return Censor.initWords(url=urlForm, home_dir="./Data/", proxy=proxies)
     else:
@@ -84,15 +94,15 @@ def save_csonfig(pLock=None):
 
 
 async def TTSSupportCheck(text, user_id):
-    global _tts_conf
+    global TTS_CONF
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
     from openai_kira.utils.Talk import Talk
-    if not _tts_conf["status"]:
+    if not TTS_CONF["status"]:
         return
-    if _tts_conf['type'] == 'none':
+    if TTS_CONF['type'] == 'none':
         return
 
     try:
@@ -102,8 +112,8 @@ async def TTSSupportCheck(text, user_id):
         from langdetect import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""))[0][0].upper()
 
-    if _tts_conf["type"] == "vits":
-        _vits_config = _tts_conf["vits"]
+    if TTS_CONF["type"] == "vits":
+        _vits_config = TTS_CONF["vits"]
         if lang_type not in ["ZH", "JA"]:
             return
         if len(text) > _vits_config["limit"]:
@@ -130,8 +140,8 @@ async def TTSSupportCheck(text, user_id):
         # 返回字节流
         return result
     # USE AZURE
-    elif _tts_conf["type"] == "azure":
-        _azure_config = _tts_conf["azure"]
+    elif TTS_CONF["type"] == "azure":
+        _azure_config = TTS_CONF["azure"]
         _new_text = text
         _speaker = _azure_config["speaker"].get(lang_type)
         if len(text) > _azure_config["limit"]:
@@ -200,18 +210,38 @@ class Reply(object):
         if not key:
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
+        openai_kira.setting.openaiApiKey = key
+
         # 长度限定
         if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
             return "TOO LONG"
+
         # 内容审计
-        prompt = ContentDfa.filter_all(prompt)
+        try:
+            _harm = False
+            _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
+            _moderation_result = _Moderation_rep["results"][0]
+            _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+            for item in _harm_result:
+                if item in HARM_TYPE:
+                    _harm = item
+        except Exception as e:
+            logger.error(f"_Moderation：{prompt}:{e}")
+            _harm = False
+        if _harm:
+            _info = DefaultData.getRefuseAnswer()
+            await asyncio.sleep(random.randint(3, 6))
+            return f"{_info}\nYour Content violates Openai policy:{_harm}..."
+
+        # 内容过滤
         if ContentDfa.exists(prompt):
             rin = random.randint(1, 10)
             if rin > 5:
                 _info = DefaultData.getRefuseAnswer()
-                time.sleep(random.randint(3, 6))
+                await asyncio.sleep(random.randint(3, 6))
                 return _info
-        # 处理
+        prompt = ContentDfa.filter_all(prompt)
+
         # 洪水防御攻击
         if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
             return "TOO FAST"
@@ -222,7 +252,6 @@ class Reply(object):
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         # 请求
         try:
-            openai_kira.setting.openaiApiKey = key
             from openai_kira import Chat
             # 计算唯一消息桶 ID
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
@@ -257,7 +286,7 @@ class Reply(object):
                                                             head="下面是一段对话。",
                                                             role=".",
                                                             max_tokens=200,
-                                                            web_enhance_server=_plugin_table
+                                                            web_enhance_server=PLUGIN_TABLE
                                                             )
             elif method == "chat":
                 _head = Header(uid=user).get()
@@ -274,7 +303,7 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
-                                                            web_enhance_server=_plugin_table
+                                                            web_enhance_server=PLUGIN_TABLE
                                                             )
             else:
                 return "NO SUPPORT METHOD"

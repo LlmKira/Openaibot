@@ -16,7 +16,7 @@ Pillow
 pathlib
 elara
 numpy
-openai-kira>=0.1.5
+openai-kira>=0.1.8
 scikit-learn
 transformers
 beautifulsoup4
@@ -26,3 +26,4 @@ requests>=2.22.0
 graiax-silkcoder
 graia-broadcast
 graia-ariadne
+pycorrector

@@ -86,6 +86,11 @@ class RedisConfig(BaseModel):
     password: str = None
 
 
+class ProxyConfig(BaseModel):
+    status: bool
+    url: str
+
+
 class DefaultData(object):
     """
     数据提供类
@@ -221,6 +226,15 @@ class DefaultData(object):
             },
             "plugin": {
             },
+            "moderation_type": [
+                "self-harm",
+                # "hate",
+                'sexual',
+                'hate/threatening',
+                'sexual/minors',
+                'violence',
+                'violence/graphic'
+            ],
             "tts": {
                 "status": True,
                 "type": "none",

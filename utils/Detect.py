@@ -5,9 +5,10 @@
 # @Github    ：spirit-yzk
 import base64
 import httpx
-
+import re
 from utils import Setting
 from utils.Base import StrListTool
+import pycorrector
 
 
 def get_start_name(prompt: str):
@@ -18,7 +19,7 @@ def get_start_name(prompt: str):
 
     STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
     STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
-                                              r=0.01) else "Teacher:"
+                                                     r=0.01) else "Teacher:"
     STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
     STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
@@ -114,6 +115,10 @@ class DFA:
                 if str(s) and s not in self.ban_words_set:
                     self.ban_words_set.add(s)
                     self.ban_words_list.append(str(s))
+                    sentence = pycorrector.simplified2traditional(s)
+                    if sentence != s:
+                        self.ban_words_set.add(sentence)
+                        self.ban_words_list.append(str(sentence))
         self.add_hash_dict(self.ban_words_list)
 
     def change_words(self, path):
@@ -174,11 +179,10 @@ class DFA:
         return -1
 
     # 查找是否存在敏感词
-    def exists(self, s):
-        import re
-        pos = self.find_illegal(s)
-        _s = re.sub('\W+', '', s).replace("_", '')
-        _pos = self.find_illegal(_s)
+    def exists(self, sentence):
+        pos = self.find_illegal(sentence)
+        _sentence = re.sub('\W+', '', sentence).replace("_", '')
+        _pos = self.find_illegal(_sentence)
         if pos == -1 and _pos == -1:
             return False
         else:
