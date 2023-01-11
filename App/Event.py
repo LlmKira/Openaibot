@@ -46,10 +46,9 @@ urlForm = {
 
 
 def initCensor():
-    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/app.toml")
-    if _proxy_conf.status:
+    if _proxy_conf.get('status'):
         proxies = {
-            'all://': config.proxy.url,
+            'all://': _proxy_conf.get('status'),
         }  # 'http://127.0.0.1:7890'  # url
         return Censor.initWords(url=urlForm, home_dir="./Data/", proxy=proxies)
     else:
