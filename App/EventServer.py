@@ -59,9 +59,24 @@ class Reply(BaseModel):
     response: Optional[dict] = None
 
 
+class FilterReply(BaseModel):
+    dfa: str
+    flagged: list
+
+
 @app.post("/filter")
 def filter_str(strs):
-    return ContentDfa.filter_all(strs)
+    # 内容审计
+    try:
+        _harm = False
+        _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
+        _moderation_result = _Moderation_rep["results"][0]
+        _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+    except Exception as e:
+        _harm_result = []
+        logger.error(f"_Moderation:{strs}-{e}")
+        _harm = False
+    return FilterReply(dfa=ContentDfa.filter_all(strs), flagged=_harm_result)
 
 
 @app.post("/getreply")
