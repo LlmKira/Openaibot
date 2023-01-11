@@ -276,9 +276,9 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-curie-001",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
-                                                            head="下面是一段对话。",
-                                                            role=".",
-                                                            max_tokens=200,
+                                                            head=".",
+                                                            role="幽默的，情感丰沛的，想尝试搭话:",
+                                                            max_tokens=120,
                                                             web_enhance_server=PLUGIN_TABLE
                                                             )
             elif method == "chat":

@@ -7,6 +7,7 @@ import random
 import time
 
 from openai_kira import Chat
+from openai_kira.utils.Talk import Talk
 
 from utils.Data import User_Message, Service_Data, RedisConfig, DataWorker
 
@@ -115,11 +116,24 @@ class Vitality(object):
         _text = Message.text
         _name = Message.from_user.name
         self._grow_request_vitality()
+        if len(_text) < 3:
+            return False
         self.receiver.record_message(ask=f"{_name}:{_text}", reply=".:.")
+
+    @staticmethod
+    def isHighestSentiment(text, cache):
+        now = Talk.sentiment(text).get("score")
+        for item in cache:
+            _score = Talk.sentiment(item).get("score")
+            if _score > now:
+                return False
+        return True
 
     def check(self, Message: User_Message):
         _text = Message.text
-        _min = random.randint(5, 20)
+        _min = random.randint(10, 30)
+        if len(_text) < 5:
+            return False
         # 检查频次锁，提前返回
         if Trigger.getKey(self.group_id):
             return False
@@ -132,41 +146,34 @@ class Vitality(object):
 
         # 合格检查，上下文阶段
         status = False
-
-        # 抽签检查
+        # 抽签
         _lucky = random.randint(1, 100)
         if _lucky > 80:
             status = True
-
-        # 计算初始
-        message_cache = self.receiver.read_memory(plain_text=True, sign=False)
-        message_cache: list
-        message_cache = [item for item in message_cache if item]
-        if not len(message_cache) > 20:
-            return False
-        _cache = message_cache[:20]
-        from openai_kira.utils.Talk import Talk
-        _keywords = []
-        for items in _cache:
-            _keywords.extend(Talk.tfidf_keywords(keywords=items, delete_stopwords=True, topK=5, withWeight=False))
-
-        # 提前返回
-        if len(_keywords) < 8:
-            return False
-        _get_score = len(list(set(_keywords))) / len(_keywords)
-
-        # 得分越低代表越相似
-        if _get_score < 0.5:
-            status = True
-
-        # 内容检查
+        # 最后的内容检查
         if status:
+            status = False
             _check = CheckSeq()
             if _check.help(_text):
-                status = True
-            else:
-                status = False
+                _score = Talk.sentiment(_text).get("score")
+                if isinstance(_score, float):
+                    if _score > 2 or _score < -2:
+                        status = True
+                else:
+                    status = True
         # 检查
         if status:
             Trigger.setKey(self.group_id, "True", exN=60 * _min)
         return status
+
+
+"""
+                # 计算初始
+                message_cache = self.receiver.read_memory(plain_text=True, sign=True)
+                message_cache: list
+                message_cache = [item for item in message_cache if item]
+                if len(message_cache) < 20:
+                    return False
+                _cache = message_cache[:20]
+                if self.isHighestSentiment(text=_text, cache=_cache):
+"""
