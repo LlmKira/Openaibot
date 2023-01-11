@@ -54,8 +54,7 @@ def get_message(message):
 
 class MyClient(discord.Client):
     async def on_ready(self):
-        print(f'Logged in as {self.user} (ID: {self.user.id})')
-        print('------')
+        logger.info(f'Discord:Logged in as {self.user} (ID: {self.user.id})')
 
     async def on_message(self, message):
         # we do not want the bot to reply to itself
