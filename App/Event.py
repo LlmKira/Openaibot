@@ -188,7 +188,6 @@ class Reply(object):
                             group,
                             key: Union[str, list],
                             prompt: str = "Say this is a test",
-                            userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
                             restart_name: str = "Human:"
@@ -211,6 +210,9 @@ class Reply(object):
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
         openai_kira.setting.openaiApiKey = key
+        # 洪水防御攻击
+        if Utils.WaitFlood(user=user, group=group):
+            return "TOO FAST"
 
         # 长度限定
         if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
@@ -236,15 +238,11 @@ class Reply(object):
         # 内容过滤
         if ContentDfa.exists(prompt):
             rin = random.randint(1, 10)
-            if rin > 5:
+            if rin > 8:
                 _info = DefaultData.getRefuseAnswer()
                 await asyncio.sleep(random.randint(3, 6))
                 return _info
         prompt = ContentDfa.filter_all(prompt)
-
-        # 洪水防御攻击
-        if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
-            return "TOO FAST"
         # 用量检测
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
