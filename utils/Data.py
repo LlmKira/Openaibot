@@ -229,11 +229,11 @@ class DefaultData(object):
             "moderation_type": [
                 "self-harm",
                 # "hate",
-                'sexual',
-                'hate/threatening',
-                'sexual/minors',
-                'violence',
-                'violence/graphic'
+                "sexual",
+                "hate/threatening",
+                "sexual/minors",
+                "violence",
+                "violence/graphic"
             ],
             "tts": {
                 "status": True,

@@ -215,20 +215,27 @@ add_api_key - 增加 Api key
     "db": 0,
     "password": null
   },
-  "proxy":{
+  "proxy": {
     "status": false,
     "url": "localhost:7890"
   },
   "plugin": {
-    "search": [
-      "https://www.exp.com/search?word={}"
-    ],
+    "details": "",
     "time": "",
     "week": ""
   },
+  "moderation_type": [
+    "self-harm",
+    "hate",
+    "sexual",
+    "hate/threatening",
+    "sexual/minors",
+    "violence",
+    "violence/graphic"
+  ],
   "tts": {
-    "status": false,
-    "type": "vits",
+    "status": true,
+    "type": "none",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
       "limit": 70,
@@ -237,11 +244,11 @@ add_api_key - 增加 Api key
     },
     "azure": {
       "key": [
-        "123"
+        ""
       ],
       "limit": 70,
       "speaker": {
-        "ZH": "zh-CN-XiaoxiaoNeural"
+        "chinese": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }
