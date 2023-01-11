@@ -395,7 +395,7 @@ kill -9 id
 chat - 交谈
 write - 续写
 forgetme - 重置记忆
-remind - 场景设定
+remind - 场景设定 取消用短文本覆盖
 voice - 语音支持
 trigger - 管理员启动主动回复
 set_user_cold - 设置用户冷却时间
