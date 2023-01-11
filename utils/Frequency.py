@@ -135,7 +135,7 @@ class Vitality(object):
 
         # 抽签检查
         _lucky = random.randint(1, 100)
-        if _lucky < 20:
+        if _lucky > 80:
             status = True
 
         # 计算初始
