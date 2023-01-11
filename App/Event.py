@@ -243,12 +243,6 @@ class Reply(object):
             return f"{_info}\nYour Content violates Openai policy:{_harm}..."
 
         # 内容过滤
-        if ContentDfa.exists(prompt):
-            rin = random.randint(1, 10)
-            if rin > 8:
-                _info = DefaultData.getRefuseAnswer()
-                await asyncio.sleep(random.randint(3, 6))
-                return _info
         prompt = ContentDfa.filter_all(prompt)
 
         # 请求
