@@ -131,7 +131,7 @@ class Vitality(object):
 
     def check(self, Message: User_Message):
         _text = Message.text
-        _min = random.randint(15, 30)
+        _min = random.randint(10, 100)
         if len(_text) < 5:
             return False
         # 检查频次锁，提前返回
