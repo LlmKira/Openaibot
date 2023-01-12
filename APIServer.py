@@ -24,6 +24,7 @@ class ReqBody(BaseModel):
     signature: str = ''
     returnVoice: bool = False
     returnVoiceRaw: bool = True
+    chatName: str = ""
     audioFormat: str = Union['wav', 'ogg', 'flac']
 
 
@@ -151,7 +152,7 @@ async def forgetme(body: ReqBody):
         message = FakeTGBotMessage()
         message.from_user.id = body.chatId
         message.chat.id = body.groupId
-        if await appe.Forget(bot=FakeTGBot(), message=message, config=config):
+        if await appe.Forget(user_id=body.chatId, chat_id=body.groupId):
             return {'success': True, 'response': 'done'}
         else:
             return {'success': False, 'response': 'GENERAL_FAILURE'}
@@ -218,7 +219,7 @@ async def admin(body: ReqBody, action: str):
 
         # bot = FakeTGBot()
         bot = FakeTGBot(reply_to_callback=admin_callback)
-        await appe.MasterCommand(bot, message, config.bot)
+        await appe.MasterCommand(user_id=message.from_user.id, Message=, pLock=None)
         if resp == {}:
             return {'success': False, 'response': 'GENERAL_FAILURE'}
         return resp

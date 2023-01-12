@@ -24,7 +24,7 @@ class VITS:
         text = Talk.chinese_sentence_cut(text)
         cn = {i: f"[{lang}]" for i in text}
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
-        _prompt = "[LENGTH]1.4[LENGTH]" + "".join(_spell)
+        _prompt = "[LENGTH]1.2[LENGTH]" + "".join(_spell)
         _req_body = TTS_REQ(model_name=vits_Conf['model_name'],
                             task_id=task,
                             text=_prompt,
