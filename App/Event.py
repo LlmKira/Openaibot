@@ -269,16 +269,16 @@ class Reply(object):
                 receiver = Chat.Chatbot(
                     conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
-                    token_limit=1500,
+                    token_limit=900,
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
-                response = await receiver.get_chat_response(model="text-curie-001",
+                response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
                                                             head=".",
-                                                            role="幽默的，情感丰沛的，想尝试搭话:",
-                                                            max_tokens=120,
+                                                            role="正在幽默的，情感丰沛的多人聊天:",
+                                                            max_tokens=100,
                                                             web_enhance_server=PLUGIN_TABLE
                                                             )
             elif method == "chat":

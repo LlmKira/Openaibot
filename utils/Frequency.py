@@ -26,8 +26,8 @@ class CheckSeq(object):
     def __init__(self):
         self._help_keywords = ["怎么",
                                "How",
-                               "?",
-                               "？",
+                               "今天",
+                               "吗？",
                                "什么",
                                "知道",
                                "无聊",
@@ -131,7 +131,7 @@ class Vitality(object):
 
     def check(self, Message: User_Message):
         _text = Message.text
-        _min = random.randint(10, 30)
+        _min = random.randint(15, 30)
         if len(_text) < 5:
             return False
         # 检查频次锁，提前返回
@@ -150,17 +150,19 @@ class Vitality(object):
         _lucky = random.randint(1, 100)
         if _lucky > 80:
             status = True
+
         # 最后的内容检查
+        _check = CheckSeq()
+        if _check.help(_text):
+            status = True
+
         if status:
             status = False
-            _check = CheckSeq()
-            if _check.help(_text):
-                _score = Talk.sentiment(_text).get("score")
-                if isinstance(_score, float):
-                    if _score > 2 or _score < -2:
-                        status = True
-                else:
+            _score = Talk.sentiment(_text).get("score")
+            if isinstance(_score, float):
+                if _score > 1.2 or _score < -2:
                     status = True
+
         # 检查
         if status:
             Trigger.setKey(self.group_id, "True", exN=60 * _min)
