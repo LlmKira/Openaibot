@@ -444,7 +444,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
+        return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
@@ -519,7 +519,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
     _user_name = Message.from_user.name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
+        return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
