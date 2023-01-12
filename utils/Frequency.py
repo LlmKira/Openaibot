@@ -160,7 +160,7 @@ class Vitality(object):
             status = False
             _score = Talk.sentiment(_text).get("score")
             if isinstance(_score, float):
-                if _score > 1.2 or _score < -2:
+                if _score > 2 or _score < -2:
                     status = True
 
         # 检查
