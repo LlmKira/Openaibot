@@ -44,15 +44,6 @@ def preCheck(reqbody):
     return False
 
 
-app = FastAPI()
-
-
-# HelloWorld
-@app.get('/')
-def read_root():
-    return {'HelloWorld': 'OpenAIBot-HTTPAPI'}
-
-
 def newMsg(body: ReqBody, type):
     isGroup: bool = True
     gid: int = body.groupId
@@ -67,8 +58,20 @@ def newMsg(body: ReqBody, type):
     return {'msgObj': msgObj, 'isGroup': isGroup}
 
 
+app = FastAPI()
+
+
+# HelloWorld
+@app.get('/')
+def read_root():
+    return {'HelloWorld': 'OpenAIBot-HTTPAPI'}
+
+
 @app.post('/{command}')
 async def universalHandler(command: str=['chat', 'write', 'voice', 'forgetme', 'remind'], body: ReqBody=None):
+    notvalid = preCheck(body)
+    if notvalid:  # 预检查错误信息
+        return notvalid
     msg = newMsg(body, command)
     resp: PublicReturn
     finalMsg: str
@@ -82,7 +85,7 @@ async def universalHandler(command: str=['chat', 'write', 'voice', 'forgetme', '
     if not resp.status:  # 不成功
         return {'success': False, 'response': 'GENERAL_FAILURE', 'text': finalMsg}
     if resp.voice and body.returnVoice:  # 语音正常、请求语音返回
-        return Response(content=resp.voice, media_type='audio/x-pcm')
+        return Response(content=resp.voice, headers={'X-Bot-Reply': resp.reply}, media_type='audio/x-pcm')
     return {'success': True, 'response': finalMsg}
     
     
@@ -90,10 +93,10 @@ async def universalHandler(command: str=['chat', 'write', 'voice', 'forgetme', '
 @app.post('/admin/{action}')
 async def admin(body: ReqBody, action: str):
     try:
-        response = preCheck(body)
-        if response:
-            return response
-        if not body.chatId in config.bot.master:
+        notvalid = preCheck(body)
+        if notvalid:
+            return notvalid
+        if not body.chatId in apicfg.master:
             return {'success': False, 'response': 'OPERATION_NOT_PERMITTED'}
         admin_actions = ['set_user_cold', 'set_group_cold', 'set_token_limit', 'set_input_limit', 'see_api_key',
                          'del_api_key', 'add_api_key', 'set_per_user_limit', 'set_per_hour_limit', 'promote_user_limit',
@@ -103,23 +106,11 @@ async def admin(body: ReqBody, action: str):
                          'close_group_white_mode', 'open', 'close', 'disable_change_head', 'enable_change_head']
         if not action in admin_actions:
             return {'success': False, 'response': 'INVAILD_ADMIN_ACTION'}
-        message = FakeTGBotMessage()
-        message.from_user.id = body.chatId
-        message.text = '/{action}{msg}'.format(action=action, msg=' ' + body.chatText if body.chatText else '')
-        resp = {}
-
-        def admin_callback(message, text):  # bot管理接口回调
-            nonlocal resp
-            # logger.info(text)
-            # logger.info('callback executed')
-            resp = {'success': True, 'response': text}
-
-        # bot = FakeTGBot()
-        bot = FakeTGBot(reply_to_callback=admin_callback)
-        await appe.MasterCommand(user_id=message.from_user.id, Message=, pLock=None)
-        if resp == {}:
-            return {'success': False, 'response': 'GENERAL_FAILURE'}
-        return resp
+        msg = newMsg(body, action)
+        resp = await appe.MasterCommand(user_id=body.chatId, Message=msg, pLock=None)
+        if resp == []:
+            return {'success': False, 'response': 'GENERAL_FAILURE', 'text': 'see console'}
+        return {'success': True, 'response': resp}
     except Exception as e:
         logger.error(e)
 
