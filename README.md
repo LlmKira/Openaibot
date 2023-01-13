@@ -15,15 +15,19 @@
 
 OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
-如果没有您的即时通信平台，您可以通过调度通用事件层开发一个新的 Controller。
+如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度通用事件层开发一个新的 Controller。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 由本机器人自实现。
+本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 是自实现。
 
-*是复刻 chatGPT，chatGPT 并未开放接口。*
-
-*依赖库由官方的同步切换为自维护异步库*
+```
+采用 GPT3 + 注入的方式尽量靠近ChatGpt，采用可扩展架构，等到 ChatGPT 商业化后会即时切进新的 Api，
+* 靠近 chatGPT，目前 chatGPT 并未开放接口，基本全换成达芬奇了。
+* 依赖库由官方的同步切换为自维护异步库。
+* 逆向没有出路，我们的优势是走在尝试的最前列，提供成熟的交互体验。
+* 此仓库欢迎一切贡献者。
+```
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
@@ -31,27 +35,29 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
 ## 特性
 
-* 聊天 (chat) chatGpt 自实现 + NLP 增强
 * 续写 (write)  独立推测，续写
-* 完善的内容安全功能
-* 设定固定头人设
-* 多主人管理
-* 多平台
-* 多 Api key 负载，超额弹出。
+* 聊天 (chat)  记忆桶机制，权重关联分配，更智能的上下文
+* 支持 Api
 * 支持私聊
-* 多平台支持的通用接口
 * 支持群聊
+* 多主人管理
 * 支持速率限制
+* 支持内容过滤
 * 支持用量管理
+* 设定固定头人设
 * 支持白名单系统
 * 支持黑名单系统
-* 支持内容过滤
-* (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
-* chatGpt 替换为自己写的 chatGpt Openai api Python 实现
+* 多平台，泛用性强
+* 完善的内容安全功能
+* 多平台支持的通用接口
+* 支持主动回复(For Fun)
 * 动态裁剪上下文，防止超额
-* 网络中间件支持，实时内容支持， Prompt Injection，对Chat更友好
+* 多 Api key 负载，便捷管理，超额弹出
+* 插件化，实时内容支持， Prompt Injection，对Chat更友好
+* chatGpt 替换为自己写的 chatGpt Openai api Python 实现
+* 官方依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库(最近官方才支持了异步)
 
-见 https://github.com/sudoskys/Openaibot/issues/1
+## 用法
 
 **聊天**
 

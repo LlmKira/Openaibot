@@ -12,38 +12,44 @@
 
 OpenAI Chat Bot For IM. Use OpenAi Interaction on IM.
 
-*If you don't have your own IM platform, you can develop a new Controller by scheduling a generic event layer.*
+**If your instant messaging platform is not available or you want to develop a new app, we welcome your contribution to
+this repository. You can develop a new Controller by dispatching generic event layer.**
 
-This project uses `Api` authentication `Token` + context pooling to implement chat, and is not a reverse of `chatGPT`,
-the **Python implementation** of the chatGPT-like is self-implemented by this bot.
+This project uses GPT API + context memory pool to realize chat, not the reverse of chatGPT, and the Python
+implementation of chatGPT-like is self-implemented.
 
-The **Python implementation** of chatGPT **functionality** is implemented by this bot. but the Api costs money
+Using GPT3 + injection to get close to ChatGpt, using an extensible framework, when ChatGPT is commercialized, it will
+switch into new Api immediately.
 
-**use Unofficial(self) async Api library to Speed up**
+* Close to chatGPT, currently chatGPT has not opened interfaces and basically all replaced with Dafanqi.
+* Dependent libraries are switched from official synchronous to self-maintained asynchronous libraries.
+* Reverse has no way out, our advantage is at the forefront of trying and providing mature interactive experience.
+* This repository welcomes all contributors.
 
 ## Features
 
-* chat (chat) chatGpt replica + NLP enhancements
-* write independent speculation, continuation
-* Set a constant story set point
-* Multi IM
-* Multi maneger
-* Multi Api key load, overrun popup.
-* chatGPT api version implementation, not reverse preview's api
-* Support for private chats
-* Support for group chat
-* Rate limiting support
-* Support for usage management
-* Whitelisting support
-* Blacklisting support
-* Support for content filtering
-* (20221205) Api library changed to an Async library implemented in this repository
-* Dynamic context trimming to prevent overruns
-* Pre enhance support, Prompt Injection+ Web
-
-See https://github.com/sudoskys/Openaibot/issues/1
-
-**chatGpt**
+* Independent inference, continuation writing
+* Memory bucket mechanism, weight correlation allocation, more intelligent context
+* Support API
+* Support private chat
+* Support group chat
+* Multi-host management
+* Support rate limiting
+* Content filtering support
+* Usage management support
+* Setting fixed host settings
+* White list system support
+* Blacklist system support
+* Multi-platform, strong generality
+* Comprehensive content security functions
+* Universal interface supported by multiple platforms
+* Support active reply (For Fun)
+* Dynamic context clipping to prevent overuse
+* Multiple Api key loads for convenient management and overuse pop-up
+* Pluginization for real-time content support, Prompt Injection for better Chat experience
+* Replace chatGpt with your own written chatGpt Openai api Python implementation
+* Official dependency library does not support asynchronous, a large number of requests will block, replace with your
+  own written asynchronous library (recently official supports asynchronous)
 
 🔭 Using `/chat + sentence` you can start a loop and then **just reply** to talk. Private chat messages or group
 messages within 48 hours are automatically inferred and cropped using context, and the conversation can continue by
