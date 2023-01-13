@@ -4,8 +4,10 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # 全局共享管理器
-from graia.ariadne import Ariadne
-from graia.ariadne.model import Profile
+
+#from graia.ariadne import Ariadne
+#from graia.ariadne.model import Profile
+# ^^^ Unused import? ^^^
 from loguru import logger
 
 global _bot_profile

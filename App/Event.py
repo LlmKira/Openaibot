@@ -87,9 +87,12 @@ def load_csonfig():
 
 
 def save_csonfig(pLock=None):
-    with pLock:
-        with open("./Config/config.json", "w+", encoding="utf8") as f:
-            json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.acquire()
+    with open("./Config/config.json", "w+", encoding="utf8") as f:
+        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.release()
 
 
 async def TTSSupportCheck(text, user_id):
@@ -621,7 +624,7 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
     return _reply
 
 
-async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
+async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None):
     load_csonfig()
     _reply = []
     if user_id in config.master:
