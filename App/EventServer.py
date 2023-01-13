@@ -70,7 +70,7 @@ class FilterReply(BaseModel):
 
 
 @app.post("/filter")
-def filter_str(check: Filter):
+async def filter_str(check: Filter):
     # 内容审计
     _harm_result = []
     if check.moderation:
