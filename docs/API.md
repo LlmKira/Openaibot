@@ -259,7 +259,7 @@ public class HMACSHA256Example {
     "groupId": "1919810",
     "signature": "no sign",
     "timestamp": "1671266252",
-    "returnVoiceRaw": false
+    "returnVoice": true
 }
 // 响应2：合成语音（请求/chat）
 (ogg数据流)
