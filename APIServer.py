@@ -1,3 +1,4 @@
+from utils import Setting
 from fastapi import FastAPI
 from fastapi.responses import Response
 from API.Signature import APISignature
@@ -6,10 +7,7 @@ from utils.Base import ReadConfig
 from utils.Data import create_message, PublicReturn
 from loguru import logger
 import App.Event as appe
-import time
-import os
-from API.FakeMessage import FakeTGBotMessage, FakeTGBot
-from typing import Union
+import time, os
 
 
 class ReqBody(BaseModel):
@@ -20,9 +18,7 @@ class ReqBody(BaseModel):
     timestamp: int = -1
     signature: str = ''
     returnVoice: bool = False
-    returnVoiceRaw: bool = True
     chatName: str = ""
-    audioFormat: str = Union['wav', 'ogg', 'flac']
 
 
 apicfg = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/Config/api.toml')
@@ -54,7 +50,8 @@ def newMsg(body: ReqBody, type):
                             user_name=body.chatName,
                             group_id=gid,
                             text=f'/{type} {body.chatText}',
-                            state=103)
+                            state=103,
+                            group_name='')
     return {'msgObj': msgObj, 'isGroup': isGroup}
 
 
@@ -77,15 +74,18 @@ async def universalHandler(command: str=['chat', 'write', 'voice', 'forgetme', '
     finalMsg: str
     
     if msg['isGroup']:
-        resp = appe.Group(msg['msgObj'], apicfg)
+        resp = await appe.Group(msg['msgObj'], apicfg)
     else:
-        resp = appe.Friends(msg['msgObj'], apicfg)
+        resp = await appe.Friends(msg['msgObj'], apicfg)
     
     finalMsg = resp.reply if resp.reply else resp.msg
     if not resp.status:  # 不成功
         return {'success': False, 'response': 'GENERAL_FAILURE', 'text': finalMsg}
     if resp.voice and body.returnVoice:  # 语音正常、请求语音返回
-        return Response(content=resp.voice, headers={'X-Bot-Reply': resp.reply}, media_type='audio/x-pcm')
+        import base64
+        httpRes = Response(content=resp.voice, media_type='audio/ogg')
+        httpRes.headers['X-Bot-Reply'] = str(base64.b64encode(resp.reply.encode('utf-8')),'utf-8')
+        return httpRes
     return {'success': True, 'response': finalMsg}
     
     
@@ -107,10 +107,10 @@ async def admin(body: ReqBody, action: str):
         if not action in admin_actions:
             return {'success': False, 'response': 'INVAILD_ADMIN_ACTION'}
         msg = newMsg(body, action)
-        resp = await appe.MasterCommand(user_id=body.chatId, Message=msg, pLock=None)
+        resp = await appe.MasterCommand(user_id=body.chatId, Message=msg['msgObj'], pLock=None, config=apicfg)
         if resp == []:
             return {'success': False, 'response': 'GENERAL_FAILURE', 'text': 'see console'}
-        return {'success': True, 'response': resp}
+        return {'success': True, 'response': resp[0]}
     except Exception as e:
         logger.error(e)
 
@@ -118,7 +118,8 @@ async def admin(body: ReqBody, action: str):
 #### Run HTTP Server when executed by Python CLI
 if __name__ == '__main__':
     import uvicorn
-
+    
+    Setting.api_profile_init(apicfg)
     uvicorn.run('APIServer:app', host=apicfg['uvicorn_host'], port=apicfg['uvicorn_port'],
                 reload=apicfg['uvicorn_reload'], log_level=apicfg['uvicorn_loglevel'],
                 workers=apicfg['uvicorn_workers'])

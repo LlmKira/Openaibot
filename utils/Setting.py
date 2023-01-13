@@ -7,7 +7,7 @@
 
 #from graia.ariadne import Ariadne
 #from graia.ariadne.model import Profile
-# ^^^ Unused import? ^^^
+# TODO: ^^^ Will be imported soon, maybe along with a commit feating "at" to call ^^^
 from loguru import logger
 
 global _bot_profile
@@ -32,7 +32,11 @@ async def bot_profile_init(bot):
     logger.success(f"Init Telegram Bot:{_bot_profile}")
     return bot_profile
 
-
+def api_profile_init(apicfg):
+    global _bot_profile
+    _bot_profile = {"id": apicfg.botid, "name": apicfg.botname}
+    logger.success(f"Init APIServer: {_bot_profile}")
+    return bot_profile
 def bot_profile():
     global _bot_profile
     return _bot_profile
