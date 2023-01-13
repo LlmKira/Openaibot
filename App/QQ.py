@@ -16,6 +16,7 @@ from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
 from graia.ariadne.model import Group, Member, Friend, MemberPerm
+from graia.ariadne.event.lifecycle import AccountLaunch
 from graiax import silkcoder
 from loguru import logger
 
@@ -108,7 +109,10 @@ class BotRunner:
             return message_chain
 
         # "msg" @ RegexMatch(r"\/\b(chat|voice|write|forgetme|remind)\b.*")
-
+        @bot.broadcast.receiver(AccountLaunch)
+        async def initAccount():
+            await Setting.qqbot_profile_init(bot)
+        
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
             _hand = get_user_message(msg, member=friend, group=None)
@@ -132,6 +136,7 @@ class BotRunner:
                              source: Source):
             _hand = get_user_message(msg, member=member, group=group)
             _hand: User_Message
+            _at_me = f'@{bot.account} '
             get_request_frequency()
             started = False
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
@@ -143,13 +148,25 @@ class BotRunner:
                     if _reply:
                         message_chain = MessageChain([Plain("".join(_reply))])
                         await app.send_message(group, message_chain, quote=source)
+            elif _hand.text.startswith(_at_me):
+                started = True
+                p1 = _hand.text.index('@')
+                p2 = _hand.text.index(' ') + 1
+                t = _hand.text[p1:p2]
+                _hand.text = _hand.text.replace(t, '/chat ')
+            
+            # logger.warning(quote)   <-  这个log有魔法，不要乱动，动了之后下边的if全完蛋（
             if quote:
-                # logger.warning(quote)
-                # logger.warning('Quoted!')
-                # logger.warning(str(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}")))
-                # logger.warning(f"QQ{quote.group_id}101{quote.id}")
-                # logger.warning(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}"))
-                # logger.warning(f"{_hand.from_user.id}")
+                '''
+                logger.warning('Quoted!')
+                logger.warning(str(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}")))
+                logger.warning(f"QQ{quote.group_id}101{quote.id}")
+                logger.warning(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}"))
+                logger.warning(f"{_hand.from_user.id}")
+                
+                这整个if的logger都不要删......
+                这段代码很玄学,不知道什么时候就又升天了......
+                '''
                 if str(Utils.checkMsg(
                         f"QQ{quote.group_id}101{quote.id}")) == f"{_hand.from_user.id}":
                     # logger.warning('Detect passed!')
@@ -167,7 +184,7 @@ class BotRunner:
             # 分发指令
             if _hand.text.startswith("/help"):
                 await bot.send_message(group, await Event.Help(self.config))
-
+            # logger.warning(started)
             # 热力扳机
             if not started:
                 _trigger_message = await Event.Trigger(_hand, self.config)
@@ -205,5 +222,4 @@ class BotRunner:
             DefaultData().setAnalysis(qq=request_frequency)
             return request_frequency
 
-        Setting.qqbot_profile_init()
         Ariadne.launch_blocking()

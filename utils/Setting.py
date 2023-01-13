@@ -11,11 +11,11 @@ from loguru import logger
 global _bot_profile
 
 
-def qqbot_profile_init():
+async def qqbot_profile_init(bot):
     global _bot_profile
-    # _me: Profile = await bot.get_bot_profile()
-    _name = "None"
-    _bot_profile = {"id": 3552600542, "name": _name[:6]}
+    _me: Profile = await bot.get_bot_profile()
+    _name = _me.nickname
+    _bot_profile = {"id": bot.account, "name": _name}
     logger.success(f"Init QQ Bot:{_bot_profile}")
     return bot_profile
 
