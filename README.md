@@ -432,7 +432,7 @@ help - 帮助
 
 ## API
 
-请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
+请参阅 https://github.com/sudoskys/Openaibot/blob/main/docs/API.md 查看开放API文档。
 API服务器与Telegram Bot服务开发进度不一，通常为Telegram
 Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
 

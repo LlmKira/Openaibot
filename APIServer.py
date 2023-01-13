@@ -13,12 +13,11 @@ import time, os
 class ReqBody(BaseModel):
     chatText: str = ''
     chatId: int
-    chatName: str
+    chatName: str = 'Master'
     groupId: int = -1
     timestamp: int = -1
     signature: str = ''
-    returnVoice: bool = False
-    chatName: str = ""
+    returnVoice: bool = True
 
 
 apicfg = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/Config/api.toml')
@@ -80,7 +79,7 @@ async def universalHandler(command: str=['chat', 'write', 'voice', 'forgetme', '
     
     finalMsg = resp.reply if resp.reply else resp.msg
     if not resp.status:  # 不成功
-        return {'success': False, 'response': 'GENERAL_FAILURE', 'text': finalMsg}
+        return {'success': False, 'response': 'GENERAL_FAILURE'}
     if resp.voice and body.returnVoice:  # 语音正常、请求语音返回
         import base64
         httpRes = Response(content=resp.voice, media_type='audio/ogg')
@@ -109,7 +108,7 @@ async def admin(body: ReqBody, action: str):
         msg = newMsg(body, action)
         resp = await appe.MasterCommand(user_id=body.chatId, Message=msg['msgObj'], pLock=None, config=apicfg)
         if resp == []:
-            return {'success': False, 'response': 'GENERAL_FAILURE', 'text': 'see console'}
+            return {'success': False, 'response': 'GENERAL_FAILURE'}
         return {'success': True, 'response': resp[0]}
     except Exception as e:
         logger.error(e)
