@@ -118,7 +118,7 @@ class BotRunner(object):
 
             # 回复逻辑判定
             if message.reply_to_message:
-                if message.reply_to_message.from_user.id == Setting.ProfileManager().access_telegram(init=False).bot_id:
+                if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
                     if str(Utils.checkMsg(
                             f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
                         if not _hand.text.startswith("/"):

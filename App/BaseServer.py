@@ -11,4 +11,4 @@ class BotRunner:
         self.config = _config
 
     def run(self, pLock):
-        uvicorn.run('App.EventServer:app', host='127.0.0.1', port=self.config.port, reload=True, log_level="debug", workers=1)
+        uvicorn.run('App.EventServer:app', host='127.0.0.1', port=self.config.port, reload=False, log_level="debug", workers=1)
