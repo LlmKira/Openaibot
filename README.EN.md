@@ -430,7 +430,7 @@ help - help
 
 ## API
 
-Please see https://github.com/sudoskys/Openaibot/blob/main/API.md for open API documentation.
+Please see https://github.com/sudoskys/Openaibot/blob/main/docs/API.md for open API documentation.
 The API server and Telegram Bot service are not at the same pace of development, usually Telegram
 The API server adapts after a new commit has been made to the Bot. The API server may not function properly when certain
 import modules are changed. In this case, you can switch to the apiserver branch to get a stable version of the API

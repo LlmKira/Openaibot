@@ -87,9 +87,12 @@ def load_csonfig():
 
 
 def save_csonfig(pLock=None):
-    with pLock:
-        with open("./Config/config.json", "w+", encoding="utf8") as f:
-            json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.acquire()
+    with open("./Config/config.json", "w+", encoding="utf8") as f:
+        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.release()
 
 
 async def TTSSupportCheck(text, user_id):
@@ -621,7 +624,7 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
     return _reply
 
 
-async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
+async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None):
     load_csonfig()
     _reply = []
     if user_id in config.master:
@@ -794,7 +797,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                         logger.info(_ev)
 
             # UPDATE
-            if command == "/update_detect":
+            if command.startswith("/update_detect"):
                 keys, _error = initCensor()
                 if _error:
                     error = '\n'.join(_error)
@@ -806,32 +809,32 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                 _reply.append(f"{'|'.join(keys)}\n\n{errors}")
 
             # USER White
-            if command == "/open_user_white_mode":
+            if command.startswith("/open_user_white_mode"):
                 _csonfig["whiteUserSwitch"] = True
                 _reply.append("SETTING:whiteUserSwitch ON")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteUser ON")
 
-            if command == "/close_user_white_mode":
+            if command.startswith("/close_user_white_mode"):
                 _csonfig["whiteUserSwitch"] = False
                 _reply.append("SETTING:whiteUserSwitch OFF")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteUser OFF")
 
             # GROUP White
-            if command == "/open_group_white_mode":
+            if command.startswith("/open_group_white_mode"):
                 _csonfig["whiteGroupSwitch"] = True
                 _reply.append("ON:whiteGroup")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup ON")
 
-            if command == "/close_group_white_mode":
+            if command.startswith("/close_group_white_mode"):
                 _csonfig["whiteGroupSwitch"] = False
                 _reply.append("SETTING:whiteGroup OFF")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup OFF")
 
-            if command == "/see_api_key":
+            if command.startswith("/see_api_key"):
                 keys = Api_keys.get_key("./Config/api_keys.json")
                 # 脱敏
                 _key = []
@@ -865,13 +868,13 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                 save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
-            if command == "/open":
+            if command.startswith("/open"):
                 _csonfig["statu"] = True
                 _reply.append("SETTING:BOT ON")
                 save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
-            if command == "/close":
+            if command.startswith("/close"):
                 _csonfig["statu"] = False
                 _reply.append("SETTING:BOT OFF")
                 save_csonfig(pLock)
