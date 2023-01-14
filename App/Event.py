@@ -307,7 +307,7 @@ class Reply(object):
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
                                                             frequency_penalty=0.1,
-                                                            presence_penalty=0.1,
+                                                            presence_penalty=0.3,
                                                             web_enhance_server=PLUGIN_TABLE,
                                                             logit_bias=_style
                                                             )
