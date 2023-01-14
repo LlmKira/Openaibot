@@ -25,6 +25,7 @@ class ReqBody(BaseModel):
 
 apicfg = ReadConfig().parseFile(os.path.split(os.path.realpath(__file__))[0] + '/Config/api.toml')
 _csonfig = appe.load_csonfig()
+ProfileManager = Setting.ProfileManager()
 
 
 def preCheck(reqbody):
@@ -78,9 +79,10 @@ async def universalHandler(command=None, body: ReqBody = None):
     finalMsg: str
 
     if msg['isGroup']:
-        resp = await appe.Group(msg['msgObj'], apicfg)
+        resp = await appe.Group(Message=msg['msgObj'], bot_profile=ProfileManager.access_api(init=False), config=apicfg)
     else:
-        resp = await appe.Friends(msg['msgObj'], apicfg)
+        resp = await appe.Friends(Message=msg['msgObj'], bot_profile=ProfileManager.access_api(init=False),
+                                  config=apicfg)
 
     finalMsg = resp.reply if resp.reply else resp.msg
     if not resp.status:  # 不成功
@@ -123,7 +125,7 @@ async def admin(body: ReqBody, action: str):
 if __name__ == '__main__':
     import uvicorn
 
-    Setting.ProfileManager().access_api(bot_name=apicfg.botname[:6], bot_id=apicfg.botid, init=True)
+    ProfileManager.access_api(bot_name=apicfg.botname[:6], bot_id=apicfg.botid, init=True)
     uvicorn.run('APIServer:app', host=apicfg['uvicorn_host'], port=apicfg['uvicorn_port'],
                 reload=apicfg['uvicorn_reload'], log_level=apicfg['uvicorn_loglevel'],
                 workers=apicfg['uvicorn_workers'])

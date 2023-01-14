@@ -15,13 +15,13 @@ def get_start_name(prompt: str, bot_name=None):
     _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
                     "补全", "代码", "数据包"]
     STARTNAME = bot_name if bot_name else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
-
-    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
-    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
+    STARTNAME = STARTNAME if not prompt.endswith(("??", "？？")) else "Athene:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Assistant:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt,
+                                                     keywords=["teach me", "给出详细", "步骤", "计算结果", "教教我",
+                                                               "解释一下"],
                                                      r=0.01) else "Teacher:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!!!", "!！！")) else "God:"
     STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
     STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
     STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"

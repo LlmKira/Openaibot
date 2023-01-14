@@ -25,6 +25,7 @@ from utils.Base import Tool
 time_interval = 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
+ProfileManager = Setting.ProfileManager()
 
 
 async def set_cron(funcs, second: int):
@@ -142,7 +143,10 @@ class BotRunner(object):
             # 触发
             if started:
                 request_timestamps.append(time.time())
-                _friends_message = await Event.Group(_hand, _config)
+                _friends_message = await Event.Group(Message=_hand,
+                                                     config=_config,
+                                                     bot_profile=ProfileManager.access_telegram(init=False)
+                                                     )
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.voice:
@@ -172,7 +176,10 @@ class BotRunner(object):
             # 交谈
             if _hand.text.startswith(
                     ("/chat", "/voice", "/write", "/forgetme", "/remind")):
-                _friends_message = await Event.Friends(_hand, _config)
+                _friends_message = await Event.Friends(Message=_hand,
+                                                       config=_config,
+                                                       bot_profile=ProfileManager.access_telegram(init=False)
+                                                       )
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.voice:
@@ -220,7 +227,7 @@ class BotRunner(object):
             _last_name = _me.last_name if _me.last_name else ""
             _bot_id = _me.id
             _bot_name = f"{_first_name}{_last_name}"
-            Setting.ProfileManager().access_telegram(bot_name=_bot_name[:6], bot_id=_bot_id, init=True)
+            ProfileManager.access_telegram(bot_name=_bot_name[:6], bot_id=_bot_id, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)

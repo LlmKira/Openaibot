@@ -19,6 +19,7 @@ from openai_kira.Chat import Optimizer
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
+from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, get_start_name
 
@@ -433,7 +434,7 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
 
 
-async def Group(Message: User_Message, config) -> PublicReturn:
+async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param Message:
@@ -445,6 +446,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
     _user_name = Message.from_user.name
+    _bot_name = bot_profile.bot_name
     # 状态
     if not _csonfig.get("statu"):
         return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
@@ -486,7 +488,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt),
+                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
                                          method=_reply_type
                                          )
 
@@ -508,7 +510,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def Friends(Message: User_Message, config) -> PublicReturn:
+async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param Message:
@@ -520,6 +522,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
     _user_name = Message.from_user.name
+    _bot_name = bot_profile.bot_name
     # 状态
     if not _csonfig.get("statu"):
         return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
@@ -561,7 +564,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt),
+                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
                                          method=_reply_type
                                          )
 
