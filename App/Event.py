@@ -420,8 +420,8 @@ async def StyleSet(user_id, text) -> PublicReturn:
         for item in _style_token_list:
             item = str(item)
             _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
-            item = item.replace("(", "").replace("{", "").replace("[", "")
-            _weight = _weight if _weight <= 7 else 2
+            item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace("]", "")
+            _weight = _weight if _weight <= 10 else 2
             _weight = _weight if _weight >= -80 else 0
             _encode_token = openai_kira.utils.Talk.gpt_tokenizer.encode(item)
             _love = {str(token): _weight for token in _encode_token}
