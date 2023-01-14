@@ -306,6 +306,8 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
+                                                            frequency_penalty=0.1,
+                                                            presence_penalty=0.1,
                                                             web_enhance_server=PLUGIN_TABLE,
                                                             logit_bias=_style
                                                             )
@@ -420,7 +422,8 @@ async def StyleSet(user_id, text) -> PublicReturn:
         for item in _style_token_list:
             item = str(item)
             _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
-            item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace("]", "")
+            item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace(
+                "]", "")
             _weight = _weight if _weight <= 10 else 2
             _weight = _weight if _weight >= -80 else 0
             _encode_token = openai_kira.utils.Talk.gpt_tokenizer.encode(item)
