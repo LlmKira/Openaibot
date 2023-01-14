@@ -985,4 +985,5 @@ Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
 Use /voice 开启可能的 tts 支持。
 Use /trigger Admin 可以开启主动回复模式。
+Use /style 定制词汇风格，中文效果较弱，(增强),[减弱]。
 """
