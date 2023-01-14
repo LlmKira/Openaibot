@@ -146,15 +146,15 @@ public class HMACSHA256Example {
 
 对本API的所有请求都应以POST方式进行，且请求体为json格式（已转义），UTF-8编码。请求体应包含以下内容：
 
-| 参数名      | 数据类型 | 是否可空 | 解释                                                         | 示例数据   | 默认值   |
-| ----------- | -------- | -------- | ------------------------------------------------------------ | ---------- | -------- |
-| chatText    | String   | 是       | 用户向AI发起请求时所传入文本                                 | "你好"     | ""       |
-| chatId      | Integer  | 否       | 用于标识用户的一个整数，可任意指定                           | 114514     |          |
-| chatName    | String   | 是       | 指定用户的名字。该名称在与AI的对话中可能出现，用于称呼用户   | "白菜"     | "Master" |
-| groupId     | Integer  | 是       | 如果该请求在群聊中发起，此参数可用于标识来源群聊。本参数为-1时API将认为对话在私聊中发起 | 1919810    | -1       |
-| timestamp   | Integer  | 是       | 用于标识请求发起时间，仅在请求合法性校验中使用。应为秒级时间戳（10位整数） | 1671441081 | -1       |
-| signature   | String   | 是       | 接口签名                                                     | (略)       | ""       |
-| returnVoice | Bool     | 是       | chat、write接口专属功能。是否输出API合成的语音。这是一个全局开关，即当用户在/voice接口中开启TTS，但本参数为false时，API仍将返回文本；当用户未开启TTS时，此参数无效 | false      | true     |
+| 参数名         | 数据类型    | 是否可空 | 解释                                                                                                | 示例数据       | 默认值      |
+|-------------|---------|------|---------------------------------------------------------------------------------------------------|------------|----------|
+| chatText    | String  | 是    | 用户向AI发起请求时所传入文本                                                                                   | "你好"       | ""       |
+| chatId      | Integer | 否    | 用于标识用户的一个整数，可任意指定                                                                                 | 114514     |          |
+| chatName    | String  | 是    | 指定用户的名字。该名称在与AI的对话中可能出现，用于称呼用户                                                                    | "白菜"       | "Master" |
+| groupId     | Integer | 是    | 如果该请求在群聊中发起，此参数可用于标识来源群聊。本参数为-1时API将认为对话在私聊中发起                                                    | 1919810    | -1       |
+| timestamp   | Integer | 是    | 用于标识请求发起时间，仅在请求合法性校验中使用。应为秒级时间戳（10位整数）                                                            | 1671441081 | -1       |
+| signature   | String  | 是    | 接口签名                                                                                              | (略)        | ""       |
+| returnVoice | Bool    | 是    | chat、write接口专属功能。是否输出API合成的语音。这是一个全局开关，即当用户在/voice接口中开启TTS，但本参数为false时，API仍将返回文本；当用户未开启TTS时，此参数无效 | false      | true     |
 
 实际请求时对数据类型的要求不是很严格。如若对timestamp传入字符串类型的时间戳，API将自动转换为整数。
 
@@ -164,21 +164,21 @@ public class HMACSHA256Example {
 
 此情况下，本API所有接口都以json格式响应（已转义），编码UTF-8。格式如下：
 
-| 参数名   | 数据类型 | 解释                           | 示例数据                                               |
-| -------- | -------- | ------------------------------ | ------------------------------------------------------ |
-| success  | Bool     | 本次请求是否成功               | true                                                   |
-| response | String   | 对本次请求的返回文本或错误原因 | "喵~ 你好啊，主人！很高兴见到你！有什么能帮助你的吗？" |
+| 参数名      | 数据类型   | 解释              | 示例数据                          |
+|----------|--------|-----------------|-------------------------------|
+| success  | Bool   | 本次请求是否成功        | true                          |
+| response | String | 对本次请求的返回文本或错误原因 | "喵~ 你好啊，主人！很高兴见到你！有什么能帮助你的吗？" |
 
 当success = false时，response所有可能的返回值如下：
 
 | response                     | 解释                                                         |
-| ---------------------------- | ------------------------------------------------------------ |
-| SIGNATURE_MISMATCH           | 传入签名与服务器计算结果不匹配。请考虑您的字符编码、Base64方式或是否反转义"\n"等问题。 |
+|------------------------------|------------------------------------------------------------|
+| SIGNATURE_MISMATCH           | 传入签名与服务器计算结果不匹配。请考虑您的字符编码、Base64方式或是否反转义"\n"等问题。           |
 | NECESSARY_PARAMETER_IS_EMPTY | 未传入必需参数。如chatId、开启签名验证时未传入signature、开启时间戳校验时未传入timestamp等。 |
-| TIMESTAMP_OUTDATED           | 当前请求所包含时间戳已过期，请重新发起请求。                 |
-| OPERATION_NOT_PERMITTED      | 在执行管理指令时出现。当前chatId不是机器人管理员。           |
-| INVAILD_ADMIN_ACTION         | 所指定的管理操作无效。                                       |
-| GENERAL_FAILURE              | 不知道发生了什么，总之就是出错了。错误信息通常已输出到控制台，请通过终端查看。 |
+| TIMESTAMP_OUTDATED           | 当前请求所包含时间戳已过期，请重新发起请求。                                     |
+| OPERATION_NOT_PERMITTED      | 在执行管理指令时出现。当前chatId不是机器人管理员。                               |
+| INVAILD_ADMIN_ACTION         | 所指定的管理操作无效。                                                |
+| GENERAL_FAILURE              | 不知道发生了什么，总之就是出错了。错误信息通常已输出到控制台，请通过终端查看。                    |
 
 请注意，当您的请求体无效时（如未转义双引号导致请求json格式错误），您的请求会被FastAPI截胡并返回FastAPI生成的json报错。此情况下的响应参数请参阅FastAPI文档。
 
@@ -186,10 +186,10 @@ public class HMACSHA256Example {
 
 此情况下，API响应头将新增两项内容。
 
-| Key          | Value        | 解释                                              |
-| ------------ | ------------ | ------------------------------------------------- |
-| Content-Type | audio/ogg    | 响应体MIME。API将对所有TTS请求返回ogg格式音频流。 |
-| X-Bot-Reply  | (一段Base64) | Base64编码后的音频文案。                          |
+| Key          | Value      | 解释                              |
+|--------------|------------|---------------------------------|
+| Content-Type | audio/ogg  | 响应体MIME。API将对所有TTS请求返回ogg格式音频流。 |
+| X-Bot-Reply  | (一段Base64) | Base64编码后的音频文案。                 |
 
 响应体中将包含TTS服务合成的ogg格式音频。
 
@@ -361,37 +361,37 @@ public class HMACSHA256Example {
 
 {action}应替换为如下命令中的一个，请翻阅README获取最新版：
 
-| 命令                                | 作用                           | 额外                                                  |
-| ----------------------------------- | ------------------------------ | ----------------------------------------------------- |
-| `/set_user_cold`                    | 设置用户冷却时间               | 时间内不能发送         1 为无限制                     |
-| `/set_group_cold`                   | 设置群组冷却时间               | 时间内不能发送            1 为无限制                  |
-| `/set_token_limit`                  | 设置输出限制长度               | Api 的 4095 限制是输入+输出，如果超限，那么请调小输出 |
-| `/set_input_limit`                  | 设置输入限制长度               |                                                       |
-| ~~`/config`~~                       | ~~获取/备份 config.json 文件~~ | ~~发送文件~~   **本API不提供此接口**                  |
-| `/add_block_group`      +id 绝对值  | 禁止                           | 直接生效         可跟多参数，空格分割                 |
-| `/del_block_group`       +id 绝对值 | 解禁                           | 直接生效          可跟多参数，空格分割                |
-| `/add_block_user`     +id 绝对值    | 禁止                           | 直接生效           可跟多参数，空格分割               |
-| `/del_block_user`     +id 绝对值    | 解禁                           | 直接生效           可跟多参数，空格分割               |
-| `/add_white_group`     +id 绝对值   | 加入                           | 需要开启白名单模式生效       可跟多参数，空格分割     |
-| `/add_white_user`      +id 绝对值   | 加入                           | 需要开启白名单模式生效       可跟多参数，空格分割     |
-| `/del_white_group`     +id 绝对值   | 除名                           | 需要开启白名单模式生效        可跟多参数，空格分割    |
-| `/del_white_user`      +id 绝对值   | 除名                           | 需要开启白名单模式生效      可跟多参数，空格分割      |
-| `/update_detect`                    | 更新敏感词                     |                                                       |
-| `/open_user_white_mode`             | 开用户白名单                   |                                                       |
-| `/open_group_white_mode`            | 开群组白名单                   |                                                       |
-| `/close_user_white_mode`            | 关用户白名单                   |                                                       |
-| `/close_group_white_mode`           | 关群组白名单                   |                                                       |
-| `/open`                             | 开启机器人                     |                                                       |
-| `/close`                            | 关闭机器人                     |                                                       |
-| `/see_api_key`                      | 现在几个 Api key               |                                                       |
-| `/del_api_key`       +key           | 删除 Api key                   | 可跟多参数，空格分割                                  |
-| `/add_api_key`           +key       | 增加 Api key                   | 可跟多参数，空格分割                                  |
-| `/set_per_user_limit`               | 用户分配总额度                 | 1 为无限制            按用户计量                      |
-| `/set_per_hour_limit`               | 用户小时可用量                 | 1 为无限制              按用户计量                    |
-| `/reset_user_usage`+userID          | 重置用户分配额度               | 按用户计量          可跟多参数，空格分割              |
-| `/promote_user_limit`+userID+limit  | 提升用户的额度                 | 按用户计量  1 为默认        可跟多参数，空格分割      |
-| `/disable_change_head`              | 禁止设定头                     | 再次设定会重置为空                                    |
-| `/enable_change_head`               | 允许设定头                     |                                                       |
+| 命令                                 | 作用                       | 额外                               |
+|------------------------------------|--------------------------|----------------------------------|
+| `/set_user_cold`                   | 设置用户冷却时间                 | 时间内不能发送         1 为无限制           |
+| `/set_group_cold`                  | 设置群组冷却时间                 | 时间内不能发送            1 为无限制        |
+| `/set_token_limit`                 | 设置输出限制长度                 | Api 的 4095 限制是输入+输出，如果超限，那么请调小输出 |
+| `/set_input_limit`                 | 设置输入限制长度                 |                                  |
+| ~~`/config`~~                      | ~~获取/备份 config.json 文件~~ | ~~发送文件~~   **本API不提供此接口**        |
+| `/add_block_group`      +id 绝对值    | 禁止                       | 直接生效         可跟多参数，空格分割          |
+| `/del_block_group`       +id 绝对值   | 解禁                       | 直接生效          可跟多参数，空格分割         |
+| `/add_block_user`     +id 绝对值      | 禁止                       | 直接生效           可跟多参数，空格分割        |
+| `/del_block_user`     +id 绝对值      | 解禁                       | 直接生效           可跟多参数，空格分割        |
+| `/add_white_group`     +id 绝对值     | 加入                       | 需要开启白名单模式生效       可跟多参数，空格分割     |
+| `/add_white_user`      +id 绝对值     | 加入                       | 需要开启白名单模式生效       可跟多参数，空格分割     |
+| `/del_white_group`     +id 绝对值     | 除名                       | 需要开启白名单模式生效        可跟多参数，空格分割    |
+| `/del_white_user`      +id 绝对值     | 除名                       | 需要开启白名单模式生效      可跟多参数，空格分割      |
+| `/update_detect`                   | 更新敏感词                    |                                  |
+| `/open_user_white_mode`            | 开用户白名单                   |                                  |
+| `/open_group_white_mode`           | 开群组白名单                   |                                  |
+| `/close_user_white_mode`           | 关用户白名单                   |                                  |
+| `/close_group_white_mode`          | 关群组白名单                   |                                  |
+| `/open`                            | 开启机器人                    |                                  |
+| `/close`                           | 关闭机器人                    |                                  |
+| `/see_api_key`                     | 现在几个 Api key             |                                  |
+| `/del_api_key`       +key          | 删除 Api key               | 可跟多参数，空格分割                       |
+| `/add_api_key`           +key      | 增加 Api key               | 可跟多参数，空格分割                       |
+| `/set_per_user_limit`              | 用户分配总额度                  | 1 为无限制            按用户计量          |
+| `/set_per_hour_limit`              | 用户小时可用量                  | 1 为无限制              按用户计量        |
+| `/reset_user_usage`+userID         | 重置用户分配额度                 | 按用户计量          可跟多参数，空格分割        |
+| `/promote_user_limit`+userID+limit | 提升用户的额度                  | 按用户计量  1 为默认        可跟多参数，空格分割   |
+| `/disable_change_head`             | 禁止设定头                    | 再次设定会重置为空                        |
+| `/enable_change_head`              | 允许设定头                    |                                  |
 
 ```java
 // 请求1：非管理员调用/admin/see_api_key

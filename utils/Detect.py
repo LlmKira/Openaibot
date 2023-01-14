@@ -11,10 +11,10 @@ from utils.Base import StrListTool
 import pycorrector
 
 
-def get_start_name(prompt: str):
+def get_start_name(prompt: str, bot_name=None):
     _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
                     "补全", "代码", "数据包"]
-    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
+    STARTNAME = bot_name if bot_name else "Girl:"
     STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
 
     STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"

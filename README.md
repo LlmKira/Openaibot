@@ -152,11 +152,11 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 多平台。
 
 ```toml
-# 不想启动就注释掉那一部分
+# 不想启动哪个就注释掉那一部分
 
 # QQ
 [Controller.QQ]
-master = [114, 514] # master user id , 账号 ID
+master = [114, 514] # master user id , 管理者账号 ID
 account = 0
 http_host = 'http://localhost:8080'   # Mirai http服务器
 ws_host = 'http://localhost:8080'   # Mirai Websocket服务器
@@ -168,7 +168,7 @@ WHITE = "Group NOT in WHITE list" # 黑白名单提示
 
 # Telegram
 [Controller.Telegram]
-master = [114, 514] # master user id , 账号 ID
+master = [114, 514] # master user id , 管理者账号 ID
 botToken = '' # 机器人密钥
 trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
@@ -182,8 +182,6 @@ port = 9559
 
 ### 配置 Telegram 设置
 
-#### BotToken
-
 [Telegram botToken 申请](https://t.me/BotFather)
 
 然后关闭隐私模式或者提拔机器人为管理员后才能使用。
@@ -194,7 +192,18 @@ port = 9559
 
 ### 配置 Openai Api key
 
-在机器人私聊中配置 key
+`Config/api_keys.json` Api Key
+
+```json
+{
+  "OPENAI_API_KEY": [
+    "sk-***********",
+    "sk-***********"
+  ]
+}
+```
+
+建议在机器人私聊中配置 key
 
 ```markdown
 see_api_key - 现在几个 Api key
@@ -205,7 +214,7 @@ add_api_key - 增加 Api key
 [OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载。
 [定价参考](https://openai.com/api/pricing/)。
 
-请不要向任何人暴露你的 `app.toml`
+请不要向任何人暴露你的 `Config`
 
 ### 配置 `service.json`
 
@@ -325,7 +334,7 @@ Azure/Vits 语言类型代码均为二位大写缩写字母。
 
 Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
 
-- vits:limit 长度内的文本会被转换
+- vits:limit 长度内的文本才会被转换
 - vits:model_name 模型名字，some.pth,在 model 文件夹下的
 - vits:speaker_id 说话人的ID,具体看模型config
 
@@ -449,6 +458,14 @@ Bot出现新commit后API服务器随后适配。当某些导入模块发生变�
 https://github.com/sudoskys/openai-kira#plugin-dev
 
 ## 其他
+
+### 多 Controller 域指数
+
+| Controller | suffix_id | desc |
+|------------|-----------|------|
+| QQ         | 101       |      |
+| Telegram   | 100       |      |
+| Api        | 103       |      |
 
 ### 统计 `analysis.json`
 
