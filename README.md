@@ -47,6 +47,7 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 * 设定固定头人设
 * 支持白名单系统
 * 支持黑名单系统
+* 自定义风格化对话
 * 多平台，泛用性强
 * 完善的内容安全功能
 * 多平台支持的通用接口
@@ -74,6 +75,11 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 **Head**
 
 支持场景设置，采用 `/remind` 设计自己的请求头。例如 `Ai 扮演在空间站的宇航员`。设定小于 4 个字符会使用默认值。
+
+**Style**
+
+支持场景设置，采用 `/style` 设计自己的风格，Ai
+会倾向使用语料中的词汇，语法是 `(enhance),((enhance pro)),[[weak]],{enhance}，(中文逗号也可以)`
 
 *这些设定的说明*
 
@@ -400,9 +406,12 @@ kill -9 id
 | `/promote_user_limit`+userID+limit | 提升用户的额度              | 按用户计量  1 为默认        可跟多参数，空格分割   |
 | `/disable_change_head`             | 禁止设定头                | 再次设定会重置为空                        |
 | `/enable_change_head`              | 允许设定头                |                                  |
+| `/disable_change_style`            | 禁止设定头                | 再次设定会重置为空                        |
+| `/enable_change_style`             | 允许设定头                |                                  |
 | `/forgetme`                        | 忘记我                  |                                  |
 | `/voice`                           | VITS/AZURE  TTS      |                                  |
 | `/trigger`                         | 主动回复模式               | 全局设置或/只有管理组成员可以启动本群模式            |
+| `/style`                           | 风格化指定                | 全局设置或/用户设置                       |
 
 ### 样表
 
@@ -442,6 +451,8 @@ open - 开启机器人
 close - 关闭机器人
 disable_change_head - 允许设定头
 enable_change_head - 禁止设定头
+disable_change_style - 允许设定风格
+enable_change_style - 禁止设定风格
 help - 帮助
 ```
 

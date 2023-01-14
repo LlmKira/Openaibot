@@ -31,6 +31,7 @@ switch into new Api immediately.
 * Independent inference, continuation writing
 * Memory bucket mechanism, weight correlation allocation, more intelligent context
 * Support API
+* Style Chat!
 * Support private chat
 * Support group chat
 * Multi-host management
@@ -65,6 +66,12 @@ Use `/forgetme` resetAi's memory.
 
 Supports scenario setting, using `/remind` to design your own request headers. For
 example `Ai plays an astronaut on a space station`.
+
+**Style**
+
+Support scene setting, use `/style` to design your own style, Ai
+Will tend to use the vocabulary in the corpus, the grammar
+is `(enhance),((enhance pro)),[[weak]],{enhance}, (Chinese commas are also acceptable)`
 
 **Description of these settings**
 
@@ -380,12 +387,12 @@ Restricted class setting set to ``1`` means no effect.
 | `/set_per_hour_limit`                     | user hour usage             | 1 is unlimited, per user                                                                                                                    |
 | `/reset_user_usage`+userID                | Reset user quota            | Measured by user Can be followed by multiple parameters, separated by spaces                                                                |
 | `/promote_user_limit`+userID+limit        | Promote the user's limit    | Measured by user 1 is the default, can be followed by multiple parameters, separated by spaces                                              |
-| `/disable_change_head`                    | disalbe head setting        | Setting again will reset to empty                                                                                                           |
-| `/enable_change_head`                     | enable head setting         |                                                                                                                                             |
-| `/remind`                                 | how ai perform self         | Fixed cue words                                                                                                                             |
-| `/forgetme`                               | 忘记我                         |                                                                                                                                             |
-| `/voice`                                  | VITS/AZURE  TTS             |                                                                                                                                             |
-| `/trigger`                                | Active reply mode           | Global settings or/and only admin group members can activate this group mode                                                                |
+| `/disable_change_style`                   | Disable setting header      | Setting it again will reset to empty                                                                                                        |
+| `/enable_change_style`                    | Allow setting headers       |                                                                                                                                             |
+| `/forgetme`                               | forget me                   |                                                                                                                                             |
+| `/voice`                                  | VITS/AZURE TTS              |                                                                                                                                             |
+| `/trigger`                                | Active reply mode           | Global settings or/only members of the management group can start this group mode                                                           |
+| `/style`                                  | style specification         | global setting or /user setting                                                                                                             |
 
 ### Sample table
 
@@ -425,6 +432,8 @@ open - turn on bots
 close - disables the bot
 disable_change_head - allow setting of head
 enable_change_head - disable_change_head
+disable_change_style - allow setting style
+enable_change_style - disable setting style
 help - help
 ```
 
