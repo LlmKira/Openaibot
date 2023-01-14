@@ -10,13 +10,14 @@ from typing import Union, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from graia.amnesia.message import MessageChain
-from graia.ariadne import Ariadne
 from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
 from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
 from graia.ariadne.model import Group, Member, Friend, MemberPerm
 from graia.ariadne.event.lifecycle import AccountLaunch
+from graia.ariadne import Ariadne
+from graia.ariadne.model import Profile
 from graiax import silkcoder
 from loguru import logger
 
@@ -42,6 +43,7 @@ async def set_cron(funcs, second: int):
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
+ProfileManager = Setting.ProfileManager()
 
 
 def get_user_message(
@@ -92,7 +94,10 @@ class BotRunner:
             if not _hand.text.startswith("/"):
                 _hand.text = f"/chat {_hand.text}"
             # _friends_message = await Event.Text(_hand, self.config)
-            _friends_message = await Event.Friends(_hand, self.config)
+            _friends_message = await Event.Friends(Message=_hand,
+                                                   bot_profile=ProfileManager.access_qq(init=False),
+                                                   config=self.config
+                                                   )
 
             if not _friends_message.status:
                 return None
@@ -111,8 +116,11 @@ class BotRunner:
         # "msg" @ RegexMatch(r"\/\b(chat|voice|write|forgetme|remind)\b.*")
         @bot.broadcast.receiver(AccountLaunch)
         async def initAccount():
-            await Setting.qqbot_profile_init(bot)
-        
+            _me: Profile = await bot.get_bot_profile()
+            _name = _me.nickname
+            _bot_profile = {"id": bot.account, "name": _name}
+            ProfileManager.access_qq(bot_name=_name, bot_id=bot.account, init=True)
+
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
             _hand = get_user_message(msg, member=friend, group=None)
@@ -154,7 +162,7 @@ class BotRunner:
                 p2 = _hand.text.index(' ') + 1
                 t = _hand.text[p1:p2]
                 _hand.text = _hand.text.replace(t, '/chat ')
-            
+
             # logger.warning(quote)   <-  这个log有魔法，不要乱动，动了之后下边的if全完蛋（
             if quote:
                 '''
@@ -197,7 +205,10 @@ class BotRunner:
                         started = True
             if started:
                 request_timestamps.append(time.time())
-                _friends_message = await Event.Group(_hand, self.config)
+                _friends_message = await Event.Group(Message=_hand,
+                                                     bot_profile=ProfileManager.access_qq(init=False),
+                                                     config=self.config
+                                                     )
                 _friends_message: PublicReturn
 
                 _caption = f"{_friends_message.reply}\n{self.config.INTRO}"

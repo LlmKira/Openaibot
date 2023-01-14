@@ -445,6 +445,14 @@ https://github.com/sudoskys/openai-kira#plugin-dev
 
 ## Other
 
+### Muti Controller
+
+| Controller | suffix_id | desc |
+|------------|-----------|------|
+| QQ         | 101       |      |
+| Telegram   | 100       |      |
+| Api        | 103       |      |
+
 ### Statistics `analysis.json`
 
 If you don't have one, please populate it with `{}`
