@@ -163,6 +163,7 @@ class DefaultData(object):
             "Group": {},
             "whiteUserSwitch": True,
             "whiteGroupSwitch": True,
+            "allow_change_style": True,
             "Model": {
             },
             "allow_change_head": True

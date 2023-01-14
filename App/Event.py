@@ -9,6 +9,7 @@ import asyncio
 import json
 import pathlib
 import random
+import re
 import time
 # from io import BytesIO
 from typing import Union
@@ -17,7 +18,7 @@ import openai_kira
 from openai_kira.Chat import Optimizer
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
+from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header, Style
 from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
@@ -286,9 +287,6 @@ class Reply(object):
                                                             web_enhance_server=PLUGIN_TABLE
                                                             )
             elif method == "chat":
-                _head = Header(uid=user).get()
-                if _head:
-                    _head = ContentDfa.filter_all(_head)
                 receiver = Chat.Chatbot(
                     conversation_id=int(_cid),
                     call_func=Api_keys.pop_api_key,
@@ -296,11 +294,20 @@ class Reply(object):
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
+                _head = None
+                if _csonfig.get("allow_change_head"):
+                    _head = Header(uid=user).get()
+                    _head = ContentDfa.filter_all(_head)
+
+                _style = {}
+                if _csonfig.get("allow_change_style"):
+                    _style = Style(uid=user).get()
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
-                                                            web_enhance_server=PLUGIN_TABLE
+                                                            web_enhance_server=PLUGIN_TABLE,
+                                                            logit_bias=_style
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -393,6 +400,46 @@ async def RemindSet(user_id, text) -> PublicReturn:
     return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
 
 
+async def StyleSet(user_id, text) -> PublicReturn:
+    """
+    :param user_id:
+    :param text:
+    :return: Ture 代表设定成功
+    """
+    _text = text
+    _user_id = user_id
+    _style_r = _text.split(" ", 1)
+    if len(_style_r) < 2:
+        return PublicReturn(status=False, msg=f"", trace="StyleSet")
+    _style = _style_r[1]
+    if Utils.tokenizer(_style) > 800:
+        return PublicReturn(status=True, msg=f"过长:{_style}", trace="StyleSet")
+    _style_token_list = re.split("[,，]", _style)
+    _token = {}
+    if _csonfig.get("allow_change_style"):
+        for item in _style_token_list:
+            item = str(item)
+            _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
+            item = item.replace("(", "").replace("{", "").replace("[", "")
+            _weight = _weight if _weight <= 7 else 2
+            _weight = _weight if _weight >= -80 else 0
+            _encode_token = openai_kira.utils.Talk.gpt_tokenizer.encode(item)
+            _love = {str(token): _weight for token in _encode_token}
+            _child_token = {}
+            for token, weight in _love.items():
+                token = str(token)
+                if token in _token.keys():
+                    __weight = _token.get(token) + _weight
+                else:
+                    __weight = _weight
+                _child_token[token] = __weight
+            _token.update(_child_token)
+        Style(uid=_user_id).set(_token)
+        return PublicReturn(status=True, msg=f"Style:{_style}\nNo reply this msg", trace="StyleSet")
+    Style(uid=_user_id).set(_token)
+    return PublicReturn(status=True, msg=f"I refuse StyleSet Command", trace="StyleSet")
+
+
 async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     """
     消息预处理，命令识别和与配置的交互层
@@ -437,6 +484,7 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
 async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
+    :param bot_profile:
     :param Message:
     :param config:
     :return: True 回复用户
@@ -462,8 +510,16 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
+                            trace="Remind",
                             msg=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Style",
+                            msg=_style_set.msg)
+
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
@@ -513,6 +569,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
 async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
+    :param bot_profile:
     :param Message:
     :param config:
     :return: True 回复用户
@@ -538,11 +595,20 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
+                            trace="Remind",
                             msg=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Style",
+                            msg=_style_set.msg)
+
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
+
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
@@ -859,6 +925,19 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     Api_keys.pop_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:DEL API KEY")
                 _reply.append("SETTING:DEL API KEY")
+
+            if "/enable_change_style" in command:
+                _csonfig["allow_change_style"] = True
+                _reply.append("SETTING:allow_change_style ON")
+                save_csonfig(pLock)
+                logger.info("SETTING:BOT ON")
+
+            if "/disable_change_style" in command:
+                _csonfig["allow_change_style"] = False
+                _reply.append("SETTING:allow_change_style OFF")
+                save_csonfig(pLock)
+                logger.info("SETTING:BOT ON")
+
             if "/enable_change_head" in command:
                 _csonfig["allow_change_head"] = True
                 _reply.append("SETTING:allow_change_head ON")

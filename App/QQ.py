@@ -147,7 +147,7 @@ class BotRunner:
             _at_me = f'@{bot.account} '
             get_request_frequency()
             started = False
-            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write","/style", "/forgetme", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = member.permission

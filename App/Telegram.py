@@ -107,7 +107,7 @@ class BotRunner(object):
             started = False
 
             # 命令解析
-            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme","/style", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = await is_admin(message)
@@ -175,7 +175,7 @@ class BotRunner(object):
                 _hand.text = f"/chat {_hand.text}"
             # 交谈
             if _hand.text.startswith(
-                    ("/chat", "/voice", "/write", "/forgetme", "/remind")):
+                    ("/chat", "/voice", "/write", "/forgetme", "/style","/remind")):
                 _friends_message = await Event.Friends(Message=_hand,
                                                        config=_config,
                                                        bot_profile=ProfileManager.access_telegram(init=False)
