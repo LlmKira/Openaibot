@@ -16,7 +16,7 @@ Pillow
 pathlib
 elara
 numpy
-openai-kira>=0.2.2
+openai-kira>=0.3.0
 scikit-learn
 transformers
 beautifulsoup4
