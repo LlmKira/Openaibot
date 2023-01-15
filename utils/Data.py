@@ -163,9 +163,10 @@ class DefaultData(object):
             "Group": {},
             "whiteUserSwitch": True,
             "whiteGroupSwitch": True,
-            "allow_change_style": True,
             "Model": {
             },
+            "auto-adjust": False,
+            "allow_change_style": True,
             "allow_change_head": True
         }
 

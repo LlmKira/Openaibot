@@ -308,7 +308,8 @@ class Reply(object):
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
                                                             web_enhance_server=PLUGIN_TABLE,
-                                                            logit_bias=_style
+                                                            logit_bias=_style,
+                                                            no_penalty=not _csonfig["auto-adjust"]
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -928,29 +929,35 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                 logger.info("SETTING:DEL API KEY")
                 _reply.append("SETTING:DEL API KEY")
 
-            if "/enable_change_style" in command:
-                _csonfig["allow_change_style"] = True
-                _reply.append("SETTING:allow_change_style ON")
+            if "/change_style" in command:
+                if _csonfig["allow_change_style"]:
+                    _allow_change_style = False
+                else:
+                    _allow_change_style = True
+                _csonfig["allow_change_style"] = _allow_change_style
+                _reply.append(f"SETTING:allow_change_style {_allow_change_style}")
                 save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
+                logger.info(f"SETTING:allow_change_style {_allow_change_style}")
 
-            if "/disable_change_style" in command:
-                _csonfig["allow_change_style"] = False
-                _reply.append("SETTING:allow_change_style OFF")
+            if "/change_head" in command:
+                if _csonfig["allow_change_head"]:
+                    _allow_change_head = False
+                else:
+                    _allow_change_head = True
+                _csonfig["allow_change_head"] = _allow_change_head
+                _reply.append(f"SETTING:allow_change_head {_allow_change_head}")
                 save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
+                logger.info(f"SETTING:allow_change_head {_allow_change_head}")
 
-            if "/enable_change_head" in command:
-                _csonfig["allow_change_head"] = True
-                _reply.append("SETTING:allow_change_head ON")
+            if "/auto_adjust" in command:
+                if _csonfig["auto_adjust"]:
+                    _adjust = False
+                else:
+                    _adjust = True
+                _csonfig["auto_adjust"] = _adjust
+                _reply.append(f"SETTING:auto_adjust {_adjust}")
                 save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
-
-            if "/disable_change_head" in command:
-                _csonfig["allow_change_head"] = False
-                _reply.append("SETTING:allow_change_head OFF")
-                save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
+                logger.info(f"SETTING:auto_adjust {_adjust}")
 
             if command.startswith("/open"):
                 _csonfig["statu"] = True

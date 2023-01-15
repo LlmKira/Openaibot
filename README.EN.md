@@ -355,85 +355,86 @@ kill -9
 
 Restricted class setting set to ``1`` means no effect.
 
-| command                                   | function                    | extra                                                                                                                                       |
-|-------------------------------------------|-----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `/set_user_cold`                          | set user cooldown time      | can not send within the time 1 is unlimited                                                                                                 |
-| `/set_group_cold`                         | Set group cooling time      | Cannot send within the time 1 is unlimited                                                                                                  |
-| `/set_token_limit`                        | Set the output limit length | Api's 4095 limit is input + output, if it exceeds the limit, please reduce the output                                                       |
-| `/set_input_limit`                        | Set input limit length      |                                                                                                                                             |
-| `/config`                                 | get/backup config.json file | send file                                                                                                                                   |
-| `/add_block_group` +id absolute value     | Prohibited                  | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
-| `/del_block_group` + absolute value of id | Unban                       | Effective directly Can be separated with multiple parameters and spaces                                                                     |
-| `/add_block_user` +Absolute value of id   | Forbidden                   | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
-| `/del_block_user` + absolute value of id  | Unban                       | Effective directly Can be separated with multiple parameters and spaces                                                                     |
-| `/add_white_group` +id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
-| `/add_white_user` + id absolute value     | Add                         | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
-| `/del_white_group` +id absolute value     | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
-| `/del_white_user` + absolute value of id  | Delisting                   | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
-| `/update_detect`                          | Update sensitive words      |                                                                                                                                             |
-| `/open_user_white_mode`                   | Open user whitelist         |                                                                                                                                             |
-| `/open_group_white_mode`                  | Open group whitelist        |                                                                                                                                             |
-| `/close_user_white_mode`                  | close user whitelist        |                                                                                                                                             |
-| `/close_group_white_mode`                 | close group whitelist       |                                                                                                                                             |
-| `/open`                                   | Open the robot              |                                                                                                                                             |
-| `/close`                                  | close the robot             |                                                                                                                                             |
-| `/chat`                                   | Conversation                | Each time /chat starts over, forgetting the record. Replies cannot be indexed after 24 hours in the group, and private chats are permanent. |
-| `/write`                                  | continue writing            | continue writing.                                                                                                                           |
-| `/see_api_key`                            | Several Api keys now        |                                                                                                                                             |
-| `/remind`                                 | Persona                     | Fixed reminder.                                                                                                                             |
-| `/del_api_key` +key                       | Delete Api key              | Can follow multiple parameters, separated by spaces                                                                                         |
-| `/add_api_key` +key                       | Add Api key                 | Can follow multiple parameters, separated by spaces                                                                                         |
-| `/set_per_user_limit`                     | total user allocation limit | 1 is unlimited per user                                                                                                                     |
-| `/set_per_hour_limit`                     | user hour usage             | 1 is unlimited, per user                                                                                                                    |
-| `/reset_user_usage`+userID                | Reset user quota            | Measured by user Can be followed by multiple parameters, separated by spaces                                                                |
-| `/promote_user_limit`+userID+limit        | Promote the user's limit    | Measured by user 1 is the default, can be followed by multiple parameters, separated by spaces                                              |
-| `/disable_change_style`                   | Disable setting header      | Setting it again will reset to empty                                                                                                        |
-| `/enable_change_style`                    | Allow setting headers       |                                                                                                                                             |
-| `/forgetme`                               | forget me                   |                                                                                                                                             |
-| `/voice`                                  | VITS/AZURE TTS              |                                                                                                                                             |
-| `/trigger`                                | Active reply mode           | Global settings or/only members of the management group can start this group mode                                                           |
-| `/style`                                  | style specification         | global setting or /user setting                                                                                                             |
+| command                                   | function                           | extra                                                                                                                                       |
+|-------------------------------------------|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `/set_user_cold`                          | set user cooldown time             | can not send within the time 1 is unlimited                                                                                                 |
+| `/set_group_cold`                         | Set group cooling time             | Cannot send within the time 1 is unlimited                                                                                                  |
+| `/set_token_limit`                        | Set the output limit length        | Api's 4095 limit is input + output, if it exceeds the limit, please reduce the output                                                       |
+| `/set_input_limit`                        | Set input limit length             |                                                                                                                                             |
+| `/config`                                 | get/backup config.json file        | send file                                                                                                                                   |
+| `/add_block_group` +id absolute value     | Prohibited                         | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
+| `/del_block_group` + absolute value of id | Unban                              | Effective directly Can be separated with multiple parameters and spaces                                                                     |
+| `/add_block_user` +Absolute value of id   | Forbidden                          | Effective directly Can be followed by multiple parameters, separated by spaces                                                              |
+| `/del_block_user` + absolute value of id  | Unban                              | Effective directly Can be separated with multiple parameters and spaces                                                                     |
+| `/add_white_group` +id absolute value     | Add                                | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/add_white_user` + id absolute value     | Add                                | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/del_white_group` +id absolute value     | Delisting                          | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/del_white_user` + absolute value of id  | Delisting                          | Need to enable the whitelist mode to take effect Can be separated with multiple parameters and spaces                                       |
+| `/update_detect`                          | Update sensitive words             |                                                                                                                                             |
+| `/open_user_white_mode`                   | Open user whitelist                |                                                                                                                                             |
+| `/open_group_white_mode`                  | Open group whitelist               |                                                                                                                                             |
+| `/close_user_white_mode`                  | close user whitelist               |                                                                                                                                             |
+| `/close_group_white_mode`                 | close group whitelist              |                                                                                                                                             |
+| `/open`                                   | Open the robot                     |                                                                                                                                             |
+| `/close`                                  | close the robot                    |                                                                                                                                             |
+| `/chat`                                   | Conversation                       | Each time /chat starts over, forgetting the record. Replies cannot be indexed after 24 hours in the group, and private chats are permanent. |
+| `/write`                                  | continue writing                   | continue writing.                                                                                                                           |
+| `/see_api_key`                            | Several Api keys now               |                                                                                                                                             |
+| `/remind`                                 | Persona                            | Fixed reminder.                                                                                                                             |
+| `/del_api_key` +key                       | Delete Api key                     | Can follow multiple parameters, separated by spaces                                                                                         |
+| `/add_api_key` +key                       | Add Api key                        | Can follow multiple parameters, separated by spaces                                                                                         |
+| `/set_per_user_limit`                     | total user allocation limit        | 1 is unlimited per user                                                                                                                     |
+| `/set_per_hour_limit`                     | user hour usage                    | 1 is unlimited, per user                                                                                                                    |
+| `/reset_user_usage`+userID                | Reset user quota                   | Measured by user Can be followed by multiple parameters, separated by spaces                                                                |
+| `/promote_user_limit`+userID+limit        | Promote the user's limit           | Measured by user 1 is the default, can be followed by multiple parameters, separated by spaces                                              |
+| `/change_style`                           | setting prefer words               | Setting it again will reset to empty                                                                                                        |
+| `/change_head`                            | setting header                     | Setting it again will reset to empty                                                                                                        |
+| `/forgetme`                               | forget me                          |                                                                                                                                             |
+| `/voice`                                  | VITS/AZURE TTS                     |                                                                                                                                             |
+| `/trigger`                                | Active reply mode                  | Global settings or/only members of the management group can start this group mode                                                           |
+| `/style`                                  | style specification                | global setting or /user setting                                                                                                             |
+| `/auto_adjust`                            | Automatically optimize performance | owner                                                                                                                                       |
 
 ### Sample table
 
 ```markdown
-chat - Talking
-write - complement
-remind - persona
-forgetme - reset
-voice - talk to me
-trigger - AdminCommand Active reply mode
+chat - talk
+write - continue writing
+forgetme - reset memory
+reminder - Scene setting cancel overwrite with short text
+voice - voice support
+trigger - Admin initiates unsolicited responses
+style - set the preferred word
+auto_adjust - automatic optimizer
 set_user_cold - set user cooldown
-set_group_cold - sets the group cooldown time
+set_group_cold - set group cooldown
 set_token_limit - set output limit length
-set_input_limit - sets the input limit length
-see_api_key - now several Api keys
-del_api_key - remove Api key
+set_input_limit - set input limit length
+see_api_key - Several Api keys now
+del_api_key - Delete Api key
 add_api_key - add Api key
-config - get/backup hotfile
-set_per_user_limit - set the normal user limit
-set_per_hour_limit - set the hourly user limit
-promote_user_limit - raise user limit
-reset_user_usage - reset user limits
-add_block_group - disable a group
-del_block_group - unblock a group
-add_block_user - disable a user
-del_block_user - unblock a user
-add_white_group - add a whitelisted group
-add_white_user - add whitelisted users
-del_white_group - delist a whitelisted group
-del_white_user - delist a whitelisted person
+config - get/backup hot configuration file
+set_per_user_limit - set normal user limit
+set_per_hour_limit - set user hour limit
+promote_user_limit - Promote user limit
+reset_user_usage - Reset user usage
+add_block_group - block group
+del_block_group - Unblock group
+add_block_user - block user
+del_block_user - Unblock user
+add_white_group - add whitelist group
+add_white_user - add whitelist user
+del_white_group - delist whitelist group
+del_white_user - remove whitelist user
 update_detect - update sensitive words
 open_user_white_mode - open user whitelist
 open_group_white_mode - open group whitelist
-close_user_white_mode - turn off user whitelisting
-close_group_white_mode - Turn off group whitelisting
-open - turn on bots
-close - disables the bot
-disable_change_head - allow setting of head
-enable_change_head - disable_change_head
-disable_change_style - allow setting style
-enable_change_style - disable setting style
+close_user_white_mode - close user whitelist
+close_group_white_mode - close group whitelist
+open - open the robot
+close - close the robot
+change_head - set head switch
+change_style - set the style switch
 help - help
 ```
 
