@@ -165,7 +165,7 @@ class DefaultData(object):
             "whiteGroupSwitch": True,
             "Model": {
             },
-            "auto-adjust": False,
+            "auto_adjust": False,
             "allow_change_style": True,
             "allow_change_head": True
         }
