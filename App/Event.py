@@ -16,6 +16,7 @@ from typing import Union
 from loguru import logger
 import openai_kira
 from openai_kira.Chat import Optimizer
+from openai_kira.utils.chat import Cut
 
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header, Style
@@ -103,7 +104,6 @@ async def TTSSupportCheck(text, user_id):
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
-    from openai_kira.utils.Talk import Talk
     if not TTS_CONF["status"]:
         return
     if TTS_CONF['type'] == 'none':
@@ -122,7 +122,7 @@ async def TTSSupportCheck(text, user_id):
             return
         if len(text) > _vits_config["limit"]:
             return
-        cn_res = Talk.chinese_sentence_cut(text)
+        cn_res = Cut.chinese_sentence_cut(text)
         cn = {i: f"[{lang_type}]" for i in cn_res}
         # 合成
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
@@ -274,7 +274,7 @@ class Reply(object):
                 receiver = Chat.Chatbot(
                     conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
-                    token_limit=900,
+                    token_limit=1000,
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
@@ -282,7 +282,8 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
                                                             head=".",
-                                                            role="正在幽默的，情感丰沛的多人聊天:",
+                                                            frequency_penalty=0.5,  # 不要用用过的字符
+                                                            presence_penalty=-0.5,  # 不要谈论新话题
                                                             max_tokens=100,
                                                             web_enhance_server=PLUGIN_TABLE
                                                             )
@@ -306,8 +307,6 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
                                                             role=_head,
-                                                            frequency_penalty=0.1,
-                                                            presence_penalty=0.5,
                                                             web_enhance_server=PLUGIN_TABLE,
                                                             logit_bias=_style
                                                             )
@@ -424,9 +423,9 @@ async def StyleSet(user_id, text) -> PublicReturn:
             _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
             item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace(
                 "]", "")
-            _weight = _weight if _weight <= 10 else 2
+            _weight = _weight if _weight <= 20 else 2
             _weight = _weight if _weight >= -80 else 0
-            _encode_token = openai_kira.utils.Talk.gpt_tokenizer.encode(item)
+            _encode_token = openai_kira.utils.chat.gpt_tokenizer.encode(item)
             _love = {str(token): _weight for token in _encode_token}
             _child_token = {}
             for token, weight in _love.items():

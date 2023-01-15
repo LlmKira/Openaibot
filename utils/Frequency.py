@@ -7,7 +7,7 @@ import random
 import time
 
 from openai_kira import Chat
-from openai_kira.utils.Talk import Talk
+from openai_kira.utils.chat import Utils
 
 from utils.Data import User_Message, Service_Data, RedisConfig, DataWorker
 
@@ -59,6 +59,8 @@ class CheckSeq(object):
                                "帮朋友",
                                "需要什么",
                                "注意什么",
+                               "草",
+                               "呀",
                                "怎么办"
                                ]
 
@@ -122,9 +124,9 @@ class Vitality(object):
 
     @staticmethod
     def isHighestSentiment(text, cache):
-        now = Talk.sentiment(text).get("score")
+        now = Utils.sentiment(text).get("score")
         for item in cache:
-            _score = Talk.sentiment(item).get("score")
+            _score = Utils.sentiment(item).get("score")
             if _score > now:
                 return False
         return True
@@ -158,7 +160,7 @@ class Vitality(object):
 
         if status:
             status = False
-            _score = Talk.sentiment(_text).get("score")
+            _score = Utils.sentiment(_text).get("score")
             if isinstance(_score, float):
                 if _score > 1.8 or _score < -2:
                     status = True
