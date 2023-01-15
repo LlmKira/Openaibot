@@ -25,7 +25,8 @@ logger.add(sink='run.log',
 logger.debug("Debug Mode On")
 
 logger.info("NEWS Channel:https://t.me/Openaibot_channel")
-logger.info("新闻:必须 `pip install -U openai-kira -i https://pypi.org/simple/` 到 0.3.0 版本")
+logger.info("新闻:命令表有改动")
+logger.info("新闻:必须 `pip install -U openai-kira -i https://pypi.org/simple/` 到 0.3.5 版本")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 

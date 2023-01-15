@@ -404,14 +404,13 @@ kill -9 id
 | `/set_per_hour_limit`              | 用户小时可用量              | 1 为无限制              按用户计量        |
 | `/reset_user_usage`+userID         | 重置用户分配额度             | 按用户计量          可跟多参数，空格分割        |
 | `/promote_user_limit`+userID+limit | 提升用户的额度              | 按用户计量  1 为默认        可跟多参数，空格分割   |
-| `/disable_change_head`             | 禁止设定头                | 再次设定会重置为空                        |
-| `/enable_change_head`              | 允许设定头                |                                  |
-| `/disable_change_style`            | 禁止设定头                | 再次设定会重置为空                        |
-| `/enable_change_style`             | 允许设定头                |                                  |
+| `/change_head`                     | 设定头                  | 用户再次设定会重置为空                      |
+| `/change_style`                    | 设定头                  | 用户再次设定会重置为空                      |
 | `/forgetme`                        | 忘记我                  |                                  |
 | `/voice`                           | VITS/AZURE  TTS      |                                  |
 | `/trigger`                         | 主动回复模式               | 全局设置或/只有管理组成员可以启动本群模式            |
 | `/style`                           | 风格化指定                | 全局设置或/用户设置                       |
+| `/auto_adjust`                     | 自动优化                 | owner                            |
 
 ### 样表
 
@@ -422,6 +421,8 @@ forgetme - 重置记忆
 remind - 场景设定 取消用短文本覆盖
 voice - 语音支持
 trigger - 管理员启动主动回复
+style - 设定偏好词
+auto_adjust - 自动优化器
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
@@ -449,10 +450,8 @@ close_user_white_mode - 关用户白名单
 close_group_white_mode - 关群组白名单
 open - 开启机器人
 close - 关闭机器人
-disable_change_head - 允许设定头
-enable_change_head - 禁止设定头
-disable_change_style - 允许设定风格
-enable_change_style - 禁止设定风格
+change_head - 设定人设开关
+change_style - 设定风格开关
 help - 帮助
 ```
 
