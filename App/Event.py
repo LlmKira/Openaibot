@@ -306,6 +306,7 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
+                                                            optimizer=Optimizer.SinglePoint,
                                                             role=_head,
                                                             web_enhance_server=PLUGIN_TABLE,
                                                             logit_bias=_style,
