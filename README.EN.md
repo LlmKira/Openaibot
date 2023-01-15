@@ -118,6 +118,7 @@ docker compose up -d
 
 ```shell
 apt-get install redis
+systemctl start redis.service
 ```
 
 **Docker**
