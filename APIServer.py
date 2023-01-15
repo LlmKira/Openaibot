@@ -109,7 +109,7 @@ async def admin(body: ReqBody, action: str):
                          'reset_user_usage', 'add_block_group', 'del_block_group', 'add_block_user', 'del_block_user',
                          'add_white_group', 'add_white_user', 'del_white_group', 'del_white_user', 'update_detect',
                          'open_user_white_mode', 'open_group_white_mode', 'close_user_white_mode',
-                         'close_group_white_mode', 'open', 'close', 'disable_change_head', 'enable_change_head']
+                         'close_group_white_mode', 'open', 'close', 'change_head', 'change_style', 'auto_adjust']
         if action not in admin_actions:
             return {'success': False, 'response': 'INVAILD_ADMIN_ACTION'}
         msg = newMsg(body, action)
