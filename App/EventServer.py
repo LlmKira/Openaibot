@@ -47,13 +47,13 @@ openai_kira.setting.openaiApiKey = Api_keys.get_key("./Config/api_keys.json")["O
 
 class Prompt(BaseModel):
     cid: int
-    start_sequ: str = "Neko:"
-    restart_sequ: str = "Human:"
+    start_sequ: str = "Human"  # 你的名字
+    restart_sequ: str = "Neko"  # Ai 的名字
     prompt: str
-    role: str = ""  # Ai 的人格预设
-    character: list = None
+    role: str = ""  # Ai 的自我认同
+    character: list = None  # Ai 的性格
     head: str = ""  # 对话的场景定位
-    model: str = "text-davinci-003"
+    model: str = "text-davinci-003"  # 模型
 
 
 class Filter(BaseModel):
