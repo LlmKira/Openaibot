@@ -310,7 +310,7 @@ class Reply(object):
                                                             role=_head,
                                                             web_enhance_server=PLUGIN_TABLE,
                                                             logit_bias=_style,
-                                                            no_penalty=not _csonfig["auto-adjust"]
+                                                            no_penalty=not _csonfig["auto_adjust"]
                                                             )
             else:
                 return "NO SUPPORT METHOD"
