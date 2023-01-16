@@ -67,6 +67,8 @@ ln -sf /usr/lib/libstdc++.so.6 /home/someone/miniconda3/envs/OpenAi/lib/libstdc+
 
 ## 使用
 
+运行 `client.py`
+
 说 `Hi Coco` + 文本
 
 ## 设计架构

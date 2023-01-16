@@ -46,7 +46,7 @@ TRIGGER_KEY = _assistant_config["rec"]["porcupine"]["key"]
 STT_CONFIG = _assistant_config["sst"]
 STT_METHOD = STT_CONFIG["select"]
 STT_LANG = STT_CONFIG["lang"]
-STT_KEY = STT_CONFIG["server"][STT_METHOD][0]
+STT_SELECT_CONFIG = STT_CONFIG[STT_METHOD]
 if STT_LANG not in ["ja", "zh", "JA", "ZH"]:
     logger.warning("TTS MAY UNSUPPORTED WHEN YOU USE Vits")
 
@@ -63,7 +63,7 @@ GPT_SERVER = CHAT_CONFIG["gpt_server"]
 def think_loop():
     prompt = Recognize.Wake(method=STT_METHOD,
                             lang=STT_LANG,
-                            api_key=STT_KEY)
+                            config=STT_SELECT_CONFIG)
     prompt = pycorrector.traditional2simplified(prompt)
     logger.info(f"Input:{prompt}")
     if len(prompt) < 5:
@@ -77,6 +77,7 @@ def think_loop():
     _reply = Chat.Req().gpt(prompt=_prompt, server=GPT_SERVER)
     if not _reply.get("status") or not _reply.get('response'):
         logger.warning(f"NO REPLY:{_reply.get('response')}")
+        return
     reply = _reply['response']["choices"][0]["text"]
     logger.info(f"Output:{reply}")
 

@@ -10,20 +10,22 @@ class DefaultAssistants(object):
         return {
             "rec": {
                 "porcupine": {
-                    "key": ""
+                    "key": "BhMjlw=="
                 }
             },
             "userid": 10086,
             "sst": {
                 "select": "whisper",
                 "lang": "zh",
-                "server": {
-                    "whisper": [
-                        ""
+                "whisper": {},
+                "azure": {
+                    "key": [
+                        "ea9a6"
                     ],
-                    "azure": [
-                        ""
-                    ]
+                    "lang": {
+                        "zh": "zh-CN"
+                    },
+                    "location": "japanwest"
                 }
             },
             "chat": {
