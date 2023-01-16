@@ -15,15 +15,19 @@
 
 OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
-如果没有您的即时通信平台，您可以通过调度通用事件层开发一个新的 Controller。
+如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度通用事件层开发一个新的 Controller。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
-本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 由本机器人自实现。
+本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 是自实现。
 
-*是复刻 chatGPT，chatGPT 并未开放接口。*
-
-*依赖库由官方的同步切换为自维护异步库*
+```
+采用 GPT3 + 注入的方式尽量靠近ChatGpt，采用可扩展架构，等到 ChatGPT 商业化后会即时切进新的 Api，
+* 靠近 chatGPT，目前 chatGPT 并未开放接口，基本全换成达芬奇了。
+* 依赖库由官方的同步切换为自维护异步库。
+* 逆向没有出路，我们的优势是走在尝试的最前列，提供成熟的交互体验。
+* 此仓库欢迎一切贡献者。
+```
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
@@ -31,26 +35,30 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
 ## 特性
 
-* 聊天 (chat) chatGpt 自实现 + NLP 增强
 * 续写 (write)  独立推测，续写
-* 设定固定头人设
-* 多主人管理
-* 多平台
-* 多 Api key 负载，超额弹出。
+* 聊天 (chat)  记忆桶机制，权重关联分配，更智能的上下文
+* 支持 Api
 * 支持私聊
-* 实验性的多平台
 * 支持群聊
+* 多主人管理
 * 支持速率限制
+* 支持内容过滤
 * 支持用量管理
+* 设定固定头人设
 * 支持白名单系统
 * 支持黑名单系统
-* 支持内容过滤
-* (20221205) 依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库
-* chatGpt 替换为自己写的 chatGpt Openai api Python 实现
+* 自定义风格化对话
+* 多平台，泛用性强
+* 完善的内容安全功能
+* 多平台支持的通用接口
+* 支持主动回复(For Fun)
 * 动态裁剪上下文，防止超额
-* 网络中间件支持，实时内容支持， Prompt Injection，对Chat更友好
+* 多 Api key 负载，便捷管理，超额弹出
+* 插件化，实时内容支持， Prompt Injection，对Chat更友好
+* chatGpt 替换为自己写的 chatGpt Openai api Python 实现
+* 官方依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库(最近官方才支持了异步)
 
-见 https://github.com/sudoskys/Openaibot/issues/1
+## 用法
 
 **聊天**
 
@@ -67,6 +75,11 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 **Head**
 
 支持场景设置，采用 `/remind` 设计自己的请求头。例如 `Ai 扮演在空间站的宇航员`。设定小于 4 个字符会使用默认值。
+
+**Style**
+
+支持场景设置，采用 `/style` 设计自己的风格，Ai
+会倾向使用语料中的词汇，语法是 `(enhance),((enhance pro)),[[weak]],{enhance}，(中文逗号也可以)`
 
 *这些设定的说明*
 
@@ -111,6 +124,7 @@ docker compose up -d
 
 ```shell
 apt-get install redis
+systemctl start redis.service
 ```
 
 **Docker**
@@ -145,14 +159,14 @@ Data/Danger.form 一行一个黑名单词汇。至少要有一个。
 多平台。
 
 ```toml
-# 不想启动就注释掉那一部分
+# 不想启动哪个就注释掉那一部分
 
 # QQ
 [Controller.QQ]
-master = [114, 514] # master user id , 账号 ID
+master = [114, 514] # master user id , 管理者账号 ID
 account = 0
-http_host = 'localhost:8080'   # Mirai http服务器
-ws_host = 'localhost:8080'   # Mirai Websocket服务器
+http_host = 'http://localhost:8080'   # Mirai http服务器
+ws_host = 'http://localhost:8080'   # Mirai Websocket服务器
 verify_key = ""
 trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
@@ -161,14 +175,12 @@ WHITE = "Group NOT in WHITE list" # 黑白名单提示
 
 # Telegram
 [Controller.Telegram]
-master = [114, 514] # master user id , 账号 ID
+master = [114, 514] # master user id , 管理者账号 ID
 botToken = '' # 机器人密钥
 trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
-# 设置的代理，但是不代理 openai api, 只代理 bot
-proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 [Controller.BaseServer]
 port = 9559
@@ -176,8 +188,6 @@ port = 9559
 ```
 
 ### 配置 Telegram 设置
-
-#### BotToken
 
 [Telegram botToken 申请](https://t.me/BotFather)
 
@@ -189,7 +199,18 @@ port = 9559
 
 ### 配置 Openai Api key
 
-在机器人私聊中配置 key
+`Config/api_keys.json` Api Key
+
+```json
+{
+  "OPENAI_API_KEY": [
+    "sk-***********",
+    "sk-***********"
+  ]
+}
+```
+
+建议在机器人私聊中配置 key
 
 ```markdown
 see_api_key - 现在几个 Api key
@@ -200,7 +221,7 @@ add_api_key - 增加 Api key
 [OPENAI_API_KEY 申请](https://beta.openai.com/account/api-keys)，支持多 key 分发负载。
 [定价参考](https://openai.com/api/pricing/)。
 
-请不要向任何人暴露你的 `app.toml`
+请不要向任何人暴露你的 `Config`
 
 ### 配置 `service.json`
 
@@ -216,16 +237,27 @@ add_api_key - 增加 Api key
     "db": 0,
     "password": null
   },
+  "proxy": {
+    "status": false,
+    "url": "localhost:7890"
+  },
   "plugin": {
-    "search": [
-      "https://www.exp.com/search?word={}"
-    ],
+    "details": "",
     "time": "",
     "week": ""
   },
+  "moderation_type": [
+    "self-harm",
+    "hate",
+    "sexual",
+    "hate/threatening",
+    "sexual/minors",
+    "violence",
+    "violence/graphic"
+  ],
   "tts": {
-    "status": false,
-    "type": "vits",
+    "status": true,
+    "type": "none",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
       "limit": 70,
@@ -234,11 +266,11 @@ add_api_key - 增加 Api key
     },
     "azure": {
       "key": [
-        "123"
+        ""
       ],
       "limit": 70,
       "speaker": {
-        "ZH": "zh-CN-XiaoxiaoNeural"
+        "chinese": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }
@@ -309,7 +341,7 @@ Azure/Vits 语言类型代码均为二位大写缩写字母。
 
 Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 本机运行
 
-- vits:limit 长度内的文本会被转换
+- vits:limit 长度内的文本才会被转换
 - vits:model_name 模型名字，some.pth,在 model 文件夹下的
 - vits:speaker_id 说话人的ID,具体看模型config
 
@@ -373,11 +405,13 @@ kill -9 id
 | `/set_per_hour_limit`              | 用户小时可用量              | 1 为无限制              按用户计量        |
 | `/reset_user_usage`+userID         | 重置用户分配额度             | 按用户计量          可跟多参数，空格分割        |
 | `/promote_user_limit`+userID+limit | 提升用户的额度              | 按用户计量  1 为默认        可跟多参数，空格分割   |
-| `/disable_change_head`             | 禁止设定头                | 再次设定会重置为空                        |
-| `/enable_change_head`              | 允许设定头                |                                  |
+| `/change_head`                     | 设定头                  | 用户再次设定会重置为空                      |
+| `/change_style`                    | 设定头                  | 用户再次设定会重置为空                      |
 | `/forgetme`                        | 忘记我                  |                                  |
 | `/voice`                           | VITS/AZURE  TTS      |                                  |
 | `/trigger`                         | 主动回复模式               | 全局设置或/只有管理组成员可以启动本群模式            |
+| `/style`                           | 风格化指定                | 全局设置或/用户设置                       |
+| `/auto_adjust`                     | 自动优化                 | owner                            |
 
 ### 样表
 
@@ -385,9 +419,11 @@ kill -9 id
 chat - 交谈
 write - 续写
 forgetme - 重置记忆
-remind - 场景设定
+remind - 场景设定 取消用短文本覆盖
 voice - 语音支持
 trigger - 管理员启动主动回复
+style - 设定偏好词
+auto_adjust - 自动优化器
 set_user_cold - 设置用户冷却时间
 set_group_cold - 设置群组冷却时间
 set_token_limit - 设置输出限制长度
@@ -415,14 +451,14 @@ close_user_white_mode - 关用户白名单
 close_group_white_mode - 关群组白名单
 open - 开启机器人
 close - 关闭机器人
-disable_change_head - 允许设定头
-enable_change_head - 禁止设定头
+change_head - 设定人设开关
+change_style - 设定风格开关
 help - 帮助
 ```
 
 ## API
 
-请参阅 https://github.com/sudoskys/Openaibot/blob/main/API.md 查看开放API文档。
+请参阅 https://github.com/sudoskys/Openaibot/blob/main/docs/API.md 查看开放API文档。
 API服务器与Telegram Bot服务开发进度不一，通常为Telegram
 Bot出现新commit后API服务器随后适配。当某些导入模块发生变动时，API服务器可能无法正常运行。此情况下，您可切换至apiserver分支获取稳定版API服务器。
 
@@ -433,6 +469,14 @@ Bot出现新commit后API服务器随后适配。当某些导入模块发生变�
 https://github.com/sudoskys/openai-kira#plugin-dev
 
 ## 其他
+
+### 多 Controller 域指数
+
+| Controller | suffix_id | desc |
+|------------|-----------|------|
+| QQ         | 101       |      |
+| Telegram   | 100       |      |
+| Api        | 103       |      |
 
 ### 统计 `analysis.json`
 

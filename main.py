@@ -25,11 +25,8 @@ logger.add(sink='run.log',
 logger.debug("Debug Mode On")
 
 logger.info("NEWS Channel:https://t.me/Openaibot_channel")
-
-logger.info("新闻:因为state变动，Telegram的config群组ID和个人ID需要全部加上 100 后缀！")
-
-logger.info("新闻:配置文件大改，请更新 app.toml ，配置文件已经备份至 `~/tmp`")
-logger.info("新闻:vits 需要 apt install ffmpeg 安装 ffmpeg！")
+logger.info("新闻:命令表有改动")
+logger.info("新闻:必须 `pip install -U openai-kira -i https://pypi.org/simple/` 到 0.3.5 版本")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 

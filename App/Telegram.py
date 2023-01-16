@@ -11,20 +11,21 @@ from collections import deque
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
-
-from App import Event
-from utils import Setting
-from utils.Chat import Utils
-from utils.Frequency import Vitality
-from utils.Data import DefaultData, User_Message, create_message, PublicReturn
-
 from telebot import util, types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
+from App import Event
+from utils import Setting
+from utils.Chat import Utils
+from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
+from utils.Frequency import Vitality
+from utils.Base import Tool
+
 time_interval = 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
+ProfileManager = Setting.ProfileManager()
 
 
 async def set_cron(funcs, second: int):
@@ -61,7 +62,7 @@ def get_message(message: types.Message):
 class BotRunner(object):
     def __init__(self, config):
         self.bot = config
-        self.proxy = config.proxy
+        self.proxy = Tool().dictToObj(Service_Data.get_key()['proxy'])
 
     def botCreate(self):
         if not self.bot.botToken:
@@ -73,9 +74,9 @@ class BotRunner(object):
         # print(self.bot)
         bot, _config = self.botCreate()
         if not bot:
-            logger.info("Controller:Telegram Bot Close")
+            logger.info("APP:Telegram Bot Close")
             return
-        logger.success("Controller:Telegram Bot Start")
+        logger.success("APP:Telegram Bot Start")
         if self.proxy.status:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy.url
@@ -106,7 +107,7 @@ class BotRunner(object):
             started = False
 
             # 命令解析
-            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme","/style", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = await is_admin(message)
@@ -117,7 +118,7 @@ class BotRunner(object):
 
             # 回复逻辑判定
             if message.reply_to_message:
-                if message.reply_to_message.from_user.id == Setting.bot_profile()["id"]:
+                if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
                     if str(Utils.checkMsg(
                             f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
                         if not _hand.text.startswith("/"):
@@ -142,7 +143,10 @@ class BotRunner(object):
             # 触发
             if started:
                 request_timestamps.append(time.time())
-                _friends_message = await Event.Group(_hand, _config)
+                _friends_message = await Event.Group(Message=_hand,
+                                                     config=_config,
+                                                     bot_profile=ProfileManager.access_telegram(init=False)
+                                                     )
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.voice:
@@ -171,8 +175,11 @@ class BotRunner(object):
                 _hand.text = f"/chat {_hand.text}"
             # 交谈
             if _hand.text.startswith(
-                    ("/chat", "/voice", "/write", "/forgetme", "/remind")):
-                _friends_message = await Event.Friends(_hand, _config)
+                    ("/chat", "/voice", "/write", "/forgetme", "/style","/remind")):
+                _friends_message = await Event.Friends(Message=_hand,
+                                                       config=_config,
+                                                       bot_profile=ProfileManager.access_telegram(init=False)
+                                                       )
                 _friends_message: PublicReturn
                 if _friends_message.status:
                     if _friends_message.voice:
@@ -215,7 +222,12 @@ class BotRunner(object):
             return request_frequency
 
         async def main():
-            await Setting.bot_profile_init(bot)
+            _me = await bot.get_me()
+            _first_name = _me.first_name if _me.first_name else ""
+            _last_name = _me.last_name if _me.last_name else ""
+            _bot_id = _me.id
+            _bot_name = f"{_first_name}{_last_name}"
+            ProfileManager.access_telegram(bot_name=_bot_name[:6], bot_id=_bot_id, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)

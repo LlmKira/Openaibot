@@ -86,6 +86,11 @@ class RedisConfig(BaseModel):
     password: str = None
 
 
+class ProxyConfig(BaseModel):
+    status: bool
+    url: str
+
+
 class DefaultData(object):
     """
     数据提供类
@@ -160,6 +165,8 @@ class DefaultData(object):
             "whiteGroupSwitch": True,
             "Model": {
             },
+            "auto_adjust": False,
+            "allow_change_style": True,
             "allow_change_head": True
         }
 
@@ -215,8 +222,21 @@ class DefaultData(object):
                 "db": 0,
                 "password": None
             },
+            "proxy": {
+                "status": False,
+                "url": "localhost:7890"
+            },
             "plugin": {
             },
+            "moderation_type": [
+                "self-harm",
+                # "hate",
+                "sexual",
+                "hate/threatening",
+                "sexual/minors",
+                "violence",
+                "violence/graphic"
+            ],
             "tts": {
                 "status": True,
                 "type": "none",
@@ -351,7 +371,7 @@ class DataWorker(object):
     Redis 数据基类
     """
 
-    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
+    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Openaibot_'):
         self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
         # self.con = Redis(connection_pool=self.redis) -> use this when necessary
         #

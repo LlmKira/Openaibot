@@ -32,8 +32,6 @@ global _csonfig
 
 
 # IO
-
-# IO
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
@@ -67,9 +65,32 @@ class Header(object):
     def get(self):
         _usage = self.__Data.getKey(f"{self._uid}")
         if not _usage:
-            return None
+            return ""
         else:
             return str(_usage)
+
+    def set(self, context):
+        return self.__Data.setKey(f"{self._uid}", context)
+
+
+class Style(object):
+    def __init__(self, uid):
+        self._uid = str(uid)
+        _service = Service_Data.get_key()
+        _redis_conf = _service["redis"]
+        _redis_config = RedisConfig(**_redis_conf)
+        self.__Data = DataWorker(host=_redis_config.host,
+                                 port=_redis_config.port,
+                                 db=_redis_config.db,
+                                 password=_redis_config.password,
+                                 prefix="Open_Ai_bot_user_style")
+
+    def get(self):
+        _usage = self.__Data.getKey(f"{self._uid}")
+        if not _usage:
+            return {}
+        else:
+            return _usage
 
     def set(self, context):
         return self.__Data.setKey(f"{self._uid}", context)

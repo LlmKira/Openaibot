@@ -8,23 +8,24 @@ import time
 from collections import deque
 from typing import Union, Optional
 
-from loguru import logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from App import Event
-from utils import Setting
-from utils.Chat import Utils
-from utils.Frequency import Vitality
-from utils.Data import create_message, User_Message, PublicReturn, DefaultData
-
-from graiax import silkcoder
-from graia.ariadne import Ariadne
 from graia.amnesia.message import MessageChain
+from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
 from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
 from graia.ariadne.model import Group, Member, Friend, MemberPerm
-from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
+from graia.ariadne.event.lifecycle import AccountLaunch
+from graia.ariadne import Ariadne
+from graia.ariadne.model import Profile
+from graiax import silkcoder
+from loguru import logger
+
+from App import Event
+from utils import Setting
+from utils.Chat import Utils
+from utils.Data import create_message, User_Message, PublicReturn, DefaultData
+from utils.Frequency import Vitality
 
 
 async def set_cron(funcs, second: int):
@@ -42,6 +43,7 @@ async def set_cron(funcs, second: int):
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
+ProfileManager = Setting.ProfileManager()
 
 
 def get_user_message(
@@ -92,7 +94,10 @@ class BotRunner:
             if not _hand.text.startswith("/"):
                 _hand.text = f"/chat {_hand.text}"
             # _friends_message = await Event.Text(_hand, self.config)
-            _friends_message = await Event.Friends(_hand, self.config)
+            _friends_message = await Event.Friends(Message=_hand,
+                                                   bot_profile=ProfileManager.access_qq(init=False),
+                                                   config=self.config
+                                                   )
 
             if not _friends_message.status:
                 return None
@@ -109,6 +114,12 @@ class BotRunner:
             return message_chain
 
         # "msg" @ RegexMatch(r"\/\b(chat|voice|write|forgetme|remind)\b.*")
+        @bot.broadcast.receiver(AccountLaunch)
+        async def initAccount():
+            _me: Profile = await bot.get_bot_profile()
+            _name = _me.nickname
+            _bot_profile = {"id": bot.account, "name": _name}
+            ProfileManager.access_qq(bot_name=_name, bot_id=bot.account, init=True)
 
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
@@ -133,9 +144,10 @@ class BotRunner:
                              source: Source):
             _hand = get_user_message(msg, member=member, group=group)
             _hand: User_Message
+            _at_me = f'@{bot.account} '
             get_request_frequency()
             started = False
-            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write","/style", "/forgetme", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = member.permission
@@ -144,17 +156,43 @@ class BotRunner:
                     if _reply:
                         message_chain = MessageChain([Plain("".join(_reply))])
                         await app.send_message(group, message_chain, quote=source)
+            elif _hand.text.startswith(_at_me):
+                started = True
+                p1 = _hand.text.index('@')
+                p2 = _hand.text.index(' ') + 1
+                t = _hand.text[p1:p2]
+                _hand.text = _hand.text.replace(t, '/chat ')
+
+            # logger.warning(quote)   <-  这个log有魔法，不要乱动，动了之后下边的if全完蛋（
             if quote:
+                '''
+                logger.warning('Quoted!')
+                logger.warning(str(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}")))
+                logger.warning(f"QQ{quote.group_id}101{quote.id}")
+                logger.warning(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}"))
+                logger.warning(f"{_hand.from_user.id}")
+                
+                这整个if的logger都不要删......
+                这段代码很玄学,不知道什么时候就又升天了......
+                '''
                 if str(Utils.checkMsg(
-                        f"{_hand.from_chat.id}{source.id}")) == f"{_hand.from_user.id}":
+                        f"QQ{quote.group_id}101{quote.id}")) == f"{_hand.from_user.id}":
+                    # logger.warning('Detect passed!')
+                    # logger.warning(_hand.text)
                     if not _hand.text.startswith("/"):
                         _hand.text = f"/chat {_hand.text}"
+                        # logger.warning(_hand.text)
+                    if _hand.text.startswith('@'):  # 去除QQ回复时的自动at
+                        p1 = _hand.text.index('@')
+                        p2 = _hand.text.index(' ') + 1
+                        t = _hand.text[p1:p2]
+                        _hand.text = _hand.text.replace(t, '')
                     started = True
 
             # 分发指令
             if _hand.text.startswith("/help"):
                 await bot.send_message(group, await Event.Help(self.config))
-
+            # logger.warning(started)
             # 热力扳机
             if not started:
                 _trigger_message = await Event.Trigger(_hand, self.config)
@@ -167,7 +205,10 @@ class BotRunner:
                         started = True
             if started:
                 request_timestamps.append(time.time())
-                _friends_message = await Event.Group(_hand, self.config)
+                _friends_message = await Event.Group(Message=_hand,
+                                                     bot_profile=ProfileManager.access_qq(init=False),
+                                                     config=self.config
+                                                     )
                 _friends_message: PublicReturn
 
                 _caption = f"{_friends_message.reply}\n{self.config.INTRO}"
@@ -192,5 +233,4 @@ class BotRunner:
             DefaultData().setAnalysis(qq=request_frequency)
             return request_frequency
 
-        Setting.qqbot_profile_init()
         Ariadne.launch_blocking()

@@ -47,10 +47,18 @@ openai_kira.setting.openaiApiKey = Api_keys.get_key("./Config/api_keys.json")["O
 
 class Prompt(BaseModel):
     cid: int
-    start_sequ: str = "Neko:"
-    restart_sequ: str = "Human:"
+    start_sequ: str = "Human"  # 你的名字
+    restart_sequ: str = "Neko"  # Ai 的名字
     prompt: str
-    role: str = ""
+    role: str = ""  # Ai 的自我认同
+    character: list = None  # Ai 的性格
+    head: str = ""  # 对话的场景定位
+    model: str = "text-davinci-003"  # 模型
+
+
+class Filter(BaseModel):
+    prompt: str
+    moderation: bool = True
 
 
 class Reply(BaseModel):
@@ -59,9 +67,23 @@ class Reply(BaseModel):
     response: Optional[dict] = None
 
 
+class FilterReply(BaseModel):
+    dfa: str
+    flagged: list
+
+
 @app.post("/filter")
-def filter_str(strs):
-    return ContentDfa.filter_all(strs)
+async def filter_str(check: Filter):
+    # 内容审计
+    _harm_result = []
+    if check.moderation:
+        try:
+            _Moderation_rep = await openai_kira.Moderations().create(input=check.prompt)
+            _moderation_result = _Moderation_rep["results"][0]
+            _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+        except Exception as e:
+            logger.error(f"Moderation:{check.prompt}-{e}")
+    return FilterReply(dfa=ContentDfa.filter_all(check.prompt), flagged=_harm_result)
 
 
 @app.post("/getreply")
@@ -74,11 +96,15 @@ async def get_reply(req: Prompt):
         restart_sequ=req.restart_sequ,
     )
     try:
-        response = await receiver.get_chat_response(model="text-davinci-003",
+        response = await receiver.get_chat_response(model=req.model,
                                                     prompt=str(req.prompt),
                                                     max_tokens=int(_csonfig["token_limit"]),
                                                     role=req.role,
-                                                    web_enhance_server=_plugin_table
+                                                    web_enhance_server=_plugin_table,
+                                                    optimizer=None,
+                                                    no_penalty=not _csonfig["auto_adjust"],
+                                                    character=req.character,
+                                                    head=req.head,
                                                     )
         _got = Reply(status=True, response=response)
     except Exception as e:

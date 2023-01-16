@@ -5,22 +5,23 @@
 # @Github    ：spirit-yzk
 import base64
 import httpx
-
+import re
 from utils import Setting
 from utils.Base import StrListTool
+import pycorrector
 
 
-def get_start_name(prompt: str):
+def get_start_name(prompt: str, bot_name=None):
     _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
                     "补全", "代码", "数据包"]
-    STARTNAME = Setting.bot_profile().get("name") if Setting.bot_profile().get("name") else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("?", "？")) else "Athene:"
-
-    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Engineer:"
-    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=["teach me", "教教我", "解释一下"],
-                                              r=0.01) else "Teacher:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!", "！")) else "Girl:"
-    STARTNAME = STARTNAME if not prompt.endswith(("!!", "！！")) else "God:"
+    STARTNAME = bot_name if bot_name else "Girl:"
+    STARTNAME = STARTNAME if not prompt.endswith(("??", "？？")) else "Athene:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.1) else "Assistant:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt,
+                                                     keywords=["teach me", "给出详细", "步骤", "计算结果", "教教我",
+                                                               "解释一下"],
+                                                     r=0.01) else "Teacher:"
+    STARTNAME = STARTNAME if not prompt.endswith(("!!!", "!！！")) else "God:"
     STARTNAME = STARTNAME if not prompt.endswith("——") else "Cat:"
     STARTNAME = STARTNAME if not prompt.endswith(("...", "。。。")) else "Angel:"
     STARTNAME = STARTNAME if not prompt.endswith(("~", "～")) else "Neko:"
@@ -76,7 +77,7 @@ class Censor:
                         tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
                         for sid in tmpList:
                             censor_words = str(sid.strip(",").strip("\n"))
-                            if censor_words and Cn.is_contain_chinese(censor_words) and len(censor_words) > 2:
+                            if censor_words and Cn.is_contain_chinese(censor_words) and len(censor_words) >= 2:
                                 _Words.append(censor_words)
                     else:
                         print(f"词库初始化失败 -> {_url}")
@@ -114,6 +115,10 @@ class DFA:
                 if str(s) and s not in self.ban_words_set:
                     self.ban_words_set.add(s)
                     self.ban_words_list.append(str(s))
+                    sentence = pycorrector.simplified2traditional(s)
+                    if sentence != s:
+                        self.ban_words_set.add(sentence)
+                        self.ban_words_list.append(str(sentence))
         self.add_hash_dict(self.ban_words_list)
 
     def change_words(self, path):
@@ -174,11 +179,10 @@ class DFA:
         return -1
 
     # 查找是否存在敏感词
-    def exists(self, s):
-        import re
-        pos = self.find_illegal(s)
-        _s = re.sub('\W+', '', s).replace("_", '')
-        _pos = self.find_illegal(_s)
+    def exists(self, sentence):
+        pos = self.find_illegal(sentence)
+        _sentence = re.sub('\W+', '', sentence).replace("_", '')
+        _pos = self.find_illegal(_sentence)
         if pos == -1 and _pos == -1:
             return False
         else:

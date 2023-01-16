@@ -3,23 +3,25 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-
+import asyncio
 # 事件，完全隔离的
 
 import json
 import pathlib
 import random
+import re
 import time
 # from io import BytesIO
 from typing import Union
 from loguru import logger
 import openai_kira
 from openai_kira.Chat import Optimizer
+from openai_kira.utils.chat import Cut
 
 # from App.chatGPT import PrivateChat
-from utils.Base import ReadConfig
-from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn
+from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header, Style
+from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
+from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, get_start_name
 
@@ -28,11 +30,22 @@ from utils.Detect import DFA, Censor, get_start_name
 # fast text langdetect
 
 _service = Service_Data.get_key()
-_redis_conf = _service["redis"]
-_tts_conf = _service["tts"]
-_plugin_table = _service["plugin"]
+REDIS_CONF = _service["redis"]
+TTS_CONF = _service["tts"]
+PLUGIN_TABLE = _service["plugin"]
+PROXY_CONF = ProxyConfig(**_service["proxy"])
+HARM_TYPE = _service["moderation_type"]
+HARM_TYPE.extend([
+    'violence',
+    'violence/graphic'
+])
+HARM_TYPE = list(set(HARM_TYPE))
 
-openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
+# Proxy
+
+if PROXY_CONF.status:
+    openai_kira.setting.proxyUrl = PROXY_CONF.url,
+openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**REDIS_CONF)
 
 urlForm = {
     "Danger.form": [
@@ -45,10 +58,9 @@ urlForm = {
 
 
 def initCensor():
-    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/app.toml")
-    if config.proxy.status:
+    if PROXY_CONF.status:
         proxies = {
-            'all://': config.proxy.url,
+            'all://': PROXY_CONF.url,
         }  # 'http://127.0.0.1:7890'  # url
         return Censor.initWords(url=urlForm, home_dir="./Data/", proxy=proxies)
     else:
@@ -78,21 +90,23 @@ def load_csonfig():
 
 
 def save_csonfig(pLock=None):
-    with pLock:
-        with open("./Config/config.json", "w+", encoding="utf8") as f:
-            json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.acquire()
+    with open("./Config/config.json", "w+", encoding="utf8") as f:
+        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
+    if pLock:
+        pLock.release()
 
 
 async def TTSSupportCheck(text, user_id):
-    global _tts_conf
+    global TTS_CONF
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
     :return:
     """
-    from openai_kira.utils.Talk import Talk
-    if not _tts_conf["status"]:
+    if not TTS_CONF["status"]:
         return
-    if _tts_conf['type'] == 'none':
+    if TTS_CONF['type'] == 'none':
         return
 
     try:
@@ -102,13 +116,13 @@ async def TTSSupportCheck(text, user_id):
         from langdetect import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""))[0][0].upper()
 
-    if _tts_conf["type"] == "vits":
-        _vits_config = _tts_conf["vits"]
+    if TTS_CONF["type"] == "vits":
+        _vits_config = TTS_CONF["vits"]
         if lang_type not in ["ZH", "JA"]:
             return
         if len(text) > _vits_config["limit"]:
             return
-        cn_res = Talk.chinese_sentence_cut(text)
+        cn_res = Cut.chinese_sentence_cut(text)
         cn = {i: f"[{lang_type}]" for i in cn_res}
         # 合成
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
@@ -130,8 +144,8 @@ async def TTSSupportCheck(text, user_id):
         # 返回字节流
         return result
     # USE AZURE
-    elif _tts_conf["type"] == "azure":
-        _azure_config = _tts_conf["azure"]
+    elif TTS_CONF["type"] == "azure":
+        _azure_config = TTS_CONF["azure"]
         _new_text = text
         _speaker = _azure_config["speaker"].get(lang_type)
         if len(text) > _azure_config["limit"]:
@@ -178,7 +192,6 @@ class Reply(object):
                             group,
                             key: Union[str, list],
                             prompt: str = "Say this is a test",
-                            userlimit: int = None,
                             method: str = "chat",
                             start_name: str = "Ai:",
                             restart_name: str = "Human:"
@@ -191,7 +204,6 @@ class Reply(object):
         :param group:
         :param key:
         :param prompt:
-        :param userlimit:
         :param method:
         :return:
         """
@@ -200,29 +212,44 @@ class Reply(object):
         if not key:
             logger.error("SETTING:API key missing")
             raise Exception("API key missing")
-        # 长度限定
-        if _csonfig["input_limit"] < len(str(prompt)) / 4:
-            return "TOO LONG"
-        # 内容审计
-        prompt = ContentDfa.filter_all(prompt)
-        if ContentDfa.exists(prompt):
-            rin = random.randint(1, 10)
-            if rin > 5:
-                _info = DefaultData.getRefuseAnswer()
-                time.sleep(random.randint(3, 6))
-                return _info
-        # 处理
+        openai_kira.setting.openaiApiKey = key
+
         # 洪水防御攻击
-        if Utils.WaitFlood(user=user, group=group, usercold_time=userlimit):
+        if Utils.WaitFlood(user=user, group=group):
             return "TOO FAST"
+
+        # 长度限定
+        if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
+            return "TOO LONG"
+
         # 用量检测
         _UsageManger = Usage(uid=user)
         _Usage = _UsageManger.isOutUsage()
         if _Usage["status"]:
             return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+
+        # 内容审计
+        try:
+            _harm = False
+            _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
+            _moderation_result = _Moderation_rep["results"][0]
+            _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+            for item in _harm_result:
+                if item in HARM_TYPE:
+                    _harm = item
+        except Exception as e:
+            logger.error(f"Moderation：{prompt}:{e}")
+            _harm = False
+        if _harm:
+            _info = DefaultData.getRefuseAnswer()
+            await asyncio.sleep(random.randint(3, 6))
+            return f"{_info}\nYour Content violates Openai policy:{_harm}..."
+
+        # 内容过滤
+        prompt = ContentDfa.filter_all(prompt)
+
         # 请求
         try:
-            openai_kira.setting.openaiApiKey = key
             from openai_kira import Chat
             # 计算唯一消息桶 ID
             _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
@@ -247,22 +274,20 @@ class Reply(object):
                 receiver = Chat.Chatbot(
                     conversation_id=int(_oid),
                     call_func=Api_keys.pop_api_key,
-                    token_limit=1500,
+                    token_limit=1000,
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
-                response = await receiver.get_chat_response(model="text-curie-001",
+                response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
-                                                            head="下面是一段对话。",
-                                                            role=".",
-                                                            max_tokens=int(_csonfig["token_limit"]),
-                                                            web_enhance_server=_plugin_table
+                                                            role="......",
+                                                            frequency_penalty=0.5,  # 不要用用过的字符
+                                                            presence_penalty=-0.5,  # 不要谈论新话题
+                                                            max_tokens=100,
+                                                            web_enhance_server=PLUGIN_TABLE
                                                             )
             elif method == "chat":
-                _head = Header(uid=user).get()
-                if _head:
-                    _head = ContentDfa.filter_all(_head)
                 receiver = Chat.Chatbot(
                     conversation_id=int(_cid),
                     call_func=Api_keys.pop_api_key,
@@ -270,11 +295,22 @@ class Reply(object):
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
+                _head = None
+                if _csonfig.get("allow_change_head"):
+                    _head = Header(uid=user).get()
+                    _head = ContentDfa.filter_all(_head)
+
+                _style = {}
+                if _csonfig.get("allow_change_style"):
+                    _style = Style(uid=user).get()
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             max_tokens=int(_csonfig["token_limit"]),
+                                                            optimizer=Optimizer.SinglePoint,
                                                             role=_head,
-                                                            web_enhance_server=_plugin_table
+                                                            web_enhance_server=PLUGIN_TABLE,
+                                                            logit_bias=_style,
+                                                            no_penalty=not _csonfig["auto_adjust"]
                                                             )
             else:
                 return "NO SUPPORT METHOD"
@@ -367,6 +403,47 @@ async def RemindSet(user_id, text) -> PublicReturn:
     return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
 
 
+async def StyleSet(user_id, text) -> PublicReturn:
+    """
+    :param user_id:
+    :param text:
+    :return: Ture 代表设定成功
+    """
+    _text = text
+    _user_id = user_id
+    _style_r = _text.split(" ", 1)
+    if len(_style_r) < 2:
+        return PublicReturn(status=False, msg=f"", trace="StyleSet")
+    _style = _style_r[1]
+    if Utils.tokenizer(_style) > 800:
+        return PublicReturn(status=True, msg=f"过长:{_style}", trace="StyleSet")
+    _style_token_list = re.split("[,，]", _style)
+    _token = {}
+    if _csonfig.get("allow_change_style"):
+        for item in _style_token_list:
+            item = str(item)
+            _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
+            item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace(
+                "]", "")
+            _weight = _weight if _weight <= 20 else 2
+            _weight = _weight if _weight >= -80 else 0
+            _encode_token = openai_kira.utils.chat.gpt_tokenizer.encode(item)
+            _love = {str(token): _weight for token in _encode_token}
+            _child_token = {}
+            for token, weight in _love.items():
+                token = str(token)
+                if token in _token.keys():
+                    __weight = _token.get(token) + _weight
+                else:
+                    __weight = _weight
+                _child_token[token] = __weight
+            _token.update(_child_token)
+        Style(uid=_user_id).set(_token)
+        return PublicReturn(status=True, msg=f"Style:{_style}\nNo reply this msg", trace="StyleSet")
+    Style(uid=_user_id).set(_token)
+    return PublicReturn(status=True, msg=f"I refuse StyleSet Command", trace="StyleSet")
+
+
 async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     """
     消息预处理，命令识别和与配置的交互层
@@ -408,9 +485,10 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
 
 
-async def Group(Message: User_Message, config) -> PublicReturn:
+async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
+    :param bot_profile:
     :param Message:
     :param config:
     :return: True 回复用户
@@ -420,9 +498,10 @@ async def Group(Message: User_Message, config) -> PublicReturn:
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
     _user_name = Message.from_user.name
+    _bot_name = bot_profile.bot_name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
+        return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
@@ -435,8 +514,16 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
+                            trace="Remind",
                             msg=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Style",
+                            msg=_style_set.msg)
+
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
@@ -461,7 +548,7 @@ async def Group(Message: User_Message, config) -> PublicReturn:
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt),
+                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
                                          method=_reply_type
                                          )
 
@@ -483,9 +570,10 @@ async def Group(Message: User_Message, config) -> PublicReturn:
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
 
 
-async def Friends(Message: User_Message, config) -> PublicReturn:
+async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
+    :param bot_profile:
     :param Message:
     :param config:
     :return: True 回复用户
@@ -495,9 +583,10 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
     _user_name = Message.from_user.name
+    _bot_name = bot_profile.bot_name
     # 状态
     if not _csonfig.get("statu"):
-        return PublicReturn(status=False, msg="BOT:Under Maintenance", trace="Statu")
+        return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
     # 白名单检查
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
@@ -510,11 +599,20 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
+                            trace="Remind",
                             msg=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Style",
+                            msg=_style_set.msg)
+
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
+
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
@@ -536,7 +634,7 @@ async def Friends(Message: User_Message, config) -> PublicReturn:
                                          key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
                                          prompt=_prompt,
                                          restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt),
+                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
                                          method=_reply_type
                                          )
 
@@ -599,7 +697,7 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
     return _reply
 
 
-async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
+async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None):
     load_csonfig()
     _reply = []
     if user_id in config.master:
@@ -772,7 +870,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                         logger.info(_ev)
 
             # UPDATE
-            if command == "/update_detect":
+            if command.startswith("/update_detect"):
                 keys, _error = initCensor()
                 if _error:
                     error = '\n'.join(_error)
@@ -784,32 +882,32 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                 _reply.append(f"{'|'.join(keys)}\n\n{errors}")
 
             # USER White
-            if command == "/open_user_white_mode":
+            if command.startswith("/open_user_white_mode"):
                 _csonfig["whiteUserSwitch"] = True
                 _reply.append("SETTING:whiteUserSwitch ON")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteUser ON")
 
-            if command == "/close_user_white_mode":
+            if command.startswith("/close_user_white_mode"):
                 _csonfig["whiteUserSwitch"] = False
                 _reply.append("SETTING:whiteUserSwitch OFF")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteUser OFF")
 
             # GROUP White
-            if command == "/open_group_white_mode":
+            if command.startswith("/open_group_white_mode"):
                 _csonfig["whiteGroupSwitch"] = True
                 _reply.append("ON:whiteGroup")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup ON")
 
-            if command == "/close_group_white_mode":
+            if command.startswith("/close_group_white_mode"):
                 _csonfig["whiteGroupSwitch"] = False
                 _reply.append("SETTING:whiteGroup OFF")
                 save_csonfig(pLock)
                 logger.info("SETTING:whiteGroup OFF")
 
-            if command == "/see_api_key":
+            if command.startswith("/see_api_key"):
                 keys = Api_keys.get_key("./Config/api_keys.json")
                 # 脱敏
                 _key = []
@@ -831,25 +929,44 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock):
                     Api_keys.pop_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:DEL API KEY")
                 _reply.append("SETTING:DEL API KEY")
-            if "/enable_change_head" in command:
-                _csonfig["allow_change_head"] = True
-                _reply.append("SETTING:allow_change_head ON")
-                save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
 
-            if "/disable_change_head" in command:
-                _csonfig["allow_change_head"] = False
-                _reply.append("SETTING:allow_change_head OFF")
+            if "/change_style" in command:
+                if _csonfig["allow_change_style"]:
+                    _allow_change_style = False
+                else:
+                    _allow_change_style = True
+                _csonfig["allow_change_style"] = _allow_change_style
+                _reply.append(f"SETTING:allow_change_style {_allow_change_style}")
                 save_csonfig(pLock)
-                logger.info("SETTING:BOT ON")
+                logger.info(f"SETTING:allow_change_style {_allow_change_style}")
 
-            if command == "/open":
+            if "/change_head" in command:
+                if _csonfig["allow_change_head"]:
+                    _allow_change_head = False
+                else:
+                    _allow_change_head = True
+                _csonfig["allow_change_head"] = _allow_change_head
+                _reply.append(f"SETTING:allow_change_head {_allow_change_head}")
+                save_csonfig(pLock)
+                logger.info(f"SETTING:allow_change_head {_allow_change_head}")
+
+            if "/auto_adjust" in command:
+                if _csonfig["auto_adjust"]:
+                    _adjust = False
+                else:
+                    _adjust = True
+                _csonfig["auto_adjust"] = _adjust
+                _reply.append(f"SETTING:auto_adjust {_adjust}")
+                save_csonfig(pLock)
+                logger.info(f"SETTING:auto_adjust {_adjust}")
+
+            if command.startswith("/open"):
                 _csonfig["statu"] = True
                 _reply.append("SETTING:BOT ON")
                 save_csonfig(pLock)
                 logger.info("SETTING:BOT ON")
 
-            if command == "/close":
+            if command.startswith("/close"):
                 _csonfig["statu"] = False
                 _reply.append("SETTING:BOT OFF")
                 save_csonfig(pLock)
@@ -875,4 +992,5 @@ Use /remind 设置一个场景头，全程不会被裁剪。
 Use /forgetme 遗忘过去，res history。
 Use /voice 开启可能的 tts 支持。
 Use /trigger Admin 可以开启主动回复模式。
+Use /style 定制词汇风格，中文效果较弱，(增强),[减弱]。
 """
