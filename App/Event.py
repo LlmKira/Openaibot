@@ -98,7 +98,7 @@ def save_csonfig(pLock=None):
         pLock.release()
 
 
-async def TTSSupportCheck(text, user_id):
+async def TTSSupportCheck(text, user_id, limit: bool = True):
     global TTS_CONF
     """
     处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
@@ -120,7 +120,7 @@ async def TTSSupportCheck(text, user_id):
         _vits_config = TTS_CONF["vits"]
         if lang_type not in ["ZH", "JA"]:
             return
-        if len(text) > _vits_config["limit"]:
+        if len(text) > _vits_config["limit"] and limit:
             return
         cn_res = Cut.chinese_sentence_cut(text)
         cn = {i: f"[{lang_type}]" for i in cn_res}
