@@ -50,7 +50,10 @@ class Prompt(BaseModel):
     start_sequ: str = "Neko:"
     restart_sequ: str = "Human:"
     prompt: str
-    role: str = ""
+    role: str = ""  # Ai 的人格预设
+    character: list = None
+    head: str = ""  # 对话的场景定位
+    model: str = "text-davinci-003"
 
 
 class Filter(BaseModel):
@@ -93,11 +96,15 @@ async def get_reply(req: Prompt):
         restart_sequ=req.restart_sequ,
     )
     try:
-        response = await receiver.get_chat_response(model="text-davinci-003",
+        response = await receiver.get_chat_response(model=req.model,
                                                     prompt=str(req.prompt),
                                                     max_tokens=int(_csonfig["token_limit"]),
                                                     role=req.role,
-                                                    web_enhance_server=_plugin_table
+                                                    web_enhance_server=_plugin_table,
+                                                    optimizer=None,
+                                                    no_penalty=not _csonfig["auto_adjust"],
+                                                    character=req.character,
+                                                    head=req.head,
                                                     )
         _got = Reply(status=True, response=response)
     except Exception as e:

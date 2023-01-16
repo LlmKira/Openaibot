@@ -281,7 +281,7 @@ class Reply(object):
                 response = await receiver.get_chat_response(model="text-davinci-003",
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
-                                                            head=".",
+                                                            role="......",
                                                             frequency_penalty=0.5,  # 不要用用过的字符
                                                             presence_penalty=-0.5,  # 不要谈论新话题
                                                             max_tokens=100,
