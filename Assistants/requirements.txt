@@ -1,3 +1,8 @@
 pyaudio
 SpeechRecognition
 pvporcupine
+pydantic
+httpx
+whisper
+pycorrector
+playsound

@@ -11,6 +11,7 @@ from typing import Optional
 
 from fastapi import FastAPI
 import openai_kira
+from fastapi.responses import Response
 from pydantic import BaseModel
 from App.Event import ContentDfa, TTSSupportCheck
 from utils.Data import Service_Data, Api_keys, DefaultData, DictUpdate
@@ -114,15 +115,20 @@ async def get_reply(req: Prompt):
         return _got
 
 
-@app.post("/getvoice")
+@app.get("/getvoice")
 async def get_voice(text: str, cid: int):
     try:
         _req = await TTSSupportCheck(text=text, user_id=cid)
     except Exception as e:
         logger.error(e)
-        return Reply(status=False)
+        return Response(status_code=417)
     else:
         status = False
         if _req:
             status = True
-        return Reply(status=status, data=_req)
+        if status:
+            import base64
+            httpRes = Response(content=_req, media_type='audio/ogg')
+            httpRes.headers['X-Bot-Reply'] = str(base64.b64encode(text.encode('utf-8')), 'utf-8')
+            return httpRes
+        return Response(status_code=417)
