@@ -3,11 +3,14 @@
 # @FileName: main.py.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import pathlib
 
 # 负责我们的 唤醒和 STT 服务
 import speech_recognition
 # rec("record.wav")
 import speech_recognition as sr
+from playsound import playsound
+
 from .utils import data as data
 from loguru import logger
 
@@ -23,6 +26,8 @@ def Wake(lang: str = "zh", method: str = "whisper", config: dict = None):
     with sr.Microphone() as source:
         audio = r.listen(source, phrase_time_limit=5)
     logger.info("-Think-")
+    if pathlib.Path("./think.mp3").exists():
+        playsound("./think.mp3")
     if method == "whisper":
         return STT(lang=lang).whisper(audio=audio)
     elif method == "azure":

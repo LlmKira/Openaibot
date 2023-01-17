@@ -9,6 +9,7 @@ import struct
 import pvporcupine
 import pyaudio
 from loguru import logger
+from playsound import playsound
 
 if pathlib.Path("./Hi-Coco_en_linux_v2_1_0.ppn").exists():
     logger.success("-Hi COCO-")
@@ -42,6 +43,8 @@ def trigger(access_key,
             keyword_index = porcupine.process(pcm)
             if keyword_index >= 0:
                 logger.info("-Wake-")
+                if pathlib.Path("wake.mp3").exists():
+                    playsound("wake.mp3")
                 callback_func(**kwargs)
     finally:
         if porcupine is not None:

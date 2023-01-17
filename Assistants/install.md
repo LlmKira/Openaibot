@@ -14,6 +14,14 @@ ln -sf /usr/lib/libstdc++.so.6 /home/someone/miniconda3/envs/OpenAi/lib/libstdc+
 
 ## 配置
 
+`./wake.mp3`
+
+在 `client.py` 同级目录放入 `wake.mp3` ，识别到会自动播放，作为识别开始提示音。
+
+`./think.mp3`
+
+在 `client.py` 同级目录放入 `think.mp3` ，识别到会自动播放，作为识别结束提示音。
+
 `Config/assistants.json`
 
 ```json
