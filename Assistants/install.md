@@ -1,3 +1,5 @@
+# 配置细则
+
 ## 解决依赖问题
 
 apt-get install python3-pyaudio
@@ -16,21 +18,27 @@ ln -sf /usr/lib/libstdc++.so.6 /home/someone/miniconda3/envs/OpenAi/lib/libstdc+
 {
   "rec": {
     "porcupine": {
-      "key": "Bh******************fjlw=="
+      "key": "Bh=="
     }
   },
   "userid": 10086,
   "sst": {
     "select": "whisper",
     "lang": "zh",
-    "server": {
-      "whisper": [
+    "whisper": {},
+    "azure": {
+      "key": [
         ""
       ],
-      "azure": [
-        ""
-      ]
+      "lang": {
+        "zh": "zh-CN"
+      },
+      "location": "japanwest"
     }
+  },
+  "sound": {
+    "save": true,
+    "dir": "sound"
   },
   "chat": {
     "gpt_server": "http://127.0.0.1:9559"
@@ -46,7 +54,6 @@ ln -sf /usr/lib/libstdc++.so.6 /home/someone/miniconda3/envs/OpenAi/lib/libstdc+
     "model": "text-davinci-003"
   }
 }
-
 ```
 
 ## 如果不能用麦克风
