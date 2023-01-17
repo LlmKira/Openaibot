@@ -18,6 +18,33 @@ contribute to this repository and you can develop a new Controller by scheduling
 
 This project uses a contextual memory pool to implement chat and is not a reverse of `chatGPT`.
 
+## Features
+
+* Independent inference, continuation writing
+* Memory bucket mechanism, weight correlation allocation, more intelligent context
+* Support API
+* Style Chat!
+* Support private chat
+* Support group chat
+* Support voice wake-up on Linux
+* Multi-host management
+* Support rate limiting
+* Content filtering support
+* Usage management support
+* Setting fixed host settings
+* White list system support
+* Blacklist system support
+* Multi-platform, strong generality
+* Comprehensive content security functions
+* Universal interface supported by multiple platforms
+* Support active reply (For Fun)
+* Dynamic context clipping to prevent overuse
+* Multiple Api key loads for convenient management and overuse pop-up
+* Pluginization for real-time content support, Prompt Injection for better Chat experience
+* Replace chatGpt with your own written chatGpt Openai api Python implementation
+* Official dependency library does not support asynchronous, a large number of requests will block, replace with your
+  own written asynchronous library (recently official supports asynchronous)
+
 ## 🌤Status
 
 *Please update if you have problems, then submit an Issue*
@@ -52,32 +79,7 @@ class API:
     AdvanceEventApi = "http as im"
 ```
 
-## Features
-
-* Independent inference, continuation writing
-* Memory bucket mechanism, weight correlation allocation, more intelligent context
-* Support API
-* Style Chat!
-* Support private chat
-* Support group chat
-* Support voice wake-up on Linux
-* Multi-host management
-* Support rate limiting
-* Content filtering support
-* Usage management support
-* Setting fixed host settings
-* White list system support
-* Blacklist system support
-* Multi-platform, strong generality
-* Comprehensive content security functions
-* Universal interface supported by multiple platforms
-* Support active reply (For Fun)
-* Dynamic context clipping to prevent overuse
-* Multiple Api key loads for convenient management and overuse pop-up
-* Pluginization for real-time content support, Prompt Injection for better Chat experience
-* Replace chatGpt with your own written chatGpt Openai api Python implementation
-* Official dependency library does not support asynchronous, a large number of requests will block, replace with your
-  own written asynchronous library (recently official supports asynchronous)
+## USE
 
 🔭 Using `/chat + sentence` you can start a loop and then **just reply** to talk. Private chat messages or group
 messages within 48 hours are automatically inferred and cropped using context, and the conversation can continue by
