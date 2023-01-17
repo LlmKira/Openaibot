@@ -15,11 +15,14 @@
 
 OpenAI Chat Bot For IM/Linux/Windows.
 
+
 如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度通用事件层开发一个新的 Controller。
 
 [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
 
 本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 是自实现。
+
+**有任何使用上的问题请提交到 Issue，而不是我的邮箱...**
 
 ```
 采用 GPT3 + 注入的方式尽量靠近ChatGpt，采用可扩展架构，等到 ChatGPT 商业化后会即时切进新的 Api，

@@ -12,6 +12,8 @@
 
 OpenAI Chat Bot For IM/Linux/Windows.
 
+**If you have any questions about deployment/use, please submit to Issue instead mail me**
+
 **If your instant messaging platform is not available or you want to develop a new app, we welcome your contribution to
 this repository. You can develop a new Controller by dispatching generic event layer.**
 
