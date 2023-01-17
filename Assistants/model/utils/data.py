@@ -10,7 +10,7 @@ class DefaultAssistants(object):
         return {
             "rec": {
                 "porcupine": {
-                    "key": "BhMjlw=="
+                    "key": "Bh=="
                 }
             },
             "userid": 10086,
@@ -20,13 +20,17 @@ class DefaultAssistants(object):
                 "whisper": {},
                 "azure": {
                     "key": [
-                        "ea9a6"
+                        ""
                     ],
                     "lang": {
                         "zh": "zh-CN"
                     },
                     "location": "japanwest"
                 }
+            },
+            "sound": {
+                "save": True,
+                "dir": "sound"
             },
             "chat": {
                 "gpt_server": "http://127.0.0.1:9559"

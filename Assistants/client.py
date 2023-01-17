@@ -3,25 +3,28 @@
 # @FileName: spark.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import time
 import json
 import pathlib
 import tempfile
 
 import pycorrector
-from loguru import logger
-import model.recognize as Recognize
-import model.spark as Spark
+
+import model.chat as chat
+import model.spark as spark
 import model.utils.data as data
-import model.chat as Chat
 from playsound import playsound
+import model.recognize as recognize
+
+from loguru import logger
 
 
 # IO
-def load_config():
+def load_config(path: str = "../Config/assistants.json"):
     global _assistant_config
     now_table = data.DefaultAssistants.defaultConfig()
-    if pathlib.Path("../Config/assistants.json").exists():
-        with open("../Config/assistants.json", encoding="utf-8") as f:
+    if pathlib.Path(path).exists():
+        with open(path, encoding="utf-8") as f:
             _assistant_config = json.load(f)
     else:
         _assistant_config = {}
@@ -30,16 +33,16 @@ def load_config():
     return _assistant_config
 
 
-def save_csonfig(pLock=None):
+def save_csonfig(path: str = "../Config/config.json", pLock=None):
     if pLock:
         pLock.acquire()
-    with open("../Config/config.json", "w+", encoding="utf8") as f:
+    with open(path, "w+", encoding="utf8") as f:
         json.dump(_assistant_config, f, indent=4, ensure_ascii=False)
     if pLock:
         pLock.release()
 
 
-load_config()
+load_config(path="../Config/assistants.json")
 
 TRIGGER_KEY = _assistant_config["rec"]["porcupine"]["key"]
 
@@ -58,10 +61,14 @@ CID = _assistant_config["userid"]
 
 CHAT_CONFIG = _assistant_config["chat"]
 GPT_SERVER = CHAT_CONFIG["gpt_server"]
+SAVE_SOUND = _assistant_config["sound"]["save"]
+SOUND_DIR = _assistant_config["sound"]["dir"]
+
+pathlib.Path(SOUND_DIR).mkdir(exist_ok=True)
 
 
 def think_loop():
-    prompt = Recognize.Wake(method=STT_METHOD,
+    prompt = recognize.Wake(method=STT_METHOD,
                             lang=STT_LANG,
                             config=STT_SELECT_CONFIG)
     prompt = pycorrector.traditional2simplified(prompt)
@@ -73,24 +80,29 @@ def think_loop():
         "cid": CID,
         "prompt": prompt,
     })
-    _prompt = Chat.Prompt(**_req_table)
-    _reply = Chat.Req().gpt(prompt=_prompt, server=GPT_SERVER)
+    _prompt = chat.Prompt(**_req_table)
+    _reply = chat.Req().gpt(prompt=_prompt, server=GPT_SERVER)
     if not _reply.get("status") or not _reply.get('response'):
         logger.warning(f"NO REPLY:{_reply.get('response')}")
         return
     reply = _reply['response']["choices"][0]["text"]
     logger.info(f"Output:{reply}")
 
-    _tts = Chat.TTS().create(text=reply, server=GPT_SERVER, cid=CID)
+    _tts = chat.TTS().create(text=reply, server=GPT_SERVER, cid=CID)
     if not _tts.status_code == 200:
         logger.warning(f"NO TTS:{_tts.status_code}")
     else:
+        if SAVE_SOUND:
+            _name = str(time.strftime("%Y%m%d_%H%M%S", time.localtime()))
+            with pathlib.Path(f"{SOUND_DIR}/{_name}.ogg") as f:
+                f.write(_tts.content)
+                f.flush()
         with tempfile.NamedTemporaryFile(suffix=".wav") as f:
             f.write(_tts.content)
             f.flush()
             playsound(f.name)
 
 
-Spark.trigger(access_key=TRIGGER_KEY,
+spark.trigger(access_key=TRIGGER_KEY,
               callback_func=think_loop
               )
