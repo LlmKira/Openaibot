@@ -82,14 +82,14 @@ def think_loop():
     })
     _prompt = chat.Prompt(**_req_table)
     _reply = chat.Req().gpt(prompt=_prompt, server=GPT_SERVER)
-    if not _reply.get("status") or not _reply.get('response'):
+    if not _reply:
         logger.warning(f"NO REPLY:{_reply.get('response')}")
         return
     reply = _reply['response']["choices"][0]["text"]
     logger.info(f"Output:{reply}")
 
     _tts = chat.TTS().create(text=reply, server=GPT_SERVER, cid=CID)
-    if not _tts.status_code == 200:
+    if not _tts:
         logger.warning(f"NO TTS:{_tts.status_code}")
     else:
         if SAVE_SOUND:

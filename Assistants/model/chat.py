@@ -22,14 +22,25 @@ class Req(object):
     def gpt(self, prompt: Prompt, server: str = "http://127.0.0.1:9559"):
         headers = {'accept': 'application/json',
                    'Content-Type': 'application/json'}
-        req = httpx.post(f"{server}/getreply", json=prompt.dict(), headers=headers, timeout=30)
-        req.raise_for_status()
-        return req.json()
+        try:
+            req = httpx.post(f"{server}/getreply", json=prompt.dict(), headers=headers, timeout=30)
+            req.raise_for_status()
+            _json = req.json()
+            if not _json.get("status") or not _json.get('response'):
+                return
+            return _json
+        except:
+            return
 
 
 class TTS(object):
     def create(self, text: str, cid: int, server: str = "http://127.0.0.1:9559"):
         headers = {'accept': 'application/json',
                    'Content-Type': 'application/json'}
-        req = httpx.get(f"{server}/getvoice?text={text}&cid={cid}", headers=headers, timeout=30)
-        return req
+        try:
+            req = httpx.get(f"{server}/getvoice?text={text}&cid={cid}", headers=headers, timeout=30)
+            if not req.status_code == 200:
+                return
+            return req
+        except:
+            return
