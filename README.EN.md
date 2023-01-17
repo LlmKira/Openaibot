@@ -8,27 +8,29 @@
 </p>
 
 <h2 align="center">Openaibot</h2>
+
 > Translate by deepl (wink~
 
 OpenAI Chat Bot For IM/Linux/Windows.
 
-**If you have any questions about deployment/use, please submit to Issue instead mail me**
+If you don't have your own instant messaging platform or you want to develop a new application, you are welcome to
+contribute to this repository and you can develop a new Controller by scheduling **Universal Event Layer**.
 
-**If your instant messaging platform is not available or you want to develop a new app, we welcome your contribution to
-this repository. You can develop a new Controller by dispatching generic event layer.**
+This project uses a contextual memory pool to implement chat and is not a reverse of `chatGPT`.
 
-This project uses GPT API + context memory pool to realize chat, not the reverse of chatGPT, and the Python
-implementation of chatGPT-like is self-implemented.
+## 🌤Status
 
-Using GPT3 + injection to get close to ChatGpt, using an extensible framework, when ChatGPT is commercialized, it will
-switch into new Api immediately.
+*Please update if you have problems, then submit an Issue*
 
-* Close to chatGPT, currently chatGPT has not opened interfaces and basically all replaced with Dafanqi.
-* Dependent libraries are switched from official synchronous to self-maintained asynchronous libraries.
-* Reverse has no way out, our advantage is at the forefront of trying and providing mature interactive experience.
+```
+Using GPT3 + injection to get as close to chatGpt as possible, with a scalable architecture, and will cut in a new Api in time for ChatGPT to be commercialized.
+* Closer to chatGPT, which currently does not have an open interface and has basically been replaced with Da Vinci.
+* Dependency libraries are switched from official synchronous to self-maintained asynchronous libraries.
+* There is no way out of reverse, our strength is being at the forefront of experimentation and providing a mature interaction experience.
 * This repository welcomes all contributors.
+```
 
-## 组成
+### Schematic composition
 
 ```python
 IM = ""
@@ -503,12 +505,6 @@ database.
 needs to be backed up frequently using the command. If not please create a new populated `{}` or delete it and it will
 automatically merge the missing keys for repair.
 
-### Default parameters
-
-- Group revert memory to 48 hours
-- Usage limit is 15000/h
-- Memory capacity of 80 dialogue pairs
-
 ### prompt_server.py
 
 Peripheral Prompt trimming interface to give support to other projects.
@@ -530,16 +526,28 @@ stable API server.
 
 ### Thanks to
 
-- Contributors
 - [Text Analysis Tool Library](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
+
+## Join Community
+
+<a href="https://github.com/sudoskys/Openaibot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sudoskys/Openaibot" />
+</a>
+
+## Star history
+
+[![Star History](https://api.star-history.com/svg?repos=sudoskys/Openaibot&type=Date)](https://star-history.com/#sudoskys/Openaibot&Date)
 
 ## FOSSA
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
+## License
+
+This project maybe open source and available under
+the [AGPL License](https://github.com/sudoskys/Openaibot/blob/main/LICENSE).
+
 ## CLAUSE
 
-CLAUSE 说明了如何授权，声明，附加条款等内容。
-
-![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)
+[CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。

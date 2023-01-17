@@ -1,42 +1,35 @@
 ![cover](https://raw.githubusercontent.com/sudoskys/Openaibot/main/docs/cover.png)
-
-
 ------------------------------------
-
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/LICENSE-Other-ff69b4">
-  <img src="https://img.shields.io/badge/Python-3.7|8|9|10-green" alt="PYTHON" >
+  <img alt="License" src="https://img.shields.io/badge/LICENSE-AGPL-ff69b4">
+  <img src="https://img.shields.io/badge/Python-3.7|8|9|10-green" alt="Python" >
   <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Buyme-milk-DB94A2" alt="SPONSOR"></a>
   <a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small"/></a>
 </p>
 
-
 <h2 align="center">OpenaiBot</h2>
+
+*We Have [EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)*
 
 OpenAI Chat Bot For IM/Linux/Windows.
 
+如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度**通用事件层**开发一个新的 Controller。
 
-如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度通用事件层开发一个新的 Controller。
+本项目使用上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向。
 
-[EN_README](https://github.com/sudoskys/Openaibot/blob/main/README.EN.md)
+## 🌤Status
 
-本项目利用 `Api` 认证 `Token` + 上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向，类 chatGPT 的 **Python 实现** 是自实现。
-
-**有任何使用上的问题请提交到 Issue，而不是我的邮箱...**
+*有问题请更新，然后提交 Issue*
 
 ```
-采用 GPT3 + 注入的方式尽量靠近ChatGpt，采用可扩展架构，等到 ChatGPT 商业化后会即时切进新的 Api，
+采用 GPT3 + 注入的方式尽量靠近ChatGpt，采用可扩展架构，等到 ChatGPT 商业化后会及时切进新的 Api，
 * 靠近 chatGPT，目前 chatGPT 并未开放接口，基本全换成达芬奇了。
 * 依赖库由官方的同步切换为自维护异步库。
 * 逆向没有出路，我们的优势是走在尝试的最前列，提供成熟的交互体验。
 * 此仓库欢迎一切贡献者。
 ```
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
-
-*有问题请更新，然后提交 Issue*
-
-## 组成示意
+### 组成示意
 
 ```python
 IM = ""
@@ -84,7 +77,7 @@ class API:
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 官方依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库(最近官方才支持了异步)
 
-## 用法
+## 使用
 
 **聊天**
 
@@ -376,6 +369,8 @@ Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 
 
 ## 运行
 
+### Nohup
+
 * 运行
 
 ```shell
@@ -394,6 +389,10 @@ ps -aux|grep python3
 ```shell
 kill -9 id
 ```
+
+### PM2
+
+使用 `pm2 start pm2.json`
 
 ## 命令
 
@@ -516,32 +515,36 @@ https://github.com/sudoskys/openai-kira#plugin-dev
 
 需要经常使用命令备份。如果没有请新建填充`{}`或删除，会自动合并缺失的键值进行修复。
 
-### 默认参数
-
-- 群组回复记忆为 48 hours
-- 用量限制为 15000/h
-- 人设记忆力为永久，追溯记忆是 80
-
-### prompt_server.py
-
-外设的 Prompt 裁剪接口，给其他项目提供支持。
-
 ### QuickDev
 
 Quick Dev by MVC 框架 https://github.com/TelechaBot/BaseBot
+**完整运行所有组件至少需要 1GB 内存**
 
-### 上一次的性能分析
+## Thanks
 
-**日常负载内存 316MB**
-
-## 感谢
-
-- 贡献者
 - [文本分析工具库](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 
+## Join Community
+
+<a href="https://github.com/sudoskys/Openaibot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sudoskys/Openaibot" />
+</a>
+
+## Star history
+
+[![Star History](https://api.star-history.com/svg?repos=sudoskys/Openaibot&type=Date)](https://star-history.com/#sudoskys/Openaibot&Date)
+
+## FOSSA
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
+
+## License
+
+This project maybe open source and available under
+the [AGPL License](https://github.com/sudoskys/Openaibot/blob/main/LICENSE).
+
 ## CLAUSE
 
-CLAUSE 说明了如何授权，声明，附加条款等内容。
+[CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。
 
-![CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md)
