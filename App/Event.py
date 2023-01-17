@@ -282,8 +282,7 @@ class Reply(object):
                                                             prompt=str(prompt),
                                                             optimizer=Optimizer.MatrixPoint,
                                                             role="......",
-                                                            frequency_penalty=0.5,  # 不要用用过的字符
-                                                            presence_penalty=-0.5,  # 不要谈论新话题
+                                                            no_penalty=True,
                                                             max_tokens=100,
                                                             web_enhance_server=PLUGIN_TABLE
                                                             )
