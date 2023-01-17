@@ -90,3 +90,11 @@ ln -sf /usr/lib/libstdc++.so.6 /home/someone/miniconda3/envs/OpenAi/lib/libstdc+
                                         |API 返回层
 
 ```
+
+## 设计来源
+
+提出想法:https://github.com/sudoskys/Openaibot/issues/70
+
+关于麦克风和转文本:https://github.com/Uberi/speech_recognition/blob/master/examples/microphone_recognition.py
+
+关于热词唤醒:https://github.com/Picovoice/porcupine/issues/255#issuecomment-876974791

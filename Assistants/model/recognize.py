@@ -21,7 +21,7 @@ def Wake(lang: str = "zh", method: str = "whisper", config: dict = None):
         lang = lang.lower()
     ##
     with sr.Microphone() as source:
-        audio = r.listen(source, phrase_time_limit=3)
+        audio = r.listen(source, phrase_time_limit=5)
     logger.info("-Think-")
     if method == "whisper":
         return STT(lang=lang).whisper(audio=audio)
