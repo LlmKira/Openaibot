@@ -26,8 +26,8 @@ def Wake(lang: str = "zh", method: str = "whisper", config: dict = None):
     with sr.Microphone() as source:
         audio = r.listen(source, phrase_time_limit=5)
     logger.info("-Think-")
-    if pathlib.Path("./think.mp3").exists():
-        playsound("./think.mp3")
+    if pathlib.Path("think.mp3").exists():
+        playsound("think.mp3")
     if method == "whisper":
         return STT(lang=lang).whisper(audio=audio)
     elif method == "azure":
