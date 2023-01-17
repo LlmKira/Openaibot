@@ -2,6 +2,10 @@
 
 client 除了唤醒都可以依赖网络来解决，但是 BaseServer 我没有做鉴权，所以大概适合局域网使用。
 
+## 唤醒词
+
+当然是为 Linux 准备的 `Hi Coco` 啦，其他唤醒词自己训练咯。
+
 ## 解决依赖问题
 
 apt-get install python3-pyaudio
