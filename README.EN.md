@@ -10,7 +10,7 @@
 <h2 align="center">Openaibot</h2>
 > Translate by deepl (wink~
 
-OpenAI Chat Bot For IM. Use OpenAi Interaction on IM.
+OpenAI Chat Bot For IM/Linux/Windows.
 
 **If your instant messaging platform is not available or you want to develop a new app, we welcome your contribution to
 this repository. You can develop a new Controller by dispatching generic event layer.**
@@ -26,6 +26,28 @@ switch into new Api immediately.
 * Reverse has no way out, our advantage is at the forefront of trying and providing mature interactive experience.
 * This repository welcomes all contributors.
 
+## 组成
+
+```python
+IM = ""
+Server = ""
+Device = "device interaction"
+
+
+class APP:
+    QQ: IM
+    Telegram: IM
+    BaseServerEvent: Server
+
+
+class Assistants:
+    Voice: Device
+
+
+class API:
+    AdvanceEventApi = "http as im"
+```
+
 ## Features
 
 * Independent inference, continuation writing
@@ -34,6 +56,7 @@ switch into new Api immediately.
 * Style Chat!
 * Support private chat
 * Support group chat
+* Support voice wake-up on Linux
 * Multi-host management
 * Support rate limiting
 * Content filtering support

@@ -94,7 +94,7 @@ def think_loop():
     else:
         if SAVE_SOUND:
             _name = str(time.strftime("%Y%m%d_%H%M%S", time.localtime()))
-            with pathlib.Path(f"{SOUND_DIR}/{_name}.ogg").open("w+") as f:
+            with pathlib.Path(f"{SOUND_DIR}/{_name}.ogg").open("wb+") as f:
                 f.write(_tts.content)
                 f.flush()
         with tempfile.NamedTemporaryFile(suffix=".wav") as f:

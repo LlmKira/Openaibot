@@ -13,7 +13,7 @@
 
 <h2 align="center">OpenaiBot</h2>
 
-OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
+OpenAI Chat Bot For IM/Linux/Windows.
 
 如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度通用事件层开发一个新的 Controller。
 
@@ -33,6 +33,28 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 
 *有问题请更新，然后提交 Issue*
 
+## 组成示意
+
+```python
+IM = ""
+Server = ""
+Device = "device interaction"
+
+
+class APP:
+    QQ: IM
+    Telegram: IM
+    BaseServerEvent: Server
+
+
+class Assistants:
+    Voice: Device
+
+
+class API:
+    AdvanceEventApi = "http as im"
+```
+
 ## 特性
 
 * 续写 (write)  独立推测，续写
@@ -47,6 +69,7 @@ OpenAI Chat Bot For IM. 在 IM 上使用 OpenAi 交互。
 * 设定固定头人设
 * 支持白名单系统
 * 支持黑名单系统
+* 支持实机语音唤醒
 * 自定义风格化对话
 * 多平台，泛用性强
 * 完善的内容安全功能

@@ -1,5 +1,7 @@
 # 配置细则
 
+client 除了唤醒都可以依赖网络来解决，但是 BaseServer 我没有做鉴权，所以大概适合局域网使用。
+
 ## 解决依赖问题
 
 apt-get install python3-pyaudio
