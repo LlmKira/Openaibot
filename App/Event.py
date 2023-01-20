@@ -290,7 +290,7 @@ class Reply(object):
                 receiver = Chat.Chatbot(
                     conversation_id=int(_cid),
                     call_func=Api_keys.pop_api_key,
-                    token_limit=3751,
+                    token_limit=3851,
                     start_sequ=start_name,
                     restart_sequ=restart_name,
                 )
