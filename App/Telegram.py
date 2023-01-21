@@ -107,7 +107,7 @@ class BotRunner(object):
             started = False
 
             # 命令解析
-            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme","/style", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = await is_admin(message)
@@ -175,7 +175,7 @@ class BotRunner(object):
                 _hand.text = f"/chat {_hand.text}"
             # 交谈
             if _hand.text.startswith(
-                    ("/chat", "/voice", "/write", "/forgetme", "/style","/remind")):
+                    ("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
                 _friends_message = await Event.Friends(Message=_hand,
                                                        config=_config,
                                                        bot_profile=ProfileManager.access_telegram(init=False)
@@ -223,11 +223,11 @@ class BotRunner(object):
 
         async def main():
             _me = await bot.get_me()
+            _bot_id = _me.id
             _first_name = _me.first_name if _me.first_name else ""
             _last_name = _me.last_name if _me.last_name else ""
-            _bot_id = _me.id
-            _bot_name = f"{_first_name}{_last_name}"
-            ProfileManager.access_telegram(bot_name=_bot_name[:6], bot_id=_bot_id, init=True)
+            _bot_name = ProfileManager.name_generate(first_name=_first_name, last_name=_last_name)
+            ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)

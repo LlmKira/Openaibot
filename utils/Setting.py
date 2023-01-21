@@ -31,6 +31,15 @@ class ProfileReturn(BaseModel):
 class ProfileManager(object):
     global _bot_profile
 
+    @staticmethod
+    def name_generate(first_name, last_name):
+        _bot_full_name = f"{first_name}{last_name}"
+        _bot_split_name = _bot_full_name.split()
+        _bot_split_name: list
+        _bot_name = _bot_full_name if not _bot_split_name else _bot_split_name[0]
+        _bot_name = _bot_name if _bot_name else "Assistant"
+        return _bot_name
+
     def access_api(self, bot_name=None, bot_id=None, init=False):
         global _bot_profile
         if init:
