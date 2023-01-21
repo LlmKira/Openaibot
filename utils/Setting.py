@@ -33,11 +33,13 @@ class ProfileManager(object):
 
     @staticmethod
     def name_generate(first_name, last_name):
+        # 反转内容
         _bot_full_name = f"{first_name}{last_name}"
         _bot_split_name = _bot_full_name.split()
         _bot_split_name: list
-        _bot_name = _bot_full_name if not _bot_split_name else _bot_split_name[0]
+        _bot_name = _bot_full_name if not len(_bot_split_name) > 1 else _bot_split_name[1]
         _bot_name = _bot_name if _bot_name else "Assistant"
+        _bot_name = _bot_name[:12]
         return _bot_name
 
     def access_api(self, bot_name=None, bot_id=None, init=False):

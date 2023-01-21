@@ -11,3 +11,6 @@ r = [1]
 print(isinstance(r, list))
 reply = "1122"
 print(reply[:1000])
+
+name = "NAS CO"
+print(name.split())

@@ -12,11 +12,12 @@ import pycorrector
 
 
 def get_start_name(prompt: str, bot_name=None):
-    _code_symbol = ["class", "test", "debug", "_", ")", "(", "}", "{", "=", "Python", "lua", "nodejs", "rust", "code",
+    _code_symbol = ["class", "test", "debug", "_", ")", "Class", "写一", "(", "}", "{", "=", "Python", "lua",
+                    "nodejs", "rust", "code",
                     "补全", "代码", "数据包"]
     STARTNAME = bot_name if bot_name else "Assistant:"
     STARTNAME = STARTNAME if not prompt.endswith(("???", "？？？")) else "Assistant:"
-    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.4) else "Assistant:"
+    STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt, keywords=_code_symbol, r=0.01) else "Assistant:"
     STARTNAME = STARTNAME if not StrListTool.isStrIn(prompt=prompt,
                                                      keywords=["teach me", "给出详细", "步骤", "计算结果", "教教我",
                                                                "解释一下"],
