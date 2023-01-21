@@ -35,10 +35,6 @@ TTS_CONF = _service["tts"]
 PLUGIN_TABLE = _service["plugin"]
 PROXY_CONF = ProxyConfig(**_service["proxy"])
 HARM_TYPE = _service["moderation_type"]
-HARM_TYPE.extend([
-    'violence',
-    'violence/graphic'
-])
 HARM_TYPE = list(set(HARM_TYPE))
 
 # Proxy
@@ -231,12 +227,13 @@ class Reply(object):
         # 内容审计
         try:
             _harm = False
-            _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
-            _moderation_result = _Moderation_rep["results"][0]
-            _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
-            for item in _harm_result:
-                if item in HARM_TYPE:
-                    _harm = item
+            if HARM_TYPE:
+                _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
+                _moderation_result = _Moderation_rep["results"][0]
+                _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
+                for item in _harm_result:
+                    if item in HARM_TYPE:
+                        _harm = item
         except Exception as e:
             logger.error(f"Moderation：{prompt}:{e}")
             _harm = False
