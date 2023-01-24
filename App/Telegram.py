@@ -103,10 +103,13 @@ class BotRunner(object):
             _hand = get_message(message)
             _hand: User_Message
             started = False
+
             # 回复逻辑判定
             if message.reply_to_message:
+                _name = message.reply_to_message.from_user.full_name
+                _text = str(message.reply_to_message.text)
+                _text = _text.replace(_config.INTRO, "")
                 if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
-
                     # Chat
                     if not _hand.text.startswith("/"):
                         _hand.text = f"/chat {_hand.text}"
@@ -115,8 +118,9 @@ class BotRunner(object):
                             f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
                         pass
                     else:
-                        _name = message.reply_to_message.from_user.full_name
-                        _hand.prompt.append(f"{_name[:8]}:{message.reply_to_message.text}")
+                        _hand.prompt.append(f"{_name[:8]}:{_text}")
+                else:
+                    _hand.prompt.append(f"{_name[:8]}:{_text}")
 
             # 命令解析
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
