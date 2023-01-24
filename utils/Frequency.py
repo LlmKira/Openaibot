@@ -76,12 +76,11 @@ class Vitality(object):
     def __init__(self, group_id: int):
         self.group_id = str(group_id)
         self.time_interval = 60 * 10
-        _oid = f"-{abs(group_id)}"
         receiver = llm_kira.client
         conversation = receiver.Conversation(
             start_name="Human:",
             restart_name="AI:",
-            conversation_id=int(_oid),
+            conversation_id=group_id,
         )
         self.mem = receiver.MemoryManger(profile=conversation)
 

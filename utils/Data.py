@@ -39,6 +39,7 @@ class User_Message(BaseModel):
     from_user: from_user
     from_chat: from_chat
     text: str
+    prompt: list
     date: int = int(time.time() * 1000)
 
 
@@ -47,15 +48,21 @@ def create_message(
         user_name,
         group_id: int,
         group_name,
-        text,
+        text: str,
         state: int,
+        prompt: Union[str, list] = None,
         date=time.time()):
     state = abs(state)
     if state != 0:
         group_id = int(f"{group_id}{state}")
         user_id = int(f"{user_id}{state}")
+    if prompt is None:
+        prompt = [text]
+    if isinstance(prompt, str):
+        prompt = [prompt]
     message = {
         "text": text,
+        "prompt": prompt,
         "from_user": from_user(id=user_id, name=user_name),
         "from_chat": from_chat(id=group_id, name=group_name),
         "date": date
