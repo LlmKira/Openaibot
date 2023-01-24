@@ -194,6 +194,8 @@ trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
+proxy = { status = false, url = "http://127.0.0.1:7890" }
+
 
 # Telegram
 [Controller.Telegram]
@@ -203,6 +205,7 @@ trigger = false # 合适的时候主动回复
 INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
+proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 [Controller.BaseServer]
 port = 9559

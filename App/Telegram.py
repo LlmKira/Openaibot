@@ -67,7 +67,7 @@ def get_message(message: types.Message):
 class BotRunner(object):
     def __init__(self, config):
         self.bot = config
-        self.proxy = Tool().dictToObj(Service_Data.get_key()['proxy'])
+        self.proxy = config.proxy
 
     def botCreate(self):
         if not self.bot.botToken:
@@ -172,6 +172,7 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text'], chat_types=['private'])
         async def handle_private_msg(message):
             _hand = get_message(message)
+
             # 检查管理员指令
             _real_id = message.from_user.id
             _hand: User_Message

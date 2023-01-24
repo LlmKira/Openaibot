@@ -313,10 +313,15 @@ class Reply(object):
                                                llm_model=llm)
                 prompt: PromptManger
                 prompt.template = _head
+                webSupport = ""
+                if 4 < len(prompt_text) < 35:
+                    webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
+                                                                     prompt=prompt_text).run()
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name="text-davinci-003", logit_bias=_style),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
+                    increase=webSupport
                 )
                 prompt.clean()
                 # print(response)
