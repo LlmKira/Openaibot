@@ -307,6 +307,8 @@ class Reply(object):
                 _style = {}
                 if _csonfig.get("allow_change_style"):
                     _style = Style(uid=self.user).get()
+                    if len(_style) < 5:
+                        _style = {}
 
                 mem = receiver.MemoryManger(profile=conversation)
                 chat_client = receiver.ChatBot(profile=conversation,
