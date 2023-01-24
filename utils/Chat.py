@@ -177,7 +177,7 @@ class GroupManger(object):
 class Utils(object):
     @staticmethod
     def forget_me(user_id, group_id):
-        from openai_kira.utils.data import MsgFlow
+        from llm_kira.utils.data import MsgFlow
         _cid = DefaultData.composing_uid(user_id=user_id, chat_id=group_id)
         return MsgFlow(uid=_cid).forget()
 

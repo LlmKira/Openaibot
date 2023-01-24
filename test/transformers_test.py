@@ -4,4 +4,4 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 
-from transformers import GPT2TokenizerFast
+# from transformers import GPT2TokenizerFast

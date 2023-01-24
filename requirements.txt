@@ -2,7 +2,6 @@ pyTelegramBotAPI
 rtoml
 rich
 aiohttp
-openai
 redis
 loguru
 httpx
@@ -16,9 +15,8 @@ Pillow
 pathlib
 elara
 numpy
-openai-kira>=0.3.5
+llm_kira>=0.0.3
 scikit-learn
-transformers
 beautifulsoup4
 wget
 fasttext>=0.9.1

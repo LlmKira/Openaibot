@@ -10,7 +10,7 @@ import pathlib
 from typing import Optional
 
 from fastapi import FastAPI
-import openai_kira
+import llm_kira
 from fastapi.responses import Response
 from pydantic import BaseModel
 from App.Event import ContentDfa, TTSSupportCheck
@@ -42,8 +42,8 @@ def load_csonfig():
 
 load_csonfig()
 
-openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**_redis_conf)
-openai_kira.setting.openaiApiKey = Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]
+llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**_redis_conf)
+openaiApiKey = Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]
 
 
 class Prompt(BaseModel):
@@ -79,7 +79,7 @@ async def filter_str(check: Filter):
     _harm_result = []
     if check.moderation:
         try:
-            _Moderation_rep = await openai_kira.Moderations().create(input=check.prompt)
+            _Moderation_rep = await llm_kira.openai.Moderations(api_key=openaiApiKey).create(input=check.prompt)
             _moderation_result = _Moderation_rep["results"][0]
             _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
         except Exception as e:
@@ -89,7 +89,7 @@ async def filter_str(check: Filter):
 
 @app.post("/getreply")
 async def get_reply(req: Prompt):
-    receiver = openai_kira.Chat.Chatbot(
+    receiver = llm_kira.client.Chatbot(
         conversation_id=req.cid,
         call_func=Api_keys.pop_api_key,
         token_limit=3751,
