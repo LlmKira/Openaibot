@@ -43,11 +43,8 @@ async def set_cron(funcs, second: int):
 def get_message(message: types.Message):
     # 自动获取名字
     prompt = [message.text]
-    if message.reply_to_message:
-        _name = message.reply_to_message.from_user.full_name
-        prompt.append(f"{_name[:8]}:{message.reply_to_message.text}")
     _name = message.from_user.full_name
-    group_name = message.chat.title if message.chat.title else message.chat.last_name
+    group_name = message.chat.title if message.chat.title else message.chat.first_name
     group_name = group_name if group_name else "Group"
     return create_message(
         state=100,
@@ -106,6 +103,20 @@ class BotRunner(object):
             _hand = get_message(message)
             _hand: User_Message
             started = False
+            # 回复逻辑判定
+            if message.reply_to_message:
+                if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
+
+                    # Chat
+                    if not _hand.text.startswith("/"):
+                        _hand.text = f"/chat {_hand.text}"
+                    started = True
+                    if str(Utils.checkMsg(
+                            f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
+                        pass
+                    else:
+                        _name = message.reply_to_message.from_user.full_name
+                        _hand.prompt.append(f"{_name[:8]}:{message.reply_to_message.text}")
 
             # 命令解析
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
@@ -116,15 +127,6 @@ class BotRunner(object):
                     _reply = await Event.GroupAdminCommand(Message=_hand, config=_config, pLock=pLock)
                     if _reply:
                         await bot.reply_to(message, "".join(_reply))
-
-            # 回复逻辑判定
-            if message.reply_to_message:
-                if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
-                    if str(Utils.checkMsg(
-                            f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
-                        if not _hand.text.startswith("/"):
-                            _hand.text = f"/chat {_hand.text}"
-                        started = True
 
             # 分发指令
             if _hand.text.startswith("/help"):
