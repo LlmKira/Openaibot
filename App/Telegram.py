@@ -44,13 +44,9 @@ def get_message(message: types.Message):
     # 自动获取名字
     prompt = [message.text]
     if message.reply_to_message:
-        _name = message.reply_to_message.from_user.last_name
+        _name = message.reply_to_message.from_user.full_name
         prompt.append(f"{_name[:8]}:{message.reply_to_message.text}")
-    first_name = message.from_user.first_name if message.from_user.first_name else ""
-    last_name = message.from_user.last_name if message.from_user.last_name else ""
-    _name = f"{first_name}{last_name}"
-    if len(_name) > 12 and len(f"{last_name}") < 6:
-        _name = f"{last_name}"
+    _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.last_name
     group_name = group_name if group_name else "Group"
     return create_message(
