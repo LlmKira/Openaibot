@@ -203,7 +203,7 @@ INTRO = "POWER BY OPENAI"  # 后缀
 ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
 WHITE = "Group NOT in WHITE list" # 黑白名单提示
 # 设置的代理，但是不代理 openai api, 只代理 bot
-proxy = { status = true, url = "http://127.0.0.1:7890" }
+proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 [Controller.BaseServer]
 port = 9559

@@ -3,12 +3,11 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import asyncio
-# 事件，完全隔离的
 
 import json
-import pathlib
 import random
+import pathlib
+import asyncio
 import re
 import time
 import llm_kira
