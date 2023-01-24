@@ -6,8 +6,8 @@
 import random
 import time
 
-from openai_kira import Chat
-from openai_kira.utils.chat import Utils
+import llm_kira
+from llm_kira.utils.chat import Utils
 
 from utils.Data import User_Message, Service_Data, RedisConfig, DataWorker
 
@@ -76,12 +76,13 @@ class Vitality(object):
     def __init__(self, group_id: int):
         self.group_id = str(group_id)
         self.time_interval = 60 * 10
-        _oid = f"-{abs(group_id)}"
-        self.receiver = Chat.Chatbot(
-            api_key="1",
-            conversation_id=int(_oid),
-            token_limit=1500,
+        receiver = llm_kira.client
+        conversation = receiver.Conversation(
+            start_name="Human:",
+            restart_name="AI:",
+            conversation_id=group_id,
         )
+        self.mem = receiver.MemoryManger(profile=conversation)
 
     def __tid(self):
         return self.group_id + str(time.strftime("%Y%m%d%H%M", time.localtime()))
@@ -120,7 +121,7 @@ class Vitality(object):
         self._grow_request_vitality()
         if len(_text) < 3:
             return False
-        self.receiver.record_message(ask=f"{_name}:{_text}", reply=".:.")
+        self.mem.save_context(ask=f"{_name}:{_text}", reply=".:.")
 
     @staticmethod
     def isHighestSentiment(text, cache):

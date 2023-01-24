@@ -8,7 +8,7 @@
 # NO USE
 
 from prompt_server import create_item
-from openai_kira.Chat import Chatbot
+from llm_kira.client import Chatbot
 import nltk
 
 nltk.download('punkt')

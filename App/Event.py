@@ -11,12 +11,16 @@ import pathlib
 import random
 import re
 import time
+import llm_kira
 # from io import BytesIO
 from typing import Union
 from loguru import logger
-import openai_kira
-from openai_kira.Chat import Optimizer
-from openai_kira.utils.chat import Cut
+
+# import llm_kira
+from llm_kira.utils.chat import Cut
+from llm_kira.client import Optimizer, PromptManger, Conversation
+from llm_kira.client.types import PromptItem
+from llm_kira.client.llms.openai import OpenAiParam
 
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header, Style
@@ -40,8 +44,8 @@ HARM_TYPE = list(set(HARM_TYPE))
 # Proxy
 
 if PROXY_CONF.status:
-    openai_kira.setting.proxyUrl = PROXY_CONF.url,
-openai_kira.setting.redisSetting = openai_kira.setting.RedisConfig(**REDIS_CONF)
+    llm_kira.setting.proxyUrl = PROXY_CONF.url,
+llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**REDIS_CONF)
 
 urlForm = {
     "Danger.form": [
@@ -173,62 +177,31 @@ async def Forget(user_id: int, chat_id: int):
     :param user_id:
     :return:
     """
-    from openai_kira.utils.data import MsgFlow
+    receiver = llm_kira.client
     _cid = DefaultData.composing_uid(user_id=user_id, chat_id=chat_id)
-    return MsgFlow(uid=_cid).forget()
+    conversation = receiver.Conversation(
+        start_name="start_name",
+        restart_name="restart_name",
+        conversation_id=int(_cid),
+    )
+    mem = receiver.MemoryManger(profile=conversation)
+    return mem.reset_chat()
 
 
 class Reply(object):
-    """
-    群组
-    """
-
-    @staticmethod
-    async def load_response(user,
-                            group,
-                            key: Union[str, list],
-                            prompt: str = "Say this is a test",
-                            method: str = "chat",
-                            start_name: str = "Ai:",
-                            restart_name: str = "Human:"
-                            ) -> str:
-        """
-        发起请求
-        :param start_name: 称呼自己
-        :param restart_name: 称呼请求发起人
-        :param user:
-        :param group:
-        :param key:
-        :param prompt:
-        :param method:
-        :return:
-        """
-        load_csonfig()
-        # 载入全局变量
-        if not key:
-            logger.error("SETTING:API key missing")
-            raise Exception("API key missing")
-        openai_kira.setting.openaiApiKey = key
-
-        # 洪水防御攻击
-        if Utils.WaitFlood(user=user, group=group):
-            return "TOO FAST"
-
-        # 长度限定
-        if Utils.tokenizer(str(prompt)) > _csonfig['input_limit']:
-            return "TOO LONG"
-
+    def __init__(self, user, group, api_key: Union[list, str]):
         # 用量检测
-        _UsageManger = Usage(uid=user)
-        _Usage = _UsageManger.isOutUsage()
-        if _Usage["status"]:
-            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+        self.user = user
+        self.group = group
+        self._UsageManger = Usage(uid=self.user)
+        self.api_key = api_key
 
+    async def openai_moderation(self, prompt: str):
         # 内容审计
         try:
             _harm = False
             if HARM_TYPE:
-                _Moderation_rep = await openai_kira.Moderations().create(input=prompt)
+                _Moderation_rep = await llm_kira.openai.Moderations(api_key=self.api_key).create(input=prompt)
                 _moderation_result = _Moderation_rep["results"][0]
                 _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
                 for item in _harm_result:
@@ -237,93 +210,136 @@ class Reply(object):
         except Exception as e:
             logger.error(f"Moderation：{prompt}:{e}")
             _harm = False
+        return _harm
+
+    def pre_check(self):
+        # 洪水防御攻击
+        load_csonfig()
+        if Utils.WaitFlood(user=self.user, group=self.group):
+            return "TOO FAST"
+        _Usage = self._UsageManger.isOutUsage()
+        if _Usage["status"]:
+            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+
+    async def load_response(self,
+                            conversation: Conversation = None,
+                            prompt: PromptManger = None,
+                            method: str = "chat") -> str:
+        """
+        发起请求
+        :param conversation:
+        :param prompt:
+        :param method:
+        :return:
+        """
+        load_csonfig()
+        receiver = llm_kira.client
+        if not self.api_key:
+            logger.error("SETTING:API key missing")
+            raise Exception("API key missing")
+
+        prompt_text = prompt.run()
+
+        # 长度限定
+        # if Utils.tokenizer(str(prompt_text)) > _csonfig['input_limit']:
+        #     return "TOO LONG"
+
+        # 内容安全策略
+        _harm = await self.openai_moderation(prompt=prompt_text)
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(3, 6))
             return f"{_info}\nYour Content violates Openai policy:{_harm}..."
 
-        # 内容过滤
-        prompt = ContentDfa.filter_all(prompt)
+        # 初始化记忆管理器
+        Mem = receiver.MemoryManger(profile=conversation)
+        llm = llm_kira.client.llms.OpenAi(
+            profile=conversation,
+            api_key=self.api_key,
+            call_func=Api_keys.pop_api_key,
+            token_limit=4000,
+            auto_penalty=not _csonfig["auto_adjust"],
+        )
 
-        # 请求
         try:
-            from openai_kira import Chat
-            # 计算唯一消息桶 ID
-            _cid = DefaultData.composing_uid(user_id=user, chat_id=group)
-            # 启用单人账户桶
-            if len(start_name) > 12:
-                start_name = start_name[-10:]
-            if len(restart_name) > 12:
-                restart_name = restart_name[-10:]
             # 分发类型
             if method == "write":
                 # OPENAI
-                response = await openai_kira.Completion(call_func=Api_keys.pop_api_key).create(
+                response = await llm_kira.openai.Completion(api_key=self.api_key,
+                                                            call_func=Api_keys.pop_api_key).create(
                     model="text-davinci-003",
                     prompt=str(prompt),
                     temperature=0.2,
                     frequency_penalty=1,
                     max_tokens=int(_csonfig["token_limit"])
                 )
+                _deal = rqParser.get_response_text(response)[0]
+                _usage = rqParser.get_response_usage(response)
+                logger.success(
+                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal}"
+                )
             elif method == "catch":
-                # 群组公用桶 ID
-                _oid = f"-{abs(group)}"
-                receiver = Chat.Chatbot(
-                    conversation_id=int(_oid),
-                    call_func=Api_keys.pop_api_key,
-                    token_limit=1000,
-                    start_sequ=start_name,
-                    restart_sequ=restart_name,
+                llm.token_limit = 1000
+                llm.auto_penalty = False
+                chat_client = receiver.ChatBot(profile=conversation,
+                                               memory_manger=Mem,
+                                               optimizer=Optimizer.MatrixPoint,
+                                               llm_model=llm
+                                               )
+                response = await chat_client.predict(
+                    llm_param=OpenAiParam(model_name="text-davinci-003"),
+                    prompt=prompt,
+                    predict_tokens=100,
+                    # increase="外部增强:每句话后面都要带 “喵”",
                 )
-                response = await receiver.get_chat_response(model="text-davinci-003",
-                                                            prompt=str(prompt),
-                                                            optimizer=Optimizer.MatrixPoint,
-                                                            role="......",
-                                                            no_penalty=True,
-                                                            max_tokens=100,
-                                                            web_enhance_server=PLUGIN_TABLE
-                                                            )
+                prompt.clean()
+                _deal = response.reply
+                _usage = response.llm.usage
+                logger.success(
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
             elif method == "chat":
-                receiver = Chat.Chatbot(
-                    conversation_id=int(_cid),
-                    call_func=Api_keys.pop_api_key,
-                    token_limit=3851,
-                    start_sequ=start_name,
-                    restart_sequ=restart_name,
-                )
                 _head = None
                 if _csonfig.get("allow_change_head"):
-                    _head = Header(uid=user).get()
+                    _head = Header(uid=self.user).get()
                     _head = ContentDfa.filter_all(_head)
-
                 _style = {}
                 if _csonfig.get("allow_change_style"):
-                    _style = Style(uid=user).get()
-                response = await receiver.get_chat_response(model="text-davinci-003",
-                                                            prompt=str(prompt),
-                                                            max_tokens=int(_csonfig["token_limit"]),
-                                                            optimizer=Optimizer.SinglePoint,
-                                                            role=_head,
-                                                            web_enhance_server=PLUGIN_TABLE,
-                                                            logit_bias=_style,
-                                                            no_penalty=not _csonfig["auto_adjust"]
-                                                            )
+                    _style = Style(uid=self.user).get()
+
+                mem = receiver.MemoryManger(profile=conversation)
+                chat_client = receiver.ChatBot(profile=conversation,
+                                               memory_manger=mem,
+                                               optimizer=Optimizer.SinglePoint,
+                                               llm_model=llm)
+                prompt: PromptManger
+                prompt.template = _head
+                webSupport = ""
+                if 4 < len(prompt_text) < 35:
+                    webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
+                                                                     prompt=prompt_text).run()
+                response = await chat_client.predict(
+                    llm_param=OpenAiParam(model_name="text-davinci-003", logit_bias=_style),
+                    prompt=prompt,
+                    predict_tokens=int(_csonfig["token_limit"]),
+                    increase=webSupport
+                )
+                prompt.clean()
+                # print(response)
+                _deal = response.reply
+                _usage = response.llm.usage
+                logger.success(
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
             else:
                 return "NO SUPPORT METHOD"
-            # print(response)
-            _deal_rq = rqParser.get_response_text(response)
-            _deal = _deal_rq[0]
-            _usage = rqParser.get_response_usage(response)
-            _time = int(time.time() * 1000)
-            logger.success(f"CHAT:{user}:{group} --time: {_time} --prompt: {prompt} --req: {_deal} ")
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"OH no,api Outline or crash? \n {prompt}"
+            _deal = f"OH no,api Outline or crash? \n {prompt_text}"
+
         # 更新额度
-        _AnalysisUsage = _UsageManger.renewUsage(usage=_usage)
+        _AnalysisUsage = self._UsageManger.renewUsage(usage=_usage)
         # 更新统计
-        DefaultData().setAnalysis(usage={f"{user}": _AnalysisUsage.total_usage})
+        DefaultData().setAnalysis(usage={f"{self.user}": _AnalysisUsage.total_usage})
         # 人性化处理
         _deal = ContentDfa.filter_all(_deal)
         _deal = Utils.Humanization(_deal)
@@ -336,7 +352,6 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     :param WHITE: 白名单提示
     :return: TRUE,msg -> 在白名单
     """
-    #
     if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
         if UserManger(user_id).read("white"):
@@ -423,7 +438,7 @@ async def StyleSet(user_id, text) -> PublicReturn:
                 "]", "")
             _weight = _weight if _weight <= 20 else 2
             _weight = _weight if _weight >= -80 else 0
-            _encode_token = openai_kira.utils.chat.gpt_tokenizer.encode(item)
+            _encode_token = llm_kira.utils.chat.gpt_tokenizer.encode(item)
             _love = {str(token): _weight for token in _encode_token}
             _child_token = {}
             for token, weight in _love.items():
@@ -440,7 +455,7 @@ async def StyleSet(user_id, text) -> PublicReturn:
     return PublicReturn(status=True, msg=f"I refuse StyleSet Command", trace="StyleSet")
 
 
-async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
+async def PromptType(text, types: str = "group") -> PublicReturn:
     """
     消息预处理，命令识别和与配置的交互层
     :param text:
@@ -477,8 +492,8 @@ async def PromptPreprocess(text, types: str = "group") -> PublicReturn:
     # 校验结果
     if _prompt_types == "unknown":
         # 不执行
-        return PublicReturn(status=False, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
-    return PublicReturn(status=True, msg=types, data=[_prompt, _prompt_types], trace="PromptPreprocess")
+        return PublicReturn(status=False, msg=types, data=_prompt_types, trace="PromptPreprocess")
+    return PublicReturn(status=True, msg=types, data=_prompt_types, trace="PromptPreprocess")
 
 
 async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
@@ -490,6 +505,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     :return: True 回复用户
     """
     load_csonfig()
+    _prompt = list(reversed(Message.prompt))
     _text = Message.text
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
@@ -498,6 +514,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     # 状态
     if not _csonfig.get("statu"):
         return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
+
     # 白名单检查
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
@@ -505,6 +522,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=True,
                             trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
+
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
@@ -523,6 +541,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
+
     if _text.startswith("/voice"):
         _user_manger = UserManger(_user_id)
         _set = True
@@ -530,24 +549,46 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
             _set = False
         _user_manger.save({"voice": _set})
         return PublicReturn(status=True, msg=f"TTS:{_set}", trace="VoiceSet")
-    _prompt_preprocess = await PromptPreprocess(text=_text, types="group")
-    _prompt_preprocess: PublicReturn
-    if not _prompt_preprocess.status:
+
+    # Prompt 创建
+    _prompt_type = await PromptType(text=_text, types="group")
+    _prompt_type: PublicReturn
+    if not _prompt_type.status:
         # 预处理失败，不符合任何触发条件，不回复捏
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-    _prompt = _prompt_preprocess.data[0]
-    _reply_type = _prompt_preprocess.data[1]
-    try:
-        _name = f"{_user_name}"
-        _req = await Reply.load_response(user=_user_id,
-                                         group=_chat_id,
-                                         key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
-                                         prompt=_prompt,
-                                         restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
-                                         method=_reply_type
-                                         )
+    _cid = DefaultData.composing_uid(user_id=_user_id,
+                                     chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
+    start_name = _user_name[-10:]
+    restart_name = get_start_name(prompt=_text, bot_name=_bot_name)[-10:]
+    conversation = llm_kira.client.Conversation(
+        start_name=start_name,
+        restart_name=restart_name,
+        conversation_id=int(_cid),
+    )
+    promptManger = llm_kira.client.PromptManger(profile=conversation, connect_words="\n")
 
+    # 构建
+    for item in _prompt:
+        item = str(item)
+        start = conversation.start_name
+        if ":" in item:
+            start = ""
+        if item.startswith("/"):
+            _split_prompt = item.split(" ", 1)
+            if len(_split_prompt) > 1:
+                item = _split_prompt[1]
+        # 内容过滤
+        item = ContentDfa.filter_all(item)
+        promptManger.insert(item=PromptItem(start=start, text=str(item)))
+    try:
+
+        _req = await Reply(user=_user_id,
+                           group=_chat_id,
+                           api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]).load_response(
+            conversation=conversation,
+            prompt=promptManger,
+            method=_prompt_type.data
+        )
         # message_type = "text"
         _info = []
         # 语音消息
@@ -575,14 +616,17 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     :return: True 回复用户
     """
     load_csonfig()
+    _prompt = list(reversed(Message.prompt))
     _text = Message.text
     _user_id = Message.from_user.id
     _chat_id = Message.from_chat.id
     _user_name = Message.from_user.name
     _bot_name = bot_profile.bot_name
+
     # 状态
     if not _csonfig.get("statu"):
         return PublicReturn(status=True, msg="BOT:Under Maintenance", trace="Statu")
+
     # 白名单检查
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
@@ -590,6 +634,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=True,
                             trace="WhiteGroupCheck",
                             msg=_white_user_check.msg)
+
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, text=_text)
@@ -616,25 +661,49 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
             _set = False
         _user_manger.save({"voice": _set})
         return PublicReturn(status=True, msg=f"TTS:{_set}", trace="Voice")
-    _prompt_preprocess = await PromptPreprocess(text=_text, types="private")
-    _prompt_preprocess: PublicReturn
-    if not _prompt_preprocess.status:
+
+    # logger.info(_prompt)
+    # Prompt 创建
+    _prompt_type = await PromptType(text=_text, types="private")
+    _prompt_type: PublicReturn
+    if not _prompt_type.status:
         # 预处理失败，不符合任何触发条件，不回复捏
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-    _prompt = _prompt_preprocess.data[0]
-    _reply_type = _prompt_preprocess.data[1]
-    try:
-        _name = f"{_user_name}"
-        _req = await Reply.load_response(user=_user_id,
-                                         group=_chat_id,
-                                         key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"],
-                                         prompt=_prompt,
-                                         restart_name=_name,
-                                         start_name=get_start_name(prompt=_prompt, bot_name=_bot_name),
-                                         method=_reply_type
-                                         )
+    _cid = DefaultData.composing_uid(user_id=_user_id,
+                                     chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
+    start_name = _user_name[-10:]
+    restart_name = get_start_name(prompt=_text, bot_name=_bot_name)[-10:]
+    conversation = llm_kira.client.Conversation(
+        start_name=start_name,
+        restart_name=restart_name,
+        conversation_id=int(_cid),
+    )
+    promptManger = llm_kira.client.PromptManger(profile=conversation, connect_words="\n")
 
-        message_type = "text"
+    # 构建
+    for item in _prompt:
+        item = str(item)
+        start = conversation.start_name
+        if ":" in item:
+            start = ""
+        if item.startswith("/"):
+            _split_prompt = item.split(" ", 1)
+            if len(_split_prompt) > 1:
+                item = _split_prompt[1]
+        # 内容过滤
+        item = ContentDfa.filter_all(item)
+        promptManger.insert(item=PromptItem(start=start, text=str(item)))
+
+    try:
+
+        _req = await Reply(user=_user_id,
+                           group=_chat_id,
+                           api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]).load_response(
+            conversation=conversation,
+            prompt=promptManger,
+            method=_prompt_type.data
+        )
+        # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManger(_user_id).read("voice")
@@ -643,20 +712,13 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
-        message_type = "voice" if _voice and voice_data else message_type
+        # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
-        _data = {"type": message_type, "msg": "".join(_info), "text": _req, "voice": voice_data}
-        return PublicReturn(status=True,
-                            msg=f"OK",
-                            trace="Reply",
-                            reply=_req + "\n".join(_info),
-                            voice=voice_data
-                            )
+        _log = '\n'.join(_info)
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"Error Occur~Maybe Api request rate limit~nya",
-                            trace="Error",
-                            reply="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
 
 
 async def Trigger(Message: User_Message, config) -> PublicReturn:

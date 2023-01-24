@@ -3,16 +3,16 @@
 # @FileName: nltk_test.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-# from openai_kira.Chat import Talk, Chatbot
+# from llm_kira.client import Talk, Chatbot
 # import nltk
 
-from openai_kira.Chat.text_analysis_tools.api.keyphrase.keyphrase import KeyPhraseExtraction
-from openai_kira.Chat.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
-from openai_kira.Chat.text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
-from openai_kira.Chat.text_analysis_tools.api.text_similarity.cosion import CosionSimilarity
-from openai_kira.Chat.text_analysis_tools.api.text_similarity.edit import EditSimilarity
-from openai_kira.Chat.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
-from openai_kira.Chat.text_analysis_tools.api.summarization.textrank_summarization import TextRankSummarization
+from llm_kira.client.text_analysis_tools.api.keyphrase.keyphrase import KeyPhraseExtraction
+from llm_kira.client.text_analysis_tools.api.keywords.tfidf import TfidfKeywords
+from llm_kira.client.text_analysis_tools.api.summarization.tfidf_summarization import TfidfSummarization
+from llm_kira.client.text_analysis_tools.api.text_similarity.cosion import CosionSimilarity
+from llm_kira.client.text_analysis_tools.api.text_similarity.edit import EditSimilarity
+from llm_kira.client.text_analysis_tools.api.text_similarity.simhash import SimHashSimilarity
+from llm_kira.client.text_analysis_tools.api.summarization.textrank_summarization import TextRankSummarization
 
 # nltk.download('punkt')
 en_word = """

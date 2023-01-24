@@ -42,6 +42,10 @@ async def set_cron(funcs, second: int):
 
 def get_message(message: types.Message):
     # 自动获取名字
+    prompt = [message.text]
+    if message.reply_to_message:
+        _name = message.reply_to_message.from_user.last_name
+        prompt.append(f"{_name[:8]}:{message.reply_to_message.text}")
     first_name = message.from_user.first_name if message.from_user.first_name else ""
     last_name = message.from_user.last_name if message.from_user.last_name else ""
     _name = f"{first_name}{last_name}"
@@ -55,14 +59,15 @@ def get_message(message: types.Message):
         user_name=_name,
         group_id=message.chat.id,
         text=message.text,
-        group_name=group_name
+        prompt=prompt,
+        group_name=group_name,
     )
 
 
 class BotRunner(object):
     def __init__(self, config):
         self.bot = config
-        self.proxy = Tool().dictToObj(Service_Data.get_key()['proxy'])
+        self.proxy = config.proxy
 
     def botCreate(self):
         if not self.bot.botToken:
@@ -167,12 +172,16 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text'], chat_types=['private'])
         async def handle_private_msg(message):
             _hand = get_message(message)
+
             # 检查管理员指令
             _real_id = message.from_user.id
             _hand: User_Message
             request_timestamps.append(time.time())
+
+            # 私聊嘛
             if not _hand.text.startswith("/"):
                 _hand.text = f"/chat {_hand.text}"
+
             # 交谈
             if _hand.text.startswith(
                     ("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
