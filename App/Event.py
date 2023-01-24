@@ -268,7 +268,7 @@ class Reply(object):
                 response = await llm_kira.openai.Completion(api_key=self.api_key,
                                                             call_func=Api_keys.pop_api_key).create(
                     model="text-davinci-003",
-                    prompt=str(prompt),
+                    prompt=str(prompt_text),
                     temperature=0.2,
                     frequency_penalty=1,
                     max_tokens=int(_csonfig["token_limit"])
