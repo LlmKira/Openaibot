@@ -147,7 +147,7 @@ class BotRunner:
             _at_me = f'@{bot.account} '
             get_request_frequency()
             started = False
-            if _hand.text.startswith(("/chat", "/voice", "/write","/style", "/forgetme", "/remind")):
+            if _hand.text.startswith(("/chat", "/voice", "/write", "/style", "/forgetme", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
                 _is_admin = member.permission
@@ -181,13 +181,12 @@ class BotRunner:
                     # logger.warning(_hand.text)
                     if not _hand.text.startswith("/"):
                         _hand.text = f"/chat {_hand.text}"
-                        # logger.warning(_hand.text)
+                    started = True
                     if _hand.text.startswith('@'):  # 去除QQ回复时的自动at
                         p1 = _hand.text.index('@')
                         p2 = _hand.text.index(' ') + 1
                         t = _hand.text[p1:p2]
                         _hand.text = _hand.text.replace(t, '')
-                    started = True
 
             # 分发指令
             if _hand.text.startswith("/help"):
