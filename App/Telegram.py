@@ -240,7 +240,7 @@ class BotRunner(object):
             _bot_name = ProfileManager.name_generate(first_name=_first_name, last_name=_last_name)
             ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, init=True)
             await asyncio.gather(
-                bot.polling(non_stop=True, allowed_updates=util.update_types),
+                bot.polling(non_stop=True, skip_pending=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=4)
             )
 
