@@ -262,7 +262,7 @@ add_api_key - 增加 Api key
   },
   "proxy": {
     "status": false,
-    "url": "localhost:7890"
+    "url": "http://127.0.0.1:7890"
   },
   "plugin": {
     "details": "",

@@ -44,7 +44,8 @@ HARM_TYPE = list(set(HARM_TYPE))
 # Proxy
 
 if PROXY_CONF.status:
-    llm_kira.setting.proxyUrl = PROXY_CONF.url,
+    llm_kira.setting.proxyUrl = PROXY_CONF.url
+
 llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**REDIS_CONF)
 
 urlForm = {
@@ -201,7 +202,7 @@ class Reply(object):
         try:
             _harm = False
             if HARM_TYPE:
-                _Moderation_rep = await llm_kira.openai.Moderations(api_key=self.api_key).create(input=prompt)
+                _Moderation_rep = await llm_kira.openai.Moderations(api_key=self.api_key).create(input=str(prompt))
                 _moderation_result = _Moderation_rep["results"][0]
                 _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
                 for item in _harm_result:
@@ -585,10 +586,11 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         item = ContentDfa.filter_all(item)
         promptManger.insert(item=PromptItem(start=start, text=str(item)))
     try:
-
-        _req = await Reply(user=_user_id,
-                           group=_chat_id,
-                           api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]).load_response(
+        _client = Reply(user=_user_id,
+                        group=_chat_id,
+                        api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
+        _client.pre_check()
+        _req = await _client.load_response(
             conversation=conversation,
             prompt=promptManger,
             method=_prompt_type.data
@@ -699,10 +701,11 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         promptManger.insert(item=PromptItem(start=start, text=str(item)))
 
     try:
-
-        _req = await Reply(user=_user_id,
-                           group=_chat_id,
-                           api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]).load_response(
+        _client = Reply(user=_user_id,
+                        group=_chat_id,
+                        api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
+        _client.pre_check()
+        _req = await _client.load_response(
             conversation=conversation,
             prompt=promptManger,
             method=_prompt_type.data
