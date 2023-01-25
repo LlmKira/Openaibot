@@ -7,6 +7,7 @@ import ast
 import json
 import pathlib
 import random
+import re
 import time
 # 缓冲
 from collections import OrderedDict
@@ -146,6 +147,17 @@ class DefaultData(object):
     def composing_uid(user_id, chat_id):
         # return f"{user_id}:{chat_id}"
         return f"{user_id}"
+
+    @staticmethod
+    def name_split(sentence: str, limit: int) -> str:
+        if len(sentence) < limit:
+            return sentence
+        str_list = re.split("[, !]#《》", sentence)
+        str_list.sort(key=len, reverse=True)
+        for item in str_list:
+            if len(item) < limit:
+                return item
+        return sentence[:limit]
 
     @staticmethod
     def mask_middle(s: str, n: int) -> str:

@@ -289,8 +289,7 @@ class Reply(object):
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name="text-davinci-003"),
                     prompt=prompt,
-                    predict_tokens=100,
-                    # increase="外部增强:每句话后面都要带 “喵”",
+                    predict_tokens=150
                 )
                 prompt.clean()
                 _deal = response.reply
@@ -562,8 +561,8 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _cid = DefaultData.composing_uid(user_id=_user_id,
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
-    start_name = _user_name[-10:]
-    restart_name = get_start_name(prompt=_text, bot_name=_bot_name)[-10:]
+    start_name = DefaultData.name_split(sentence=_user_name, limit=14)
+    restart_name = DefaultData.name_split(sentence=get_start_name(prompt=_text, bot_name=_bot_name), limit=14)
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
@@ -676,15 +675,15 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _cid = DefaultData.composing_uid(user_id=_user_id,
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
-    start_name = _user_name[-10:]
-    restart_name = get_start_name(prompt=_text, bot_name=_bot_name)[-10:]
+    start_name = DefaultData.name_split(sentence=_user_name, limit=16)
+    restart_name = DefaultData.name_split(sentence=get_start_name(prompt=_text, bot_name=_bot_name), limit=16)
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
+    # 构建
     promptManger = llm_kira.client.PromptManger(profile=conversation, connect_words="\n")
-
     # 构建
     for item in _prompt:
         item = str(item)

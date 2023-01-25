@@ -25,7 +25,7 @@ logger.add(sink='run.log',
 logger.debug("Debug Mode On")
 
 logger.info("NEWS Channel:https://t.me/Openaibot_channel")
-logger.info("新闻:命令表有改动")
+# logger.info("新闻:命令表有改动")
 logger.info("新闻:请使用 `pip install -U llm-kira -i https://pypi.org/simple/` `pip uninstall openai-kira`")
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
