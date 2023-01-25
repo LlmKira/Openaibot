@@ -409,14 +409,14 @@ async def RemindSet(user_id, text) -> PublicReturn:
     _remind = _remind_r[1]
     if Utils.tokenizer(_remind) > 333:
         return PublicReturn(status=True, msg=f"过长:{_remind}", trace="Remind")
-    _remind = ContentDfa.filter_all(_remind)
     if _csonfig.get("allow_change_head"):
         # _remind = _remind.replace("你是", "ME*扮演")
         _remind = _remind.replace("你", "ME*")
         _remind = _remind.replace("我", "YOU*")
         _remind = _remind.replace("YOU*", "你")
         _remind = _remind.replace("ME*", "我")
-        Header(uid=_user_id).set(_remind)
+        _safe_remind = ContentDfa.filter_all(_remind)
+        Header(uid=_user_id).set(_safe_remind)
         return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", trace="Remind")
     Header(uid=_user_id).set({})
     return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
