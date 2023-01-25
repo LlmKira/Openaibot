@@ -308,11 +308,11 @@ class Reply(object):
                     _head = ContentDfa.filter_all(_head)
                     if 3 < len(_head) < 7:
                         _head = None
-                _style = {}
+                _style = None
                 if _csonfig.get("allow_change_style"):
                     _style = Style(uid=self.user).get()
                     if len(_style) < 5:
-                        _style = {}
+                        _style = None
 
                 mem = receiver.MemoryManger(profile=conversation)
                 chat_client = receiver.ChatBot(profile=conversation,
