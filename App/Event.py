@@ -51,8 +51,8 @@ urlForm = {
     "Danger.form": [
         "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2Z3d2RuL3NlbnNpdGl2ZS1zdG9wLXdvcmRzL21hc3Rlci8lRTYlOTQlQkYlRTYlQjIlQkIlRTclQjElQkIudHh0",
         "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1RlbGVjaGFCb3QvQW50aVNwYW0vbWFpbi9EYW5nZXIudHh0",
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FkbGVyZWQvRGFuZ2Vyb3VzU3BhbVdvcmRzL21hc3Rlci9EYW5nZXJvdXNTcGFtV29yZHMvR2VuZXJhbF9TcGFtV29yZHNfVjEuMC4xX0NOLm1pbi50eHQ=",
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0phaW1pbjEzMDQvc2Vuc2l0aXZlLXdvcmQtZGV0ZWN0b3IvbWFpbi9zYW1wbGVfZmlsZXMvc2FtcGxlX2Jhbm5lZF93b3Jkcy50eHQ=",
+        # "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FkbGVyZWQvRGFuZ2Vyb3VzU3BhbVdvcmRzL21hc3Rlci9EYW5nZXJvdXNTcGFtV29yZHMvR2VuZXJhbF9TcGFtV29yZHNfVjEuMC4xX0NOLm1pbi50eHQ=",
+        # NSFW "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0phaW1pbjEzMDQvc2Vuc2l0aXZlLXdvcmQtZGV0ZWN0b3IvbWFpbi9zYW1wbGVfZmlsZXMvc2FtcGxlX2Jhbm5lZF93b3Jkcy50eHQ=",
     ]
 }
 
@@ -254,7 +254,7 @@ class Reply(object):
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(3, 6))
-            return f"{_info}\nYour Content violates Openai policy:{_harm}..."
+            return f"{_info},And Openai Think these words too {_harm}"
 
         # 初始化记忆管理器
         Mem = receiver.MemoryManger(profile=conversation)
@@ -566,8 +566,8 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _cid = DefaultData.composing_uid(user_id=_user_id,
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
-    start_name = DefaultData.name_split(sentence=_user_name, limit=14)
-    restart_name = DefaultData.name_split(sentence=get_start_name(prompt=_text, bot_name=_bot_name), limit=14)
+    start_name = DefaultData.name_split(sentence=_user_name, limit=10)
+    restart_name = DefaultData.name_split(sentence=_bot_name, limit=10)
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
@@ -679,8 +679,8 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     _cid = DefaultData.composing_uid(user_id=_user_id,
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
-    start_name = DefaultData.name_split(sentence=_user_name, limit=16)
-    restart_name = DefaultData.name_split(sentence=get_start_name(prompt=_text, bot_name=_bot_name), limit=16)
+    start_name = DefaultData.name_split(sentence=_user_name, limit=10)
+    restart_name = DefaultData.name_split(sentence=_bot_name, limit=10)
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
