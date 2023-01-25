@@ -194,14 +194,18 @@ class BotRunner:
             # logger.warning(started)
             # 热力扳机
             if not started:
-                _trigger_message = await Event.Trigger(_hand, self.config)
-                if _trigger_message.status:
-                    _GroupTrigger = Vitality(group_id=_hand.from_chat.id)
-                    _GroupTrigger.trigger(Message=_hand, config=self.config)
-                    _check = _GroupTrigger.check(Message=_hand)
-                    if _check:
-                        _hand.text = f"/catch {_hand.text}"
-                        started = True
+                try:
+                    _trigger_message = await Event.Trigger(_hand, self.config)
+                    if _trigger_message.status:
+                        _GroupTrigger = Vitality(group_id=_hand.from_chat.id)
+                        _GroupTrigger.trigger(Message=_hand, config=self.config)
+                        _check = _GroupTrigger.check(Message=_hand)
+                        if _check:
+                            _hand.text = f"/catch {_hand.text}"
+                            started = True
+                except Exception as e:
+                    logger.warning(f"{e} Trigger Error,may [trigger] typo [tigger],try to check your config?")
+
             if started:
                 request_timestamps.append(time.time())
                 _friends_message = await Event.Group(Message=_hand,

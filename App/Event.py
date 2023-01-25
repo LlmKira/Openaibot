@@ -757,7 +757,6 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
             _ev = f"Group Admin:GroupTrigger {_set}"
             _reply.append(_ev)
             logger.info(_ev)
-        #
     except Exception as e:
         logger.error(e)
     return _reply

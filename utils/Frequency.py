@@ -21,6 +21,8 @@ Trigger = DataWorker(host=redis_config.host,
                      password=redis_config.password,
                      prefix="Open_Ai_bot_trigger_")
 
+GROUP_BUFFER = {}
+
 
 class CheckSeq(object):
     def __init__(self):
@@ -92,7 +94,7 @@ class Vitality(object):
         _time_matrix = Trigger.getKey(_tid)
         if _time_matrix:
             if not isinstance(_time_matrix, list):
-                matrix = []
+                _time_matrix = []
             matrix = _time_matrix
         else:
             matrix = []
@@ -118,10 +120,19 @@ class Vitality(object):
         """
         _text = Message.text
         _name = Message.from_user.name
+        _group = str(Message.from_chat.id)
         self._grow_request_vitality()
         if len(_text) < 3:
             return False
-        self.mem.save_context(ask=f"{_name}:{_text}", reply=".:.")
+        Buffer = GROUP_BUFFER.get(_group)
+        if not Buffer:
+            Buffer = []
+        Buffer.append(f"{_name}:{_text}")
+        if len(Buffer) > 1:
+            self.mem.save_context(ask=str(Buffer[0]), reply=str(Buffer[1]))
+            Buffer = []
+        # 重置缓存
+        GROUP_BUFFER[_group] = Buffer
 
     @staticmethod
     def isHighestSentiment(text, cache):
