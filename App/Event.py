@@ -212,14 +212,14 @@ class Reply(object):
             _harm = False
         return _harm
 
-    def pre_check(self):
-        # 洪水防御攻击
-        load_csonfig()
+    def pre_check(self) -> tuple[bool, str]:
+        # Flood
         if Utils.WaitFlood(user=self.user, group=self.group):
-            return "TOO FAST"
+            return False, "TOO FAST"
         _Usage = self._UsageManger.isOutUsage()
         if _Usage["status"]:
-            return f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+            return False, f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+        return True, ""
 
     async def load_response(self,
                             conversation: Conversation = None,
@@ -233,6 +233,11 @@ class Reply(object):
         :return:
         """
         load_csonfig()
+        # 关键检查
+        status, log = self.pre_check()
+        if not status:
+            return log
+
         receiver = llm_kira.client
         if not self.api_key:
             logger.error("SETTING:API key missing")
@@ -587,7 +592,6 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         _client = Reply(user=_user_id,
                         group=_chat_id,
                         api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
-        _client.pre_check()
         _req = await _client.load_response(
             conversation=conversation,
             prompt=promptManger,
@@ -702,7 +706,6 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         _client = Reply(user=_user_id,
                         group=_chat_id,
                         api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
-        _client.pre_check()
         _req = await _client.load_response(
             conversation=conversation,
             prompt=promptManger,
