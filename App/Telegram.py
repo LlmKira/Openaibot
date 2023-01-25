@@ -149,7 +149,7 @@ class BotRunner(object):
                             _hand.text = f"/catch {_hand.text}"
                             started = True
                 except Exception as e:
-                    logger.warning(f"{e} Trigger Error,may [trigger] typo [tigger],try to check your config")
+                    logger.warning(f"{e} \n This is a trigger Error,may [trigger] typo [tigger],try to check your config")
 
             # 触发
             if started:

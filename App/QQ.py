@@ -204,7 +204,8 @@ class BotRunner:
                             _hand.text = f"/catch {_hand.text}"
                             started = True
                 except Exception as e:
-                    logger.warning(f"{e} Trigger Error,may [trigger] typo [tigger],try to check your config?")
+                    logger.warning(
+                        f"{e}\nThis is a trigger Error,may [trigger] typo [tigger],try to check your config?")
 
             if started:
                 request_timestamps.append(time.time())
