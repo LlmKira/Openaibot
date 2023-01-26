@@ -105,6 +105,27 @@ class DefaultData(object):
     """
 
     @staticmethod
+    def getWaitAnswer():
+        _wait_child = ["6 ", "? ", "别 ", "呃呃 ", "我不好说，", "害怕，",
+                       "？？？？", "....", "666 ", "勿Cue，", "忙着呢 ", "等我打个电话...",
+                       "等我查查字典...", "亲，", "别急", "", "", "", "", "",
+                       "啊哈哈哈。", "尴尬。", "Oppose..", "你知道的。", "停停...", "手机信号不好，", "手机信号不好，",
+                       '到底说啥呐？', '我不懂', '笑死，', '不明白了，', "哇！", "牛的"
+                       ]
+        _wait = ["稍等，土豆炸了", "服务器真的炸了",
+                 "有点小问题", "发生了啥",
+                 "Crash了", "ServerBoom",
+                 "服务器进水了", "服务器飞走了",
+                 "服务器稍微有点问题", "你点的土豆泥",
+                 "....", "那个", "", "", "", "？"
+                 ]
+        _compose_list1 = [random.choice(_wait_child), random.choice(_wait)]
+        _compose_list2 = [random.choice(_wait_child), random.choice(_wait_child), " ", random.choice(_wait)]
+        _compose_list = random.choice([_compose_list2, _compose_list1])
+        _info = f"\n{' '.join(_compose_list)}"
+        return _info
+
+    @staticmethod
     def getRefuseAnswer():
         _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "? ", "别 ", "呃呃 ", "我不好说，", "害怕，",
                          "我想说的是", "我想强调的是...", "没意思", "无聊...", "你以为我会回你？", "",
@@ -300,16 +321,22 @@ class Service_Data(object):
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
 
-class Api_keys(object):
+class Openai_Api_Key(object):
     """
     管理 Api
     """
 
-    @staticmethod
-    def get_key(filePath: str = "./Config/api_keys.json"):
+    def __init__(self, filePath: str = "./Config/api_keys.json"):
+        self.__filePath = filePath
+
+    def _save_key(self, config: dict) -> None:
+        with open(self.__filePath, "w+", encoding="utf8") as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
+
+    def __get_config(self):
         now_table = DefaultData.defaultKeys()
-        if pathlib.Path(filePath).exists():
-            with open(filePath, encoding="utf-8") as f:
+        if pathlib.Path(self.__filePath).exists():
+            with open(self.__filePath, encoding="utf-8") as f:
                 _config = json.load(f)
                 DictUpdate.dict_update(now_table, _config)
                 _config = now_table
@@ -317,50 +344,53 @@ class Api_keys(object):
         else:
             return now_table
 
-    @staticmethod
-    def save_key(_config, filePath: str = "./Config/api_keys.json"):
-        with open(filePath, "w+", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
+    def get_key(self) -> Optional[list]:
+        _config = self.__get_config()
+        return _config.get('OPENAI_API_KEY')
 
-    @staticmethod
-    def add_key(key: str, filePath: str = "./Config/api_keys.json"):
-        _config = Api_keys.get_key()
+    def add_key(self, key: str) -> str:
+        _config = self.__get_config()
         _config['OPENAI_API_KEY'].append(key)
         _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open(filePath, "w", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
+        self._save_key(config=_config)
         return key
 
-    @staticmethod
-    def pop_key(key: str, filePath: str = "./Config/api_keys.json"):
-        _config = Api_keys.get_key()
+    def pop_key(self, key: str) -> Optional[str]:
+        _config = self.__get_config()
         if key not in _config['OPENAI_API_KEY']:
             return
         _config['OPENAI_API_KEY'].remove(key)
         _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        with open(filePath, "w", encoding="utf8") as f:
-            json.dump(_config, f, indent=4, ensure_ascii=False)
+        self._save_key(config=_config)
         return key
 
-    @staticmethod
-    def pop_api_key(resp, auth):
+    def warn_api_key(self, key: str, log: str = "unknown error happened"):
+        self.pop_key(key)
+        _masked_key = DefaultData.mask_middle(key, 4)
+        logger.warning(f"Api Key be Removed:{_masked_key},because {log}")
+
+    def check_api_key(self, resp, auth):
         # 读取
-        _config = Api_keys.get_key()
-        _config: dict
+        _error = ["invalid_request_error", "billing_not_active", "billing_not_active", "insufficient_quota"]
         # 弹出
         ERROR = resp.get("error")
         if ERROR:
+            logg = None
+            pop_key = False
+            if ERROR.get('type') == "billing_not_active":
+                pop_key = True
+                logg = f"认证资料过期: --type billing_not_active --auth {DefaultData.mask_middle(auth, 4)}"
             if ERROR.get('type') == "insufficient_quota":
-                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
-                    _config["OPENAI_API_KEY"].remove(auth)
-                    logger.error(
-                        f"弹出过期ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}")
-                    # 存储
+                pop_key = True
+                logg = f"Overused ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}"
             if ERROR.get('code') == "invalid_api_key":
-                if isinstance(_config["OPENAI_API_KEY"], list) and auth in _config["OPENAI_API_KEY"]:
-                    _config["OPENAI_API_KEY"].remove(auth)
-                    logger.error(f"弹出非法ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}")
-        Api_keys.save_key(_config)
+                pop_key = True
+                logg = f"非法 ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}"
+            if pop_key:
+                self.warn_api_key(key=auth, log=logg)
+            else:
+                logg = f"{ERROR.get('type')}"
+            logger.warning(logg)
 
 
 class ExpiringDict(OrderedDict):

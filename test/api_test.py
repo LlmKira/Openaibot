@@ -6,10 +6,10 @@
 import asyncio
 
 # 最小单元测试
-import openai_kira
-from utils.Data import Api_keys
+import llm_kira
+from utils.Data import Openai_Api_Key
 
-openai_kira.setting.openaiApiKey = Api_keys.get_key("../Config/api_keys.json")["OPENAI_API_KEY"]
+llm_kira.setting.openaiApiKey = Openai_Api_Key(filePath="../Config/api_keys.json").get_key()
 
 print(openai_kira.setting.openaiApiKey)
 

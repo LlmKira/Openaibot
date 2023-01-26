@@ -149,7 +149,8 @@ class BotRunner(object):
                             _hand.text = f"/catch {_hand.text}"
                             started = True
                 except Exception as e:
-                    logger.warning(f"{e} \n This is a trigger Error,may [trigger] typo [tigger],try to check your config")
+                    logger.warning(
+                        f"{e} \n This is a trigger Error,may [trigger] typo [tigger],try to check your config")
 
             # 触发
             if started:
@@ -245,7 +246,7 @@ class BotRunner(object):
             ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, skip_pending=True, allowed_updates=util.update_types),
-                set_cron(get_request_frequency, second=4)
+                set_cron(get_request_frequency, second=5)
             )
 
         asyncio.run(main())

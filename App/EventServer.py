@@ -12,9 +12,11 @@ from typing import Optional
 from fastapi import FastAPI
 import llm_kira
 from fastapi.responses import Response
+from llm_kira.client import Optimizer
+from llm_kira.client.llms import OpenAiParam
 from pydantic import BaseModel
 from App.Event import ContentDfa, TTSSupportCheck
-from utils.Data import Service_Data, Api_keys, DefaultData, DictUpdate
+from utils.Data import Service_Data, Openai_Api_Key, DefaultData, DictUpdate
 from loguru import logger
 
 _service = Service_Data.get_key()
@@ -43,7 +45,7 @@ def load_csonfig():
 load_csonfig()
 
 llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**_redis_conf)
-openaiApiKey = Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"]
+OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
 
 
 class Prompt(BaseModel):
@@ -79,7 +81,8 @@ async def filter_str(check: Filter):
     _harm_result = []
     if check.moderation:
         try:
-            _Moderation_rep = await llm_kira.openai.Moderations(api_key=openaiApiKey).create(input=check.prompt)
+            _Moderation_rep = await llm_kira.openai.Moderations(api_key=OPENAI_API_KEY_MANAGER.get_key()).create(
+                input=check.prompt)
             _moderation_result = _Moderation_rep["results"][0]
             _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
         except Exception as e:
@@ -89,24 +92,30 @@ async def filter_str(check: Filter):
 
 @app.post("/getreply")
 async def get_reply(req: Prompt):
-    receiver = llm_kira.client.Chatbot(
-        conversation_id=req.cid,
-        call_func=Api_keys.pop_api_key,
-        token_limit=3751,
-        start_sequ=req.start_sequ,
-        restart_sequ=req.restart_sequ,
+    conversation = llm_kira.client.Conversation(
+        start_name=req.start_sequ,
+        restart_name=req.restart_sequ,
+        conversation_id=int(req.cid),
     )
+    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
     try:
-        response = await receiver.get_chat_response(model=req.model,
-                                                    prompt=str(req.prompt),
-                                                    max_tokens=int(_csonfig["token_limit"]),
-                                                    role=req.role,
-                                                    web_enhance_server=_plugin_table,
-                                                    optimizer=None,
-                                                    no_penalty=not _csonfig["auto_adjust"],
-                                                    character=req.character,
-                                                    head=req.head,
-                                                    )
+        Mem = llm_kira.client.MemoryManager(profile=conversation)
+        llm = llm_kira.client.llms.OpenAi(
+            profile=conversation,
+            api_key=OPENAI_API_KEY_MANAGER.get_key(),
+            call_func=OPENAI_API_KEY_MANAGER.check_api_key,
+            token_limit=3780,
+            auto_penalty=not _csonfig["auto_adjust"],
+        )
+        chat_client = llm_kira.client.ChatBot(profile=conversation,
+                                              memory_manger=Mem,
+                                              optimizer=Optimizer.SinglePoint,
+                                              llm_model=llm)
+        response = await chat_client.predict(
+            llm_param=OpenAiParam(model_name="text-davinci-003"),
+            prompt=promptManager,
+            predict_tokens=int(_csonfig["token_limit"]),
+        )
         _got = Reply(status=True, response=response)
     except Exception as e:
         logger.error(e)
