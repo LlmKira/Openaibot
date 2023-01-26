@@ -213,7 +213,7 @@ class Reply(object):
             _harm = False
         return _harm
 
-    def pre_check(self) -> tuple[bool, str]:
+    def pre_check(self):
         # Flood
         if Utils.WaitFlood(user=self.user, group=self.group):
             return False, "TOO FAST"
