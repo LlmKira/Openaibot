@@ -96,7 +96,7 @@ class Style(object):
         return self.__Data.setKey(f"{self._uid}", context)
 
 
-class UserManger(object):
+class UserManager(object):
     def __init__(self, uid: int):
         """
         """
@@ -135,7 +135,7 @@ class UserManger(object):
         return _item.get(key)
 
 
-class GroupManger(object):
+class GroupManager(object):
     def __init__(self, uid: int):
         """
         """
@@ -345,7 +345,7 @@ class Usage(object):
                 return {"status": True, "use": GET.dict(), "time": key_time}
         # 用户额度计量---特殊额度---还有通用额度
         USER_ = _csonfig["per_user_limit"]
-        _LIMIT = UserManger(int(self.__uid)).read("usage")
+        _LIMIT = UserManager(int(self.__uid)).read("usage")
         if not isinstance(_LIMIT, int):
             _LIMIT = 10000
         if _LIMIT != 1:

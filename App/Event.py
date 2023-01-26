@@ -17,18 +17,19 @@ from loguru import logger
 
 # import llm_kira
 from llm_kira.utils.chat import Cut
-from llm_kira.client import Optimizer, PromptManger, Conversation
+from llm_kira.client import Optimizer, PromptManager, Conversation
 from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import Utils, Usage, rqParser, GroupManger, UserManger, Header, Style
-from utils.Data import DictUpdate, DefaultData, Api_keys, Service_Data, User_Message, PublicReturn, ProxyConfig
+from utils.Chat import Utils, Usage, rqParser, GroupManager, UserManager, Header, Style
+from utils.Data import DictUpdate, DefaultData, Openai_Api_Key, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, get_start_name
+from utils.Logging import LoadResponseError
 
-#
+OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
 
 # fast text langdetect
 
@@ -184,7 +185,7 @@ async def Forget(user_id: int, chat_id: int):
         restart_name="restart_name",
         conversation_id=int(_cid),
     )
-    mem = receiver.MemoryManger(profile=conversation)
+    mem = receiver.MemoryManager(profile=conversation)
     return mem.reset_chat()
 
 
@@ -193,7 +194,7 @@ class Reply(object):
         # 用量检测
         self.user = user
         self.group = group
-        self._UsageManger = Usage(uid=self.user)
+        self._UsageManager = Usage(uid=self.user)
         self.api_key = api_key
 
     async def openai_moderation(self, prompt: str):
@@ -216,14 +217,14 @@ class Reply(object):
         # Flood
         if Utils.WaitFlood(user=self.user, group=self.group):
             return False, "TOO FAST"
-        _Usage = self._UsageManger.isOutUsage()
+        _Usage = self._UsageManager.isOutUsage()
         if _Usage["status"]:
             return False, f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
         return True, ""
 
     async def load_response(self,
                             conversation: Conversation = None,
-                            prompt: PromptManger = None,
+                            prompt: PromptManager = None,
                             method: str = "chat") -> str:
         """
         发起请求
@@ -240,8 +241,8 @@ class Reply(object):
 
         receiver = llm_kira.client
         if not self.api_key:
-            logger.error("SETTING:API key missing")
-            raise Exception("API key missing")
+            logger.error("Api Check:Api Key pool empty")
+            raise LoadResponseError("Found:Api Key pool empty")
 
         prompt_text = prompt.run()
 
@@ -257,11 +258,11 @@ class Reply(object):
             return f"{_info},And Openai Think these words too {_harm}"
 
         # 初始化记忆管理器
-        Mem = receiver.MemoryManger(profile=conversation)
+        Mem = receiver.MemoryManager(profile=conversation)
         llm = llm_kira.client.llms.OpenAi(
             profile=conversation,
             api_key=self.api_key,
-            call_func=Api_keys.pop_api_key,
+            call_func=OPENAI_API_KEY_MANAGER.check_api_key,
             token_limit=4000,
             auto_penalty=not _csonfig["auto_adjust"],
         )
@@ -271,7 +272,7 @@ class Reply(object):
             if method == "write":
                 # OPENAI
                 response = await llm_kira.openai.Completion(api_key=self.api_key,
-                                                            call_func=Api_keys.pop_api_key).create(
+                                                            call_func=OPENAI_API_KEY_MANAGER.check_api_key).create(
                     model="text-davinci-003",
                     prompt=str(prompt_text),
                     temperature=0.2,
@@ -314,12 +315,11 @@ class Reply(object):
                     if len(_style) < 5:
                         _style = None
 
-                mem = receiver.MemoryManger(profile=conversation)
                 chat_client = receiver.ChatBot(profile=conversation,
-                                               memory_manger=mem,
+                                               memory_manger=Mem,
                                                optimizer=Optimizer.SinglePoint,
                                                llm_model=llm)
-                prompt: PromptManger
+                prompt: PromptManager
                 prompt.template = _head
                 webSupport = ""
                 if 4 < len(prompt_text) < 35:
@@ -342,10 +342,14 @@ class Reply(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
-            _deal = f"OH no,api Outline or crash? \n {prompt_text}"
-
+            _error_type = "Api Error"
+            if "overload" in e:
+                _error_type = "Api Overload Now"
+            if "had an error while processing" in e:
+                _error_type = "Server Error While Processing Your Prompt"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:{_error_type}"
         # 更新额度
-        _AnalysisUsage = self._UsageManger.renewUsage(usage=_usage)
+        _AnalysisUsage = self._UsageManager.renewUsage(usage=_usage)
         # 更新统计
         DefaultData().setAnalysis(usage={f"{self.user}": _AnalysisUsage.total_usage})
         # 人性化处理
@@ -362,10 +366,10 @@ async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
     """
     if _csonfig["whiteUserSwitch"]:
         # 没有在白名单里！
-        if UserManger(user_id).read("white"):
+        if UserManager(user_id).read("white"):
             return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{user_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
-        if UserManger(user_id).read("block"):
+        if UserManager(user_id).read("block"):
             msg = f"{user_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
                             trace="WhiteUserCheck",
@@ -383,10 +387,10 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
     #
     if _csonfig["whiteGroupSwitch"]:
         # 没有在白名单里！
-        if GroupManger(group_id).read("white"):
+        if GroupManager(group_id).read("white"):
             return PublicReturn(status=True, trace="WhiteUserCheck")
         msg = f"{group_id}:Check the settings to find that you is not whitelisted!...{WHITE}"
-        if GroupManger(group_id).read("block"):
+        if GroupManager(group_id).read("block"):
             msg = f"{group_id}:Blocked!...{WHITE}"
         return PublicReturn(status=False,
                             trace="WhiteUserCheck",
@@ -551,7 +555,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
 
     if _text.startswith("/voice"):
-        _user_manger = UserManger(_user_id)
+        _user_manger = UserManager(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
@@ -573,7 +577,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
-    promptManger = llm_kira.client.PromptManger(profile=conversation, connect_words="\n")
+    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
 
     # 构建
     for item in _prompt:
@@ -587,20 +591,20 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
                 item = _split_prompt[1]
         # 内容过滤
         item = ContentDfa.filter_all(item)
-        promptManger.insert(item=PromptItem(start=start, text=str(item)))
+        promptManager.insert(item=PromptItem(start=start, text=str(item)))
     try:
         _client = Reply(user=_user_id,
                         group=_chat_id,
-                        api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
+                        api_key=OPENAI_API_KEY_MANAGER.get_key())
         _req = await _client.load_response(
             conversation=conversation,
-            prompt=promptManger,
+            prompt=promptManager,
             method=_prompt_type.data
         )
         # message_type = "text"
         _info = []
         # 语音消息
-        _voice = UserManger(_user_id).read("voice")
+        _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
@@ -610,6 +614,8 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
         return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
+    except LoadResponseError as e:
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
@@ -663,7 +669,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
 
     if _text.startswith("/voice"):
-        _user_manger = UserManger(_user_id)
+        _user_manger = UserManager(_user_id)
         _set = True
         if _user_manger.read("voice"):
             _set = False
@@ -687,7 +693,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         conversation_id=int(_cid),
     )
     # 构建
-    promptManger = llm_kira.client.PromptManger(profile=conversation, connect_words="\n")
+    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
     # 构建
     for item in _prompt:
         item = str(item)
@@ -700,21 +706,21 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
                 item = _split_prompt[1]
         # 内容过滤
         item = ContentDfa.filter_all(item)
-        promptManger.insert(item=PromptItem(start=start, text=str(item)))
+        promptManager.insert(item=PromptItem(start=start, text=str(item)))
 
     try:
         _client = Reply(user=_user_id,
                         group=_chat_id,
-                        api_key=Api_keys.get_key("./Config/api_keys.json")["OPENAI_API_KEY"])
+                        api_key=OPENAI_API_KEY_MANAGER.get_key())
         _req = await _client.load_response(
             conversation=conversation,
-            prompt=promptManger,
+            prompt=promptManager,
             method=_prompt_type.data
         )
         # message_type = "text"
         _info = []
         # 语音消息
-        _voice = UserManger(_user_id).read("voice")
+        _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
@@ -724,6 +730,8 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
         return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
+    except LoadResponseError as e:
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
@@ -737,7 +745,7 @@ async def Trigger(Message: User_Message, config) -> PublicReturn:
     """
     group_id = Message.from_chat.id
     if config.trigger:
-        if GroupManger(group_id).read("trigger"):
+        if GroupManager(group_id).read("trigger"):
             return PublicReturn(status=True, trace="TriggerCheck")
     return PublicReturn(status=False, trace="No trigger")
 
@@ -749,7 +757,7 @@ async def GroupAdminCommand(Message: User_Message, config, pLock):
     try:
         command = Message.text
         if command.startswith("/trigger"):
-            _group_manger = GroupManger(int(group_id))
+            _group_manger = GroupManager(int(group_id))
             _set = True
             if _group_manger.read("trigger"):
                 _set = False
@@ -816,7 +824,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                 __user_id = int("".join(list(filter(str.isdigit, _len[0]))))
                 __limit = int("".join(list(filter(str.isdigit, _len[1]))))
                 if __user_id > 0 and __limit > 0:
-                    UserManger(__user_id).save({"usage": __limit})
+                    UserManager(__user_id).save({"usage": __limit})
                     _reply.append(f"user_limit:{__limit}")
                     logger.info(f"SETTING:promote user_limit to{__limit}")
 
@@ -857,7 +865,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:add block group {_len_}"
-                        GroupManger(int(_len_)).save({"block": True})
+                        GroupManager(int(_len_)).save({"block": True})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -868,7 +876,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:del block group {_len_}"
-                        GroupManger(int(_len_)).save({"block": False})
+                        GroupManager(int(_len_)).save({"block": False})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -878,7 +886,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:add_block_userp {_len_}"
-                        UserManger(int(_len_)).save({"block": True})
+                        UserManager(int(_len_)).save({"block": True})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -888,7 +896,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:del_block_user {_len_}"
-                        UserManger(int(_len_)).save({"block": False})
+                        UserManager(int(_len_)).save({"block": False})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -899,7 +907,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:add_white_group {_len_}"
-                        GroupManger(int(_len_)).save({"white": True})
+                        GroupManager(int(_len_)).save({"white": True})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -909,7 +917,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:del_white_group {_len_}"
-                        GroupManger(int(_len_)).save({"white": False})
+                        GroupManager(int(_len_)).save({"white": False})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -920,7 +928,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:add_white_user {_len_}"
-                        UserManger(int(_len_)).save({"white": True})
+                        UserManager(int(_len_)).save({"white": True})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -930,7 +938,7 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                     _len_ = "".join(list(filter(str.isdigit, i)))
                     if _len_:
                         _ev = f"SETTING:del_white_user {_len_}"
-                        UserManger(int(_len_)).save({"white": False})
+                        UserManager(int(_len_)).save({"white": False})
                         _reply.append(_ev)
                         logger.info(_ev)
 
@@ -973,25 +981,25 @@ async def MasterCommand(user_id: int, Message: User_Message, config, pLock=None)
                 logger.info("SETTING:whiteGroup OFF")
 
             if command.startswith("/see_api_key"):
-                keys = Api_keys.get_key("./Config/api_keys.json")
+                keys = OPENAI_API_KEY_MANAGER.get_key()
                 # 脱敏
                 _key = []
-                for i in keys["OPENAI_API_KEY"]:
-                    _key.append(DefaultData.mask_middle(i, 10))
+                for i in keys:
+                    _key.append(DefaultData.mask_middle(i, 6))
                 _info = '\n'.join(_key)
                 _reply.append(f"Now Have \n{_info}")
 
             if "/add_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
-                    Api_keys.add_key(key=str(_parser[0]).strip())
+                    OPENAI_API_KEY_MANAGER.add_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:ADD API KEY")
                 _reply.append("SETTING:ADD API KEY")
 
             if "/del_api_key" in command:
                 _parser = Utils.extract_arg(command)
                 if _parser:
-                    Api_keys.pop_key(key=str(_parser[0]).strip())
+                    OPENAI_API_KEY_MANAGER.pop_key(key=str(_parser[0]).strip())
                 logger.info("SETTING:DEL API KEY")
                 _reply.append("SETTING:DEL API KEY")
 

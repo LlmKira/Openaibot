@@ -84,7 +84,7 @@ class Vitality(object):
             restart_name="AI:",
             conversation_id=group_id,
         )
-        self.mem = receiver.MemoryManger(profile=conversation)
+        self.mem = receiver.MemoryManager(profile=conversation)
 
     def __tid(self):
         return self.group_id + str(time.strftime("%Y%m%d%H%M", time.localtime()))
