@@ -293,7 +293,7 @@ add_api_key - 增加 Api key
       ],
       "limit": 70,
       "speaker": {
-        "chinese": "zh-CN-XiaoxiaoNeural"
+        "ZH": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }
@@ -348,7 +348,7 @@ apt-get install ffmpeg
 - status 开关
 - type 类型
 
-Azure/Vits 语言类型代码均为二位大写缩写字母。
+Azure/Vits 的 `speaker` 语言类型代码均为二位大写缩写字母，例： `ZH`。
 
 **Azure 支持说明**
 
