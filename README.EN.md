@@ -14,7 +14,7 @@
 OpenAI Chat Bot For IM/Linux/Windows.
 
 If you don't have your own instant messaging platform or you want to develop a new application, you are welcome to
-contribute to this repository and you can develop a new Controller by scheduling **Universal Event Layer**.
+contribute to this repository and you can develop a new Controller by scheduling **App/Event.py**.
 
 This project uses a contextual memory pool to implement chat and is not a reverse of `chatGPT`.
 
