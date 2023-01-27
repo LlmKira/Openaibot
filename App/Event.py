@@ -308,7 +308,7 @@ class Reply(object):
                 if _csonfig.get("allow_change_head"):
                     _head = Header(uid=self.user).get()
                     _head = ContentDfa.filter_all(_head)
-                    if len(_head) < 10:
+                    if len(_head) < 6:
                         _head = None
                 _style = None
                 if _csonfig.get("allow_change_style"):
