@@ -302,17 +302,18 @@ class Reply(object):
                 _usage = response.llm.usage
                 logger.success(
                     f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
+
             elif method == "chat":
                 _head = None
                 if _csonfig.get("allow_change_head"):
                     _head = Header(uid=self.user).get()
                     _head = ContentDfa.filter_all(_head)
-                    if 3 < len(_head) < 7:
+                    if len(_head) < 10:
                         _head = None
                 _style = None
                 if _csonfig.get("allow_change_style"):
                     _style = Style(uid=self.user).get()
-                    if len(_style) < 5:
+                    if len(_style) < 10:
                         _style = None
 
                 chat_client = receiver.ChatBot(profile=conversation,
