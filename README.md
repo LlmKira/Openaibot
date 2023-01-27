@@ -13,7 +13,7 @@
 
 OpenAI Chat Bot For IM/Linux/Windows.
 
-如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度**通用事件层**开发一个新的 Controller。
+如果没有您的即时通信平台或您想开发新应用体，欢迎您贡献本仓库，您可以通过调度`Event.py`开发一个新的 Controller。
 
 本项目使用上下文记忆池来实现聊天 ，并不是 `chatGPT` 的逆向。
 
