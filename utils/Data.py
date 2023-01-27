@@ -116,7 +116,7 @@ class DefaultData(object):
                  "有点小问题", "发生了啥",
                  "Crash了", "ServerBoom",
                  "服务器进水了", "服务器飞走了",
-                 "服务器稍微有点问题", "你点的土豆泥",
+                 "服务器稍微有点问题...", "服务器被我吃掉了...",
                  "....", "那个", "", "", "", "？"
                  ]
         _compose_list1 = [random.choice(_wait_child), random.choice(_wait)]
