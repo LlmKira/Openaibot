@@ -331,6 +331,7 @@ class Reply(object):
                     _head, _body = Utils.get_head_foot(prompt_index)
                     webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
                                                                      prompt=_body).run()
+                    webSupport = webSupport[:900]
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name="text-davinci-003", logit_bias=_style),
                     prompt=prompt,
