@@ -170,7 +170,9 @@ class DefaultData(object):
         return f"{user_id}"
 
     @staticmethod
-    def name_split(sentence: str, limit: int) -> str:
+    def name_split(sentence: str, limit: int, safe_replace: bool = True) -> str:
+        if safe_replace:
+            sentence = sentence.replace(":", "：")
         if len(sentence) < limit:
             return sentence
         str_list = re.split("[, !]#《》", sentence)

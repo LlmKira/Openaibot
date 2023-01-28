@@ -174,7 +174,7 @@ class Vitality(object):
             status = False
             _score = Utils.sentiment(_text).get("score")
             if isinstance(_score, float):
-                if _score > 1.8 or _score < -2:
+                if _score > 1.8 or _score < -1.8:
                     status = True
 
         # 检查

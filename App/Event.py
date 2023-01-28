@@ -247,6 +247,8 @@ class Reply(object):
             raise LoadResponseError("Found:Api Key pool empty")
 
         prompt_text = prompt.run()
+        prompt_raw = prompt.run(raw_list=True) if prompt.run(raw_list=True) else [""]
+        prompt_index = prompt_raw[-1]
 
         # 长度限定
         # if Utils.tokenizer(str(prompt_text)) > _csonfig['input_limit']:
@@ -326,8 +328,9 @@ class Reply(object):
                 prompt.template = _head
                 webSupport = ""
                 if 4 < len(prompt_text) < 35:
+                    _head, _body = Utils.get_head_foot(prompt_index)
                     webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
-                                                                     prompt=prompt_text).run()
+                                                                     prompt=_body).run()
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name="text-davinci-003", logit_bias=_style),
                     prompt=prompt,

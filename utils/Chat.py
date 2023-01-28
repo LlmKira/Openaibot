@@ -225,6 +225,16 @@ class Utils(object):
         return False
 
     @staticmethod
+    def get_head_foot(prompt: str):
+        body = prompt
+        head = ""
+        _split = prompt.split(":", 1)
+        if len(_split) > 1:
+            body = _split[1]
+            head = _split[0]
+        return head, body
+
+    @staticmethod
     def checkMsg(msg_uid):
         _Group_Msg = MsgsRecordUtils.getKey(msg_uid)
         # print(Group_Msg.get(str(msg_uid)))
