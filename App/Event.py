@@ -259,7 +259,7 @@ class Reply(object):
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(3, 6))
-            return f"{_info},And Openai Think these words too {_harm}"
+            return f"{_info}\nI think you talk too {_harm}."
 
         # 初始化记忆管理器
         Mem = receiver.MemoryManager(profile=conversation)
