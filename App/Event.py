@@ -274,11 +274,12 @@ class Reply(object):
         try:
             # 分发类型
             if method == "write":
+                _head, _body = Utils.get_head_foot(prompt_index)
                 # OPENAI
                 response = await llm_kira.openai.Completion(api_key=self.api_key,
                                                             call_func=OPENAI_API_KEY_MANAGER.check_api_key).create(
                     model="text-davinci-003",
-                    prompt=str(prompt_text),
+                    prompt=str(_body),
                     temperature=0.2,
                     frequency_penalty=1,
                     max_tokens=int(_csonfig["token_limit"])
@@ -286,7 +287,7 @@ class Reply(object):
                 _deal = rqParser.get_response_text(response)[0]
                 _usage = rqParser.get_response_usage(response)
                 logger.success(
-                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal}"
+                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_body} --req: {_deal}"
                 )
             elif method == "catch":
                 llm.token_limit = 1000
