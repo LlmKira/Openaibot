@@ -9,6 +9,7 @@ import pathlib
 import tempfile
 import time
 from collections import deque
+from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -57,11 +58,13 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
-async def recognize_photo(bot: AsyncTeleBot, photo: types.PhotoSize):
+async def recognize_photo(bot: AsyncTeleBot, photo: types.PhotoSize) -> Optional[str]:
     _file_info = await bot.get_file(photo.file_id)
     _history = PhotoRecordUtils.getKey(_file_info.file_unique_id)
     if _history:
         return _history
+    if _file_info.file_size > 10485760:
+        return "Too Large Photo"
     downloaded_file = await bot.download_file(_file_info.file_path)
     with tempfile.NamedTemporaryFile(suffix=".png") as f:
         f.write(downloaded_file)
@@ -90,6 +93,11 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
         if photo_text:
             BlipInterrogatorText = f"![PHOTO|{photo_text}]\n{message.caption}"
             msg_text = f"{BlipInterrogatorText}"
+    if message.sticker:
+        # TODO
+        msg_text = message.sticker.emoji
+        logger.warning(message.json)
+    logger.warning(msg_text)
     prompt = [msg_text]
     _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.first_name
@@ -146,7 +154,7 @@ class BotRunner(object):
                 await bot.reply_to(message, await Event.Help(_config))
 
         # 群聊
-        @bot.message_handler(content_types=['text', 'photo'], chat_types=['supergroup', 'group'])
+        @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['supergroup', 'group'])
         async def group_msg(message):
             _hand = await get_message(bot, message)
             _hand: User_Message
@@ -224,7 +232,7 @@ class BotRunner(object):
                     Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
         # 私聊
-        @bot.message_handler(content_types=['text', 'photo'], chat_types=['private'])
+        @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['private'])
         async def handle_private_msg(message):
             _hand = await get_message(bot, message)
 
