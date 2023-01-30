@@ -6,6 +6,7 @@
 
 import asyncio
 import pathlib
+import tempfile
 import time
 from collections import deque
 
@@ -16,13 +17,23 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
-from utils import Setting
+from utils import Setting, Blip
 from utils.Chat import Utils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
-from utils.Base import Tool
 
-time_interval = 60
+from PIL import Image
+
+# from utils.Base import Tool
+
+_service = Service_Data.get_key()
+BLIP_CONF = _service["blip"]
+if BLIP_CONF.get("status"):
+    BlipInterrogator = Blip.Interrogator(Blip.Config())
+else:
+    BlipInterrogator = None
+
+TIME_INTERVAL = 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
 ProfileManager = Setting.ProfileManager()
@@ -40,9 +51,27 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
-def get_message(message: types.Message):
+async def get_message(bot: AsyncTeleBot, message: types.Message):
     # 自动获取名字
-    prompt = [message.text]
+    msg_text = ""
+    logger.warning("new")
+    if message:
+        msg_text = message.text
+    if message.photo and BlipInterrogator:
+        msg_text = message.caption
+        file_info = await bot.get_file(message.photo[-1].file_id)
+        downloaded_file = await bot.download_file(file_info.file_path)
+        with tempfile.NamedTemporaryFile(suffix=".png") as f:
+            f.write(downloaded_file)
+            f.flush()
+            image_pil = Image.open("test.jpg").convert('RGB')
+        if downloaded_file:
+            BlipInterrogatorText = BlipInterrogator.generate_caption(
+                pil_image=image_pil)
+            BlipInterrogatorText = f"![PHOTO|{BlipInterrogatorText}]\n{message.caption}"
+            msg_text = f"{BlipInterrogatorText}"
+    logger.warning(msg_text)
+    prompt = [msg_text]
     _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.first_name
     group_name = group_name if group_name else "Group"
@@ -51,7 +80,7 @@ def get_message(message: types.Message):
         user_id=message.from_user.id,
         user_name=_name,
         group_id=message.chat.id,
-        text=message.text,
+        text=msg_text,
         prompt=prompt,
         group_name=group_name,
     )
@@ -88,7 +117,7 @@ class BotRunner(object):
         # 私聊起动机
         @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
         async def handle_command(message):
-            _hand = get_message(message)
+            _hand = await get_message(bot, message)
             _hand: User_Message
             if "/start" in _hand.text:
                 await bot.reply_to(message, await Event.Start(_config))
@@ -98,9 +127,9 @@ class BotRunner(object):
                 await bot.reply_to(message, await Event.Help(_config))
 
         # 群聊
-        @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
+        @bot.message_handler(content_types=['text', 'photo'], chat_types=['supergroup', 'group'])
         async def group_msg(message):
-            _hand = get_message(message)
+            _hand = await get_message(bot, message)
             _hand: User_Message
             started = False
 
@@ -176,9 +205,9 @@ class BotRunner(object):
                     Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
         # 私聊
-        @bot.message_handler(content_types=['text'], chat_types=['private'])
+        @bot.message_handler(content_types=['text', 'photo'], chat_types=['private'])
         async def handle_private_msg(message):
-            _hand = get_message(message)
+            _hand = await get_message(bot, message)
 
             # 检查管理员指令
             _real_id = message.from_user.id
@@ -230,7 +259,7 @@ class BotRunner(object):
 
         def get_request_frequency():
             # 检查队列头部是否过期
-            while request_timestamps and request_timestamps[0] < time.time() - time_interval:
+            while request_timestamps and request_timestamps[0] < time.time() - TIME_INTERVAL:
                 request_timestamps.popleft()
             # 计算请求频率
             request_frequency = len(request_timestamps)

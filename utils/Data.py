@@ -264,6 +264,7 @@ class DefaultData(object):
                 "db": 0,
                 "password": None
             },
+            "blip": {"status": False},
             "proxy": {
                 "status": False,
                 "url": "localhost:7890"
