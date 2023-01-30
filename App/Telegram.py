@@ -18,7 +18,7 @@ from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
 from utils import Setting, Blip
-from utils.Chat import Utils
+from utils.Chat import Utils, PhotoRecordUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
@@ -57,36 +57,39 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
+async def recognize_photo(bot: AsyncTeleBot, photo: types.PhotoSize):
+    _file_info = await bot.get_file(photo.file_id)
+    _history = PhotoRecordUtils.getKey(_file_info.file_unique_id)
+    if _history:
+        return _history
+    downloaded_file = await bot.download_file(_file_info.file_path)
+    with tempfile.NamedTemporaryFile(suffix=".png") as f:
+        f.write(downloaded_file)
+        f.flush()
+        image_pil = Image.open(f.name).convert('RGB')
+    if downloaded_file:
+        BlipInterrogatorText = BlipInterrogator.generate_caption(
+            pil_image=image_pil)
+        if BlipInterrogatorText:
+            PhotoRecordUtils.setKey(_file_info.file_unique_id, BlipInterrogatorText)
+        return BlipInterrogatorText
+    return None
+
+
 async def get_message(bot: AsyncTeleBot, message: types.Message):
     # 自动获取名字
     msg_text = ""
-    logger.warning("new")
     if message:
         msg_text = message.text
-        logger.warning(msg_text)
-        logger.warning(message.photo)
     if message.photo and BlipInterrogator:
+        # TODO
         logger.warning('photo')
-        logger.warning(message.photo)
         msg_text = message.caption
-        logger.warning(msg_text)
-        file_info = await bot.get_file(message.photo[-1].file_id)
-        downloaded_file = await bot.download_file(file_info.file_path)
-        with tempfile.NamedTemporaryFile(suffix=".png") as f:
-            f.write(downloaded_file)
-            f.flush()
-            image_pil = Image.open(f.name).convert('RGB')
-        if downloaded_file:
-            logger.warning('start caption')
-            t1 = time.time()
-            BlipInterrogatorText = BlipInterrogator.generate_caption(
-                pil_image=image_pil)
-            logger.warning('finish caption')
-            BlipInterrogatorText = f"![PHOTO|{BlipInterrogatorText}]\n{message.caption}"
+        # RECOGNIZE File
+        photo_text = recognize_photo(bot=bot, photo=message.photo[-1])
+        if photo_text:
+            BlipInterrogatorText = f"![PHOTO|{photo_text}]\n{message.caption}"
             msg_text = f"{BlipInterrogatorText}"
-            t2 = time.time()
-            logger.warning(f'{t2 - t1} seconds')
-    logger.warning(msg_text)
     prompt = [msg_text]
     _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.first_name

@@ -28,6 +28,12 @@ MsgsRecordUtils = DataWorker(host=redis_config.host,
                              db=redis_config.db,
                              password=redis_config.password,
                              prefix="Open_Ai_bot_msg_record")
+PhotoRecordUtils = DataWorker(host=redis_config.host,
+                              port=redis_config.port,
+                              db=redis_config.db,
+                              password=redis_config.password,
+                              prefix="Open_Ai_bot_photo_record")
+
 global _csonfig
 
 
