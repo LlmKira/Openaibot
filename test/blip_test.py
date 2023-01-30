@@ -85,14 +85,13 @@ class Interrogator(object):
 from PIL import Image
 
 from loguru import logger
-async def mains():
+def mains():
     logger.warning(2)
     image = Image.open("test.jpg").convert('RGB')
     res = Interrogator(Config()).generate_caption(pil_image=image)
     logger.warning(res)
 
-
-# asyncio.run(main())
-p = multiprocessing.Process(target=mains, args=())
-p.start()
-p.join()
+# 使用ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor() as p:
+    p.submit(mains)

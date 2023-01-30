@@ -28,8 +28,14 @@ from PIL import Image
 
 _service = Service_Data.get_key()
 BLIP_CONF = _service["blip"]
+global BlipModel
 if BLIP_CONF.get("status"):
-    BlipInterrogator = Blip.Interrogator(Blip.Config())
+    BlipModel = BLIP_CONF.get("model")
+    if BlipModel not in ['large', 'base']:
+        BlipModel = 'large'
+    BlipConfig = Blip.Config()
+    BlipConfig.model = BlipModel
+    BlipInterrogator = Blip.Interrogator(BlipConfig)
 else:
     BlipInterrogator = None
 
@@ -57,19 +63,29 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
     logger.warning("new")
     if message:
         msg_text = message.text
+        logger.warning(msg_text)
+        logger.warning(message.photo)
     if message.photo and BlipInterrogator:
+        logger.warning('photo')
+        logger.warning(message.photo)
         msg_text = message.caption
+        logger.warning(msg_text)
         file_info = await bot.get_file(message.photo[-1].file_id)
         downloaded_file = await bot.download_file(file_info.file_path)
         with tempfile.NamedTemporaryFile(suffix=".png") as f:
             f.write(downloaded_file)
             f.flush()
-            image_pil = Image.open("test.jpg").convert('RGB')
+            image_pil = Image.open(f.name).convert('RGB')
         if downloaded_file:
+            logger.warning('start caption')
+            t1 = time.time()
             BlipInterrogatorText = BlipInterrogator.generate_caption(
                 pil_image=image_pil)
+            logger.warning('finish caption')
             BlipInterrogatorText = f"![PHOTO|{BlipInterrogatorText}]\n{message.caption}"
             msg_text = f"{BlipInterrogatorText}"
+            t2 = time.time()
+            logger.warning(f'{t2 - t1} seconds')
     logger.warning(msg_text)
     prompt = [msg_text]
     _name = message.from_user.full_name

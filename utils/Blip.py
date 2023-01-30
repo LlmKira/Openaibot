@@ -33,23 +33,26 @@ class Config:
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     flavor_intermediate_count: int = 2048
     quiet: bool = False  # when quiet progress bars are not shown
+    model: str = 'large'
 
 
 class Interrogator(object):
     def __init__(self, config: Config):
         self.config = config
         self.device = config.device
-
+        if self.config.model == 'base':
+            self.config.blip_model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth'
         if config.blip_model is None:
             if not config.quiet:
                 print("Loading BLIP model...")
+            print(f'>>>>>>>> Using model {config.model}')
             blip_path = os.path.dirname(inspect.getfile(blip_decoder))
             configs_path = os.path.join(os.path.dirname(blip_path), 'configs')
             med_config = os.path.join(configs_path, 'med_config.json')
             blip_model = blip_decoder(
                 pretrained=config.blip_model_url,
                 image_size=config.blip_image_eval_size,
-                vit='large',
+                vit=config.model,
                 med_config=med_config
             )
             blip_model.eval()
