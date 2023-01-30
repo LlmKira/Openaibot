@@ -42,6 +42,7 @@ OpenAI Chat Bot For IM/Linux/Windows.
 * 插件化，实时内容支持， Prompt Injection，对Chat更友好
 * chatGpt 替换为自己写的 chatGpt Openai api Python 实现
 * 官方依赖库不支持异步，大量请求会阻塞，替换为自己写的异步库(最近官方才支持了异步)
+* 多模态交互支持|图片识别|语音识别
 
 ## 🌤Status
 
@@ -278,6 +279,12 @@ add_api_key - 增加 Api key
     "violence",
     "violence/graphic"
   ],
+  "media": {
+    "blip": {
+      "status": false,
+      "model": "large"
+    }
+  },
   "tts": {
     "status": true,
     "type": "none",
@@ -370,6 +377,12 @@ Api 后端请使用我打包改造的 MoeGoe https://github.com/sudoskys/MoeGoe 
 
 安装依赖，运行 `server.py` 文件可以默认使用。
 模型下载请自行寻找，并注意模型相应的协议。 如果不生效，可能是文本的长度超过了设定的 limit(`len()`) 。
+
+#### Blip 图片认知
+
+Blip 即 `media` ，用于理解图片，可选开启，开启后占用 2GB 内存。
+
+`model` 可选 `base` `large` 两个模型。
 
 ## 运行
 

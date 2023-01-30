@@ -44,6 +44,7 @@ This project uses a contextual memory pool to implement chat and is not a revers
 * Replace chatGpt with your own written chatGpt Openai api Python implementation
 * Official dependency library does not support asynchronous, a large number of requests will block, replace with your
   own written asynchronous library (recently official supports asynchronous)
+* Multimodal interaction support|Image recognition|Speech recognition
 
 ## 🌤Status
 
@@ -270,6 +271,12 @@ that are not in the preset will not be completed.
     "violence",
     "violence/graphic"
   ],
+  "media": {
+    "blip": {
+      "status": false,
+      "model": "large"
+    }
+  },
   "tts": {
     "status": true,
     "type": "none",
@@ -285,7 +292,7 @@ that are not in the preset will not be completed.
       ],
       "limit": 70,
       "speaker": {
-        "chinese": "zh-CN-XiaoxiaoNeural"
+        "ZH": "zh-CN-XiaoxiaoNeural"
       },
       "location": "japanwest"
     }
@@ -362,6 +369,12 @@ Api backend please use my packaged and modified MoeGoe https://github.com/sudosk
 Install the dependencies and run the `server.py` file to use them by default.
 To download the model, please find it yourself and note the appropriate protocol for the model. If it doesn't work, the
 text may be longer than the set limit(`len()`).
+
+#### Blip image awareness
+
+Blip, `media`, is used to understand images and is optionally turned on, taking up 2GB of memory when turned on.
+
+`model` is optional `base` and `large` models.
 
 ## Run
 

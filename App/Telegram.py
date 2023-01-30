@@ -27,8 +27,8 @@ from PIL import Image
 # from utils.Base import Tool
 
 _service = Service_Data.get_key()
-BLIP_CONF = _service["blip"]
-global BlipModel
+BLIP_CONF = _service["media"]["blip"]
+
 if BLIP_CONF.get("status"):
     BlipModel = BLIP_CONF.get("model")
     if BlipModel not in ['large', 'base']:

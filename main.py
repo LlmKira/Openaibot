@@ -30,23 +30,7 @@ logger.info("新闻:请使用 `pip install -U llm-kira -i https://pypi.org/simpl
 
 config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
-'''
-def start():
-    # pool = multiprocessing.Pool(processes=len(ctrlConfig))   # 进程池
-    ctrlConfig = config.Controller
-    pLock = multiprocessing.Lock()
-    try:
-        for starter in ctrlConfig:
-            if not Path(f"App/{starter}.py").exists():
-                logger.warning(f"Controller {starter} Do Not Exist.")
-                continue
-            module = importlib.import_module('App.' + starter)
-            p = multiprocessing.Process(target=module.BotRunner(ctrlConfig.get(starter)).run, args=(pLock,))
-            p.start()
-    except KeyboardInterrupt:
-        logger.info('Exiting.')
-        exit(0)
-'''
+
 def start():
     ctrlConfig = config.Controller
     pLock = multiprocessing.Lock()
@@ -58,11 +42,12 @@ def start():
                     logger.warning(f"Controller {starter} Do Not Exist.")
                     continue
                 module = importlib.import_module('App.' + starter)
-                # 使用 ThreadPoolExecutor 的submit方法
+                # 使用 ThreadPoolExecutor 的 submit 方法
                 p.submit(module.BotRunner(ctrlConfig.get(starter)).run, (pLock,))
     except KeyboardInterrupt:
         logger.info('Exiting.')
         exit(0)
+
 
 if __name__ == '__main__':  # 兼容Windows multiprocessing
     start()

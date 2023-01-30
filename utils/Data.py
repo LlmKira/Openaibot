@@ -264,7 +264,6 @@ class DefaultData(object):
                 "db": 0,
                 "password": None
             },
-            "blip": {"status": False},
             "proxy": {
                 "status": False,
                 "url": "localhost:7890"
@@ -280,6 +279,12 @@ class DefaultData(object):
                 "violence",
                 "violence/graphic"
             ],
+            "media": {
+                "blip": {
+                    "status": False,
+                    "model": "large"
+                },
+            },
             "tts": {
                 "status": True,
                 "type": "none",
@@ -293,7 +298,7 @@ class DefaultData(object):
                     "key": [""],
                     "limit": 70,
                     "speaker": {
-                        "chinese": "zh-CN-XiaoxiaoNeural"
+                        "ZH": "zh-CN-XiaoxiaoNeural"
                     },
                     "location": "japanwest"
                 }
