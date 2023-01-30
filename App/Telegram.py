@@ -64,7 +64,7 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
         with tempfile.NamedTemporaryFile(suffix=".png") as f:
             f.write(downloaded_file)
             f.flush()
-            image_pil = Image.open("test.jpg").convert('RGB')
+            image_pil = Image.open(f.name).convert('RGB')
         if downloaded_file:
             BlipInterrogatorText = BlipInterrogator.generate_caption(
                 pil_image=image_pil)
