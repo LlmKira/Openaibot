@@ -9,7 +9,7 @@ from utils.Base import ReadConfig
 # 日志
 from loguru import logger
 import sys
-import multiprocessing
+import threading
 import importlib
 
 logger.remove()
@@ -33,7 +33,7 @@ config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 def start():
     ctrlConfig = config.Controller
-    pLock = multiprocessing.Lock()
+    pLock = threading.Lock()
     try:
         from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=len(ctrlConfig)) as p:
@@ -45,8 +45,8 @@ def start():
                 # 使用 ThreadPoolExecutor 的 submit 方法
                 p.submit(module.BotRunner(ctrlConfig.get(starter)).run, (pLock,))
     except KeyboardInterrupt:
-        logger.info('Exiting.')
-        exit(0)
+        logger.info('Caught Ctrl-C, Exiting.')
+        exit()
 
 
 if __name__ == '__main__':  # 兼容Windows multiprocessing

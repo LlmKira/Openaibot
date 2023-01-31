@@ -46,7 +46,7 @@ class ProfileManager(object):
         global _bot_profile
         if init:
             _profile = self.set_bot_profile(domain="api", bot_id=bot_id, bot_name=bot_name)
-            logger.success(f"Init API Bot Profile: {_bot_profile}")
+            logger.success(f"Init API Bot Profile: {_profile}")
             return _profile
         else:
             return ProfileReturn(**self.get_bot_profile(domain="api"))
@@ -55,7 +55,7 @@ class ProfileManager(object):
         global _bot_profile
         if init:
             _profile = self.set_bot_profile(domain="telegram", bot_id=bot_id, bot_name=bot_name)
-            logger.success(f"Init Telegram Bot Profile: {_bot_profile}")
+            logger.success(f"Init Telegram Bot Profile: {_profile}")
             return _profile
         else:
             return ProfileReturn(**self.get_bot_profile(domain="telegram"))
@@ -64,7 +64,7 @@ class ProfileManager(object):
         global _bot_profile
         if init:
             _profile = self.set_bot_profile(domain="qq", bot_id=bot_id, bot_name=bot_name)
-            logger.success(f"Init QQ Bot Profile: {_bot_profile}")
+            logger.success(f"Init QQ Bot Profile: {_profile}")
             return _profile
         else:
             return ProfileReturn(**self.get_bot_profile(domain="qq"))

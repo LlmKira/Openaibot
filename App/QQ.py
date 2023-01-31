@@ -15,7 +15,6 @@ from graia.ariadne.message import Source, Quote
 from graia.ariadne.message.element import Voice, Plain
 from graia.ariadne.message.parser.twilight import UnionMatch
 from graia.ariadne.model import Group, Member, Friend, MemberPerm
-from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne import Ariadne
 from graia.ariadne.model import Profile
 from graiax import silkcoder
@@ -26,18 +25,6 @@ from utils import Setting
 from utils.Chat import Utils
 from utils.Data import create_message, User_Message, PublicReturn, DefaultData
 from utils.Frequency import Vitality
-
-
-async def set_cron(funcs, second: int):
-    """
-    启动一个异步定时器
-    :param funcs: 回调函数
-    :param second: 秒数
-    :return:
-    """
-    tick_scheduler = AsyncIOScheduler()
-    tick_scheduler.add_job(funcs, trigger='interval', max_instances=10, seconds=second)
-    tick_scheduler.start()
 
 
 time_interval = 60 * 5
@@ -114,7 +101,7 @@ class BotRunner:
             return message_chain
 
         # "msg" @ RegexMatch(r"\/\b(chat|voice|write|forgetme|remind)\b.*")
-        @bot.broadcast.receiver(AccountLaunch)
+        @bot.broadcast.receiver("AccountLaunch")
         async def initAccount():
             _me: Profile = await bot.get_bot_profile()
             _name = _me.nickname
@@ -163,22 +150,9 @@ class BotRunner:
                 t = _hand.text[p1:p2]
                 _hand.text = _hand.text.replace(t, '/chat ')
 
-            # logger.warning(quote)   <-  这个log有魔法，不要乱动，动了之后下边的if全完蛋（
             if quote:
-                '''
-                logger.warning('Quoted!')
-                logger.warning(str(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}")))
-                logger.warning(f"QQ{quote.group_id}101{quote.id}")
-                logger.warning(Utils.checkMsg(f"QQ{quote.group_id}101{quote.id}"))
-                logger.warning(f"{_hand.from_user.id}")
-                
-                这整个if的logger都不要删......
-                这段代码很玄学,不知道什么时候就又升天了......
-                '''
                 if str(Utils.checkMsg(
                         f"QQ{quote.group_id}101{quote.id}")) == f"{_hand.from_user.id}":
-                    # logger.warning('Detect passed!')
-                    # logger.warning(_hand.text)
                     if not _hand.text.startswith("/"):
                         _hand.text = f"/chat {_hand.text}"
                     started = True
