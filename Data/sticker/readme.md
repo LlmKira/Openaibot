@@ -1,4 +1,4 @@
-Only For Test,Please Allow CopyRight.
+Only For Test,Please Follow CopyRight.
 
 StickerPackSource:
 
