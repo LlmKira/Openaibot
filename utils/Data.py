@@ -266,7 +266,7 @@ class DefaultData(object):
             },
             "proxy": {
                 "status": False,
-                "url": "localhost:7890"
+                "url": "http://127.0.0.1:7890"
             },
             "plugin": {
             },
@@ -279,7 +279,8 @@ class DefaultData(object):
                     "model": "large"
                 },
                 "sticker": {
-                    "status": False
+                    "status": False,
+                    "penalty": 0.9
                 }
             },
             "moderation_type": [

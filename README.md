@@ -266,9 +266,19 @@ add_api_key - 增加 Api key
     "url": "http://127.0.0.1:7890"
   },
   "plugin": {
-    "details": "",
-    "time": "",
-    "week": ""
+  },
+  "backend": {
+    "model": "text-davinci-003"
+  },
+  "media": {
+    "blip": {
+      "status": false,
+      "model": "large"
+    },
+    "sticker": {
+      "status": false,
+      "penalty": 0.9
+    }
   },
   "moderation_type": [
     "self-harm",
@@ -279,12 +289,6 @@ add_api_key - 增加 Api key
     "violence",
     "violence/graphic"
   ],
-  "media": {
-    "blip": {
-      "status": false,
-      "model": "large"
-    }
-  },
   "tts": {
     "status": true,
     "type": "none",
