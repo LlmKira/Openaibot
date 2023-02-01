@@ -9,7 +9,7 @@ import pathlib
 import tempfile
 import time
 from collections import deque
-from typing import Optional
+from typing import Optional, Union
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -18,17 +18,22 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
-from utils import Setting, Blip
+from utils import Setting, Blip, Sticker
 from utils.Chat import Utils, PhotoRecordUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
 from PIL import Image
 
+import torch
+
 # from utils.Base import Tool
+if not torch.cuda.is_available():
+    logger.warning("GPU Unavailable,If You Enable The Media Service,May Cause CPU OverLoaded")
 
 _service = Service_Data.get_key()
 BLIP_CONF = _service["media"]["blip"]
+STICKER_CONF = _service["media"]["sticker"]
 
 if BLIP_CONF.get("status"):
     BlipModel = BLIP_CONF.get("model")
@@ -39,6 +44,11 @@ if BLIP_CONF.get("status"):
     BlipInterrogator = Blip.Interrogator(BlipConfig)
 else:
     BlipInterrogator = None
+
+if STICKER_CONF.get("status"):
+    EmojiPredict = Sticker.StickerPredict()
+else:
+    EmojiPredict = None
 
 TIME_INTERVAL = 60
 # 使用 deque 存储请求时间戳
@@ -58,7 +68,7 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
-async def recognize_photo(bot: AsyncTeleBot, photo: types.PhotoSize) -> Optional[str]:
+async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types.Sticker]) -> Optional[str]:
     _file_info = await bot.get_file(photo.file_id)
     _history = PhotoRecordUtils.getKey(_file_info.file_unique_id)
     if _history:
@@ -85,8 +95,6 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
     if message:
         msg_text = message.text
     if message.photo and BlipInterrogator:
-        # TODO
-        logger.warning('photo')
         msg_text = message.caption
         # RECOGNIZE File
         photo_text = recognize_photo(bot=bot, photo=message.photo[-1])
@@ -94,10 +102,11 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
             BlipInterrogatorText = f"![PHOTO|{photo_text}]\n{message.caption}"
             msg_text = f"{BlipInterrogatorText}"
     if message.sticker:
-        # TODO
         msg_text = message.sticker.emoji
-        logger.warning(message.json)
-    logger.warning(msg_text)
+        if BlipInterrogator:
+            photo_text = recognize_photo(bot=bot, photo=message.sticker)
+            if photo_text:
+                msg_text = f"![Emoji|{photo_text}]"
     prompt = [msg_text]
     _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.first_name
@@ -127,6 +136,7 @@ class BotRunner(object):
     def run(self, pLock=None):
         # print(self.bot)
         bot, _config = self.botCreate()
+        bot: AsyncTeleBot
         if not bot:
             logger.info("APP:Telegram Bot Close")
             return

@@ -484,6 +484,10 @@ change_style - set the style switch
 help - help
 ```
 
+### About ID
+
+Any ID should be followed by the suffix of the corresponding platform.
+
 ## API
 
 Please see https://github.com/sudoskys/Openaibot/blob/main/docs/API.md for open API documentation.

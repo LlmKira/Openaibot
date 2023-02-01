@@ -37,9 +37,15 @@ _service = Service_Data.get_key()
 REDIS_CONF = _service["redis"]
 TTS_CONF = _service["tts"]
 PLUGIN_TABLE = _service["plugin"]
+BACKEND_CONF = _service["backend"]
 PROXY_CONF = ProxyConfig(**_service["proxy"])
 HARM_TYPE = _service["moderation_type"]
 HARM_TYPE = list(set(HARM_TYPE))
+
+# Model
+MODEL_NAME = BACKEND_CONF.get("model")
+if not MODEL_NAME:
+    logger.warning("Model Conf Not Found")
 
 # Proxy
 
@@ -278,7 +284,7 @@ class Reply(object):
                 # OPENAI
                 response = await llm_kira.openai.Completion(api_key=self.api_key,
                                                             call_func=OPENAI_API_KEY_MANAGER.check_api_key).create(
-                    model="text-davinci-003",
+                    model=MODEL_NAME,
                     prompt=str(_body),
                     temperature=0.2,
                     frequency_penalty=1,
@@ -298,7 +304,7 @@ class Reply(object):
                                                llm_model=llm
                                                )
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(model_name="text-davinci-003"),
+                    llm_param=OpenAiParam(model_name=MODEL_NAME),
                     prompt=prompt,
                     predict_tokens=150
                 )
@@ -334,7 +340,7 @@ class Reply(object):
                                                                      prompt=_body).run()
                     webSupport = webSupport[:900]
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(model_name="text-davinci-003", logit_bias=_style),
+                    llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
                     increase=webSupport

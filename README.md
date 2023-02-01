@@ -498,6 +498,10 @@ change_style - 设定风格开关
 help - 帮助
 ```
 
+### 名单说明
+
+任何 ID 后面都应该加 相应平台的后缀。
+
 ## API
 
 请参阅 https://github.com/sudoskys/Openaibot/blob/main/docs/API.md 查看开放API文档。

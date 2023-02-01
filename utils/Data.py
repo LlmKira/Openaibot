@@ -270,6 +270,18 @@ class DefaultData(object):
             },
             "plugin": {
             },
+            "backend": {
+                "model": "text-davinci-003"
+            },
+            "media": {
+                "blip": {
+                    "status": False,
+                    "model": "large"
+                },
+                "sticker": {
+                    "status": False
+                }
+            },
             "moderation_type": [
                 "self-harm",
                 # "hate",
@@ -279,12 +291,6 @@ class DefaultData(object):
                 "violence",
                 "violence/graphic"
             ],
-            "media": {
-                "blip": {
-                    "status": False,
-                    "model": "large"
-                },
-            },
             "tts": {
                 "status": True,
                 "type": "none",
