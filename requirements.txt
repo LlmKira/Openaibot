@@ -28,3 +28,4 @@ pycorrector
 git+https://github.com/pharmapsychotic/BLIP.git
 clip-interrogator
 torch
+tweetnlp
