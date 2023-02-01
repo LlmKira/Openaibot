@@ -44,6 +44,8 @@ HARM_TYPE = list(set(HARM_TYPE))
 
 # Model
 MODEL_NAME = BACKEND_CONF.get("model")
+MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
+MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 3500
 if not MODEL_NAME:
     logger.warning("Model Conf Not Found")
 
@@ -273,7 +275,7 @@ class Reply(object):
             profile=conversation,
             api_key=self.api_key,
             call_func=OPENAI_API_KEY_MANAGER.check_api_key,
-            token_limit=4000,
+            token_limit=MODEL_TOKEN_LIMIT,
             auto_penalty=not _csonfig["auto_adjust"],
         )
 

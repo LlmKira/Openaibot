@@ -271,7 +271,8 @@ class DefaultData(object):
             "plugin": {
             },
             "backend": {
-                "model": "text-davinci-003"
+                "model": "text-davinci-003",
+                "token_limit": 4000
             },
             "media": {
                 "blip": {

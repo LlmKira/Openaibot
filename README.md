@@ -268,7 +268,8 @@ add_api_key - 增加 Api key
   "plugin": {
   },
   "backend": {
-    "model": "text-davinci-003"
+    "model": "text-davinci-003",
+    "token_limit": 4000
   },
   "media": {
     "blip": {
