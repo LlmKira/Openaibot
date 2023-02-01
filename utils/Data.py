@@ -175,7 +175,7 @@ class DefaultData(object):
             sentence = sentence.replace(":", "：")
         if len(sentence) < limit:
             return sentence
-        str_list = re.split("[, !]#《》", sentence)
+        str_list = re.split("[, !]#《》:：【】", sentence)
         str_list.sort(key=len, reverse=True)
         for item in str_list:
             if len(item) < limit:
