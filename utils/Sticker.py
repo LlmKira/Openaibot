@@ -6,64 +6,28 @@
 import os
 import pathlib
 import random
-
-import loguru
-import tweetnlp
-import torch
 from loguru import logger
+from llm_kira.utils.chat import Utils
 
-EMOJI_NAME = {
-    '❤': 'heart',
-    '😍': 'heart_eyes',
-    '😂': 'joy',
-    '💕': 'two_hearts',
-    '🔥': 'fire',
-    '😊': 'blush',
-    '😎': 'sunglasses',
-    '✨': 'sparkles',
-    '💙': 'blue_heart',
-    '😘': 'kissing_heart',
-    '📷': 'camera',
-    '🇺🇸': 'us',
-    '☀': 'sunny',
-    '💜': 'purple_heart',
-    '😉': 'wink',
-    '💯': '100',
-    '😁': 'grin',
-    '🎄': 'christmas_tree',
-    '📸': 'camera_flash',
-    '😜': 'stuck_out_tongue_winking_eye'
-}
+
+class Classifiers(object):
+    def __init__(self, prompt):
+        self.prompt = prompt
+
+    def run(self):
+        _score = Utils.sentiment(self.prompt).get("score")
+        _type = ""
+        if _score > 1.5:
+            _type = "positive"
+        if _score < -1.5:
+            _type = "negative"
+        return _type
 
 
 class StickerPredict(object):
     def __init__(self):
         # self.model = tweetnlp.Emotion()
         print("Loading Sticker Manger")
-        self.model = tweetnlp.Emoji()
-        self.model.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.EMOJI_NAME = {
-            '❤': 'heart',
-            '😍': 'heart_eyes',
-            '😂': 'joy',
-            '💕': 'heart',
-            '🔥': 'anger',
-            '😊': 'heart',
-            '😎': 'optimism',
-            '✨': 'sparkles',
-            '💙': 'heart',
-            '😘': 'heart',
-            '📷': 'optimism',
-            '🇺🇸': 'optimism',
-            '☀': 'optimism',
-            '💜': 'heart',
-            '😉': 'wink',
-            '💯': '100',
-            '😁': 'grin',
-            '🎄': 'christmas_tree',
-            '📸': 'camera_flash',
-            '😜': 'stuck_out_tongue_winking_eye'
-        }
 
     @staticmethod
     def convert_folder(filepath: str) -> dict:
@@ -95,10 +59,7 @@ class StickerPredict(object):
             emoji_folder_dict = self.convert_folder("./Data/sticker")
         if not emoji_folder_dict:
             return None
-        predict_result = self.model.predict(text=prompt, return_probability=True)
-        _type = predict_result["label"]
-        _type = self.EMOJI_NAME.get(_type)
-        print(_type)
+        _type = Classifiers(prompt=prompt).run()
         if emoji_folder_dict.get(_type):
             sticker = random.choice(emoji_folder_dict[_type])
         elif emoji_folder_dict.get("default"):

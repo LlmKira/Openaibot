@@ -85,13 +85,17 @@ class Interrogator(object):
 from PIL import Image
 
 from loguru import logger
+
+
 def mains():
     logger.warning(2)
     image = Image.open("test.jpg").convert('RGB')
     res = Interrogator(Config()).generate_caption(pil_image=image)
     logger.warning(res)
 
+
 # 使用ThreadPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
+
 with ThreadPoolExecutor() as p:
     p.submit(mains)

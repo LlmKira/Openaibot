@@ -46,8 +46,12 @@ else:
     BlipInterrogator = None
 
 if STICKER_CONF.get("status"):
+    STICKER_PENALTY = STICKER_CONF.get("penalty")
+    STICKER_PENALTY = STICKER_PENALTY if STICKER_PENALTY else 0.9
+    STICKER_PENALTY = STICKER_PENALTY if 0 < STICKER_PENALTY < 1 else 0.9
     EmojiPredict = Sticker.StickerPredict()
 else:
+    STICKER_PENALTY = 0.9
     EmojiPredict = None
 
 TIME_INTERVAL = 60
@@ -237,6 +241,16 @@ class BotRunner(object):
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
                         msg = await bot.reply_to(message, _caption)
+                        if EmojiPredict:
+                            emoji = EmojiPredict.predict(prompt=_caption,
+                                                         emoji_folder_dict=EmojiPredict.convert_folder(
+                                                             "./Data/sticker"),
+                                                         penalty_probab=STICKER_PENALTY
+                                                         )
+                            if emoji:
+                                await bot.send_sticker(chat_id=message.chat.id,
+                                                       sticker=open(emoji, "rb"),
+                                                       reply_to_message_id=message.id)
                     else:
                         msg = await bot.reply_to(message, _friends_message.msg)
                     Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
@@ -274,6 +288,16 @@ class BotRunner(object):
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
                         await bot.reply_to(message, _caption)
+                        if EmojiPredict:
+                            emoji = EmojiPredict.predict(prompt=_caption,
+                                                         emoji_folder_dict=EmojiPredict.convert_folder(
+                                                             "./Data/sticker"),
+                                                         penalty_probab=STICKER_PENALTY
+                                                         )
+                            if emoji:
+                                await bot.send_sticker(chat_id=message.chat.id,
+                                                       sticker=open(emoji, "rb")
+                                                       )
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             if _real_id in _config.master:

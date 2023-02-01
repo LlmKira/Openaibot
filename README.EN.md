@@ -258,9 +258,19 @@ that are not in the preset will not be completed.
     "url": "http://127.0.0.1:7890"
   },
   "plugin": {
-    "details": "",
-    "time": "",
-    "week": ""
+  },
+  "backend": {
+    "model": "text-davinci-003"
+  },
+  "media": {
+    "blip": {
+      "status": false,
+      "model": "large"
+    },
+    "sticker": {
+      "status": false,
+      "penalty": 0.9
+    }
   },
   "moderation_type": [
     "self-harm",
@@ -271,12 +281,6 @@ that are not in the preset will not be completed.
     "violence",
     "violence/graphic"
   ],
-  "media": {
-    "blip": {
-      "status": false,
-      "model": "large"
-    }
-  },
   "tts": {
     "status": true,
     "type": "none",
