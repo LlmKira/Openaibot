@@ -24,12 +24,12 @@ client.
 * Support for black and white list system
 * Support for usage management, persona, custom `words` style
 * Memory pool guarantees 1000 rounds of contextual memory
-* Multi-platform, universal use, also supports live voice assistant
+* Multi-platform, universal use, also supports local voice assistant
 * Multiple Api key polling pools for easy management and overflow pop-ups
 * Active search for content to reply to and support for Sticker replies
 * Universal interface for multi-platform support, theoretically allows access to any chat platform
-* Removable content security module, also supports official Api content filtering
-* Real-time web indexing support, universal crawler (supports UrlQueryHtml on crawling)
+* Content security removable components, also supports official Api content filtering
+* Real-time web indexing support, universal crawler (supports UrlQueryHtml `url?q={}`)
 * Multimodal interaction support, image `Blip` comprehension support, voice recognition, sticker support
 
 ## 🪜 Deploy It
