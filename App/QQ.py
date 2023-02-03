@@ -57,7 +57,7 @@ class BotRunner:
         return Ariadne(config(self.config.account, self.config.verify_key, HttpClientConfig(host=self.config.http_host),
                               WebsocketClientConfig(host=self.config.ws_host)))
 
-    def run(self, pLock=None):
+    def run(self):
         bot = self.botCreate()
         if not bot:
             logger.info("APP:QQ Bot Close")
@@ -113,7 +113,7 @@ class BotRunner:
             _hand = get_user_message(msg, member=friend, group=None)
             _read_id = friend.id
             if _read_id in self.config.master:
-                _reply = await Event.MasterCommand(user_id=_read_id, Message=_hand, config=self.config, pLock=pLock)
+                _reply = await Event.MasterCommand(user_id=_read_id, Message=_hand, config=self.config)
                 if _reply:
                     await app.send_message(friend, "".join(_reply), quote=source)
 
@@ -139,7 +139,7 @@ class BotRunner:
             elif _hand.text.startswith("/"):
                 _is_admin = member.permission
                 if _is_admin in [MemberPerm.Owner, MemberPerm.Administrator]:
-                    _reply = await Event.GroupAdminCommand(Message=_hand, config=self.config, pLock=pLock)
+                    _reply = await Event.GroupAdminCommand(Message=_hand, config=self.config)
                     if _reply:
                         message_chain = MessageChain([Plain("".join(_reply))])
                         await app.send_message(group, message_chain, quote=source)

@@ -9,7 +9,6 @@ from utils.Base import ReadConfig
 # 日志
 from loguru import logger
 import sys
-import threading
 import importlib
 
 logger.remove()
@@ -33,7 +32,6 @@ config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
 
 def start():
     ctrlConfig = config.Controller
-    pLock = threading.Lock()
     try:
         from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=len(ctrlConfig)) as p:
@@ -43,7 +41,7 @@ def start():
                     continue
                 module = importlib.import_module('App.' + starter)
                 # 使用 ThreadPoolExecutor 的 submit 方法
-                p.submit(module.BotRunner(ctrlConfig.get(starter)).run, (pLock,))
+                p.submit(module.BotRunner(ctrlConfig.get(starter)).run)
     except KeyboardInterrupt:
         logger.info('Caught Ctrl-C, Exiting.')
         exit()
