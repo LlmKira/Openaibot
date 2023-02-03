@@ -342,7 +342,10 @@ class Reply(object):
                                                                      prompt=_body).run()
                     webSupport = webSupport[:900]
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style),
+                    llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style,
+                                          presence_penalty=0.2,
+                                          frequency_penalty=0.2
+                                          ),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
                     increase=webSupport
