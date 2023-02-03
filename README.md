@@ -118,7 +118,7 @@ This project open source and available under
 the [AGPL License](https://github.com/LLMKira/Openaibot/blob/main/LICENSE).
 ```
 
-[CLAUSE](https://github.com/LLMKira/Openaibot/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。
+[CLAUSE](https://github.com/LlmKira/Openaibot/blob/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。
 
 ### Fossa
 
