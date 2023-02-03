@@ -100,8 +100,8 @@ Details On [Deploy Guide](https://llmkira.github.io/Docs/en/guide/getting-starte
 
 ## 🤗 Join Our Community
 
-<a href="https://github.com/sudoskys/Openaibot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=sudoskys/Openaibot" />
+<a href="https://github.com/LLMKira/Openaibot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=LLMKira/Openaibot" />
 </a>
 
 ## ❤ Thanks
@@ -115,10 +115,10 @@ Details On [Deploy Guide](https://llmkira.github.io/Docs/en/guide/getting-starte
 
 ```
 This project open source and available under
-the [AGPL License](https://github.com/sudoskys/Openaibot/blob/main/LICENSE).
+the [AGPL License](https://github.com/LLMKira/Openaibot/blob/main/LICENSE).
 ```
 
-[CLAUSE](https://github.com/sudoskys/Openaibot/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。
+[CLAUSE](https://github.com/LLMKira/Openaibot/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。
 
 ### Fossa
 
