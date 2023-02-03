@@ -71,9 +71,9 @@ echox() {
   esac
 }
 Gitpull() {
-  git clone https://github.com/sudoskys/Openaibot.git || (
+  git clone https://github.com/LLMKira/Openaibot.git || (
     echox yellow "Git failed,try pull from mirror"
-    git clone https://gitclone.com/github.com/sudoskys/Openaibot.git
+    git clone https://gitclone.com/github.com/LLMKira/Openaibot.git
   )
 }
 
@@ -101,7 +101,7 @@ run() {
   #    # shellcheck disable=SC2154
   #    echox green "当前版本 ${version}"
   #    now=$version
-  #    (curl -s https://raw.fastgit.org/sudoskys/Openaibot/main/project.info) && declare<(curl -s https://raw.fastgit.org/sudoskys/Openaibot/main/project.info)
+  #    (curl -s https://raw.fastgit.org/LLMKira/Openaibot/main/project.info) && declare<(curl -s https://raw.fastgit.org/LLMKira/Openaibot/main/project.info)
   #    new=$version
   #    if [[ $new ]]; then
   #       if [[ $((new)) -gt $((now)) ]]; then
