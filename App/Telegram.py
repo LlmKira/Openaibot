@@ -96,28 +96,39 @@ async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types
 async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
     if not BlipInterrogator:
         return ""
+    msg_text = None
     if message.sticker and BlipInterrogator:
         try:
             photo_text = await recognize_photo(bot=bot, photo=message.sticker)
-        except Exception as e:
-            logger.warning(f"Blip:{e}")
-            photo_text = None
-        if photo_text:
             msg_text = f"![Emoji|{photo_text}]"
             return msg_text
+        except Exception as e:
+            logger.warning(f"Blip:{e}")
 
     if message.photo and BlipInterrogator:
-        msg_text = message.caption
+        msg_caption = message.caption if message.caption else ""
         # RECOGNIZE File
         try:
             photo_text = await recognize_photo(bot=bot, photo=message.photo[-1])
+            BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
+            msg_text = f"{BlipInterrogatorText}"
         except Exception as e:
             logger.warning(f"Blip:{e}")
-            photo_text = None
-        if photo_text:
-            BlipInterrogatorText = f"![PHOTO|{photo_text}]\n{message.caption}"
+        if msg_text:
+            return msg_text
+
+    if message.reply_to_message.photo and not message.photo:
+        msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
+        # RECOGNIZE File
+        try:
+            photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.photo[-1])
+            BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
             msg_text = f"{BlipInterrogatorText}"
-        return msg_text
+        except Exception as e:
+            logger.warning(f"Blip:{e}")
+        if msg_text:
+            return msg_text
+
     return ""
 
 
@@ -245,7 +256,8 @@ class BotRunner(object):
                 request_timestamps.append(time.time())
                 # Blip
                 _recognized_photo_text = await parse_photo(bot, message)
-                _hand.prompt[-1] = f"{_hand.prompt[-1]}{_recognized_photo_text}"
+                if _recognized_photo_text:
+                    _hand.prompt.append(_recognized_photo_text)
                 _friends_message = await Event.Group(Message=_hand,
                                                      config=_config,
                                                      bot_profile=ProfileManager.access_telegram(init=False)
@@ -294,7 +306,8 @@ class BotRunner(object):
                     ("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
                 # Blip
                 _recognized_photo_text = await parse_photo(bot, message)
-                _hand.prompt[-1] = f"{_hand.prompt[-1]}{_recognized_photo_text}"
+                if _recognized_photo_text:
+                    _hand.prompt.append(_recognized_photo_text)
                 _friends_message = await Event.Friends(Message=_hand,
                                                        config=_config,
                                                        bot_profile=ProfileManager.access_telegram(init=False)

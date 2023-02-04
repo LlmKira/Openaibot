@@ -281,7 +281,7 @@ class DefaultData(object):
                 },
                 "sticker": {
                     "status": False,
-                    "penalty": 0.9
+                    "penalty": 0.92
                 }
             },
             "moderation_type": [
