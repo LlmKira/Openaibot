@@ -101,14 +101,20 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
     if message.photo and BlipInterrogator:
         msg_text = message.caption
         # RECOGNIZE File
-        photo_text = recognize_photo(bot=bot, photo=message.photo[-1])
+        try:
+            photo_text = await recognize_photo(bot=bot, photo=message.photo[-1])
+        except:
+            photo_text = "Unknown"
         if photo_text:
             BlipInterrogatorText = f"![PHOTO|{photo_text}]\n{message.caption}"
             msg_text = f"{BlipInterrogatorText}"
     if message.sticker:
         msg_text = message.sticker.emoji
         if BlipInterrogator:
-            photo_text = recognize_photo(bot=bot, photo=message.sticker)
+            try:
+                photo_text = await recognize_photo(bot=bot, photo=message.photo[-1])
+            except:
+                photo_text = "Unknown"
             if photo_text:
                 msg_text = f"![Emoji|{photo_text}]"
     prompt = [msg_text]
