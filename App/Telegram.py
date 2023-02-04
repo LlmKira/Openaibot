@@ -143,7 +143,7 @@ class BotRunner(object):
         bot = AsyncTeleBot(self.bot.botToken, state_storage=StateMemoryStorage())
         return bot, self.bot
 
-    def run(self, pLock=None):
+    def run(self):
         # print(self.bot)
         bot, _config = self.botCreate()
         bot: AsyncTeleBot
@@ -205,7 +205,7 @@ class BotRunner(object):
             elif _hand.text.startswith("/"):
                 _is_admin = await is_admin(message)
                 if _is_admin:
-                    _reply = await Event.GroupAdminCommand(Message=_hand, config=_config, pLock=pLock)
+                    _reply = await Event.GroupAdminCommand(Message=_hand, config=_config)
                     if _reply:
                         await bot.reply_to(message, "".join(_reply))
 
@@ -307,7 +307,7 @@ class BotRunner(object):
                     else:
                         await bot.reply_to(message, _friends_message.msg)
             if _real_id in _config.master:
-                _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config, pLock=pLock)
+                _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config)
                 # 检查管理员指令
                 if _hand.text == "/config":
                     path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
