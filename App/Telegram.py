@@ -93,7 +93,7 @@ async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types
     return None
 
 
-async def parse_photo(bot: AsyncTeleBot, message: types.Message):
+async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
     if not BlipInterrogator:
         return ""
     if message.sticker and BlipInterrogator:
