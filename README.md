@@ -47,7 +47,7 @@ curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh
 ### 🍽 Configure
 
 ```shell
-cd Config/app_exp.toml Config/app.toml
+cp Config/app_exp.toml Config/app.toml
 
 nano Config/app.toml
 
