@@ -94,12 +94,26 @@ async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types
 
 
 async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
+    """
+    单线图像理解，而不采用列表添加的方式....
+    :param bot:
+    :param message:
+    :return:
+    """
     if not BlipInterrogator:
         return ""
     msg_text = None
     if message.sticker and BlipInterrogator:
         try:
             photo_text = await recognize_photo(bot=bot, photo=message.sticker)
+            msg_text = f"![Emoji|{photo_text}]"
+            return msg_text
+        except Exception as e:
+            logger.warning(f"Blip:{e}")
+
+    if message.reply_to_message.sticker and BlipInterrogator and not message.sticker:
+        try:
+            photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.sticker)
             msg_text = f"![Emoji|{photo_text}]"
             return msg_text
         except Exception as e:
@@ -117,7 +131,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         if msg_text:
             return msg_text
 
-    if message.reply_to_message.photo and not message.photo:
+    if message.reply_to_message.photo and BlipInterrogator and not message.photo:
         msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
         # RECOGNIZE File
         try:
