@@ -36,7 +36,9 @@ client.
 
 ### 🔨 Check
 
-Make sure your server has 1GB of RAM and 10GB of free storage
+Make sure your server has 1GB of RAM and 10GB of free storage.
+
+For Arm architecture servers: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 
 ### 📦 Deploy/Renew
 
