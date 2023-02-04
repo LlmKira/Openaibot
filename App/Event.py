@@ -106,7 +106,6 @@ def save_csonfig():
     with open("./Config/config.json", "w+", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
     pLock.getInstance().release()
-    logger.warning(pLock.getInstance())
 
 
 async def TTSSupportCheck(text, user_id, limit: bool = True):
