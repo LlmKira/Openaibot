@@ -125,6 +125,8 @@ async def get_message(message: types.Message):
     msg_text = ""
     if message:
         msg_text = message.text
+    if message.photo:
+        msg_text = "/chat "
     if message.sticker:
         msg_text = message.sticker.emoji
     prompt = [msg_text]
@@ -185,11 +187,10 @@ class BotRunner(object):
 
         # 群聊
         @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['supergroup', 'group'])
-        async def group_msg(message):
+        async def group_msg(message: types.Message):
             _hand = await get_message(message)
             _hand: User_Message
             started = False
-
             # 回复逻辑判定
             if message.reply_to_message:
                 _name = message.reply_to_message.from_user.full_name
@@ -276,9 +277,8 @@ class BotRunner(object):
 
         # 私聊
         @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['private'])
-        async def handle_private_msg(message):
+        async def handle_private_msg(message: types.Message):
             _hand = await get_message(message)
-
             # 检查管理员指令
             _real_id = message.from_user.id
             _hand: User_Message
