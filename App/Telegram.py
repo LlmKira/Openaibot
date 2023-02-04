@@ -126,7 +126,7 @@ async def get_message(message: types.Message):
     if message:
         msg_text = message.text
     if message.photo:
-        msg_text = ""
+        msg_text = message.caption if message.caption else ""
     if message.sticker:
         msg_text = message.sticker.emoji
     prompt = [msg_text]
