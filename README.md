@@ -9,6 +9,8 @@
 
 <h2 align="center">OpenaiBot</h2>
 
+全平台，多模态(语音/图片)理解，自维护套件，实时信息支持
+
 If you don't have the instant messaging platform you need or you want to develop a new application, you are welcome to
 contribute to this repository.
 You can develop a new Controller by using `Event.py`.
@@ -18,19 +20,19 @@ client.
 
 ## 🥽 Feature
 
-* async
+* Async
 * Support for rate limiting
 * Support for private chats, group chats
 * Support for black and white list system
-* Support for usage management, persona, custom `words` style
-* Memory pool guarantees 1000 rounds of contextual memory
-* Multi-platform, universal use, also supports local voice assistant
-* Multiple Api key polling pools for easy management and overflow pop-ups
-* Active search for content to reply to and support for Sticker replies
-* Universal interface for multi-platform support, theoretically allows access to any chat platform
-* Content security removable components, also supports official Api content filtering
-* Real-time web indexing support, universal crawler (supports UrlQueryHtml `url?q={}`)
-* Multimodal interaction support, image `Blip` comprehension support, voice recognition, sticker support
+* Support for usage management, persona, custom words style 🤖
+* Memory pool guarantees 1000 rounds of contextual memory 💾
+* Multi-platform, universal use, also supports local voice assistant 🗣️
+* Multiple Api key polling pools for easy management and overflow pop-ups 📊
+* Active search for content to reply to and support for Sticker replies 😊
+* Universal interface for multi-platform support, theoretically allows access to any chat platform 🌐
+* Content security removable components, also supports official Api content filtering 🔒
+* Real-time web indexing support, universal crawler (supports UrlQueryHtml url?q={}) 🕸️
+* Multimodal interaction support, image Blip comprehension support, voice recognition 👂 , sticker support 😎
 
 ## 🪜 Deploy It
 
@@ -47,6 +49,7 @@ curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh
 ### 🍽 Configure
 
 - init
+
 ```shell
 cp Config/app_exp.toml Config/app.toml
 
@@ -59,6 +62,7 @@ nano Config/app.toml
 apt-get install redis
 systemctl start redis.service
 ```
+
 - Config/app.toml
 
 ```toml

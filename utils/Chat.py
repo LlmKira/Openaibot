@@ -231,13 +231,14 @@ class Utils(object):
         return False
 
     @staticmethod
-    def get_head_foot(prompt: str):
+    def get_head_foot(prompt: str, cap: int = 12):
         body = prompt
         head = ""
-        _split = prompt.split(":", 1)
-        if len(_split) > 1:
-            body = _split[1]
-            head = _split[0]
+        if ":" in prompt[:cap]:
+            _split = prompt.split(":", 1)
+            if len(_split) > 1:
+                body = _split[1]
+                head = _split[0]
         return head, body
 
     @staticmethod

@@ -626,7 +626,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         voice_data = None
         if _voice:
             voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
-        if not voice_data and _voice:
+        if _voice and not voice_data:
             _info.append("TTS Unavailable")
         # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
