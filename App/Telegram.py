@@ -112,7 +112,7 @@ async def get_message(bot: AsyncTeleBot, message: types.Message):
         msg_text = message.sticker.emoji
         if BlipInterrogator:
             try:
-                photo_text = await recognize_photo(bot=bot, photo=message.photo[-1])
+                photo_text = await recognize_photo(bot=bot, photo=message.sticker)
             except:
                 photo_text = "Unknown"
             if photo_text:
