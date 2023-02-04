@@ -105,6 +105,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         if photo_text:
             msg_text = f"![Emoji|{photo_text}]"
             return msg_text
+
     if message.photo and BlipInterrogator:
         msg_text = message.caption
         # RECOGNIZE File
@@ -244,7 +245,7 @@ class BotRunner(object):
                 request_timestamps.append(time.time())
                 # Blip
                 _recognized_photo_text = await parse_photo(bot, message)
-                _hand.text = f"{_hand.text}{_recognized_photo_text}"
+                _hand.prompt[-1] = f"{_hand.prompt[-1]}{_recognized_photo_text}"
                 _friends_message = await Event.Group(Message=_hand,
                                                      config=_config,
                                                      bot_profile=ProfileManager.access_telegram(init=False)
@@ -293,7 +294,7 @@ class BotRunner(object):
                     ("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
                 # Blip
                 _recognized_photo_text = await parse_photo(bot, message)
-                _hand.text = f"{_hand.text}{_recognized_photo_text}"
+                _hand.prompt[-1] = f"{_hand.prompt[-1]}{_recognized_photo_text}"
                 _friends_message = await Event.Friends(Message=_hand,
                                                        config=_config,
                                                        bot_profile=ProfileManager.access_telegram(init=False)
