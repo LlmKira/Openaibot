@@ -277,7 +277,7 @@ class DefaultData(object):
             "media": {
                 "blip": {
                     "status": False,
-                    "model": "large"
+                    "api": "http://127.0.0.1:10885/upload/"
                 },
                 "sticker": {
                     "status": False,

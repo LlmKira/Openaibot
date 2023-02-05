@@ -21,6 +21,7 @@ class NetworkClient(object):
                       url: str,
                       params: dict = None,
                       data: Any = None,
+                      files: Any = None,
                       headers: dict = None,
                       **kwargs
                       ):
@@ -30,6 +31,7 @@ class NetworkClient(object):
             "params": params,
             "data": data,
             "headers": headers,
+            "files": files,
         }
         param.update(kwargs)
         async with httpx.AsyncClient(timeout=self.timeout, proxies=self.proxies) as client:
