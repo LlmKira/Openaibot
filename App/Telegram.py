@@ -18,30 +18,21 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
-from utils import Setting, Blip, Sticker
+from utils import Setting, Sticker
+from utils.Blip import BlipServer
 from utils.Chat import Utils, PhotoRecordUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
 from PIL import Image
 
-import torch
-
-# from utils.Base import Tool
-if not torch.cuda.is_available():
-    logger.warning("GPU Unavailable,If You Enable The Media Service,May Cause CPU OverLoaded")
-
 _service = Service_Data.get_key()
 BLIP_CONF = _service["media"]["blip"]
 STICKER_CONF = _service["media"]["sticker"]
 
 if BLIP_CONF.get("status"):
-    BlipModel = BLIP_CONF.get("model")
-    if BlipModel not in ['large', 'base']:
-        BlipModel = 'large'
-    BlipConfig = Blip.Config()
-    BlipConfig.model = BlipModel
-    BlipInterrogator = Blip.Interrogator(BlipConfig)
+    BlipBackEnd = BLIP_CONF.get("api")
+    BlipInterrogator = BlipServer(api=BlipBackEnd)
 else:
     BlipInterrogator = None
 
@@ -78,19 +69,16 @@ async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types
     if _history:
         return _history
     if _file_info.file_size > 10485760:
-        return "Too Large Photo"
+        return "TooLargePhoto"
     downloaded_file = await bot.download_file(_file_info.file_path)
     with tempfile.NamedTemporaryFile(suffix=".png") as f:
         f.write(downloaded_file)
         f.flush()
-        image_pil = Image.open(f.name).convert('RGB')
-    if downloaded_file:
-        BlipInterrogatorText = BlipInterrogator.generate_caption(
-            pil_image=image_pil)
+        BlipInterrogatorText = await BlipInterrogator.generate_caption(
+            image_file=f.name)
         if BlipInterrogatorText:
             PhotoRecordUtils.setKey(_file_info.file_unique_id, BlipInterrogatorText)
-        return BlipInterrogatorText
-    return None
+    return BlipInterrogatorText
 
 
 async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
