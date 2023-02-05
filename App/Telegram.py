@@ -99,15 +99,15 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             logger.warning(f"Blip:{e}")
         if msg_text:
             return msg_text
-
-    if message.reply_to_message.sticker and BlipInterrogator and not message.sticker:
-        try:
-            photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.sticker)
-            msg_text = f"![Emoji|{photo_text}]"
-        except Exception as e:
-            logger.warning(f"Blip:{e}")
-        if msg_text:
-            return msg_text
+    if message.reply_to_message:
+        if message.reply_to_message.sticker and BlipInterrogator and not message.sticker:
+            try:
+                photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.sticker)
+                msg_text = f"![Emoji|{photo_text}]"
+            except Exception as e:
+                logger.warning(f"Blip:{e}")
+            if msg_text:
+                return msg_text
 
     if message.photo and BlipInterrogator:
         msg_caption = message.caption if message.caption else ""
@@ -120,18 +120,18 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             logger.warning(f"Blip:{e}")
         if msg_text:
             return msg_text
-
-    if message.reply_to_message.photo and BlipInterrogator and not message.photo:
-        msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
-        # RECOGNIZE File
-        try:
-            photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.photo[-1])
-            BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
-            msg_text = f"{BlipInterrogatorText}"
-        except Exception as e:
-            logger.warning(f"Blip:{e}")
-        if msg_text:
-            return msg_text
+    if message.reply_to_message:
+        if message.reply_to_message.photo and BlipInterrogator and not message.photo:
+            msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
+            # RECOGNIZE File
+            try:
+                photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.photo[-1])
+                BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
+                msg_text = f"{BlipInterrogatorText}"
+            except Exception as e:
+                logger.warning(f"Blip:{e}")
+            if msg_text:
+                return msg_text
 
     return ""
 
