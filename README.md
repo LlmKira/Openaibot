@@ -102,6 +102,17 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 port = 9559
 ```
 
+### Run
+
+```shell
+apt install npm
+npm install pm2@latest -g
+# or
+yarn global add pm2
+```
+
+`pm2 start pm.json`
+
 ### 🥕 Add Api Key
 
 Use `/add_api_key` Command add [OpenaiKey](https://beta.openai.com/account/api-keys)
