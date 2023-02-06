@@ -13,7 +13,6 @@ import asyncio
 import pathlib
 import time
 from collections import deque
-
 from loguru import logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -43,7 +42,7 @@ def get_message(message):
     group_name = message.chat.title if message.chat.title else message.chat.last_name
     group_name = group_name if group_name else "Group"
     return create_message(
-        state=102,
+        state=104,
         user_id=message.from_user.id,
         user_name=_name,
         group_id=message.chat.id,
@@ -86,6 +85,20 @@ class BotRunner(object):
         if not client:
             logger.info("Controller:Discord Bot Close")
             return
-        logger.success("Controller:Discord Bot Start")
         lock = pLock
+
+        @client.event
+        async def on_ready():
+            await client.tree.sync()
+            logger.success(f"Controller:Discord Bot {client.user} Start")
+
+        @client.event
+        async def on_message(message: discord.Message):
+            if message.author == client.user:
+                return
+
+            if message.content.startswith('$hello'):
+                await message.channel.send('Hello!')
+                # lazy
+
         client.run(token)
