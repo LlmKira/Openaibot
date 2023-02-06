@@ -108,7 +108,7 @@ port = 9559
 
 [Telegram BotToken Request](https://t.me/BotFather)
 
-Make sure *privacy mode is turned off* or *the bot is a group admin.*
+Make sure *the bot is a group admin* or *privacy mode is turned off*.
 
 - QQ
 
