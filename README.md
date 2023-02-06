@@ -102,6 +102,17 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 port = 9559
 ```
 
+### App Token
+
+- Telegram
+
+[Telegram BotToken Request](https://t.me/BotFather)
+Only available when privacy mode is turned off or the bot is promoted to administrator.
+
+- QQ
+
+[Configuring the QQ bot](https://graiax.cn/before/install_mirai.html)
+
 ### Run Bot
 
 Our robots can be started in multiple processes.
