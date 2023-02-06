@@ -163,7 +163,7 @@ python3 clinet.py
 
 ### 🥕 Add Api Key
 
-Use `/add_api_key` Command add [OpenaiKey](https://beta.openai.com/account/api-keys)
+Use `/add_api_key` Command add [OpenaiKey](https://beta.openai.com/account/api-keys) to `Config/api_keys.json`.
 
 ### 🧀 More Docs
 
