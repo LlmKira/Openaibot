@@ -107,7 +107,8 @@ port = 9559
 - Telegram
 
 [Telegram BotToken Request](https://t.me/BotFather)
-Only available when privacy mode is turned off or the bot is promoted to administrator.
+
+Make sure *privacy mode is turned off* or *the bot is a group admin.*
 
 - QQ
 
