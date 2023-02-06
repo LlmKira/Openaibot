@@ -25,3 +25,4 @@ graiax-silkcoder
 graia-broadcast
 graia-ariadne
 pycorrector
+nextcord

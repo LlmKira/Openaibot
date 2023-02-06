@@ -21,9 +21,8 @@ from utils import Setting
 from utils.Chat import Utils
 from utils.Frequency import Vitality
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn
-
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 
 time_interval = 60
 # 使用 deque 存储请求时间戳
@@ -32,7 +31,7 @@ request_timestamps = deque()
 lock = None
 
 
-def get_message(message):
+def get_message(message: nextcord.Message):
     # 自动获取名字
     first_name = message.from_user.first_name if message.from_user.first_name else ""
     last_name = message.from_user.last_name if message.from_user.last_name else ""
@@ -51,7 +50,10 @@ def get_message(message):
     )
 
 
-class MyClient(discord.Client):
+class BotClient(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     async def on_ready(self):
         logger.info(f'Discord:Logged in as {self.user} (ID: {self.user.id})')
 
@@ -72,10 +74,8 @@ class BotRunner(object):
     def botCreate(self):
         if not self.config.botToken:
             return None
-
-        intents = discord.Intents.default()
-        intents.message_content = True
-        client = MyClient(intents=intents)
+        intents = nextcord.Intents.default()
+        client = BotClient(command_prefix="/", intents=intents)
         return client, self.config.botToken
 
     def run(self, pLock=None):
@@ -86,19 +86,5 @@ class BotRunner(object):
             logger.info("Controller:Discord Bot Close")
             return
         lock = pLock
-
-        @client.event
-        async def on_ready():
-            await client.tree.sync()
-            logger.success(f"Controller:Discord Bot {client.user} Start")
-
-        @client.event
-        async def on_message(message: discord.Message):
-            if message.author == client.user:
-                return
-
-            if message.content.startswith('$hello'):
-                await message.channel.send('Hello!')
-                # lazy
 
         client.run(token)
