@@ -271,7 +271,7 @@ class DefaultData(object):
             "plugin": {
             },
             "backend": {
-                "model": "text-davinci-003",
+                "model": "text-chat-davinci-002-20221122",
                 "token_limit": 4000
             },
             "media": {
