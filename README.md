@@ -121,7 +121,13 @@ Use `/add_api_key` Command add [OpenaiKey](https://beta.openai.com/account/api-k
 
 Details On [Deploy Guide](https://llmkira.github.io/Docs/en/guide/getting-started)
 
+Network Plugins/Proxy Settings/Custom Model Names/Speech Services/Picture Understanding/Censor Configuration
+Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/service)
+
 详细接口/服务配置/自定义 请查看文档 [Deploy Guide](https://llmkira.github.io/Docs/guide/getting-started)
+
+插件设置/代理设置/自定义模型名称/语音服务/图片理解/审查配置
+请查看 [服务配置](https://llmkira.github.io/Docs/guide/service)
 
 ## 🤗 Join Our Community
 
