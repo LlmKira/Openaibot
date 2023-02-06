@@ -104,7 +104,7 @@ reload = false
 port = 9559
 ```
 
-### App Token
+### 🪶 App Token
 
 - Telegram
 
@@ -116,7 +116,7 @@ Make sure *the bot is a group admin* or *privacy mode is turned off*.
 
 [Configuring the QQ bot](https://graiax.cn/before/install_mirai.html)
 
-### Run Bot
+### 🌻 Run Bot
 
 Our robots can be started in multiple processes.
 
@@ -133,7 +133,9 @@ python3 main.py
 pm2 start pm.json
 ```
 
-### Run Voice Assistant
+### 🎤 Or Run Voice Assistant
+
+In addition to the robot, we also have a voice assistant.
 
 Voice Assistant is a web-dependent voice assistant that you can easily run on small devices through Azure or Openai's
 recognition services.
@@ -201,4 +203,4 @@ the [AGPL License](https://github.com/LLMKira/Openaibot/blob/main/LICENSE).
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_large)
 
-
+> You wouldn't believe it, but Ai also wrote part of this Readme
