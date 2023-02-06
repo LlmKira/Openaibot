@@ -102,16 +102,48 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 port = 9559
 ```
 
-### Run
+### Run Bot
+
+Our robots can be started in multiple processes.
 
 ```shell
 apt install npm
 npm install pm2@latest -g
 # or
 yarn global add pm2
+
+# test bot
+python3 main.py
+
+# run bot
+pm2 start pm.json
 ```
 
-`pm2 start pm.json`
+### Run Voice Assistant
+
+Voice Assistant is a web-dependent voice assistant that you can easily run on small devices through Azure or Openai's
+recognition services.
+
+- Run BaseEvent Server
+
+```toml
+# 基础对话事件服务器，Web支持或者音箱用
+[Controller.BaseServer]
+port = 9559
+```
+
+- Run Vits Server
+
+https://github.com/LlmKira/MoeGoe
+
+- Run Assistant
+
+```shell
+cd Assistant
+cat install.md
+pip3 install -r requirements.txt
+python3 clinet.py
+```
 
 ### 🥕 Add Api Key
 
