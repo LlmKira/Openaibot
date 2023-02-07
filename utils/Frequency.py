@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import random
+import re
 import time
 
 import llm_kira
@@ -124,12 +125,15 @@ class Vitality(object):
         self._grow_request_vitality()
         if len(_text) < 3:
             return False
+        if len(_name) < 3:
+            return False
         Buffer = GROUP_BUFFER.get(_group)
         if not Buffer:
             Buffer = []
+        _name = re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])", "", _name)
         Buffer.append(f"{_name}:{_text}")
         if len(Buffer) > 1:
-            self.mem.save_context(ask=str(Buffer[0]), reply=str(Buffer[1]))
+            self.mem.save_context(ask=str(Buffer[0]), reply=str(Buffer[1]), no_head=True)
             Buffer = []
         # 重置缓存
         GROUP_BUFFER[_group] = Buffer

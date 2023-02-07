@@ -294,8 +294,8 @@ class DefaultData(object):
                 "violence/graphic"
             ],
             "tts": {
-                "status": True,
-                "type": "none",
+                "status": False,
+                "type": "vits",
                 "vits": {
                     "api": "http://127.0.0.1:9557/tts/generate",
                     "limit": 70,
