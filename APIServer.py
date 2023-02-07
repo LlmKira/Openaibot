@@ -127,5 +127,5 @@ if __name__ == '__main__':
 
     ProfileManager.access_api(bot_name=apicfg.botname[:6], bot_id=apicfg.botid, init=True)
     uvicorn.run('APIServer:app', host=apicfg['uvicorn_host'], port=apicfg['uvicorn_port'],
-                reload=apicfg['uvicorn_reload'], log_level=apicfg['uvicorn_loglevel'],
+                reload=False, log_level=apicfg['uvicorn_loglevel'],
                 workers=apicfg['uvicorn_workers'])

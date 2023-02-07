@@ -27,5 +27,4 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 # Base Event Api
 [Controller.BaseServer]
 host = "127.0.0.1"
-reload = false
 port = 9559

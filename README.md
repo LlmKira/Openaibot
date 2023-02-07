@@ -100,7 +100,6 @@ proxy = { status = false, url = "http://127.0.0.1:7890" }
 # 基础对话事件服务器，Web支持或者音箱用
 [Controller.BaseServer]
 host = "127.0.0.1"
-reload = false
 port = 9559
 ```
 

@@ -14,10 +14,14 @@ class BotRunner:
     def run(self, pLock):
         try:
             host = self.config.host
-            reload = self.config.reload
         except Exception as e:
-            logger.warning("ApiServer Conf Host/Reload Missing")
+            logger.warning("ApiServer Conf Host Missing")
             host = '127.0.0.1'
-            reload = False
-        uvicorn.run('App.EventServer:app', host=host, port=self.config.port, reload=reload, log_level="debug",
-                    workers=1)
+        uvicorn.run('App.EventServer:app',
+                    host=host,
+                    reload_delay=5,
+                    port=self.config.port,
+                    reload=False,
+                    log_level="debug",
+                    workers=1
+                    )
