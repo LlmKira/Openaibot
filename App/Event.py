@@ -342,8 +342,8 @@ class Reply(object):
                     webSupport = webSupport[:900]
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style,
-                                          presence_penalty=0.3,
-                                          frequency_penalty=0.3
+                                          # presence_penalty=0.3,
+                                          # frequency_penalty=0.3
                                           ),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
@@ -360,6 +360,7 @@ class Reply(object):
         except Exception as e:
             logger.error(f"RUN:Api Error:{e}")
             _usage = 0
+            e = str(e)
             _error_type = "Api Error"
             if "overload" in e:
                 _error_type = "Api Overload Now"
