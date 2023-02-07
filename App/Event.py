@@ -194,6 +194,7 @@ async def Forget(user_id: int, chat_id: int):
         restart_name="restart_name",
         conversation_id=int(_cid),
     )
+    conversation.hash_secret = str(int(time.time()))
     mem = receiver.MemoryManager(profile=conversation)
     return mem.reset_chat()
 
@@ -596,6 +597,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
+    conversation.hash_secret = str(int(time.time()))
     promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
 
     # 构建
