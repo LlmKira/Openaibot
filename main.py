@@ -3,7 +3,7 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys,ElvinStarry
-
+import pathlib
 from pathlib import Path
 from utils.Base import ReadConfig
 # 日志
@@ -20,14 +20,15 @@ logger.add(sink='run.log',
            level="INFO",
            rotation="500 MB",
            enqueue=True)
-# logger.info("新闻：api key 只能通过 机器人命令配置")
+
 logger.debug("Debug Mode On")
-
 logger.info("NEWS Channel:https://t.me/Openaibot_channel")
-# logger.info("新闻:命令表有改动")
-logger.info("新闻:请使用 `pip install -U llm-kira -i https://pypi.org/simple/` `pip uninstall openai-kira`")
 
-config = ReadConfig().parseFile(str(Path.cwd()) + "/Config/app.toml")
+CONFIG_FILE = str(Path.cwd()) + "/Config/app.toml"
+if not pathlib.Path(CONFIG_FILE).exists():
+    raise FileNotFoundError("Cant find Config/app.toml")
+
+config = ReadConfig().parseFile(CONFIG_FILE)
 
 
 def start():
