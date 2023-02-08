@@ -5,6 +5,17 @@ initVar() {
   echoType='echo -e'
 }
 
+#判断是否为arm架构
+get_arch=`arch`
+if [[ $get_arch =~ "aarch64" ]];then
+  #判断是否安装rust
+  if [ ! -d "/root/.cargo" ]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+    sh rustup.sh -y
+    source "$HOME/.cargo/env"
+  fi
+fi
+
 # 准备运行需要的软件包
 _os=$(uname)
 echo "use system: ${_os}"
@@ -73,7 +84,7 @@ echox() {
 Gitpull() {
   git clone https://github.com/LLMKira/Openaibot.git || (
     echox yellow "Git failed,try pull from mirror"
-    git clone https://gitclone.com/github.com/LLMKira/Openaibot.git
+    git clone https://kgithub.com/LLMKira/Openaibot.git
   )
 }
 
@@ -192,4 +203,4 @@ run() {
 
 run
 
-cd "$(pwd)" && rm setup.sh
+cd "$(pwd)" && rm setup.sh && rm rustup.sh
