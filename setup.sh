@@ -73,7 +73,7 @@ echox() {
 Gitpull() {
   git clone https://github.com/LLMKira/Openaibot.git || (
     echox yellow "Git failed,try pull from mirror"
-    git clone https://gitclone.com/github.com/LLMKira/Openaibot.git
+    git clone https://kgithub.com/LLMKira/Openaibot.git
   )
 }
 
