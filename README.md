@@ -9,6 +9,8 @@
 
 <h2 align="center">OpenaiBot</h2>
 
+[中文](https://github.com/LlmKira/Openaibot/blob/main/README_ZH.md)
+
 全平台，多模态(语音/图片)理解，自维护套件，实时信息支持
 
 If you don't have the instant messaging platform you need or you want to develop a new application, you are welcome to
