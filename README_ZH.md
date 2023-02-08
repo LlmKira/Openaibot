@@ -9,6 +9,8 @@
 
 <h2 align="center">OpenaiBot</h2>
 
+[ENGLISH](https://github.com/LlmKira/Openaibot/blob/main/README.md)
+
 全平台，多模态(语音/图片)理解，自维护套件，实时信息支持
 
 如果您没有所需的即时消息平台，或者您想开发一个新的应用程序，欢迎您为该仓库贡献。
