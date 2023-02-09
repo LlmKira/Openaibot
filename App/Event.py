@@ -361,11 +361,11 @@ class Reply(object):
                 return "NO SUPPORT METHOD"
         except RateLimitError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError-Reach Limit|Overload"
             logger.error(f"RUN:Openai Error:{e}")
         except ServiceUnavailableError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError Maybe Overload"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError-Server:500"
             logger.error(f"RUN:Openai Error:{e}")
         except AuthenticationError as e:
             _usage = 0
