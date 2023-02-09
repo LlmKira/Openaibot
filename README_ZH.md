@@ -41,12 +41,16 @@
 
 请确保您的服务器有 1GB 的 RAM 和 10GB的 可用存储空间
 
-对于 Arm 架构服务器: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+对于 Arm 架构服务器: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` (安装脚本现已可以自动安装rust)
 
 ### 📦 Deploy/Renew
 
 ```shell
 curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
+```
+对于中国用户
+```shell
+curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
 
 ### 🍽 Configure
@@ -63,7 +67,7 @@ nano Config/app.toml
 
 ```shell
 apt-get install redis
-systemctl start redis.service
+systemctl enable redis.service --now
 ```
 
 - 配置/app.toml
