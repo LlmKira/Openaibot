@@ -42,14 +42,17 @@ client.
 
 Make sure your server has 1GB of RAM and 10GB of free storage.
 
-For Arm architecture servers: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` (The setup.sh can now automatically install rust.)
+For Arm architecture servers: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` (The setup.sh can now
+automatically install rust.)
 
 ### 📦 Deploy/Renew
 
 ```shell
 curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
+
 For Chinese users
+
 ```shell
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
@@ -169,6 +172,25 @@ python3 clinet.py
 ### 🥕 Add Api Key
 
 Use `/add_api_key` Command add [OpenaiKey](https://beta.openai.com/account/api-keys) to `Config/api_keys.json`.
+
+### 🫧 About ID
+
+You'll be wondering about our multi-platform ID system. This is how we store your ID in our
+json/database: `real_id` + `suffix`.
+
+- toml
+
+Use your real ID in `app.toml`, which is the whitelist prompt without the suffix.
+
+- json/command
+
+When using the user/group authorization command, you need to follow the real ID with the corresponding suffix ID.
+
+| Controller | suffix_id | desc |
+|------------|-----------|------|
+| QQ         | 101       |      |
+| Telegram   | 100       |      |
+| Api        | 103       |      |
 
 ### 🧀 More Docs
 

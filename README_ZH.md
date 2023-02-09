@@ -48,7 +48,9 @@
 ```shell
 curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
+
 对于中国用户
+
 ```shell
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
@@ -141,7 +143,7 @@ pm2 start pm.json
 
 除了机器人，我们还有语音助手.
 
-Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或  Openai 的识别服务在小型设备上轻松地运行它
+Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或 Openai 的识别服务在小型设备上轻松地运行它
 
 - 运行 `BaseEvent` 服务器
 
@@ -168,12 +170,25 @@ python3 clinet.py
 
 使用 `/add_api_key` 命令将 [OpenaiKey](https://beta.openai.com/account/api-keys) 添加到 `Config/api_keys.json`.
 
+### 🫧 About ID
+
+你一定会对我们的多平台 ID 系统感到疑惑。我们在 json/数据库中是这样存储你的ID的： `real_id`+`suffix`。
+
+- toml
+
+在 `app.toml` 中使用你的真实 ID，也就是白名单提示去掉后缀。
+
+- json/command
+
+使用用户/群组授权命令的时候，需要在真实ID后跟入对应的后缀ID。
+
+| Controller | suffix_id | desc |
+|------------|-----------|------|
+| QQ         | 101       |      |
+| Telegram   | 100       |      |
+| Api        | 103       |      |
+
 ### 🧀 More Docs
-
-[部署文档](https://llmkira.github.io/Docs/en/guide/getting-started)的详细信息
-
-Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/Censor配置请参见
-[服务器配置指南](https://llmkira.github.io/Docs/guide/service)
 
 详细接口/服务配置/自定义 请查看文档 [部署指南](https://llmkira.github.io/Docs/guide/getting-started)
 
