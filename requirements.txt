@@ -19,6 +19,7 @@ llm_kira>=0.3.1
 scikit-learn
 beautifulsoup4
 wget
+fasttext-wheel
 fasttext>=0.9.1
 requests>=2.22.0
 graiax-silkcoder
