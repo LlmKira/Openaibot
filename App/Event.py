@@ -20,6 +20,7 @@ from llm_kira.utils.chat import Cut
 from llm_kira.client import Optimizer, PromptManager, Conversation
 from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
+from llm_kira.openai.api.network import RateLimitError, ServiceUnavailableError, AuthenticationError
 
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManager, UserManager, Header, Style
@@ -358,16 +359,22 @@ class Reply(object):
                     f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
             else:
                 return "NO SUPPORT METHOD"
-        except Exception as e:
-            logger.error(f"RUN:Api Error:{e}")
+        except RateLimitError as e:
             _usage = 0
-            e = str(e)
-            _error_type = "Api Error"
-            if "overload" in e:
-                _error_type = "Api Overload Now"
-            if "had an error while processing" in e:
-                _error_type = "Server Error While Processing Your Prompt"
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:{_error_type}"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError"
+            logger.error(f"RUN:Openai Error:{e}")
+        except ServiceUnavailableError as e:
+            _usage = 0
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError Maybe Overload"
+            logger.error(f"RUN:Openai Error:{e}")
+        except AuthenticationError as e:
+            _usage = 0
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:AuthenticationError"
+            logger.error(f"RUN:Openai Error:{e}")
+        except Exception as e:
+            _usage = 0
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:Unknown Error"
+            logger.error(f"RUN:Openai Error:{e}")
         # 更新额度
         _AnalysisUsage = self._UsageManager.renewUsage(usage=_usage)
         # 更新统计
@@ -419,8 +426,13 @@ async def WhiteGroupCheck(group_id: int, WHITE: str = "") -> PublicReturn:
         return PublicReturn(status=True, trace="WhiteUserCheck")
 
 
-async def RemindSet(user_id, text) -> PublicReturn:
+async def RemindSet(user_id,
+                    start_name: str = "Human",
+                    restart_name: str = "Ai",
+                    text: str = "") -> PublicReturn:
     """
+    :param restart_name: 机器人自己的名字
+    :param start_name: 交谈人的名字
     :param user_id:
     :param text:
     :return: Ture 代表设定成功
@@ -435,10 +447,10 @@ async def RemindSet(user_id, text) -> PublicReturn:
         return PublicReturn(status=True, msg=f"过长:{_remind}", trace="Remind")
     if _csonfig.get("allow_change_head"):
         # _remind = _remind.replace("你是", "ME*扮演")
-        _remind = _remind.replace("你", "ME*")
-        _remind = _remind.replace("我", "YOU*")
-        _remind = _remind.replace("YOU*", "你")
-        _remind = _remind.replace("ME*", "我")
+        _remind = _remind.replace("你", "<|ME|>")
+        _remind = _remind.replace("我", "<|YOU|>")
+        _remind = _remind.replace("<|YOU|>", DefaultData.name_split(sentence=start_name, limit=10))
+        _remind = _remind.replace("<|ME|>", DefaultData.name_split(sentence=restart_name, limit=10))
         _safe_remind = ContentDfa.filter_all(_remind)
         Header(uid=_user_id).set(_safe_remind)
         return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", trace="Remind")
@@ -557,7 +569,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
 
     # 线性决策
     if _text.startswith("/remind"):
-        _remind_set = await RemindSet(user_id=_user_id, text=_text)
+        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Remind",
@@ -639,7 +651,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Check Bot Env/Config~nya")
 
 
 async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
@@ -672,7 +684,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
 
     # 线性决策
     if _text.startswith("/remind"):
-        _remind_set = await RemindSet(user_id=_user_id, text=_text)
+        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
         _remind_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Remind",
@@ -755,7 +767,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
     except Exception as e:
         logger.error(e)
-        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Maybe Api request rate limit~nya")
+        return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Oh no~ Check Bot Env/Config~ nya")
 
 
 async def Trigger(Message: User_Message, config) -> PublicReturn:
