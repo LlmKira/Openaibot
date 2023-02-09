@@ -42,12 +42,16 @@ client.
 
 Make sure your server has 1GB of RAM and 10GB of free storage.
 
-For Arm architecture servers: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+For Arm architecture servers: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` (The setup.sh can now automatically install rust.)
 
 ### 📦 Deploy/Renew
 
 ```shell
 curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
+```
+For Chinese users
+```shell
+curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
 
 ### 🍽 Configure
@@ -64,7 +68,7 @@ nano Config/app.toml
 
 ```shell
 apt-get install redis
-systemctl start redis.service
+systemctl enable redis.service --now
 ```
 
 - Config/app.toml
