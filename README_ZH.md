@@ -188,6 +188,17 @@ python3 clinet.py
 | Telegram   | 100       |      |
 | Api        | 103       |      |
 
+### 🥪 About Models
+
+| models           | token limit | cost                                                          |
+|------------------|-------------|---------------------------------------------------------------|
+| code-davinci-002 | 8000        | During this initial limited beta period, Codex usage is free. |
+| code-cushman-001 | 2048        | During this initial limited beta period, Codex usage is free. |
+| text-davinci-003 | 4000        | $0.0200  /1K tokens                                           |
+| text-curie-001   | 2048        | $0.0020  /1K tokens                                           |
+| text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
+| text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
+
 ### 🧀 More Docs
 
 详细接口/服务配置/自定义 请查看文档 [部署指南](https://llmkira.github.io/Docs/guide/getting-started)

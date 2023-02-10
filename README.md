@@ -192,6 +192,17 @@ When using the user/group authorization command, you need to follow the real ID 
 | Telegram   | 100       |      |
 | Api        | 103       |      |
 
+### 🥪 About Models
+
+| models           | token limit | cost                                                          |
+|------------------|-------------|---------------------------------------------------------------|
+| code-davinci-002 | 8000        | During this initial limited beta period, Codex usage is free. |
+| code-cushman-001 | 2048        | During this initial limited beta period, Codex usage is free. |
+| text-davinci-003 | 4000        | $0.0200  /1K tokens                                           |
+| text-curie-001   | 2048        | $0.0020  /1K tokens                                           |
+| text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
+| text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
+
 ### 🧀 More Docs
 
 Details On [Deploy Guide](https://llmkira.github.io/Docs/en/guide/getting-started)

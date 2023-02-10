@@ -195,8 +195,8 @@ class DefaultData(object):
     def defaultConfig():
         return {
             "statu": True,
-            "input_limit": 250,
-            "token_limit": 300,
+            "input_limit": 500,
+            "token_limit": 500,
             "hour_limit": 15000,
             "per_user_limit": 1,
             "usercold_time": 10,
@@ -271,7 +271,7 @@ class DefaultData(object):
             "plugin": {
             },
             "backend": {
-                "model": "text-chat-davinci-002-20221122",
+                "model": "text-davinci-003",
                 "token_limit": 4000
             },
             "media": {
