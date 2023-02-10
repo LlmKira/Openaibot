@@ -20,7 +20,7 @@ from llm_kira.utils.chat import Cut
 from llm_kira.client import Optimizer, PromptManager, Conversation
 from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
-from llm_kira.openai.api.network import RateLimitError, ServiceUnavailableError, AuthenticationError
+from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManager, UserManager, Header, Style
@@ -361,15 +361,19 @@ class Reply(object):
                 return "NO SUPPORT METHOD"
         except RateLimitError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError-Reach Limit|Overload"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError Reach Limit|Overload"
             logger.error(f"RUN:Openai Error:{e}")
         except ServiceUnavailableError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError-Server:500"
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError Server:500"
             logger.error(f"RUN:Openai Error:{e}")
         except AuthenticationError as e:
             _usage = 0
             _deal = f"{DefaultData.getWaitAnswer()}\nDetails:AuthenticationError"
+            logger.error(f"RUN:Openai Error:{e}")
+        except LLMException as e:
+            _usage = 0
+            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:llm-kira tips error"
             logger.error(f"RUN:Openai Error:{e}")
         except Exception as e:
             _usage = 0
