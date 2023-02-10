@@ -57,6 +57,7 @@ if PROXY_CONF.status:
     llm_kira.setting.proxyUrl = PROXY_CONF.url
 
 llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**REDIS_CONF)
+llm_kira.setting.llmRetryTime = 2
 
 urlForm = {
     "Danger.form": [
