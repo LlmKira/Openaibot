@@ -25,8 +25,6 @@ from utils.Chat import Utils, PhotoRecordUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
-from PIL import Image
-
 _service = Service_Data.get_key()
 BLIP_CONF = _service["media"]["blip"]
 STICKER_CONF = _service["media"]["sticker"]
