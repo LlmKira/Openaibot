@@ -41,7 +41,7 @@
 
 请确保您的服务器有 1GB 的 RAM 和 10GB的 可用存储空间
 
-对于 Arm 架构服务器: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` (安装脚本现已可以自动安装rust)
+对于 Arm 架构服务器: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 
 ### 📦 Deploy/Renew
 
@@ -49,11 +49,13 @@
 curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
 
-对于中国用户
+给中国用户
 
 ```shell
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
+
+
 
 ### 🍽 Configure
 
@@ -69,7 +71,7 @@ nano Config/app.toml
 
 ```shell
 apt-get install redis
-systemctl enable redis.service --now
+systemctl start redis.service
 ```
 
 - 配置/app.toml
@@ -143,7 +145,7 @@ pm2 start pm.json
 
 除了机器人，我们还有语音助手.
 
-Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或 Openai 的识别服务在小型设备上轻松地运行它
+Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或  Openai 的识别服务在小型设备上轻松地运行它
 
 - 运行 `BaseEvent` 服务器
 
@@ -172,15 +174,15 @@ python3 clinet.py
 
 ### 🫧 About ID
 
-你一定会对我们的多平台 ID 系统感到疑惑。我们在 json/数据库中是这样存储你的ID的： `real_id`+`suffix`。
+您可能对我们的多平台 ID 系统感到好奇。这我们将您的 ID 存储在我们的 json/数据库中的方式: `real_id` + `suffix`.
 
 - toml
 
-在 `app.toml` 中使用你的真实 ID，也就是白名单提示去掉后缀。
+在 `app.toml` 中使用您的真实 ID, 即为没有后缀的白名单.
 
 - json/command
 
-使用用户/群组授权命令的时候，需要在真实ID后跟入对应的后缀ID。
+当您使用 用户/组 授权命令时，需要在真实ID后面加上对应的后缀ID.
 
 | Controller | suffix_id | desc |
 |------------|-----------|------|
@@ -190,16 +192,21 @@ python3 clinet.py
 
 ### 🥪 About Models
 
-| models           | token limit | cost                                                          |
-|------------------|-------------|---------------------------------------------------------------|
-| code-davinci-002 | 8000        | During this initial limited beta period, Codex usage is free. |
-| code-cushman-001 | 2048        | During this initial limited beta period, Codex usage is free. |
-| text-davinci-003 | 4000        | $0.0200  /1K tokens                                           |
-| text-curie-001   | 2048        | $0.0020  /1K tokens                                           |
-| text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
-| text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
+| models           | token limit | cost                                       |
+| ---------------- | ----------- | ------------------------------------------ |
+| code-davinci-002 | 8000        | 在最初的有限测试期间，Codex 使用是免费的。 |
+| code-cushman-001 | 2048        | 在最初的有限测试期间，Codex 使用是免费的。 |
+| text-davinci-003 | 4000        | $0.0200  /1K tokens                        |
+| text-curie-001   | 2048        | $0.0020  /1K tokens                        |
+| text-babbage-001 | 2048        | $0.0005  /1K tokens                        |
+| text-ada-001     | 2048        | $0.0004  /1K tokens                        |
 
 ### 🧀 More Docs
+
+[部署文档](https://llmkira.github.io/Docs/en/guide/getting-started)的详细信息
+
+Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/Censor配置请参见
+[服务器配置指南](https://llmkira.github.io/Docs/guide/service)
 
 详细接口/服务配置/自定义 请查看文档 [部署指南](https://llmkira.github.io/Docs/guide/getting-started)
 
