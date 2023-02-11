@@ -272,6 +272,7 @@ class DefaultData(object):
             },
             "backend": {
                 "model": "text-davinci-003",
+                "similarity_init": True,
                 "token_limit": 4000
             },
             "media": {

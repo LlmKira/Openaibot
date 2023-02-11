@@ -47,6 +47,7 @@ HARM_TYPE = list(set(HARM_TYPE))
 # Model
 MODEL_NAME = BACKEND_CONF.get("model")
 MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
+SimilarityInit = BACKEND_CONF.get("similarity_init")
 MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 3500
 if not MODEL_NAME:
     logger.warning("Model Conf Not Found")
@@ -333,7 +334,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               optimizer=Optimizer.RelatePoint,
+                                               optimizer=Optimizer.RelatePoint if SimilarityInit else Optimizer.SinglePoint,
                                                llm_model=llm)
                 prompt: PromptManager
                 prompt.template = _head
