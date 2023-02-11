@@ -10,17 +10,10 @@ import pathlib
 import asyncio
 import re
 import time
-import llm_kira
+
 # from io import BytesIO
 from typing import Union
 from loguru import logger
-
-# import llm_kira
-from llm_kira.utils.chat import Cut
-from llm_kira.client import Optimizer, PromptManager, Conversation
-from llm_kira.client.types import PromptItem
-from llm_kira.client.llms.openai import OpenAiParam
-from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 
 # from App.chatGPT import PrivateChat
 from utils.Chat import Utils, Usage, rqParser, GroupManager, UserManager, Header, Style
@@ -30,6 +23,13 @@ from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, get_start_name
 from utils.Logging import LoadResponseError
 from utils.Lock import pLock
+
+import llm_kira
+from llm_kira.utils.chat import Cut
+from llm_kira.client import Optimizer, PromptManager, Conversation
+from llm_kira.client.types import PromptItem
+from llm_kira.client.llms.openai import OpenAiParam
+from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 
 OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
 
@@ -44,16 +44,23 @@ PROXY_CONF = ProxyConfig(**_service["proxy"])
 HARM_TYPE = _service["moderation_type"]
 HARM_TYPE = list(set(HARM_TYPE))
 
-# Model
+# Backend
 MODEL_NAME = BACKEND_CONF.get("model")
 MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
 SimilarityInit = BACKEND_CONF.get("similarity_init")
+CHAT_OPTIMIZER = Optimizer.SinglePoint
+if SimilarityInit:
+    try:
+        CHAT_OPTIMIZER = Optimizer.RelatePoint
+    except Exception as e:
+        logger.warning(f"{e}:RelatePoint init failed `pip install -U llm-kira`?")
+
+# Limit
 MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 3500
 if not MODEL_NAME:
     logger.warning("Model Conf Not Found")
 
 # Proxy
-
 if PROXY_CONF.status:
     llm_kira.setting.proxyUrl = PROXY_CONF.url
 
@@ -334,7 +341,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               optimizer=Optimizer.RelatePoint if SimilarityInit else Optimizer.SinglePoint,
+                                               optimizer=CHAT_OPTIMIZER,
                                                llm_model=llm)
                 prompt: PromptManager
                 prompt.template = _head
