@@ -5,6 +5,7 @@
 # @Github: sudoskys
 
 import asyncio
+import tzlocal
 import pathlib
 import tempfile
 import time
@@ -58,7 +59,7 @@ async def set_cron(funcs, second: int):
     :param second: 秒数
     :return:
     """
-    tick_scheduler = AsyncIOScheduler()
+    tick_scheduler = AsyncIOScheduler(timezone=str(tzlocal.get_localzone()))
     tick_scheduler.add_job(funcs, trigger='interval', max_instances=10, seconds=second)
     tick_scheduler.start()
 
