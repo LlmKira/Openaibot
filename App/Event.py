@@ -333,7 +333,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               optimizer=Optimizer.SinglePoint,
+                                               optimizer=Optimizer.RelatePoint,
                                                llm_model=llm)
                 prompt: PromptManager
                 prompt.template = _head
