@@ -192,14 +192,14 @@ python3 clinet.py
 
 ### 🥪 About Models
 
-| models           | token limit | cost                                       |
-| ---------------- | ----------- | ------------------------------------------ |
+| models           | token limit | cost                     |
+|------------------|-------------|--------------------------|
 | code-davinci-002 | 8000        | 在最初的有限测试期间，Codex 使用是免费的。 |
 | code-cushman-001 | 2048        | 在最初的有限测试期间，Codex 使用是免费的。 |
-| text-davinci-003 | 4000        | $0.0200  /1K tokens                        |
-| text-curie-001   | 2048        | $0.0020  /1K tokens                        |
-| text-babbage-001 | 2048        | $0.0005  /1K tokens                        |
-| text-ada-001     | 2048        | $0.0004  /1K tokens                        |
+| text-davinci-003 | 4000        | $0.0200  /1K tokens      |
+| text-curie-001   | 2048        | $0.0020  /1K tokens      |
+| text-babbage-001 | 2048        | $0.0005  /1K tokens      |
+| text-ada-001     | 2048        | $0.0004  /1K tokens      |
 
 ### 🧀 More Docs
 
