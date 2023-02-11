@@ -15,7 +15,7 @@ Pillow
 pathlib
 elara
 numpy
-llm_kira>=0.3.5
+llm_kira>=0.3.8
 scikit-learn
 beautifulsoup4
 wget
@@ -27,3 +27,4 @@ graia-broadcast
 graia-ariadne
 pycorrector
 nextcord
+aiohttp>=3.8.0
