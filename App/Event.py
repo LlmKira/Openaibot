@@ -51,6 +51,7 @@ SimilarityInit = BACKEND_CONF.get("similarity_init")
 CHAT_OPTIMIZER = Optimizer.SinglePoint
 if SimilarityInit:
     try:
+        import torch
         CHAT_OPTIMIZER = Optimizer.RelatePoint
     except Exception as e:
         logger.warning(f"{e}:RelatePoint init failed `pip install -U llm-kira`?")
