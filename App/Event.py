@@ -10,6 +10,7 @@ import pathlib
 import asyncio
 import re
 import time
+import psutil
 
 # from io import BytesIO
 from typing import Union
@@ -49,9 +50,12 @@ MODEL_NAME = BACKEND_CONF.get("model")
 MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
 SimilarityInit = BACKEND_CONF.get("similarity_init")
 CHAT_OPTIMIZER = Optimizer.SinglePoint
-if SimilarityInit:
+TorchMeM = (float(psutil.virtual_memory().total) / 1024 / 1024 / 1024) < 2
+
+if SimilarityInit and TorchMeM:
     try:
         import torch
+
         CHAT_OPTIMIZER = Optimizer.RelatePoint
     except Exception as e:
         logger.warning(f"{e}:RelatePoint init failed `pip install -U llm-kira`?")
