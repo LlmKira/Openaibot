@@ -9,6 +9,13 @@ logger = logging.getLogger(__name__)
 models = {"low_mem": None, "high_mem": None}
 FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
 
+try:
+    # silences warnings as the package does not properly use the python 'warnings' package
+    # see https://github.com/facebookresearch/fastText/issues/1056
+    fasttext.FastText.eprint = lambda *args, **kwargs: None
+except Exception as e:
+    pass
+
 
 def download_model(name: str) -> str:
     target_path = os.path.join(FTLANG_CACHE, name)
