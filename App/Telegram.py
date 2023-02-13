@@ -144,6 +144,11 @@ async def get_message(message: types.Message):
         msg_text = message.caption if message.caption else ""
     if message.sticker:
         msg_text = message.sticker.emoji
+    reply_chat_id = None
+    reply_user_id = None
+    if message.reply_to_message:
+        reply_chat_id = message.reply_to_message.chat.id
+        reply_user_id = message.reply_to_message.from_user.id
     prompt = [msg_text]
     _name = message.from_user.full_name
     group_name = message.chat.title if message.chat.title else message.chat.first_name
@@ -155,6 +160,8 @@ async def get_message(message: types.Message):
         group_id=message.chat.id,
         text=msg_text,
         prompt=prompt,
+        reply_chat_id=reply_chat_id,
+        reply_user_id=reply_user_id,
         group_name=group_name,
     )
 
@@ -254,6 +261,15 @@ class BotRunner(object):
                     logger.warning(
                         f"{e} \n This is a trigger Error,may [trigger] typo [tigger],try to check your config")
 
+                try:
+                    _trigger_message = await Event.Trace(_hand, _config)
+                    if _trigger_message.status:
+                        if _hand.from_user.id == 777000100:
+                            started = True
+                            _hand.text = f"/chat {_hand.text}"
+                except Exception as e:
+                    logger.warning(
+                        f"{e} \n This is a trace Error")
             # 触发
             if started:
                 request_timestamps.append(time.time())
