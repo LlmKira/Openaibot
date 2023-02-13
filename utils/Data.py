@@ -256,6 +256,7 @@ class DefaultData(object):
     @staticmethod
     def defaultGroup():
         return {
+            "cross": True,
             "trace": False,
             "white": False,
             "block": False,

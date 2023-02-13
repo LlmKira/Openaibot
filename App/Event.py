@@ -808,10 +808,21 @@ async def Trace(Message: User_Message, config) -> PublicReturn:
     :return: TRUE,msg -> 在白名单
     """
     group_id = Message.from_chat.id
-    if config.trigger:
-        if GroupManager(group_id).read("trace"):
-            return PublicReturn(status=True, trace="TraceCheck")
+    if GroupManager(group_id).read("trace"):
+        return PublicReturn(status=True, trace="TraceCheck")
     return PublicReturn(status=False, trace="No Trace")
+
+
+async def Cross(Message: User_Message, config) -> PublicReturn:
+    """
+    :param Message: group id
+    :param config:
+    :return: TRUE,msg -> 在白名单
+    """
+    group_id = Message.from_chat.id
+    if GroupManager(group_id).read("cross"):
+        return PublicReturn(status=True, trace="CrossCheck")
+    return PublicReturn(status=False, trace="No Cross")
 
 
 async def GroupAdminCommand(Message: User_Message, config):
@@ -837,6 +848,15 @@ async def GroupAdminCommand(Message: User_Message, config):
                 _set = False
             _group_manger.save({"trace": _set})
             _ev = f"Group Admin:GroupTrace {_set}"
+            _reply.append(_ev)
+            logger.info(_ev)
+        if command.startswith("/cross"):
+            _group_manger = GroupManager(int(group_id))
+            _set = True
+            if _group_manger.read("cross"):
+                _set = False
+            _group_manger.save({"cross": _set})
+            _ev = f"Group Admin:GroupCross {_set}"
             _reply.append(_ev)
             logger.info(_ev)
     except Exception as e:

@@ -220,13 +220,13 @@ class BotRunner(object):
                 _text = str(message.reply_to_message.text)
                 _text = _text.replace(_config.INTRO, "")
                 if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
-                    # Chat
-                    if not _hand.text.startswith("/"):
-                        _hand.text = f"/chat {_hand.text}"
-                    started = True
+                    # 交叉回复
+                    _trigger_message = await Event.Cross(_hand, _config)
+                    if _trigger_message.status:
+                        started = True
                     if str(Utils.checkMsg(
                             f"{_hand.from_chat.id}{message.reply_to_message.id}")) == f"{_hand.from_user.id}":
-                        pass
+                        started = True
                     else:
                         _hand.prompt.append(f"{_name}:{_text}")
                 else:
@@ -245,7 +245,6 @@ class BotRunner(object):
             # 分发指令
             if _hand.text.startswith("/help"):
                 await bot.reply_to(message, await Event.Help(_config))
-
             # 热力扳机
             if not started:
                 try:
@@ -272,6 +271,8 @@ class BotRunner(object):
                         f"{e} \n This is a trace Error")
             # 触发
             if started:
+                if not _hand.text.startswith("/"):
+                    _hand.text = f"/chat {_hand.text}"
                 request_timestamps.append(time.time())
                 # Blip
                 _recognized_photo_text = await parse_photo(bot, message)
