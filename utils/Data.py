@@ -42,6 +42,8 @@ class User_Message(BaseModel):
     text: str
     prompt: list
     date: int = int(time.time() * 1000)
+    reply_user_id: Optional[int]
+    reply_chat_id: Optional[int]
 
 
 def create_message(
@@ -51,6 +53,8 @@ def create_message(
         group_name,
         text: str,
         state: int,
+        reply_chat_id: Optional[int] = None,
+        reply_user_id: Optional[int] = None,
         prompt: Union[str, list] = None,
         date=time.time()):
     state = abs(state)
@@ -66,6 +70,8 @@ def create_message(
         "prompt": prompt,
         "from_user": from_user(id=user_id, name=user_name),
         "from_chat": from_chat(id=group_id, name=group_name),
+        "reply_user_id": reply_user_id,
+        "reply_chat_id": reply_chat_id,
         "date": date
     }
     return User_Message(**message)
@@ -250,6 +256,7 @@ class DefaultData(object):
     @staticmethod
     def defaultGroup():
         return {
+            "trace": False,
             "white": False,
             "block": False,
             "trigger": False
