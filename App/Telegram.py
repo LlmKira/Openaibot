@@ -308,7 +308,7 @@ class BotRunner(object):
                                                        reply_to_message_id=message.id)
                     else:
                         _trigger_message = await Event.Silent(_hand, _config)
-                        if _trigger_message.status:
+                        if not _trigger_message.status:
                             msg = await bot.reply_to(message, _friends_message.msg)
                     if msg:
                         Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
