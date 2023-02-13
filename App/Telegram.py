@@ -259,11 +259,12 @@ class BotRunner(object):
                 except Exception as e:
                     logger.warning(
                         f"{e} \n This is a trigger Error,may [trigger] typo [tigger],try to check your config")
-
+                # Trace
                 try:
                     _trigger_message = await Event.Trace(_hand, _config)
                     if _trigger_message.status:
                         if _hand.from_user.id == 777000100:
+                            _hand.from_user.id = _hand.from_chat.id
                             started = True
                             _hand.text = f"/chat {_hand.text}"
                 except Exception as e:
