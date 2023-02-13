@@ -131,7 +131,6 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
                 logger.warning(f"Blip:{e}")
             if msg_text:
                 return msg_text
-
     return ""
 
 
@@ -213,14 +212,16 @@ class BotRunner(object):
             _hand = await get_message(message)
             _hand: User_Message
             started = False
-            # 回复逻辑判定
+
+            # Reply
             if message.reply_to_message:
-                _name = message.reply_to_message.from_user.full_name
-                _name = DefaultData.name_split(sentence=_name, limit=16)
-                _text = str(message.reply_to_message.text)
-                _text = _text.replace(_config.INTRO, "")
+                _name = DefaultData.name_split(
+                    sentence=message.reply_to_message.from_user.full_name,
+                    limit=16
+                )
+                _text = str(message.reply_to_message.text).replace(_config.INTRO, "")
                 if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
-                    # 交叉回复
+                    # 必回复
                     _trigger_message = await Event.Cross(_hand, _config)
                     if _trigger_message.status:
                         started = True
@@ -232,7 +233,7 @@ class BotRunner(object):
                 else:
                     _hand.prompt.append(f"{_name}:{_text}")
 
-            # 命令解析
+            # Command
             if _hand.text.startswith(("/chat", "/voice", "/write", "/forgetme", "/style", "/remind")):
                 started = True
             elif _hand.text.startswith("/"):
