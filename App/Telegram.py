@@ -343,6 +343,8 @@ class BotRunner(object):
                                              )
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
+                        if _hand.from_user.id == 777000100:
+                            _caption = f"{_friends_message.reply}"
                         await bot.reply_to(message, _caption)
                         if EmojiPredict:
                             emoji = EmojiPredict.predict(prompt=_caption,
