@@ -5,6 +5,12 @@ function install() {
     else 
         curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
     fi
+
+    #拉取镜像
+    docker pull sudoskys/openaibot:main
+
+    #创建配置文件
+    #...
 }
 
 function usage() {

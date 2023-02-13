@@ -7,3 +7,4 @@ ENV WORKDIR /app
 WORKDIR $WORKDIR
 ADD . $WORKDIR
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY . .
