@@ -55,8 +55,6 @@ curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
 
-
-
 ### 🍽 Configure
 
 - 初始化
@@ -145,7 +143,7 @@ pm2 start pm.json
 
 除了机器人，我们还有语音助手.
 
-Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或  Openai 的识别服务在小型设备上轻松地运行它
+Voice Assistant 是一个依赖于 Web 的语音助手，你可以通过 Azure 或 Openai 的识别服务在小型设备上轻松地运行它
 
 - 运行 `BaseEvent` 服务器
 
@@ -201,6 +199,56 @@ python3 clinet.py
 | text-babbage-001 | 2048        | $0.0005  /1K tokens      |
 | text-ada-001     | 2048        | $0.0004  /1K tokens      |
 
+### 🎸 Command
+
+因为缺乏维护者的原因，部分命令仅在部分平台起效。
+
+```shell
+chat - 交谈
+write - 续写
+forgetme - 重置记忆
+remind - 场景设定 取消用短文本覆盖
+voice - 启用语音支持
+style - 设定偏好词
+help - 帮助
+
+trigger - 管理员启动主动回复
+trace - 管理员启动关联频道贴文自动追踪
+cross - 管理员启动是否交叉回复
+silent - 管理员启动报错沉默
+
+auto_adjust - 自动优化器
+set_user_cold - 设置用户冷却时间
+set_group_cold - 设置群组冷却时间
+set_token_limit - 设置输出限制长度
+set_input_limit - 设置输入限制长度
+see_api_key - 现在几个 Api key
+del_api_key - 删除 Api key
+add_api_key - 增加 Api key
+config - 获取/备份热配置文件
+set_per_user_limit - 设置普通用户额度
+set_per_hour_limit - 设置用户小时额度
+promote_user_limit - 提升用户额度
+reset_user_usage - 重置用户额度
+add_block_group - 禁止群组
+del_block_group - 解禁群组
+add_block_user - 禁止用户
+del_block_user - 解禁用户
+add_white_group - 加入白名单群组
+add_white_user - 加入白名单用户
+del_white_group - 除名白名单群
+del_white_user - 除名白名单人
+update_detect - 更新敏感词
+open_user_white_mode - 开用户白名单
+open_group_white_mode - 开群组白名单
+close_user_white_mode - 关用户白名单
+close_group_white_mode - 关群组白名单
+open - 开启机器人
+close - 关闭机器人
+change_head - 设定人设开关
+change_style - 设定风格开关
+```
+
 ### 🧀 More Docs
 
 [部署文档](https://llmkira.github.io/Docs/en/guide/getting-started)的详细信息
@@ -229,8 +277,10 @@ Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/C
 ## 📃 License
 
 ```
+
 This project open source and available under
 the [AGPL License](https://github.com/LLMKira/Openaibot/blob/main/LICENSE).
+
 ```
 
 [CLAUSE](https://github.com/LlmKira/Openaibot/blob/main/CLAUSE.md) 说明了如何授权，声明，附加条款等内容。

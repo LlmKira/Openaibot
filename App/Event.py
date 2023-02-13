@@ -606,18 +606,18 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         _remind_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Remind",
-                            msg=_remind_set.msg)
+                            reply=_remind_set.msg)
 
     if _text.startswith("/style"):
         _style_set = await StyleSet(user_id=_user_id, text=_text)
         _style_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Style",
-                            msg=_style_set.msg)
+                            reply=_style_set.msg)
 
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
+        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
 
     if _text.startswith("/voice"):
         _user_manger = UserManager(_user_id)
@@ -625,7 +625,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="VoiceSet")
+        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="VoiceSet")
 
     # Prompt 创建
     _prompt_type = await PromptType(text=_text, types="group")
@@ -723,18 +723,18 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         _remind_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Remind",
-                            msg=_remind_set.msg)
+                            reply=_remind_set.msg)
 
     if _text.startswith("/style"):
         _style_set = await StyleSet(user_id=_user_id, text=_text)
         _style_set: PublicReturn
         return PublicReturn(status=True,
                             trace="Style",
-                            msg=_style_set.msg)
+                            reply=_style_set.msg)
 
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, msg=f"Down,Miss you", trace="ForgetMe")
+        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
 
     if _text.startswith("/voice"):
         _user_manger = UserManager(_user_id)
@@ -742,7 +742,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         if _user_manger.read("voice"):
             _set = False
         _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, msg=f"TTS:{_set}", trace="Voice")
+        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="Voice")
 
     # logger.info(_prompt)
     # Prompt 创建

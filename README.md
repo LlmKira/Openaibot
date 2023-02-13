@@ -203,6 +203,57 @@ When using the user/group authorization command, you need to follow the real ID 
 | text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
 | text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
 
+### 🎸 Command
+
+Due to lack of maintainers, some commands only work on some platforms.
+
+```shell
+```shell
+chat - talk
+write - continue writing
+forgetme - reset memory
+remind - Scene setting cancel overwrite with short text
+voice - voice support
+style - set the preferred word
+
+trigger - Admin initiates unsolicited responses
+trace - Admin activates automatic tracking of associated channels
+cross - whether the Admin starts a cross-response
+silent - Admin starts silent error reporting
+
+auto_adjust - automatic optimizer
+set_user_cold - set user cooldown
+set_group_cold - set group cooldown
+set_token_limit - set output limit length
+set_input_limit - set input limit length
+see_api_key - Several Api keys now
+del_api_key - Delete Api key
+add_api_key - add Api key
+config - get/backup hot configuration file
+set_per_user_limit - set normal user limit
+set_per_hour_limit - set user hour limit
+promote_user_limit - Promote user limit
+reset_user_usage - Reset user usage
+add_block_group - block group
+del_block_group - Unblock group
+add_block_user - block user
+del_block_user - Unblock user
+add_white_group - add whitelist group
+add_white_user - add whitelist user
+del_white_group - delist whitelist group
+del_white_user - remove whitelist user
+update_detect - update sensitive words
+open_user_white_mode - open user whitelist
+open_group_white_mode - open group whitelist
+close_user_white_mode - close user whitelist
+close_group_white_mode - close group whitelist
+open - open the robot
+close - close the robot
+change_head - set head switch
+change_style - set the style switch
+help - help
+```
+
 ### 🧀 More Docs
 
 Details On [Deploy Guide](https://llmkira.github.io/Docs/en/guide/getting-started)
@@ -230,7 +281,7 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 
 ## 📃 License
 
-```
+```markdown
 This project open source and available under
 the [AGPL License](https://github.com/LLMKira/Openaibot/blob/main/LICENSE).
 ```
