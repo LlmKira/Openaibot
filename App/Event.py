@@ -14,6 +14,8 @@ import psutil
 
 # from io import BytesIO
 from typing import Union
+
+from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
@@ -34,7 +36,7 @@ from llm_kira.error import RateLimitError, ServiceUnavailableError, Authenticati
 
 OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
 
-# fast text langdetect
+# fast text langdetect_kira
 
 _service = Service_Data.get_key()
 REDIS_CONF = _service["redis"]
@@ -50,15 +52,6 @@ MODEL_NAME = BACKEND_CONF.get("model")
 MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
 SimilarityInit = BACKEND_CONF.get("similarity_init")
 CHAT_OPTIMIZER = Optimizer.SinglePoint
-TorchMeM = (float(psutil.virtual_memory().total) / 1024 / 1024 / 1024) < 2
-
-if SimilarityInit and TorchMeM:
-    try:
-        import torch
-
-        CHAT_OPTIMIZER = Optimizer.RelatePoint
-    except Exception as e:
-        logger.warning(f"{e}:RelatePoint init failed `pip install -U llm-kira`?")
 
 # Limit
 MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 3500
@@ -141,7 +134,7 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         from fatlangdetect import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
     except Exception as e:
-        from langdetect import detect
+        from langdetect_kira import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""))[0][0].upper()
 
     if TTS_CONF["type"] == "vits":
@@ -253,7 +246,7 @@ class Reply(object):
     async def load_response(self,
                             conversation: Conversation = None,
                             prompt: PromptManager = None,
-                            method: str = "chat") -> str:
+                            method: str = "chat") -> PublicReturn:
         """
         发起请求
         :param conversation:
@@ -265,7 +258,9 @@ class Reply(object):
         # 关键检查
         status, log = self.pre_check()
         if not status:
-            return log
+            return PublicReturn(status=True,
+                                trace="Req",
+                                reply=log)
 
         receiver = llm_kira.client
         if not self.api_key:
@@ -285,7 +280,9 @@ class Reply(object):
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(3, 6))
-            return f"{_info}\nI think you talk too {_harm}."
+            return PublicReturn(status=True,
+                                trace="Req",
+                                reply=f"{_info}\nI think you talk too {_harm}.")
 
         # 初始化记忆管理器
         Mem = receiver.MemoryManager(profile=conversation)
@@ -349,6 +346,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
+                                               skeleton=[DuckgoCraw(), SearchCraw()],
                                                optimizer=CHAT_OPTIMIZER,
                                                llm_model=llm)
                 prompt: PromptManager
@@ -356,6 +354,10 @@ class Reply(object):
                 webSupport = ""
                 if 4 < len(prompt_text) < 35:
                     _head, _body = Utils.get_head_foot(prompt_index)
+                    PLUGIN_TABLE["search"] = 0
+                    PLUGIN_TABLE["duckgo"] = 0
+                    PLUGIN_TABLE.pop("search")
+                    PLUGIN_TABLE.pop("duckgo")
                     webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
                                                                      prompt=_body).run()
                     webSupport = webSupport[:900]
@@ -375,7 +377,9 @@ class Reply(object):
                 logger.success(
                     f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
             else:
-                return "NO SUPPORT METHOD"
+                return PublicReturn(status=False,
+                                    trace="Req",
+                                    msg="NO SUPPORT METHOD")
         except RateLimitError as e:
             _usage = 0
             _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError Reach Limit|Overload"
@@ -403,7 +407,15 @@ class Reply(object):
         # 人性化处理
         _deal = ContentDfa.filter_all(_deal)
         _deal = Utils.Humanization(_deal)
-        return _deal
+        if _usage == 0:
+            return PublicReturn(status=False,
+                                trace="Req",
+                                msg=_deal
+                                )
+        else:
+            return PublicReturn(status=True,
+                                trace="Req",
+                                reply=_deal)
 
 
 async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
@@ -655,21 +667,23 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
             prompt=promptManager,
             method=_prompt_type.data
         )
+        if not _req.status:
+            raise LoadResponseError(_req.msg)
         # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
-            voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
+            voice_data = await TTSSupportCheck(text=_req.reply, user_id=_user_id)
         if _voice and not voice_data:
             _info.append("TTS Unavailable")
         # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
-        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req.reply}\n{_log}")
     except LoadResponseError as e:
-        return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
+        return PublicReturn(status=True, msg=f"{e}", trace="Error")
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Check Bot Env/Config~nya")
@@ -771,21 +785,23 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
             prompt=promptManager,
             method=_prompt_type.data
         )
+        if not _req.status:
+            raise LoadResponseError(_req.msg)
         # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
-            voice_data = await TTSSupportCheck(text=_req, user_id=_user_id)
+            voice_data = await TTSSupportCheck(text=_req.reply, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
-        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req}\n{_log}")
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req.reply}\n{_log}")
     except LoadResponseError as e:
-        return PublicReturn(status=True, msg=f"OK", trace="Error", reply=f"Error Occur --{e}")
+        return PublicReturn(status=True, msg=f"{e}", trace="Error")
     except Exception as e:
         logger.error(e)
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Oh no~ Check Bot Env/Config~ nya")
@@ -814,6 +830,18 @@ async def Trace(Message: User_Message, config) -> PublicReturn:
     if GroupManager(group_id).read("trace"):
         return PublicReturn(status=True, trace="TraceCheck")
     return PublicReturn(status=False, trace="No Trace")
+
+
+async def Silent(Message: User_Message, config) -> PublicReturn:
+    """
+    :param Message: group id
+    :param config:
+    :return: TRUE,msg -> 在白名单
+    """
+    group_id = Message.from_chat.id
+    if GroupManager(group_id).read("silent"):
+        return PublicReturn(status=True, trace="silentCheck")
+    return PublicReturn(status=False, trace="No silent")
 
 
 async def Cross(Message: User_Message, config) -> PublicReturn:
@@ -860,6 +888,15 @@ async def GroupAdminCommand(Message: User_Message, config):
                 _set = False
             _group_manger.save({"cross": _set})
             _ev = f"Group Admin:GroupCross {_set}"
+            _reply.append(_ev)
+            logger.info(_ev)
+        if command.startswith("/silent"):
+            _group_manger = GroupManager(int(group_id))
+            _set = True
+            if _group_manger.read("silent"):
+                _set = False
+            _group_manger.save({"silent": _set})
+            _ev = f"Group Admin:GroupSilent {_set}"
             _reply.append(_ev)
             logger.info(_ev)
     except Exception as e:
