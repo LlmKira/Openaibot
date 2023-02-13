@@ -258,6 +258,7 @@ class DefaultData(object):
         return {
             "cross": True,
             "trace": False,
+            "silent": False,
             "white": False,
             "block": False,
             "trigger": False
