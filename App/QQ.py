@@ -26,7 +26,6 @@ from utils.Chat import Utils
 from utils.Data import create_message, User_Message, PublicReturn, DefaultData
 from utils.Frequency import Vitality
 
-
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
