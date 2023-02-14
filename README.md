@@ -208,7 +208,6 @@ When using the user/group authorization command, you need to follow the real ID 
 Due to lack of maintainers, some commands only work on some platforms.
 
 ```shell
-```shell
 chat - talk
 write - continue writing
 forgetme - reset memory

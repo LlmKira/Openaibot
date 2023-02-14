@@ -395,28 +395,27 @@ class Openai_Api_Key(object):
         _masked_key = DefaultData.mask_middle(key, 4)
         logger.warning(f"Api Key be Removed:{_masked_key},because {log}")
 
-    def check_api_key(self, resp, auth):
+    def check_api_key(self, resp: str, auth: str):
         # 读取
-        _error = ["invalid_request_error", "billing_not_active", "billing_not_active", "insufficient_quota"]
-        # 弹出
-        ERROR = resp.get("error")
+        # _error = ["invalid_request_error", "billing_not_active", "billing_not_active", "insufficient_quota"]
+        # Pop
+        ERROR = resp
         if ERROR:
             logg = None
             pop_key = False
-            if ERROR.get('type') == "billing_not_active":
+            if "billing details" in ERROR:
                 pop_key = True
                 logg = f"认证资料过期: --type billing_not_active --auth {DefaultData.mask_middle(auth, 4)}"
-            if ERROR.get('type') == "insufficient_quota":
+            if "current quota" in ERROR:
                 pop_key = True
                 logg = f"Overused ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}"
-            if ERROR.get('code') == "invalid_api_key":
+            if "Incorrect API" in ERROR:
                 pop_key = True
                 logg = f"非法 ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}"
             if pop_key:
                 self.warn_api_key(key=auth, log=logg)
             else:
-                logg = f"{ERROR.get('type')}"
-            logger.warning(logg)
+                logger.warning(f"Unknown Error:{ERROR}")
 
 
 class ExpiringDict(OrderedDict):

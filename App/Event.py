@@ -10,7 +10,6 @@ import pathlib
 import asyncio
 import re
 import time
-import psutil
 
 # from io import BytesIO
 from typing import Union
@@ -223,7 +222,8 @@ class Reply(object):
         try:
             _harm = False
             if HARM_TYPE:
-                _Moderation_rep = await llm_kira.openai.Moderations(api_key=self.api_key).create(input=str(prompt))
+                _Moderation_rep = await llm_kira.openai_utils.Moderations(api_key=self.api_key).create(
+                    input=str(prompt))
                 _moderation_result = _Moderation_rep["results"][0]
                 _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
                 for item in _harm_result:
@@ -299,14 +299,12 @@ class Reply(object):
             if method == "write":
                 _head, _body = Utils.get_head_foot(prompt_index)
                 # OPENAI
-                response = await llm_kira.openai.Completion(api_key=self.api_key,
-                                                            call_func=OPENAI_API_KEY_MANAGER.check_api_key).create(
-                    model=MODEL_NAME,
-                    prompt=str(_body),
-                    temperature=0.2,
-                    frequency_penalty=1,
-                    max_tokens=int(_csonfig["token_limit"])
-                )
+                response = await llm.run(prompt=str(_body),
+                                         predict_tokens=int(_csonfig["token_limit"]),
+                                         llm_param=OpenAiParam(model=MODEL_NAME, temperature=0.2,
+                                                               frequency_penalty=1)
+                                         )
+                response = response.raw
                 _deal = rqParser.get_response_text(response)[0]
                 _usage = rqParser.get_response_usage(response)
                 logger.success(
@@ -346,7 +344,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               # skeleton=[DuckgoCraw(), SearchCraw()],
+                                               skeleton=[DuckgoCraw(), SearchCraw()],
                                                optimizer=CHAT_OPTIMIZER,
                                                llm_model=llm)
                 prompt: PromptManager
