@@ -2,7 +2,7 @@
 # @Time    : 9/22/22 11:04 PM
 # @FileName: Event.py
 # @Software: PyCharm
-# @Github    ：sudoskys
+# @Github: sudoskys
 
 import json
 import random
@@ -14,7 +14,6 @@ import time
 # from io import BytesIO
 from typing import Union
 
-from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
@@ -28,9 +27,10 @@ from utils.Lock import pLock
 
 import llm_kira
 from llm_kira.utils.chat import Cut
-from llm_kira.client import Optimizer, PromptManager, Conversation
 from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
+from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
+from llm_kira.client import Optimizer, PromptManager, Conversation
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 
 OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
@@ -41,6 +41,11 @@ _service = Service_Data.get_key()
 REDIS_CONF = _service["redis"]
 TTS_CONF = _service["tts"]
 PLUGIN_TABLE = _service["plugin"]
+
+# End
+PLUGIN_TABLE.pop("search", None)
+PLUGIN_TABLE.pop("duckgo", None)
+
 BACKEND_CONF = _service["backend"]
 PROXY_CONF = ProxyConfig(**_service["proxy"])
 HARM_TYPE = _service["moderation_type"]
@@ -222,7 +227,7 @@ class Reply(object):
         try:
             _harm = False
             if HARM_TYPE:
-                _Moderation_rep = await llm_kira.openai_utils.Moderations(api_key=self.api_key).create(
+                _Moderation_rep = await llm_kira.openai.Moderations(api_key=self.api_key).create(
                     input=str(prompt))
                 _moderation_result = _Moderation_rep["results"][0]
                 _harm_result = [key for key, value in _moderation_result["categories"].items() if value == True]
@@ -301,8 +306,11 @@ class Reply(object):
                 # OPENAI
                 response = await llm.run(prompt=str(_body),
                                          predict_tokens=int(_csonfig["token_limit"]),
-                                         llm_param=OpenAiParam(model=MODEL_NAME, temperature=0.2,
-                                                               frequency_penalty=1)
+                                         llm_param=OpenAiParam(
+                                             model=MODEL_NAME,
+                                             temperature=0.2,
+                                             frequency_penalty=1
+                                         )
                                          )
                 response = response.raw
                 _deal = rqParser.get_response_text(response)[0]
@@ -310,6 +318,7 @@ class Reply(object):
                 logger.success(
                     f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_body} --req: {_deal}"
                 )
+
             elif method == "catch":
                 llm.token_limit = 1000
                 llm.auto_penalty = False
@@ -344,32 +353,27 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               # skeleton=[DuckgoCraw(), SearchCraw()],
+                                               skeleton=[DuckgoCraw(), SearchCraw()],
                                                optimizer=CHAT_OPTIMIZER,
                                                llm_model=llm)
                 prompt: PromptManager
                 prompt.template = _head
-                webSupport = ""
-                if 4 < len(prompt_text) < 35:
-                    _head, _body = Utils.get_head_foot(prompt_index)
-                    PLUGIN_TABLE["search"] = 0
-                    PLUGIN_TABLE["duckgo"] = 0
-                    PLUGIN_TABLE.pop("search")
-                    PLUGIN_TABLE.pop("duckgo")
-                    webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
-                                                                     prompt=_body).run()
-                    webSupport = webSupport[:200]
+
+                _, _body = Utils.get_head_foot(prompt_index)
+                webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
+                                                                 prompt=_body).run()
+                webSupport = webSupport[:200]
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style,
-                                          # presence_penalty=0.3,
-                                          # frequency_penalty=0.3
-                                          ),
+                    llm_param=OpenAiParam(
+                        model_name=MODEL_NAME, logit_bias=_style,
+                        presence_penalty=0.5,
+                        frequency_penalty=0
+                    ),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
                     increase=webSupport
                 )
                 prompt.clean()
-                # print(response)
                 _deal = response.reply
                 _usage = response.llm.usage
                 logger.success(
