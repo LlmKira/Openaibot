@@ -344,7 +344,7 @@ class Reply(object):
 
                 chat_client = receiver.ChatBot(profile=conversation,
                                                memory_manger=Mem,
-                                               skeleton=[DuckgoCraw(), SearchCraw()],
+                                               # skeleton=[DuckgoCraw(), SearchCraw()],
                                                optimizer=CHAT_OPTIMIZER,
                                                llm_model=llm)
                 prompt: PromptManager
