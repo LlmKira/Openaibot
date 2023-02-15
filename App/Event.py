@@ -53,7 +53,7 @@ SimilarityInit = BACKEND_CONF.get("similarity_init")
 CHAT_OPTIMIZER = Optimizer.SinglePoint
 
 # Limit
-MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 3500
+MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 2000
 if not MODEL_NAME:
     logger.warning("Model Conf Not Found")
 
