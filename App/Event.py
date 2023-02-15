@@ -291,7 +291,7 @@ class Reply(object):
             api_key=self.api_key,
             call_func=OPENAI_API_KEY_MANAGER.check_api_key,
             token_limit=MODEL_TOKEN_LIMIT,
-            auto_penalty=not _csonfig["auto_adjust"],
+            auto_penalty=_csonfig["auto_adjust"],
         )
 
         try:
@@ -358,7 +358,7 @@ class Reply(object):
                     PLUGIN_TABLE.pop("duckgo")
                     webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
                                                                      prompt=_body).run()
-                    webSupport = webSupport[:900]
+                    webSupport = webSupport[:200]
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name=MODEL_NAME, logit_bias=_style,
                                           # presence_penalty=0.3,
