@@ -213,6 +213,8 @@ class BotRunner(object):
             _hand: User_Message
             started = False
 
+            if message.entities:
+                print(message.entities[0].type)
             # Self Known
             _bot_profile = Setting.ProfileManager().access_telegram(init=False)
             if _bot_profile.mentions:
