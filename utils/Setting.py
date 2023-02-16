@@ -4,7 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # 全局共享管理器
-from typing import Union
+from typing import Union, Optional
 
 from loguru import logger
 from pydantic import BaseModel
@@ -26,6 +26,7 @@ _init_()
 class ProfileReturn(BaseModel):
     bot_id: Union[str, int] = 0
     bot_name: str = ""
+    mentions: Optional[str] = None
 
 
 class ProfileManager(object):
@@ -51,10 +52,10 @@ class ProfileManager(object):
         else:
             return ProfileReturn(**self.get_bot_profile(domain="api"))
 
-    def access_telegram(self, bot_name=None, bot_id=None, init=False):
+    def access_telegram(self, bot_name: str = None, bot_id: int = None, mentions: str = None, init=False):
         global _bot_profile
         if init:
-            _profile = self.set_bot_profile(domain="telegram", bot_id=bot_id, bot_name=bot_name)
+            _profile = self.set_bot_profile(domain="telegram", bot_id=bot_id, bot_name=bot_name, mentions=mentions)
             logger.success(f"Init Telegram Bot Profile: {_profile}")
             return _profile
         else:
@@ -69,13 +70,14 @@ class ProfileManager(object):
         else:
             return ProfileReturn(**self.get_bot_profile(domain="qq"))
 
-    def set_bot_profile(self, domain=None, bot_id=None, bot_name=None):
+    def set_bot_profile(self, domain=None, bot_id=None, bot_name=None, **kwargs):
         global _bot_profile
         if not domain:
             raise Exception("ProfileManager:Missing Name")
         if not bot_id or not bot_name:
             raise Exception("BOT:NONE")
         _data = {"bot_id": bot_id, "bot_name": bot_name}
+        _data.update(**kwargs)
         _bot_profile[domain] = _data
         return _data
 

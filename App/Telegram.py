@@ -213,6 +213,12 @@ class BotRunner(object):
             _hand: User_Message
             started = False
 
+            # Self Known
+            _bot_profile = Setting.ProfileManager().access_telegram(init=False)
+            if _bot_profile.mentions:
+                if f"@{_bot_profile.mentions} " in _hand.text or _hand.text.endswith(f" @{_bot_profile.mentions}"):
+                    started = True
+
             # Reply
             if message.reply_to_message:
                 _name = DefaultData.name_split(
@@ -220,7 +226,7 @@ class BotRunner(object):
                     limit=16
                 )
                 _text = str(message.reply_to_message.text).replace(_config.INTRO, "")
-                if f"{message.reply_to_message.from_user.id}" == f"{Setting.ProfileManager().access_telegram(init=False).bot_id}":
+                if f"{message.reply_to_message.from_user.id}" == f"{_bot_profile.bot_id}":
                     # 必回复
                     _trigger_message = await Event.Cross(_hand, _config)
                     if _trigger_message.status:
@@ -397,7 +403,7 @@ class BotRunner(object):
             _first_name = _me.first_name if _me.first_name else ""
             _last_name = _me.last_name if _me.last_name else ""
             _bot_name = ProfileManager.name_generate(first_name=_first_name, last_name=_last_name)
-            ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, init=True)
+            ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, mentions=_me.username, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, skip_pending=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=5)
