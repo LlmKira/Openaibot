@@ -548,30 +548,6 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     _white_user_check: PublicReturn
     if not _white_user_check.status:
         return PublicReturn(status=True, trace="WhiteGroupCheck", msg=_white_user_check.msg)
-
-    # 线性决策
-    if _text.startswith("/remind"):
-        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
-        _remind_set: PublicReturn
-        return PublicReturn(status=True, trace="Remind", reply=_remind_set.msg)
-
-    if _text.startswith("/style"):
-        _style_set = await StyleSet(user_id=_user_id, text=_text)
-        _style_set: PublicReturn
-        return PublicReturn(status=True, trace="Style", reply=_style_set.msg)
-
-    if _text.startswith("/forgetme"):
-        await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
-
-    if _text.startswith("/voice"):
-        _user_manger = UserManager(_user_id)
-        _set = True
-        if _user_manger.read("voice"):
-            _set = False
-        _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="VoiceSet")
-
     # Prompt 创建
     _prompt_type = await PromptType(text=_text, types="group")
     _prompt_type: PublicReturn
@@ -595,6 +571,34 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         Hook(name="sleepy", trigger="very sleepy,want sleep", value=2, last=120, time=int(time.time())))
     if _think.is_night:
         _think.hook("sleepy")
+    if random.randint(1, 100) > 80:
+        _think.hook("happy")
+
+    # 线性决策
+    if _text.startswith("/remind"):
+        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
+        _remind_set: PublicReturn
+        return PublicReturn(status=True, trace="Remind", reply=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True, trace="Style", reply=_style_set.msg)
+
+    if _text.startswith("/forgetme"):
+        await Forget(user_id=_user_id, chat_id=_chat_id)
+        _think.hook("sad")
+        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
+
+    if _text.startswith("/voice"):
+        _user_manger = UserManager(_user_id)
+        _set = True
+        if _user_manger.read("voice"):
+            _set = False
+        _user_manger.save({"voice": _set})
+        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="VoiceSet")
+
+    # LLM
     llm_model = llm_kira.client.llms.OpenAi(
         profile=conversation,
         api_key=OPENAI_API_KEY_MANAGER.get_key(),
@@ -682,38 +686,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     _white_user_check = await WhiteUserCheck(_user_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
-        return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
-                            msg=_white_user_check.msg)
-
-    # 线性决策
-    if _text.startswith("/remind"):
-        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
-        _remind_set: PublicReturn
-        return PublicReturn(status=True,
-                            trace="Remind",
-                            reply=_remind_set.msg)
-
-    if _text.startswith("/style"):
-        _style_set = await StyleSet(user_id=_user_id, text=_text)
-        _style_set: PublicReturn
-        return PublicReturn(status=True,
-                            trace="Style",
-                            reply=_style_set.msg)
-
-    if _text.startswith("/forgetme"):
-        await Forget(user_id=_user_id, chat_id=_chat_id)
-        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
-
-    if _text.startswith("/voice"):
-        _user_manger = UserManager(_user_id)
-        _set = True
-        if _user_manger.read("voice"):
-            _set = False
-        _user_manger.save({"voice": _set})
-        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="Voice")
-
-    # logger.info(_prompt)
+        return PublicReturn(status=True, trace="WhiteGroupCheck", msg=_white_user_check.msg)
     # Prompt 创建
     _prompt_type = await PromptType(text=_text, types="private")
     _prompt_type: PublicReturn
@@ -738,6 +711,36 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         Hook(name="sleepy", trigger="very sleepy,want sleep", value=2, last=120, time=int(time.time())))
     if _think.is_night:
         _think.hook("sleepy")
+
+    # 线性决策
+    if _text.startswith("/remind"):
+        _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
+        _remind_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Remind",
+                            reply=_remind_set.msg)
+
+    if _text.startswith("/style"):
+        _style_set = await StyleSet(user_id=_user_id, text=_text)
+        _style_set: PublicReturn
+        return PublicReturn(status=True,
+                            trace="Style",
+                            reply=_style_set.msg)
+
+    if _text.startswith("/forgetme"):
+        _think.hook("sad")
+        await Forget(user_id=_user_id, chat_id=_chat_id)
+        return PublicReturn(status=True, reply=f"Down,Miss you", trace="ForgetMe")
+
+    if _text.startswith("/voice"):
+        _user_manger = UserManager(_user_id)
+        _set = True
+        if _user_manger.read("voice"):
+            _set = False
+        _user_manger.save({"voice": _set})
+        return PublicReturn(status=True, reply=f"TTS:{_set}", trace="Voice")
+
+    # LLM
     llm_model = llm_kira.client.llms.OpenAi(
         profile=conversation,
         api_key=OPENAI_API_KEY_MANAGER.get_key(),
