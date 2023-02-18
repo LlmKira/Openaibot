@@ -66,7 +66,7 @@ class Detect(object):
 
     def isQuery(self, sentence):
         _query = ["怎么", "How",
-                  "什么", "作用", "知道", "吗？", "什么", "认识", "What",
+                  "什么", "作用", "知道", "吗？", "什么", "认识", "What", "bilibili", "http",
                   "what", "who", "how", "Who",
                   "Why", "的作品", "why", "Where",
                   "了解", "简述一下", "How to", "how to",
