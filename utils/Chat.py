@@ -34,6 +34,12 @@ PhotoRecordUtils = DataWorker(host=redis_config.host,
                               password=redis_config.password,
                               prefix="Open_Ai_bot_photo_record")
 
+ConfigUtils = DataWorker(host=redis_config.host,
+                         port=redis_config.port,
+                         db=redis_config.db,
+                         password=redis_config.password,
+                         prefix="Open_Ai_bot_config")
+
 global _csonfig
 
 
@@ -41,17 +47,14 @@ global _csonfig
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
-    if pathlib.Path("./Config/config.json").exists():
-        with open("./Config/config.json", encoding="utf-8") as f:
-            _csonfig = json.load(f)
-    else:
-        _csonfig = {}
+    _csonfig = ConfigUtils.getKey("config")
     DictUpdate.dict_update(now_table, _csonfig)
     _csonfig = now_table
     return _csonfig
 
 
 def save_csonfig():
+    ConfigUtils.setKey("config", _csonfig)
     with open("./Config/config.json", "w+", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 

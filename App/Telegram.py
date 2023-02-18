@@ -5,6 +5,7 @@
 # @Github: sudoskys
 
 import asyncio
+import json
 import pathlib
 import tzlocal
 import tempfile
@@ -21,7 +22,7 @@ from telebot.asyncio_storage import StateMemoryStorage
 from App import Event
 from utils import Setting, Sticker
 from utils.Blip import BlipServer
-from utils.Chat import Utils, PhotoRecordUtils
+from utils.Chat import Utils, PhotoRecordUtils, ConfigUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
 
@@ -376,6 +377,8 @@ class BotRunner(object):
                 _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config)
                 # 检查管理员指令
                 if _hand.text == "/config":
+                    with open("./Config/config.json", "w+", encoding="utf8") as f:
+                        json.dump(ConfigUtils.getKey("config"), f, indent=4, ensure_ascii=False)
                     path = str(pathlib.Path().cwd()) + "/" + "Config/config.json"
                     if pathlib.Path(path).exists():
                         doc = open(path, 'rb')

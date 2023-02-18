@@ -17,7 +17,7 @@ from typing import Union, Tuple
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import Utils, Usage, GroupManager, UserManager, Header, Style
+from utils.Chat import Utils, Usage, GroupManager, UserManager, Header, Style, ConfigUtils
 from utils.Data import DictUpdate, DefaultData, Openai_Api_Key, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
@@ -109,21 +109,22 @@ global _csonfig
 def load_csonfig():
     global _csonfig
     now_table = DefaultData.defaultConfig()
-    if pathlib.Path("./Config/config.json").exists():
-        with open("./Config/config.json", encoding="utf-8") as f:
-            _csonfig = json.load(f)
-    else:
-        _csonfig = {}
+    _csonfig = ConfigUtils.getKey("config")
     DictUpdate.dict_update(now_table, _csonfig)
     _csonfig = now_table
     return _csonfig
 
 
 def save_csonfig():
-    pLock.getInstance().acquire()
-    with open("./Config/config.json", "w+", encoding="utf8") as f:
-        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
-    pLock.getInstance().release()
+    ConfigUtils.setKey("config", _csonfig)
+
+
+# Init
+if not ConfigUtils.getKey("config"):
+    if pathlib.Path("./Config/config.json").exists():
+        with open("./Config/config.json", encoding="utf-8") as f:
+            _csonfig = json.load(f)
+        save_csonfig()
 
 
 async def TTSSupportCheck(text, user_id, limit: bool = True):
