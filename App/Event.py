@@ -34,6 +34,7 @@ from llm_kira.client.llms.base import LlmBase
 from llm_kira.creator import ThinkEngine, Hook
 from llm_kira.creator import PromptEngine
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
+from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 
 OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
 
@@ -325,6 +326,16 @@ class Reply(object):
                     _style = Style(uid=self.user).get()
                     if len(_style) < 10:
                         _style = None
+                _result = []
+                try:
+                    _result = await prompt.build_skeleton(query=_prompt.text,
+                                                          llm_task="Summary Text" if len(_prompt.text) > 20 else None,
+                                                          skeleton=random.choice([SearchCraw(), DuckgoCraw()])
+                                                          )
+                except Exception as e:
+                    logger.warning(e)
+                for item in _result:
+                    prompt.insert_knowledge(knowledge=item)
                 chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
                 prompt: PromptEngine
                 prompt.description = _head if _head else ""
