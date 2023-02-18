@@ -346,6 +346,7 @@ class Reply(object):
                                           logit_bias=_style,
                                           presence_penalty=0.5,
                                           frequency_penalty=0),
+                    rank_name=False
                 )
                 prompt.clean(clean_prompt=True)
                 _deal = response.reply
