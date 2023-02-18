@@ -569,9 +569,6 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     # Prompt 创建
     _prompt_type = await PromptType(text=_text, types="group")
     _prompt_type: PublicReturn
-    if not _prompt_type.status:
-        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-
     _cid = DefaultData.composing_uid(user_id=_user_id, chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
     start_name = DefaultData.name_split(sentence=_user_name, limit=10)
     restart_name = DefaultData.name_split(sentence=_bot_name, limit=10)
@@ -615,6 +612,10 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
             _set = False
         _user_manger.save({"voice": _set})
         return PublicReturn(status=True, reply=f"TTS:{_set}", trace="VoiceSet")
+
+    # 对话层
+    if not _prompt_type.status:
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
 
     # LLM
     llm_model = llm_kira.client.llms.OpenAi(
@@ -708,9 +709,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     # Prompt 创建
     _prompt_type = await PromptType(text=_text, types="private")
     _prompt_type: PublicReturn
-    if not _prompt_type.status:
-        # 预处理失败，不符合任何触发条件，不回复捏
-        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
+
     _cid = DefaultData.composing_uid(user_id=_user_id,
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
     start_name = DefaultData.name_split(sentence=_user_name, limit=10)
@@ -757,6 +756,10 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
             _set = False
         _user_manger.save({"voice": _set})
         return PublicReturn(status=True, reply=f"TTS:{_set}", trace="Voice")
+
+    # 对话层
+    if not _prompt_type.status:
+        return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
 
     # LLM
     llm_model = llm_kira.client.llms.OpenAi(
