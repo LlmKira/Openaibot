@@ -21,7 +21,7 @@ from utils.Chat import Utils, Usage, GroupManager, UserManager, Header, Style
 from utils.Data import DictUpdate, DefaultData, Openai_Api_Key, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
-from utils.Detect import DFA, Censor
+from utils.Detect import DFA, Censor, Detect
 from utils.Logging import LoadResponseError
 from utils.Lock import pLock
 
@@ -328,10 +328,12 @@ class Reply(object):
                         _style = None
                 _result = []
                 try:
-                    _result = await prompt.build_skeleton(query=_prompt.text,
-                                                          llm_task="Summary Text" if len(_prompt.text) > 20 else None,
-                                                          skeleton=random.choice([SearchCraw(), DuckgoCraw()])
-                                                          )
+                    if Detect().isQuery(_prompt.text):
+                        _result = await prompt.build_skeleton(query=_prompt.text,
+                                                              llm_task="Summary Text" if len(
+                                                                  _prompt.text) > 20 else None,
+                                                              skeleton=random.choice([SearchCraw(), DuckgoCraw()])
+                                                              )
                 except Exception as e:
                     logger.warning(e)
                 for item in _result:
