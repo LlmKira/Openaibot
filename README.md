@@ -203,6 +203,16 @@ When using the user/group authorization command, you need to follow the real ID 
 | text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
 | text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
 
+### 🌽 `/Config` File
+
+Our `llm-kira` dependency library is stored in the current package directory when there is no Redis support.
+
+The application itself is stored in Redis for robustness, except for `api_keys.json`, `service.json`
+and `assistants.json`.
+
+If you have `config.json`, the application will automatically initialise this file. And you can update the configuration
+to this file using the `/config` command.
+
 ### 🎸 Command
 
 Due to lack of maintainers, some commands only work on some platforms.

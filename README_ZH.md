@@ -199,6 +199,14 @@ python3 clinet.py
 | text-babbage-001 | 2048        | $0.0005  /1K tokens      |
 | text-ada-001     | 2048        | $0.0004  /1K tokens      |
 
+### 🌽 `/Config` File
+
+我们的 `llm-kira` 依赖库在没有 Redis 支持的时候，存储在当前包目录下。
+
+程序本身除了 `api_keys.json` `service.json` `assistants.json` 全部存储在 Redis 中以获得稳健性。
+
+如果你有放 `config.json`，程序会自动初始化此文件。且使用 `/config` 命令可以更新配置到此文件。
+
 ### 🎸 Command
 
 因为缺乏维护者的原因，部分命令仅在部分平台起效。
