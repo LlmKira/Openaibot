@@ -278,7 +278,8 @@ class Reply(object):
             raise LoadResponseError("Found:Api Key pool empty")
 
         # 内容安全策略
-        _harm = await self.openai_moderation(prompt=prompt.prompt)
+        _prompt = prompt.prompt
+        _harm = await self.openai_moderation(prompt=_prompt.prompt)
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(1, 4))
@@ -289,15 +290,15 @@ class Reply(object):
         try:
             # 分发类型
             if method == "write":
-                response = await llm_model.run(prompt=str(prompt.prompt.text),
+                response = await llm_model.run(prompt=str(_prompt.text),
                                                predict_tokens=int(_csonfig["token_limit"]),
                                                llm_param=OpenAiParam(model=MODEL_NAME, temperature=0.2,
                                                                      frequency_penalty=1)
                                                )
-                _deal = response.reply
+                _deal = response.reply[0]
                 _usage = response.usage
                 logger.success(
-                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal}"
+                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_prompt.text} --req: {_deal}"
                 )
             elif method == "catch":
                 chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
@@ -310,7 +311,7 @@ class Reply(object):
                 _deal = response.reply
                 _usage = response.llm.usage
                 logger.success(
-                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal} "
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_prompt.text} --req: {_deal} "
                 )
             elif method == "chat":
                 _head = None
@@ -339,7 +340,7 @@ class Reply(object):
                 _deal = response.reply
                 _usage = response.llm.usage
                 logger.success(
-                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal} ")
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_prompt.text} --req: {_deal} ")
             else:
                 return PublicReturn(status=False, trace="Req", msg="NO SUPPORT METHOD")
         except RateLimitError as e:
