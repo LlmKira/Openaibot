@@ -12,16 +12,16 @@ import re
 import time
 
 # from io import BytesIO
-from typing import Union
+from typing import Union, Tuple
 
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import Utils, Usage, rqParser, GroupManager, UserManager, Header, Style
+from utils.Chat import Utils, Usage, GroupManager, UserManager, Header, Style
 from utils.Data import DictUpdate, DefaultData, Openai_Api_Key, Service_Data, User_Message, PublicReturn, ProxyConfig
 from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
-from utils.Detect import DFA, Censor, get_start_name
+from utils.Detect import DFA, Censor
 from utils.Logging import LoadResponseError
 from utils.Lock import pLock
 
@@ -29,8 +29,10 @@ import llm_kira
 from llm_kira.utils.chat import Cut
 from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
-from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
-from llm_kira.client import Optimizer, PromptManager, Conversation
+from llm_kira.client import Optimizer, Conversation
+from llm_kira.client.llms.base import LlmBase
+from llm_kira.creator import ThinkEngine, Hook
+from llm_kira.creator import PromptEngine
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 
 OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
@@ -126,7 +128,7 @@ def save_csonfig():
 async def TTSSupportCheck(text, user_id, limit: bool = True):
     global TTS_CONF
     """
-    处理消息文本并构造请求返回字节流或者空。隶属 Event 文件
+    处理消息文本并构造请求返回字节流或者空
     :return:
     """
     if not TTS_CONF["status"]:
@@ -152,7 +154,7 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         # 合成
         _spell = [f"{cn[x]}{x}{cn[x]}" for x in cn.keys()]
         _new_text = "".join(_spell)
-        _new_text = "[LENGTH]1.4[LENGTH]" + _new_text
+        _new_text = "[LENGTH]1.3[LENGTH]" + _new_text
         # 接受数据
         result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
                                                         params=TTS_REQ(task_id=user_id,
@@ -191,7 +193,6 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         # 返回字节流
         return result
     else:
-        # 啥也没有
         return
 
 
@@ -215,14 +216,14 @@ async def Forget(user_id: int, chat_id: int):
 
 
 class Reply(object):
-    def __init__(self, user, group, api_key: Union[list, str]):
+    def __init__(self, user, group, api_key):
         # 用量检测
         self.user = user
         self.group = group
-        self._UsageManager = Usage(uid=self.user)
         self.api_key = api_key
+        self._UsageManager = Usage(uid=self.user)
 
-    async def openai_moderation(self, prompt: str):
+    async def openai_moderation(self, prompt: str) -> bool:
         # 内容审计
         try:
             _harm = False
@@ -239,105 +240,72 @@ class Reply(object):
             _harm = False
         return _harm
 
-    def pre_check(self):
+    def pre_check(self) -> Tuple[bool, str]:
         # Flood
         if Utils.WaitFlood(user=self.user, group=self.group):
             return False, "TOO FAST"
         _Usage = self._UsageManager.isOutUsage()
         if _Usage["status"]:
-            return False, f"小时额度或者单人总额度用完，请申请重置或等待\n{_Usage['use']}"
+            return False, f"小时额度或单人总额度用完，请重置或等待下一个小时\n{_Usage['use']}"
         return True, ""
 
     async def load_response(self,
-                            conversation: Conversation = None,
-                            prompt: PromptManager = None,
+                            profile: Conversation,
+                            llm_model: LlmBase,
+                            prompt: PromptEngine = None,
                             method: str = "chat") -> PublicReturn:
         """
         发起请求
-        :param conversation:
-        :param prompt:
-        :param method:
+        :param profile: 身份验证类
+        :param llm_model: LLM 模型
+        :param prompt: 提示引擎
+        :param method: 回复类型
         :return:
         """
         load_csonfig()
         # 关键检查
         status, log = self.pre_check()
         if not status:
-            return PublicReturn(status=True,
-                                trace="Req",
-                                reply=log)
-
-        receiver = llm_kira.client
-        if not self.api_key:
+            return PublicReturn(status=True, trace="Req", reply=log)
+        # Api Key 检查
+        if not OPENAI_API_KEY_MANAGER.get_key():
             logger.error("Api Check:Api Key pool empty")
             raise LoadResponseError("Found:Api Key pool empty")
 
-        prompt_text = prompt.run()
-        prompt_raw = prompt.run(raw_list=True) if prompt.run(raw_list=True) else [""]
-        prompt_index = prompt_raw[-1]
-
-        # 长度限定
-        # if Utils.tokenizer(str(prompt_text)) > _csonfig['input_limit']:
-        #     return "TOO LONG"
-
         # 内容安全策略
-        _harm = await self.openai_moderation(prompt=prompt_text)
+        _harm = await self.openai_moderation(prompt=prompt.prompt)
         if _harm:
             _info = DefaultData.getRefuseAnswer()
-            await asyncio.sleep(random.randint(3, 6))
-            return PublicReturn(status=True,
-                                trace="Req",
-                                reply=f"{_info}\nI think you talk too {_harm}.")
+            await asyncio.sleep(random.randint(1, 4))
+            return PublicReturn(status=True, trace="Req", reply=f"{_info}\nYou talk too {_harm}.")
 
         # 初始化记忆管理器
-        Mem = receiver.MemoryManager(profile=conversation)
-        llm = llm_kira.client.llms.OpenAi(
-            profile=conversation,
-            api_key=self.api_key,
-            call_func=OPENAI_API_KEY_MANAGER.check_api_key,
-            token_limit=MODEL_TOKEN_LIMIT,
-            auto_penalty=_csonfig["auto_adjust"],
-        )
-
         try:
             # 分发类型
             if method == "write":
-                _head, _body = Utils.get_head_foot(prompt_index)
-                # OPENAI
-                response = await llm.run(prompt=str(_body),
-                                         predict_tokens=int(_csonfig["token_limit"]),
-                                         llm_param=OpenAiParam(
-                                             model=MODEL_NAME,
-                                             temperature=0.2,
-                                             frequency_penalty=1
-                                         )
-                                         )
-                response = response.raw
-                _deal = rqParser.get_response_text(response)[0]
-                _usage = rqParser.get_response_usage(response)
-                logger.success(
-                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {_body} --req: {_deal}"
-                )
-
-            elif method == "catch":
-                llm.token_limit = 1000
-                llm.auto_penalty = False
-                chat_client = receiver.ChatBot(profile=conversation,
-                                               memory_manger=Mem,
-                                               optimizer=Optimizer.MatrixPoint,
-                                               llm_model=llm
+                response = await llm_model.run(prompt=str(prompt.prompt.text),
+                                               predict_tokens=int(_csonfig["token_limit"]),
+                                               llm_param=OpenAiParam(model=MODEL_NAME, temperature=0.2,
+                                                                     frequency_penalty=1)
                                                )
+                _deal = response.reply
+                _usage = response.usage
+                logger.success(
+                    f"Write:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal}"
+                )
+            elif method == "catch":
+                chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
                 response = await chat_client.predict(
                     llm_param=OpenAiParam(model_name=MODEL_NAME),
                     prompt=prompt,
                     predict_tokens=150
                 )
-                prompt.clean()
+                prompt.clean(clean_prompt=True)
                 _deal = response.reply
                 _usage = response.llm.usage
                 logger.success(
-                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
-
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal} "
+                )
             elif method == "chat":
                 _head = None
                 if _csonfig.get("allow_change_head"):
@@ -350,38 +318,24 @@ class Reply(object):
                     _style = Style(uid=self.user).get()
                     if len(_style) < 10:
                         _style = None
-
-                chat_client = receiver.ChatBot(profile=conversation,
-                                               memory_manger=Mem,
-                                               skeleton=[DuckgoCraw(), SearchCraw()],
-                                               optimizer=CHAT_OPTIMIZER,
-                                               llm_model=llm)
-                prompt: PromptManager
-                prompt.template = _head
-
-                _, _body = Utils.get_head_foot(prompt_index)
-                webSupport = await receiver.enhance.PluginSystem(plugin_table=PLUGIN_TABLE,
-                                                                 prompt=_body).run()
-                webSupport = webSupport[:200]
+                chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
+                prompt: PromptEngine
+                prompt.description = _head if _head else ""
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(
-                        model_name=MODEL_NAME, logit_bias=_style,
-                        presence_penalty=0.5,
-                        frequency_penalty=0
-                    ),
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
-                    increase=webSupport
+                    llm_param=OpenAiParam(model_name=MODEL_NAME,
+                                          logit_bias=_style,
+                                          presence_penalty=0.5,
+                                          frequency_penalty=0),
                 )
-                prompt.clean()
+                prompt.clean(clean_prompt=True)
                 _deal = response.reply
                 _usage = response.llm.usage
                 logger.success(
-                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt_text} --req: {_deal} ")
+                    f"CHAT:{self.user}:{self.group} --time: {int(time.time() * 1000)} --prompt: {prompt.prompt.text} --req: {_deal} ")
             else:
-                return PublicReturn(status=False,
-                                    trace="Req",
-                                    msg="NO SUPPORT METHOD")
+                return PublicReturn(status=False, trace="Req", msg="NO SUPPORT METHOD")
         except RateLimitError as e:
             _usage = 0
             _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError Reach Limit|Overload"
@@ -410,14 +364,9 @@ class Reply(object):
         _deal = ContentDfa.filter_all(_deal)
         _deal = Utils.Humanization(_deal)
         if _usage == 0:
-            return PublicReturn(status=False,
-                                trace="Req",
-                                msg=_deal
-                                )
+            return PublicReturn(status=False, trace="Req", msg=_deal)
         else:
-            return PublicReturn(status=True,
-                                trace="Req",
-                                reply=_deal)
+            return PublicReturn(status=True, trace="Req", reply=_deal)
 
 
 async def WhiteUserCheck(user_id: int, WHITE: str = "") -> PublicReturn:
@@ -598,24 +547,18 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     _white_user_check = await WhiteGroupCheck(_chat_id, config.WHITE)
     _white_user_check: PublicReturn
     if not _white_user_check.status:
-        return PublicReturn(status=True,
-                            trace="WhiteGroupCheck",
-                            msg=_white_user_check.msg)
+        return PublicReturn(status=True, trace="WhiteGroupCheck", msg=_white_user_check.msg)
 
     # 线性决策
     if _text.startswith("/remind"):
         _remind_set = await RemindSet(user_id=_user_id, start_name=_user_name, restart_name=_bot_name, text=_text)
         _remind_set: PublicReturn
-        return PublicReturn(status=True,
-                            trace="Remind",
-                            reply=_remind_set.msg)
+        return PublicReturn(status=True, trace="Remind", reply=_remind_set.msg)
 
     if _text.startswith("/style"):
         _style_set = await StyleSet(user_id=_user_id, text=_text)
         _style_set: PublicReturn
-        return PublicReturn(status=True,
-                            trace="Style",
-                            reply=_style_set.msg)
+        return PublicReturn(status=True, trace="Style", reply=_style_set.msg)
 
     if _text.startswith("/forgetme"):
         await Forget(user_id=_user_id, chat_id=_chat_id)
@@ -633,57 +576,79 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     _prompt_type = await PromptType(text=_text, types="group")
     _prompt_type: PublicReturn
     if not _prompt_type.status:
-        # 预处理失败，不符合任何触发条件，不回复捏
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-    _cid = DefaultData.composing_uid(user_id=_user_id,
-                                     chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
+
+    _cid = DefaultData.composing_uid(user_id=_user_id, chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
     start_name = DefaultData.name_split(sentence=_user_name, limit=10)
     restart_name = DefaultData.name_split(sentence=_bot_name, limit=10)
+
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
-    # conversation.hash_secret = str(int(time.time()))
-    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
-
+    _think = ThinkEngine(profile=conversation)
+    _think.register_hook(Hook(name="happy", trigger="very happy", value=3, last=60, time=int(time.time())))
+    _think.register_hook(Hook(name="sad", trigger="very sad", value=4, last=120, time=int(time.time())))
+    _think.register_hook(Hook(name="bored", trigger="very bored", value=5, last=30, time=int(time.time())))
+    _think.register_hook(
+        Hook(name="sleepy", trigger="very sleepy,want sleep", value=2, last=120, time=int(time.time())))
+    if _think.is_night:
+        _think.hook("sleepy")
+    llm_model = llm_kira.client.llms.OpenAi(
+        profile=conversation,
+        api_key=OPENAI_API_KEY_MANAGER.get_key(),
+        call_func=OPENAI_API_KEY_MANAGER.check_api_key,
+        token_limit=MODEL_TOKEN_LIMIT,
+        auto_penalty=_csonfig["auto_adjust"],
+    )
     # 构建
+    _think = ThinkEngine(profile=conversation)
+    _description = str(time.strftime("%Y/%m/%d %H:%M", time.localtime()))
+    _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
+    _description += f"\n{''.join(_think.build_status(rank=30))}"
+    _description += f"\n📱💬 with {start_name}|"
+
+    promptManager = llm_kira.creator.PromptEngine(profile=conversation,
+                                                  connect_words="\n",
+                                                  memory_manger=llm_kira.client.MemoryManager(profile=conversation),
+                                                  reference_ratio=0.3,
+                                                  llm_model=llm_model,
+                                                  description=_description,
+                                                  )
     for item in _prompt:
-        item = str(item)
-        start = conversation.start_name
-        if ":" in item:
-            start = ""
+        item = ContentDfa.filter_all(item)
         if item.startswith("/"):
             _split_prompt = item.split(" ", 1)
             if len(_split_prompt) > 1:
                 item = _split_prompt[1]
-        # 内容过滤
-        item = ContentDfa.filter_all(item)
-        promptManager.insert(item=PromptItem(start=start, text=str(item)))
+        start, item = Utils.get_head_foot(prompt=item)
+        start = start if start else conversation.start_name
+        promptManager.insert_prompt(prompt=PromptItem(start=start, text=str(item)))
     try:
-        _client = Reply(user=_user_id,
-                        group=_chat_id,
-                        api_key=OPENAI_API_KEY_MANAGER.get_key())
-        _req = await _client.load_response(
-            conversation=conversation,
+        _client = Reply(user=_user_id, group=_chat_id, api_key=OPENAI_API_KEY_MANAGER.get_key())
+        _client_response = await _client.load_response(
+            profile=conversation,
             prompt=promptManager,
-            method=_prompt_type.data
+            method=_prompt_type.data,
+            llm_model=llm_model
         )
-        if not _req.status:
-            raise LoadResponseError(_req.msg)
+        if not _client_response.status:
+            raise LoadResponseError(_client_response.msg)
         # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
-            voice_data = await TTSSupportCheck(text=_req.reply, user_id=_user_id)
+            voice_data = await TTSSupportCheck(text=_client_response.reply, user_id=_user_id)
         if _voice and not voice_data:
             _info.append("TTS Unavailable")
         # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
-        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req.reply}\n{_log}")
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data,
+                            reply=f"{_client_response.reply}\n{_log}")
     except LoadResponseError as e:
         return PublicReturn(status=True, msg=f"{e}", trace="Error")
     except Exception as e:
@@ -757,51 +722,78 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
                                      chat_id=_chat_id) if _prompt_type.data != "catch" else _chat_id
     start_name = DefaultData.name_split(sentence=_user_name, limit=10)
     restart_name = DefaultData.name_split(sentence=_bot_name, limit=10)
+
     conversation = llm_kira.client.Conversation(
         start_name=start_name,
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
+    _think = ThinkEngine(profile=conversation)
+    _think.register_hook(Hook(name="happy", trigger="very happy", value=3, last=60, time=int(time.time())))
+    _think.register_hook(Hook(name="sad", trigger="very sad", value=4, last=120, time=int(time.time())))
+    _think.register_hook(Hook(name="bored", trigger="very bored", value=5, last=30, time=int(time.time())))
+    _think.register_hook(
+        Hook(name="sleepy", trigger="very sleepy,want sleep", value=2, last=120, time=int(time.time())))
+    if _think.is_night:
+        _think.hook("sleepy")
+    llm_model = llm_kira.client.llms.OpenAi(
+        profile=conversation,
+        api_key=OPENAI_API_KEY_MANAGER.get_key(),
+        call_func=OPENAI_API_KEY_MANAGER.check_api_key,
+        token_limit=MODEL_TOKEN_LIMIT,
+        auto_penalty=_csonfig["auto_adjust"],
+    )
     # 构建
-    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
+    _think = ThinkEngine(profile=conversation)
+    _description = str(time.strftime("%Y/%m/%d %H:%M", time.localtime()))
+    _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
+    _description += f"\n{''.join(_think.build_status(rank=30))}"
+    _description += f"\n📱💬 with {start_name}|"
+
+    promptManager = llm_kira.creator.PromptEngine(profile=conversation,
+                                                  connect_words="\n",
+                                                  memory_manger=llm_kira.client.MemoryManager(profile=conversation),
+                                                  reference_ratio=0.3,
+                                                  llm_model=llm_model,
+                                                  description=_description,
+                                                  )
     # 构建
     for item in _prompt:
-        item = str(item)
-        start = conversation.start_name
-        if ":" in item:
-            start = ""
+        if ContentDfa.exists(item):
+            _think.hook("bored")
+            _think.hook("sad")
+        item = ContentDfa.filter_all(item)
         if item.startswith("/"):
             _split_prompt = item.split(" ", 1)
             if len(_split_prompt) > 1:
                 item = _split_prompt[1]
-        # 内容过滤
-        item = ContentDfa.filter_all(item)
-        promptManager.insert(item=PromptItem(start=start, text=str(item)))
-
+        start, item = Utils.get_head_foot(prompt=item)
+        start = start if start else conversation.start_name
+        promptManager.insert_prompt(prompt=PromptItem(start=start, text=str(item)))
     try:
-        _client = Reply(user=_user_id,
-                        group=_chat_id,
-                        api_key=OPENAI_API_KEY_MANAGER.get_key())
-        _req = await _client.load_response(
-            conversation=conversation,
+        _client = Reply(user=_user_id, group=_chat_id, api_key=OPENAI_API_KEY_MANAGER.get_key())
+        _client_response = await _client.load_response(
+            profile=conversation,
             prompt=promptManager,
-            method=_prompt_type.data
+            method=_prompt_type.data,
+            llm_model=llm_model
         )
-        if not _req.status:
-            raise LoadResponseError(_req.msg)
+        if not _client_response.status:
+            raise LoadResponseError(_client_response.msg)
         # message_type = "text"
         _info = []
         # 语音消息
         _voice = UserManager(_user_id).read("voice")
         voice_data = None
         if _voice:
-            voice_data = await TTSSupportCheck(text=_req.reply, user_id=_user_id)
+            voice_data = await TTSSupportCheck(text=_client_response.reply, user_id=_user_id)
         if not voice_data and _voice:
             _info.append("TTS Unavailable")
         # message_type = "voice" if _voice and voice_data else message_type
         # f"{_req}\n{config.INTRO}\n{''.join(_info)}"
         _log = '\n'.join(_info)
-        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data, reply=f"{_req.reply}\n{_log}")
+        return PublicReturn(status=True, msg=f"OK", trace="Reply", voice=voice_data,
+                            reply=f"{_client_response.reply}\n{_log}")
     except LoadResponseError as e:
         return PublicReturn(status=True, msg=f"{e}", trace="Error")
     except Exception as e:

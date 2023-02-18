@@ -283,6 +283,7 @@ class Utils(object):
         return f"加入了\n{_info}"
 
 
+# 弃用
 class rqParser(object):
     @staticmethod
     def get_response_text(response):
