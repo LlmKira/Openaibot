@@ -773,7 +773,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     _think = ThinkEngine(profile=conversation)
     _description = str(time.strftime("%Y/%m/%d %H:%M", time.localtime()))
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
-    _description += f"\n{''.join(_think.build_status(rank=30))}"
+    _description += f"\n{''.join(_think.build_status(rank=20))}"
     _description += f"\n📱💬 with {start_name}|"
 
     promptManager = llm_kira.creator.PromptEngine(profile=conversation,
