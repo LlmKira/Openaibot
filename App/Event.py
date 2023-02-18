@@ -338,7 +338,8 @@ class Reply(object):
                     prompt.insert_knowledge(knowledge=item)
                 chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
                 prompt: PromptEngine
-                prompt.description = _head if _head else ""
+                if _head:
+                    prompt.description += _head[:400]
                 response = await chat_client.predict(
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
