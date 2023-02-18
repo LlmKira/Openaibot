@@ -97,19 +97,26 @@ async def get_reply(req: Prompt):
         restart_name=req.restart_sequ,
         conversation_id=int(req.cid),
     )
-    promptManager = llm_kira.client.PromptManager(profile=conversation, connect_words="\n")
+    Mem = llm_kira.client.MemoryManager(profile=conversation)
+    llm = llm_kira.client.llms.OpenAi(
+        profile=conversation,
+        api_key=OPENAI_API_KEY_MANAGER.get_key(),
+        call_func=OPENAI_API_KEY_MANAGER.check_api_key,
+        token_limit=3780,
+        auto_penalty=not _csonfig["auto_adjust"],
+    )
+    promptManager = llm_kira.creator.PromptEngine(
+        profile=conversation,
+        connect_words="\n",
+        memory_manger=Mem,
+        llm_model=llm,
+        description="一段对话",
+        reference_ratio=0.5,
+        forget_words=["忘掉"],
+        optimizer=Optimizer.SinglePoint,
+    )
     try:
-        Mem = llm_kira.client.MemoryManager(profile=conversation)
-        llm = llm_kira.client.llms.OpenAi(
-            profile=conversation,
-            api_key=OPENAI_API_KEY_MANAGER.get_key(),
-            call_func=OPENAI_API_KEY_MANAGER.check_api_key,
-            token_limit=3780,
-            auto_penalty=not _csonfig["auto_adjust"],
-        )
         chat_client = llm_kira.client.ChatBot(profile=conversation,
-                                              memory_manger=Mem,
-                                              optimizer=Optimizer.SinglePoint,
                                               llm_model=llm)
         response = await chat_client.predict(
             llm_param=OpenAiParam(model_name="text-davinci-003"),
