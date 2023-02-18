@@ -16,6 +16,8 @@ from typing import List, Optional, Union
 from loguru import logger
 from pydantic import BaseModel
 
+from utils.Lock import pLock
+
 redis_installed = True
 
 try:
@@ -356,16 +358,20 @@ class Openai_Api_Key(object):
         self.__filePath = filePath
 
     def _save_key(self, config: dict) -> None:
+        pLock.getInstance().acquire()
         with open(self.__filePath, "w+", encoding="utf8") as f:
             json.dump(config, f, indent=4, ensure_ascii=False)
+        pLock.getInstance().release()
 
     def __get_config(self):
         now_table = DefaultData.defaultKeys()
         if pathlib.Path(self.__filePath).exists():
+            pLock.getInstance().acquire()
             with open(self.__filePath, encoding="utf-8") as f:
                 _config = json.load(f)
                 DictUpdate.dict_update(now_table, _config)
                 _config = now_table
+            pLock.getInstance().release()
             return _config
         else:
             return now_table
