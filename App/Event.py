@@ -617,6 +617,9 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
                                                   description=_description,
                                                   )
     for item in _prompt:
+        if ContentDfa.exists(item):
+            _think.hook("bored")
+            _think.hook("sad")
         item = ContentDfa.filter_all(item)
         if item.startswith("/"):
             _split_prompt = item.split(" ", 1)
