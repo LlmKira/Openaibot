@@ -8,6 +8,7 @@ import re
 import time
 
 import llm_kira
+from llm_kira.client.types import Interaction, PromptItem
 from llm_kira.utils.chat import Utils
 
 from utils.Data import User_Message, Service_Data, RedisConfig, DataWorker
@@ -85,7 +86,10 @@ class Vitality(object):
             restart_name="AI:",
             conversation_id=group_id,
         )
-        self.mem = receiver.MemoryManager(profile=conversation)
+        self.promptManager = llm_kira.creator.PromptEngine(
+            profile=conversation,
+            memory_manger=receiver.MemoryManager(profile=conversation),
+        )
 
     def __tid(self):
         return self.group_id + str(time.strftime("%Y%m%d%H%M", time.localtime()))
@@ -127,16 +131,11 @@ class Vitality(object):
             return False
         if len(_name) < 3:
             return False
-        Buffer = GROUP_BUFFER.get(_group)
-        if not Buffer:
-            Buffer = []
         _name = re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])", "", _name)
-        Buffer.append(f"{_name}:{_text}")
-        if len(Buffer) > 1:
-            self.mem.save_context(ask=str(Buffer[0]), reply=str(Buffer[1]), no_head=True)
-            Buffer = []
-        # 重置缓存
-        GROUP_BUFFER[_group] = Buffer
+        self.promptManager.insert_interaction(Interaction(single=True,
+                                                          ask=PromptItem(start=_name, text=_text),
+                                                          )
+                                              )
 
     @staticmethod
     def isHighestSentiment(text, cache):
