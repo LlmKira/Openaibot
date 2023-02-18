@@ -263,9 +263,14 @@ class Reply(object):
         :return:
         """
         load_csonfig()
+        #
+        _think = ThinkEngine(profile=profile)
+        _think.register_hook(Hook(name="sad", trigger="very sad", value=3, last=60, time=int(time.time())))
+        _think.register_hook(Hook(name="bored", trigger="very bored", value=3, last=60, time=int(time.time())))
         # 关键检查
         status, log = self.pre_check()
         if not status:
+            _think.hook(random.choice(["bored"]))
             return PublicReturn(status=True, trace="Req", reply=log)
         # Api Key 检查
         if not OPENAI_API_KEY_MANAGER.get_key():
@@ -277,6 +282,7 @@ class Reply(object):
         if _harm:
             _info = DefaultData.getRefuseAnswer()
             await asyncio.sleep(random.randint(1, 4))
+            _think.hook(random.choice(["sad"]))
             return PublicReturn(status=True, trace="Req", reply=f"{_info}\nYou talk too {_harm}.")
 
         # 初始化记忆管理器
