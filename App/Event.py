@@ -43,30 +43,58 @@ _service = Service_Data.get_key()
 REDIS_CONF = _service["redis"]
 TTS_CONF = _service["tts"]
 PLUGIN_TABLE = _service["plugin"]
-
 # End
 PLUGIN_TABLE.pop("search", None)
 PLUGIN_TABLE.pop("duckgo", None)
 
-BACKEND_CONF = _service["backend"]
 PROXY_CONF = ProxyConfig(**_service["proxy"])
 HARM_TYPE = _service["moderation_type"]
 HARM_TYPE = list(set(HARM_TYPE))
 
 # Backend
-MODEL_NAME = BACKEND_CONF.get("model")
-MODEL_TOKEN_LIMIT = BACKEND_CONF.get("token_limit")
-SimilarityInit = BACKEND_CONF.get("similarity_init")
+BACKEND_CONF = _service["backend"]
 CHAT_OPTIMIZER = Optimizer.SinglePoint
 
 # Limit
-MODEL_TOKEN_LIMIT = MODEL_TOKEN_LIMIT if MODEL_TOKEN_LIMIT else 2000
-if not MODEL_NAME:
-    logger.warning("Model Conf Not Found")
+if not BACKEND_CONF.get("type"):
+    logger.warning("Model Type Not Set:Service.json")
 
 # Proxy
 if PROXY_CONF.status:
     llm_kira.setting.proxyUrl = PROXY_CONF.url
+
+CHATGPT_CONF = BACKEND_CONF.get("chatgpt")
+OPENAI_CONF = BACKEND_CONF.get("openai")
+
+global LLM_TYPE
+global LLM_MODEL_PARAM
+global MODEL_TOKEN_LIMIT
+global LLM_CLIENT
+MODEL_TOKEN_LIMIT = OPENAI_CONF.get("token_limit") if OPENAI_CONF.get("token_limit") else 3000
+
+
+def CreateLLM():
+    global LLM_TYPE
+    global LLM_MODEL_PARAM
+    global MODEL_TOKEN_LIMIT
+    global LLM_CLIENT
+    if BACKEND_CONF.get("type") == "openai":
+        logger.info("Using Openai Api")
+        MODEL_NAME = OPENAI_CONF.get("model")
+        MODEL_TOKEN_LIMIT = OPENAI_CONF.get("token_limit") if OPENAI_CONF.get("token_limit") else 3000
+        LLM_MODEL_PARAM = llm_kira.client.llms.OpenAiParam(model=MODEL_NAME)
+        LLM_CLIENT = llm_kira.client.llms.OpenAi
+    elif BACKEND_CONF.get("type") == "chatgpt":
+        logger.info("Using ChatGPT Server")
+        if not CHATGPT_CONF.get("agree"):
+            logger.warning("请注意，你的账号会授权给来自 https://github.com/bytemate/chatapi-single 的反代服务器")
+        MODEL_TOKEN_LIMIT = 4500
+        CHATGPT_API = CHATGPT_CONF.get("api")
+        LLM_MODEL_PARAM = llm_kira.client.llms.ChatGptParam(api=CHATGPT_API)
+        LLM_CLIENT = llm_kira.client.llms.ChatGpt
+
+
+CreateLLM()
 
 llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**REDIS_CONF)
 llm_kira.setting.llmRetryTime = 2
@@ -217,7 +245,7 @@ async def Forget(user_id: int, chat_id: int):
 
 
 class Reply(object):
-    def __init__(self, user, group, api_key):
+    def __init__(self, user, group, api_key=None):
         # 用量检测
         self.user = user
         self.group = group
@@ -225,6 +253,8 @@ class Reply(object):
         self._UsageManager = Usage(uid=self.user)
 
     async def openai_moderation(self, prompt: str) -> bool:
+        if not self.api_key:
+            return False
         # 内容审计
         try:
             _harm = False
@@ -292,10 +322,10 @@ class Reply(object):
         try:
             # 分发类型
             if method == "write":
+                llm_param = LLM_MODEL_PARAM
                 response = await llm_model.run(prompt=str(_prompt.text),
                                                predict_tokens=int(_csonfig["token_limit"]),
-                                               llm_param=OpenAiParam(model=MODEL_NAME, temperature=0.2,
-                                                                     frequency_penalty=1)
+                                               llm_param=llm_param
                                                )
                 _deal = response.reply[0]
                 _usage = response.usage
@@ -304,8 +334,9 @@ class Reply(object):
                 )
             elif method == "catch":
                 chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
+                llm_param = LLM_MODEL_PARAM
                 response = await chat_client.predict(
-                    llm_param=OpenAiParam(model_name=MODEL_NAME),
+                    llm_param=llm_param,
                     prompt=prompt,
                     predict_tokens=150
                 )
@@ -343,13 +374,14 @@ class Reply(object):
                 prompt: PromptEngine
                 if _head:
                     prompt.description += _head[:400]
+                llm_param = LLM_MODEL_PARAM
+                if isinstance(llm_param, OpenAiParam):
+                    llm_param.logit_bias = _style,
+                    llm_param.presence_penalty = 0.5
                 response = await chat_client.predict(
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
-                    llm_param=OpenAiParam(model_name=MODEL_NAME,
-                                          logit_bias=_style,
-                                          presence_penalty=0.5,
-                                          frequency_penalty=0),
+                    llm_param=llm_param,
                     rank_name=False
                 )
                 prompt.clean(clean_prompt=True)
@@ -623,7 +655,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
 
     # LLM
-    llm_model = llm_kira.client.llms.OpenAi(
+    llm_model = LLM_CLIENT(
         profile=conversation,
         api_key=OPENAI_API_KEY_MANAGER.get_key(),
         call_func=OPENAI_API_KEY_MANAGER.check_api_key,
@@ -763,7 +795,6 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     # 对话层
     if not _prompt_type.status:
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-
     # LLM
     llm_model = llm_kira.client.llms.OpenAi(
         profile=conversation,
