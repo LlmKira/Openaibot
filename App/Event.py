@@ -265,7 +265,7 @@ class Reply(object):
         """
         load_csonfig()
         #
-        _think = ThinkEngine(profile=profile)
+        _think = ThinkEngine(profile=self.group)
         _think.register_hook(Hook(name="sad", trigger="very sad", value=3, last=60, time=int(time.time())))
         _think.register_hook(Hook(name="bored", trigger="very bored", value=3, last=60, time=int(time.time())))
         # 关键检查
@@ -583,7 +583,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
-    _think = ThinkEngine(profile=conversation)
+    _think = ThinkEngine(profile=_chat_id)
     _think.register_hook(Hook(name="happy", trigger="very happy", value=3, last=60, time=int(time.time())))
     _think.register_hook(Hook(name="sad", trigger="very sad", value=4, last=120, time=int(time.time())))
     _think.register_hook(Hook(name="bored", trigger="very bored", value=5, last=30, time=int(time.time())))
@@ -631,7 +631,6 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         auto_penalty=_csonfig["auto_adjust"],
     )
     # 构建
-    _think = ThinkEngine(profile=conversation)
     _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
     _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
@@ -723,7 +722,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         restart_name=restart_name,
         conversation_id=int(_cid),
     )
-    _think = ThinkEngine(profile=conversation)
+    _think = ThinkEngine(profile=_chat_id)
     _think.register_hook(Hook(name="happy", trigger="very happy", value=3, last=60, time=int(time.time())))
     _think.register_hook(Hook(name="sad", trigger="very sad", value=4, last=120, time=int(time.time())))
     _think.register_hook(Hook(name="bored", trigger="very bored", value=5, last=30, time=int(time.time())))
@@ -773,7 +772,6 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         auto_penalty=_csonfig["auto_adjust"],
     )
     # 构建
-    _think = ThinkEngine(profile=conversation)
     _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
     _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
