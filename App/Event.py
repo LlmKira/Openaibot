@@ -23,7 +23,6 @@ from utils.Setting import ProfileReturn
 from utils.TTS import TTS_Clint, TTS_REQ
 from utils.Detect import DFA, Censor, Detect
 from utils.Logging import LoadResponseError
-from utils.Lock import pLock
 
 import llm_kira
 from llm_kira.utils.chat import Cut
