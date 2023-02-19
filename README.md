@@ -287,7 +287,7 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 - [LLM Kira](https://github.com/LLMKira/llm-kira)
 - [text_analysis_tools](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
-- [@deedy5](https://github.com/deedy5)
+- [duckduckgo_search](https://github.com/deedy5) @deedy5
 
 ## 📃 License
 
