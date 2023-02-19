@@ -273,6 +273,7 @@ class Reply(object):
         if not status:
             _think.hook(random.choice(["bored"]))
             return PublicReturn(status=True, trace="Req", reply=log)
+
         # Api Key 检查
         if not OPENAI_API_KEY_MANAGER.get_key():
             logger.error("Api Check:Api Key pool empty")
@@ -631,11 +632,9 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     )
     # 构建
     _think = ThinkEngine(profile=conversation)
-    _description = str(time.strftime("%Y/%m/%d %H:%M", time.localtime()))
+    _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
-    _description += f"\n{''.join(_think.build_status(rank=18))}"
-    _description += f"\n📱💬 with {start_name}"
-
+    _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
     promptManager = llm_kira.creator.PromptEngine(profile=conversation,
                                                   connect_words="\n",
                                                   memory_manger=llm_kira.client.MemoryManager(profile=conversation),
@@ -775,11 +774,9 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     )
     # 构建
     _think = ThinkEngine(profile=conversation)
-    _description = str(time.strftime("%Y/%m/%d %H:%M", time.localtime()))
+    _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
-    _description += f"\n{''.join(_think.build_status(rank=20))}"
-    _description += f"\n📱💬 with {start_name}|"
-
+    _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
     promptManager = llm_kira.creator.PromptEngine(profile=conversation,
                                                   connect_words="\n",
                                                   memory_manger=llm_kira.client.MemoryManager(profile=conversation),
