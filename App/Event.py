@@ -330,7 +330,7 @@ class Reply(object):
                 _result = []
                 try:
                     if Detect().isQuery(_prompt.text):
-                        _result = await prompt.build_skeleton(query=_prompt.text,
+                        _result = await prompt.build_skeleton(query=_prompt,
                                                               llm_task="Summary Text" if len(
                                                                   _prompt.text) > 20 else None,
                                                               skeleton=random.choice([SearchCraw(), DuckgoCraw()])
