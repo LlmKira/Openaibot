@@ -140,6 +140,15 @@ python3 main.py
 # run bot
 pm2 start pm.json
 ```
+monitor bot status
+```
+pm2 monit
+```
+stop bot
+```
+pm2 stop pm2.json
+```
+
 
 ### 🎤 Or Run Voice Assistant
 
