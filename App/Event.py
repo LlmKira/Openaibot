@@ -664,7 +664,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     API_KEY = OPENAI_API_KEY_MANAGER.get_key()
     if not API_KEY and isinstance(LLM_MODEL_PARAM, OpenAiParam):
-        return PublicReturn(status=True, msg=f"Sorry,Api Pool Empty,Fall ASleep", trace="Error")
+        return PublicReturn(status=True, msg=f"I finished eating the Api key, I'm so hungry", trace="Error")
     # LLM
     llm_model = LLM_CLIENT(
         profile=conversation,
@@ -807,7 +807,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
     API_KEY = OPENAI_API_KEY_MANAGER.get_key()
     if not API_KEY and isinstance(LLM_MODEL_PARAM, OpenAiParam):
-        return PublicReturn(status=True, msg=f"Sorry,Api Pool Empty,Fall ASleep", trace="Error")
+        return PublicReturn(status=True, msg=f"I finished eating the Api key, I'm so hungry", trace="Error")
     # LLM
     llm_model = LLM_CLIENT(
         profile=conversation,
