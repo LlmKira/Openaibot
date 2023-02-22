@@ -146,6 +146,11 @@ def save_csonfig():
     ConfigUtils.setKey("config", _csonfig)
 
 
+try:
+    ConfigUtils.getKey("config")
+except Exception as e:
+    logger.error(f"U Should Config Redis First")
+    exit(0)
 # Init
 if not ConfigUtils.getKey("config"):
     if pathlib.Path("./Config/config.json").exists():
@@ -353,11 +358,11 @@ class Reply(object):
                     _head = ContentDfa.filter_all(_head)
                     if len(_head) < 6:
                         _head = None
-                _style = None
+                _style = {}
                 if _csonfig.get("allow_change_style"):
                     _style = Style(uid=self.user).get()
                     if len(_style) < 10:
-                        _style = None
+                        _style = {}
                 _result = []
                 try:
                     if len(_prompt.text) > 5 and Detect().isQuery(_prompt.text):
@@ -376,7 +381,7 @@ class Reply(object):
                     prompt.description += _head[:400]
                 llm_param = LLM_MODEL_PARAM
                 if isinstance(llm_param, OpenAiParam):
-                    llm_param.logit_bias = _style,
+                    llm_param.logit_bias = _style
                     llm_param.presence_penalty = 0.5
                 response = await chat_client.predict(
                     prompt=prompt,
