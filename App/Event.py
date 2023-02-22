@@ -385,6 +385,7 @@ class Reply(object):
                     prompt.description += str(_head)[:400]
                 llm_param = LLM_MODEL_PARAM
                 if isinstance(llm_param, OpenAiParam):
+                    llm_param.temperature = 0.9
                     llm_param.logit_bias = _style
                     llm_param.presence_penalty = 0.7
                 response = await chat_client.predict(
