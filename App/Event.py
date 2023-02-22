@@ -312,6 +312,8 @@ class Reply(object):
         if not status:
             _think.hook(random.choice(["bored"]))
             return PublicReturn(status=True, trace="Req", reply=log)
+        if not self.api_key and isinstance(LLM_MODEL_PARAM, OpenAiParam):
+            raise LLMException("Api Pool Empty")
 
         # Api Key 检查
         if not OPENAI_API_KEY_MANAGER.get_key():
