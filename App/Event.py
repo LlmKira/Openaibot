@@ -314,7 +314,7 @@ class Reply(object):
             return PublicReturn(status=True, trace="Req", reply=log)
 
         # Api Key 检查
-        if not OPENAI_API_KEY_MANAGER.get_key():
+        if not self.api_key:
             logger.error("Api Check:Api Key pool empty")
             raise LoadResponseError("Found:Api Key pool empty")
 
