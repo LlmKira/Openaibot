@@ -282,9 +282,16 @@ class DefaultData(object):
             "plugin": {
             },
             "backend": {
-                "model": "text-davinci-003",
-                "similarity_init": True,
-                "token_limit": 4000
+                "type": "openai",
+                "openai": {
+                    "model": "text-davinci-003",
+                    "similarity_init": True,
+                    "token_limit": 4000
+                },
+                "chatgpt": {
+                    "api": None,
+                    "agree": False
+                },
             },
             "media": {
                 "blip": {
