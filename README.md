@@ -112,6 +112,25 @@ host = "127.0.0.1"
 port = 9559
 ```
 
+- Config/service.json
+```json5
+{
+  // ******Models
+  "backend": {
+    "type": "openai",
+    // TYPE!
+    "openai": {
+      "model": "text-davinci-003",
+      "token_limit": 4000
+    },
+    "chatgpt": {
+      "api": null,
+      "agree": false
+    }
+  },
+}
+```
+
 ### 🪶 App Token
 
 - Telegram
@@ -139,16 +158,16 @@ python3 main.py
 
 # run bot
 pm2 start pm.json
-```
-monitor bot status
-```
-pm2 monit
-```
-stop bot
-```
-pm2 stop pm2.json
-```
 
+# monitor bot status
+pm2 monit
+pm2 status
+
+# stop bot
+pm2 stop pm2.json
+pm2 stop [id]
+
+```
 
 ### 🎤 Or Run Voice Assistant
 

@@ -382,7 +382,7 @@ class Reply(object):
                 llm_param = LLM_MODEL_PARAM
                 if isinstance(llm_param, OpenAiParam):
                     llm_param.logit_bias = _style
-                    llm_param.presence_penalty = 0.5
+                    llm_param.presence_penalty = 0.7
                 response = await chat_client.predict(
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
