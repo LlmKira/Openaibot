@@ -113,8 +113,11 @@ port = 9559
 ```
 
 - Config/service.json
+
 ```json5
 {
+  // ....other config
+
   // ******Models
   "backend": {
     "type": "openai",

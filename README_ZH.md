@@ -110,6 +110,28 @@ host = "127.0.0.1"
 port = 9559
 ```
 
+- Config/service.json
+
+```json5
+{
+  // ....other config
+
+  // ******Models
+  "backend": {
+    "type": "openai",
+    // TYPE!
+    "openai": {
+      "model": "text-davinci-003",
+      "token_limit": 4000
+    },
+    "chatgpt": {
+      "api": null,
+      "agree": false
+    }
+  },
+}
+```
+
 ### 🪶 App Token
 
 - Telegram
@@ -138,11 +160,15 @@ python3 main.py
 # run bot
 pm2 start pm.json
 ```
+
 查看机器人的运行状况
+
 ```
 pm2 monit
 ```
+
 停止运行机器人
+
 ```
 pm2 stop pm2.json
 ```
