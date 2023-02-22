@@ -154,6 +154,7 @@ try:
 except Exception as e:
     logger.error(f"U Should Config Redis First")
     exit(1)
+
 # Init
 if not ConfigUtils.getKey("config"):
     if pathlib.Path("./Config/config.json").exists():
