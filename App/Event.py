@@ -90,6 +90,9 @@ def CreateLLM():
             logger.warning("请注意，你的账号会授权给来自 https://github.com/bytemate/chatapi-single 的反代服务器")
         MODEL_TOKEN_LIMIT = 4500
         CHATGPT_API = CHATGPT_CONF.get("api")
+        if not CHATGPT_API:
+            logger.error("CHATGPT_API in `Config/service.json` is Empty")
+            exit(1)
         LLM_MODEL_PARAM = llm_kira.client.llms.ChatGptParam(api=CHATGPT_API)
         LLM_CLIENT = llm_kira.client.llms.ChatGpt
 
@@ -150,7 +153,7 @@ try:
     ConfigUtils.getKey("config")
 except Exception as e:
     logger.error(f"U Should Config Redis First")
-    exit(0)
+    exit(1)
 # Init
 if not ConfigUtils.getKey("config"):
     if pathlib.Path("./Config/config.json").exists():
