@@ -312,8 +312,6 @@ class Reply(object):
         if not status:
             _think.hook(random.choice(["bored"]))
             return PublicReturn(status=True, trace="Req", reply=log)
-        if not self.api_key and isinstance(LLM_MODEL_PARAM, OpenAiParam):
-            raise LLMException("Api Pool Empty")
 
         # Api Key 检查
         if not OPENAI_API_KEY_MANAGER.get_key():
@@ -664,11 +662,13 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     # 对话层
     if not _prompt_type.status:
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
-
+    API_KEY = OPENAI_API_KEY_MANAGER.get_key()
+    if not API_KEY and isinstance(LLM_MODEL_PARAM, OpenAiParam):
+        return PublicReturn(status=True, msg=f"Sorry,Api Pool Empty,Fall ASleep", trace="Error")
     # LLM
     llm_model = LLM_CLIENT(
         profile=conversation,
-        api_key=OPENAI_API_KEY_MANAGER.get_key(),
+        api_key=API_KEY,
         call_func=OPENAI_API_KEY_MANAGER.check_api_key,
         token_limit=MODEL_TOKEN_LIMIT,
         auto_penalty=_csonfig["auto_adjust"],
@@ -805,10 +805,13 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     # 对话层
     if not _prompt_type.status:
         return PublicReturn(status=False, msg=f"No Match Type", trace="PromptPreprocess")
+    API_KEY = OPENAI_API_KEY_MANAGER.get_key()
+    if not API_KEY and isinstance(LLM_MODEL_PARAM, OpenAiParam):
+        return PublicReturn(status=True, msg=f"Sorry,Api Pool Empty,Fall ASleep", trace="Error")
     # LLM
-    llm_model = llm_kira.client.llms.OpenAi(
+    llm_model = LLM_CLIENT(
         profile=conversation,
-        api_key=OPENAI_API_KEY_MANAGER.get_key(),
+        api_key=API_KEY,
         call_func=OPENAI_API_KEY_MANAGER.check_api_key,
         token_limit=MODEL_TOKEN_LIMIT,
         auto_penalty=_csonfig["auto_adjust"],
