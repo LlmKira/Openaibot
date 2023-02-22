@@ -329,7 +329,7 @@ class Reply(object):
                         _style = None
                 _result = []
                 try:
-                    if Detect().isQuery(_prompt.text):
+                    if len(_prompt.text) > 5 and Detect().isQuery(_prompt.text):
                         _result = await prompt.build_skeleton(query=_prompt,
                                                               llm_task="Summary Text" if len(
                                                                   _prompt.text) > 20 else None,
