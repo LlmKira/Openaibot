@@ -382,7 +382,7 @@ class Reply(object):
                 chat_client = llm_kira.client.ChatBot(profile=profile, llm_model=llm_model)
                 prompt: PromptEngine
                 if _head:
-                    prompt.description += _head[:400]
+                    prompt.description += str(_head)[:400]
                 llm_param = LLM_MODEL_PARAM
                 if isinstance(llm_param, OpenAiParam):
                     llm_param.logit_bias = _style

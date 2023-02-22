@@ -320,6 +320,12 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 - [duckduckgo_search](https://github.com/deedy5) @deedy5
 
+## 🍞 Other similar projects
+
+- ChatGPT Mirai Bot is a QQ bot based on the ChatGPT Web Side Api
+
+https://github.com/lss233/chatgpt-mirai-qq-bot
+
 ## 📃 License
 
 ```markdown

@@ -317,6 +317,12 @@ Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/C
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 - [duckduckgo_search](https://github.com/deedy5) @deedy5
 
+## 🍞 Other similar projects
+
+- ChatGPT Mirai Bot是一款基于 ChatGPT Web 端 Api 的 QQ 机器人
+
+https://github.com/lss233/chatgpt-mirai-qq-bot
+
 ## 📃 License
 
 ```
