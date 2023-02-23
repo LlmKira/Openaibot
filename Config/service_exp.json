@@ -1,0 +1,66 @@
+{
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "db": 0,
+    "password": null
+  },
+  "plugin": {
+    "details": "",
+    "time": "",
+    "week": "",
+    "duckgo": ""
+  },
+  "proxy": {
+    "status": false,
+    "url": "http://127.0.0.1:7890"
+  },
+  "moderation_type": [
+    "sexual",
+    "hate/threatening",
+    "sexual/minors",
+    "violence",
+    "violence/graphic"
+  ],
+  "media": {
+    "blip": {
+      "status": false,
+      "api": "http://127.0.0.1:10885/upload/"
+    },
+    "sticker": {
+      "status": true,
+      "penalty": 0.95
+    }
+  },
+  "backend": {
+    "type": "openai",
+    "openai": {
+      "model": "text-davinci-003",
+      "token_limit": 4000
+    },
+    "chatgpt": {
+      "api": null,
+      "agree": false
+    }
+  },
+  "tts": {
+    "status": true,
+    "type": "vits",
+    "vits": {
+      "api": "http://127.0.0.1:9557/tts/generate",
+      "limit": 200,
+      "model_name": "xxxx_epxxxhs.pth",
+      "speaker_id": 0
+    },
+    "azure": {
+      "key": [
+        "eaedxxxxxxxxxxxxxxxxxxx"
+      ],
+      "limit": 70,
+      "speaker": {
+        "ZH": "zh-CN-XiaoxiaoNeural"
+      },
+      "location": "japanwest"
+    }
+  }
+}
