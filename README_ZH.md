@@ -137,7 +137,7 @@ yarn global add pm2
 python3 main.py
 
 # run bot
-pm2 start pm.json
+pm2 start pm2.json
 
 # 查看机器人的运行状况
 
