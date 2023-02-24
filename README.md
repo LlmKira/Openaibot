@@ -20,6 +20,8 @@ You can develop a new Controller by using `Event.py`.
 We use the self-maintained llm framework [llm-kira](https://github.com/LLMKira/llm-kira) to implement the conversation
 client.
 
+**Please submit an issue/discussion if you have a deployment issue rather than emailing me**
+
 ## 🥽 Feature
 
 * Async
