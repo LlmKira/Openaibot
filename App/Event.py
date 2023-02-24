@@ -1258,11 +1258,13 @@ async def About(config):
 
 async def Help(_):
     return """
-Use /chat + 句子 启动消息流，只需要回复即可交谈。48小时前的消息不能回复。
-Use /write +句子 进行空白的续写。
-Use /remind 设置一个场景头，全程不会被裁剪。
-Use /forgetme 遗忘过去，res history。
-Use /voice 开启可能的 tts 支持。
-Use /trigger Admin 可以开启主动回复模式。
-Use /style 定制词汇风格，中文效果较弱，(增强),[减弱]。
+Hi,Here a simple intro.
+Use /chat + sentence to Start
+Use /write + sentence to Write(once)
+Use /remind + sentence to make it remember forever something.(Overwritten, single words will be ignored)
+Use /forgetme reset history
+Use /voice to start voice chat(if have)
+Use /style design probability of occurrence of a character，中文效果较弱，(enhance),[wake]
+
+Admin please check Bot Command Table for more interesting func.
 """
