@@ -219,7 +219,7 @@ class BotRunner(object):
             if _bot_profile.mentions:
                 if f"@{_bot_profile.mentions} " in _hand.text or _hand.text.endswith(f" @{_bot_profile.mentions}"):
                     # 消声处理
-                    _hand.text = _hand.text.replace(f"@{_bot_profile.mentions} ", "")
+                    _hand.text = _hand.text.replace(f"@{_bot_profile.mentions} ", " ")
                     started = True
 
             # Reply
