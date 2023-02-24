@@ -19,7 +19,7 @@
 
 我们使用自维护的 [llm-kira](https://github.com/LLMKira/llm-kira) 实现对话客户端
 
-**有部署问题请提交 Issue /讨论 而不是给我发邮件.**
+**有部署问题请提交 Issue /讨论 而不是给我发邮件或私聊.**
 
 ## 🥽 Feature
 
