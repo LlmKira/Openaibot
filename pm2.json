@@ -1,6 +1,6 @@
 {
     "apps": [{
-      "name": "bot main",
+      "name": "openaibot main",
       "script": "python3 main.py",
       "instances": 1,
       "error_file": "main_error.log",
