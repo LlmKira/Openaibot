@@ -115,7 +115,9 @@ port = 9559
 
 [Telegram BotToken Request](https://t.me/BotFather)
 
-请确保 *机器人是组管理员* 或 *隐私模式已关闭*.
+在部署先请重新生成token防止其他服务占用轮询。
+
+另外请确保 *机器人是组管理员* 或 *关闭隐私模式*.
 
 - QQ
 
