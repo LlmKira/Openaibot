@@ -7,10 +7,10 @@ initVar() {
 
 #判断是否为arm架构
 get_arch=`arch`
-if [[ $get_arch =~ "aarch64" ]];then
+if [[ $get_arch =~ "aarch64" ]]; then
   #判断是否安装rust
   if [ ! -d "/root/.cargo" ]; then
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs >rustup.sh
     sh rustup.sh -y
     source "$HOME/.cargo/env"
   fi
@@ -203,4 +203,10 @@ run() {
 
 run
 
-cd "$(pwd)" && rm setup.sh && rm rustup.sh
+cd "$(pwd)" && rm setup.sh
+
+if [ ! -f "$(pwd)/rustup.sh" ]; then
+  echo ""
+else
+  rm "$(pwd)/rustup.sh"
+fi
