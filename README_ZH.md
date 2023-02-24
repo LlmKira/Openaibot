@@ -54,6 +54,7 @@ curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh
 ```shell
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
+或者使用 [Docker Deploy](https://llmkira.github.io/Docs/guide/getting-started#docker)
 
 ### 🍽 Configure
 

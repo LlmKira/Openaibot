@@ -57,6 +57,8 @@ For Chinese users
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
 
+Or [Docker Deploy](https://llmkira.github.io/Docs/guide/getting-started#docker)
+
 ### 🍽 Configure
 
 - set Redis
