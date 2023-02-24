@@ -59,7 +59,14 @@ curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 
 ### 🍽 Configure
 
-- init
+- set Redis
+
+```shell
+apt-get install redis
+systemctl enable redis.service --now
+```
+
+- edit bot config
 
 ```shell
 cp Config/app_exp.toml Config/app.toml
@@ -67,22 +74,14 @@ cp Config/app_exp.toml Config/app.toml
 nano Config/app.toml
 ```
 
-- Data
-
-```shell
-apt-get install redis
-systemctl enable redis.service --now
-```
-
-- Config/app.toml
-
 ```toml
 # Comment out which part you don't want to start
+# 注释你不需要的部分
 
 # QQ Bot
 [Controller.QQ]
-master = [114, 514] # master user id
-account = 0
+master = [114, 514] # QQ number
+account = 0  # Bot s QQ number
 http_host = 'http://localhost:8080'   # Mirai http Server
 ws_host = 'http://localhost:8080'   # Mirai Websocket Server
 verify_key = ""
@@ -90,49 +89,28 @@ trigger = false # Proactive response when appropriate
 INTRO = "POWER BY OPENAI"  # Suffixes for replies
 ABOUT = "Created by github.com/LLMKira/Openaibot" # /about
 WHITE = "Group NOT in WHITE list" # Whitelist/Blacklist tips
-
 # Proxy set, but does not proxy openai api, only bot
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 # Telegram Bot
 [Controller.Telegram]
-master = [114, 514] # master user id
+master = [114, 514] # User Id @JsonDumpBot
 botToken = '' # Bot Token @botfather
 trigger = false
 INTRO = "POWER BY OPENAI"
 ABOUT = "Created by github.com/LLMKira/Openaibot"
 WHITE = "Group NOT in WHITE list"
-
-# 设置的代理，但是不代理 openai api, 只代理 bot
+# 设置的代理，只代理 bot  openai api->service.json 
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
-# 基础对话事件服务器，Web支持或者音箱用
+# 基础对话事件服务器，Web支持或者音箱用&Use by Voice Assistant
 [Controller.BaseServer]
 host = "127.0.0.1"
 port = 9559
 ```
 
-- Config/service.json
-
-```json5
-{
-  // ....other config
-
-  // ******Models
-  "backend": {
-    "type": "openai",
-    // TYPE!
-    "openai": {
-      "model": "text-davinci-003",
-      "token_limit": 4000
-    },
-    "chatgpt": {
-      "api": null,
-      "agree": false
-    }
-  },
-}
-```
+If you want configure the backend or openai proxy. Please
+Check [Deploy Docs](https://llmkira.github.io/Docs/guide/service)
 
 ### 🪶 App Token
 
@@ -162,15 +140,18 @@ python3 main.py
 # run bot
 pm2 start pm.json
 
-# monitor bot status
-pm2 monit
+
 pm2 status
 
 # stop bot
 pm2 stop pm2.json
-pm2 stop [id]
-
+pm2 stop xx(id)
+pm2 restart x(id)
 ```
+
+Once configured, send a message and use the `/add_white_user` command to add your platform ID returned by the bot to the
+whitelist and you will be able to talk.
+Or use `/close_group_white_mode` to turn off the bot's *group whitelist* mode.
 
 ### 🎤 Or Run Voice Assistant
 
