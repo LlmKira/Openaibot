@@ -6,13 +6,14 @@
 import pathlib
 import struct
 
+import keyboard
 import pvporcupine
 import pyaudio
 from loguru import logger
 from playsound import playsound
 
 if pathlib.Path("./Hi-Coco_en_linux_v2_1_0.ppn").exists():
-    logger.success("-Hi COCO-")
+    logger.success("Load -Hi COCO-")
 
 
 def trigger(access_key,
@@ -24,7 +25,7 @@ def trigger(access_key,
     audio_stream = None
     try:
         if pathlib.Path("./Hi-Coco_en_linux_v2_1_0.ppn").exists():
-            logger.success("-Hi COCO-")
+            logger.success("Load -Hi COCO-")
             porcupine = pvporcupine.create(access_key=access_key,
                                            keyword_paths=['./Hi-Coco_en_linux_v2_1_0.ppn'])
         else:
@@ -37,11 +38,17 @@ def trigger(access_key,
             format=pyaudio.paInt16,
             input=True,
             frames_per_buffer=porcupine.frame_length)
+        clicked = []
         while True:
+            _path = "start.c"
+            if pathlib.Path(_path).exists():
+                clicked.append(1)
+                pathlib.Path(_path).unlink(missing_ok=True)
             pcm = audio_stream.read(porcupine.frame_length)
             pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
             keyword_index = porcupine.process(pcm)
-            if keyword_index >= 0:
+            if keyword_index >= 0 or clicked:
+                clicked.clear()
                 logger.info("-Wake-")
                 if pathlib.Path("wake.mp3").exists():
                     playsound("wake.mp3")

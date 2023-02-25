@@ -11,7 +11,8 @@ class BotRunner:
     def __init__(self, _config):
         self.config = _config
 
-    def run(self, pLock):
+    def run(self, pLock=None):
+        logger.info("Base Server Start")
         try:
             host = self.config.host
         except Exception as e:

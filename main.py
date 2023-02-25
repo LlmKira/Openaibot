@@ -38,11 +38,14 @@ def start():
         with ThreadPoolExecutor(max_workers=len(ctrlConfig)) as p:
             for starter in ctrlConfig:
                 if not Path(f"App/{starter}.py").exists():
-                    logger.warning(f"Controller {starter} Do Not Exist.")
+                    logger.warning(f"Skip Controller {starter} ,Do Not Exist.")
                     continue
+                else:
+                    logger.success(f"Set Controller {starter}.")
                 module = importlib.import_module('App.' + starter)
                 # 使用 ThreadPoolExecutor 的 submit 方法
-                p.submit(module.BotRunner(ctrlConfig.get(starter)).run)
+                task = p.submit(module.BotRunner(ctrlConfig.get(starter)).run)
+                # print(task.exception())
     except KeyboardInterrupt:
         logger.info('Caught Ctrl-C, Exiting.')
         exit()

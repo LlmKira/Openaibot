@@ -6,3 +6,4 @@ httpx
 whisper
 pycorrector
 playsound
+keyboard
