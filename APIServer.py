@@ -113,7 +113,7 @@ async def admin(body: ReqBody, action: str):
         if action not in admin_actions:
             return {'success': False, 'response': 'INVAILD_ADMIN_ACTION'}
         msg = newMsg(body, action)
-        resp = await appe.MasterCommand(user_id=body.chatId, Message=msg['msgObj'], pLock=None, config=apicfg)
+        resp = await appe.MasterCommand(user_id=body.chatId, Message=msg['msgObj'], config=apicfg)
         if not resp:
             return {'success': False, 'response': 'GENERAL_FAILURE'}
         return {'success': True, 'response': resp[0]}
