@@ -30,8 +30,8 @@ from llm_kira.client.types import PromptItem
 from llm_kira.client.llms.openai import OpenAiParam
 from llm_kira.client import Optimizer, Conversation
 from llm_kira.client.llms.base import LlmBase
-from llm_kira.creator import ThinkEngine, Hook
-from llm_kira.creator import PromptEngine
+from llm_kira.creator.think import ThinkEngine, Hook
+from llm_kira.creator.engine import PromptEngine
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 
@@ -82,18 +82,13 @@ def CreateLLM():
         logger.info("Using Openai Api")
         MODEL_NAME = OPENAI_CONF.get("model")
         MODEL_TOKEN_LIMIT = OPENAI_CONF.get("token_limit") if OPENAI_CONF.get("token_limit") else 3000
-        LLM_MODEL_PARAM = llm_kira.client.llms.OpenAiParam(model=MODEL_NAME)
+        LLM_MODEL_PARAM = llm_kira.client.llms.OpenAiParam(model_name=MODEL_NAME)
         LLM_CLIENT = llm_kira.client.llms.OpenAi
     elif BACKEND_CONF.get("type") == "chatgpt":
         logger.info("Using ChatGPT Server")
-        if not CHATGPT_CONF.get("agree"):
-            logger.warning("请注意，你的账号会授权给来自 https://github.com/bytemate/chatapi-single 的反代服务器")
-        MODEL_TOKEN_LIMIT = 4500
-        CHATGPT_API = CHATGPT_CONF.get("api")
-        if not CHATGPT_API:
-            logger.error("CHATGPT_API in `Config/service.json` is Empty")
-            exit(1)
-        LLM_MODEL_PARAM = llm_kira.client.llms.ChatGptParam(api=CHATGPT_API)
+        MODEL_NAME = CHATGPT_CONF.get("model")
+        MODEL_TOKEN_LIMIT = CHATGPT_CONF.get("token_limit") if CHATGPT_CONF.get("token_limit") else 3000
+        LLM_MODEL_PARAM = llm_kira.client.llms.ChatGptParam(model_name=MODEL_NAME)
         LLM_CLIENT = llm_kira.client.llms.ChatGpt
 
 
@@ -384,15 +379,13 @@ class Reply(object):
                 if _head:
                     prompt.description += str(_head)[:400]
                 llm_param = LLM_MODEL_PARAM
-                if isinstance(llm_param, OpenAiParam):
-                    llm_param.temperature = 0.9
-                    llm_param.logit_bias = _style
-                    llm_param.presence_penalty = 0.7
+                llm_param.temperature = 0.9
+                llm_param.logit_bias = _style
+                llm_param.presence_penalty = 0.7
                 response = await chat_client.predict(
                     prompt=prompt,
                     predict_tokens=int(_csonfig["token_limit"]),
-                    llm_param=llm_param,
-                    rank_name=False
+                    llm_param=llm_param
                 )
                 prompt.clean(clean_prompt=True)
                 _deal = response.reply
@@ -678,13 +671,14 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
     _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
     _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
-    promptManager = llm_kira.creator.PromptEngine(profile=conversation,
-                                                  connect_words="\n",
-                                                  memory_manger=llm_kira.client.MemoryManager(profile=conversation),
-                                                  reference_ratio=0.3,
-                                                  llm_model=llm_model,
-                                                  description=_description,
-                                                  )
+    promptManager = llm_kira.creator.engine.PromptEngine(profile=conversation,
+                                                         connect_words="\n",
+                                                         memory_manger=llm_kira.client.MemoryManager(
+                                                             profile=conversation),
+                                                         reference_ratio=0.3,
+                                                         llm_model=llm_model,
+                                                         description=_description,
+                                                         )
     for item in _prompt:
         if ContentDfa.exists(item):
             _think.hook(random.choice(["bored", "sad"]))
@@ -821,13 +815,14 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
     _description = "📱💬|Now " + str(time.strftime("%Y/%m/%d %H:%M", time.localtime())) + "|"
     _description += f" 🌙" if _think.is_night else random.choice([" 🌻", " 🌤", " 🌦"])
     _description += f"\n{restart_name}-{''.join(_think.build_status(rank=20))}"
-    promptManager = llm_kira.creator.PromptEngine(profile=conversation,
-                                                  connect_words="\n",
-                                                  memory_manger=llm_kira.client.MemoryManager(profile=conversation),
-                                                  reference_ratio=0.3,
-                                                  llm_model=llm_model,
-                                                  description=_description,
-                                                  )
+    promptManager = llm_kira.creator.engine.PromptEngine(profile=conversation,
+                                                         connect_words="\n",
+                                                         memory_manger=llm_kira.client.MemoryManager(
+                                                             profile=conversation),
+                                                         reference_ratio=0.3,
+                                                         llm_model=llm_model,
+                                                         description=_description,
+                                                         )
     # 构建
     for item in _prompt:
         if ContentDfa.exists(item):

@@ -105,7 +105,7 @@ async def get_reply(req: Prompt):
         token_limit=3780,
         auto_penalty=not _csonfig["auto_adjust"],
     )
-    promptManager = llm_kira.creator.PromptEngine(
+    promptManager = llm_kira.creator.engine.PromptEngine(
         profile=conversation,
         connect_words="\n",
         memory_manger=Mem,
