@@ -189,16 +189,17 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         _new_text = "".join(_spell)
         _new_text = "[LENGTH]1.4[LENGTH]" + _new_text
         # 接受数据
-        result, e = await TTS_Clint.request_vits_server(url=_vits_config["api"],
-                                                        params=TTS_REQ(task_id=user_id,
-                                                                       text=_new_text,
-                                                                       model_name=_vits_config["model_name"],
-                                                                       speaker_id=_vits_config["speaker_id"],
-                                                                       audio_type="ogg"
-                                                                       ))
-
+        result, _error = await TTS_Clint.request_vits_server(
+            url=_vits_config["api"],
+            params=TTS_REQ(task_id=user_id,
+                           text=_new_text,
+                           model_name=_vits_config["model_name"],
+                           speaker_id=_vits_config["speaker_id"],
+                           audio_type="ogg"
+                           )
+        )
         if not result:
-            logger.error(f"TTS:{user_id} --type:vits --content: {text}:{len(text)} --{e}")
+            logger.error(f"TTS:{user_id} --type:vits --content: {text}:{len(text)} --{_error}")
             return
         logger.info(f"TTS:{user_id} --type:vits --content: {text}:{len(text)}")
         # 返回字节流
@@ -213,13 +214,14 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         if not _speaker:
             logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --this type lang not supported")
             return
-        result, e = await TTS_Clint.request_azure_server(key=_azure_config["key"],
-                                                         location=_azure_config["location"],
-                                                         text=_new_text,
-                                                         speaker=_speaker
-                                                         )
+        result, _error = await TTS_Clint.request_azure_server(
+            key=_azure_config["key"],
+            location=_azure_config["location"],
+            text=_new_text,
+            speaker=_speaker
+        )
         if not result:
-            logger.error(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --{e}")
+            logger.error(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --{_error}")
             return
 
         logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)}")
