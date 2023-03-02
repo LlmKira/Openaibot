@@ -210,6 +210,15 @@ When using the user/group authorization command, you need to follow the real ID 
 
 ### 🥪 About Models
 
+#### ChatGpt
+
+| models             | token limit | cost                                                       |
+|--------------------|-------------|------------------------------------------------------------|
+| gpt-3.5-turbo      | 4095        | optimized for chat at 1/10th the cost of text-davinci-003. |
+| gpt-3.5-turbo-0301 | 4095        | optimized for chat at 1/10th the cost of text-davinci-003. |
+
+#### GPT3
+
 | models           | token limit | cost                                                          |
 |------------------|-------------|---------------------------------------------------------------|
 | code-davinci-002 | 8000        | During this initial limited beta period, Codex usage is free. |
