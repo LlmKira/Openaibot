@@ -56,6 +56,7 @@ curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/setup.sh && sh
 ```shell
 curl -LO https://raw.kgithub.com/LLMKira/Openaibot/main/setup.sh && sh setup.sh
 ```
+
 或者使用 [Docker Deploy](https://llmkira.github.io/Docs/guide/getting-started#docker)
 
 ### 🍽 Configure
@@ -207,14 +208,23 @@ python3 clinet.py
 
 ### 🥪 About Models
 
-| models           | token limit | cost                     |
-|------------------|-------------|--------------------------|
-| code-davinci-002 | 8000        | 在最初的有限测试期间，Codex 使用是免费的。 |
-| code-cushman-001 | 2048        | 在最初的有限测试期间，Codex 使用是免费的。 |
-| text-davinci-003 | 4000        | $0.0200  /1K tokens      |
-| text-curie-001   | 2048        | $0.0020  /1K tokens      |
-| text-babbage-001 | 2048        | $0.0005  /1K tokens      |
-| text-ada-001     | 2048        | $0.0004  /1K tokens      |
+#### ChatGpt
+
+| models             | token limit | cost                                                       |
+|--------------------|-------------|------------------------------------------------------------|
+| gpt-3.5-turbo      | 4095        | optimized for chat at 1/10th the cost of text-davinci-003. |
+| gpt-3.5-turbo-0301 | 4095        | optimized for chat at 1/10th the cost of text-davinci-003. |
+
+#### GPT3
+
+| models           | token limit | cost                                                          |
+|------------------|-------------|---------------------------------------------------------------|
+| code-davinci-002 | 8000        | During this initial limited beta period, Codex usage is free. |
+| code-cushman-001 | 2048        | During this initial limited beta period, Codex usage is free. |
+| text-davinci-003 | 4000        | $0.0200  /1K tokens                                           |
+| text-curie-001   | 2048        | $0.0020  /1K tokens                                           |
+| text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
+| text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
 
 ### 🌽 `/Config` File
 
