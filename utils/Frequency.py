@@ -86,7 +86,7 @@ class Vitality(object):
             restart_name="AI:",
             conversation_id=group_id,
         )
-        self.promptManager = llm_kira.creator.PromptEngine(
+        self.promptManager = llm_kira.creator.engine.PromptEngine(
             profile=conversation,
             memory_manger=receiver.MemoryManager(profile=conversation),
         )
