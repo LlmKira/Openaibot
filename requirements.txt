@@ -15,7 +15,7 @@ Pillow
 pathlib
 elara
 numpy
-llm_kira>=0.5.4
+llm_kira>=0.7.0
 scikit-learn
 beautifulsoup4
 wget
