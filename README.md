@@ -297,7 +297,7 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 
 详细接口/服务配置/自定义 请查看文档 [Deploy Guide](https://llmkira.github.io/Docs/guide/getting-started)
 
-插件设置/代理设置/自定义模型名称/语音服务/图片理解/审查配置
+贴纸设置/代理设置/切换其他模型/语音服务/图片理解/审查配置
 请查看 [服务配置](https://llmkira.github.io/Docs/guide/service)
 
 ## 🤗 Join Our Community
