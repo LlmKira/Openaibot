@@ -203,8 +203,8 @@ class DefaultData(object):
     def defaultConfig():
         return {
             "statu": True,
-            "input_limit": 500,
-            "token_limit": 500,
+            "input_limit": 800,
+            "token_limit": 1000,
             "hour_limit": 15000,
             "per_user_limit": 1,
             "usercold_time": 10,
