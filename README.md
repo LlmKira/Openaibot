@@ -316,7 +316,7 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 
 ## 🍞 Other similar projects
 
-- ChatGPT Mirai Bot is a QQ bot based on the ChatGPT Web Side Api
+- ChatGPT Mirai Bot is a QQ bot based on the ChatGPT Web Api& Edge Api & GPT3.5
 
 https://github.com/lss233/chatgpt-mirai-qq-bot
 

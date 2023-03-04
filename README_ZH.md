@@ -312,7 +312,7 @@ Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/C
 
 ## 🍞 Other similar projects
 
-- ChatGPT Mirai Bot是一款基于 ChatGPT Web 端 Api 的 QQ 机器人
+- ChatGPT Mirai Bot 是一个基于ChatGPT Web Api & Edge Api & GPT3.5 的 QQ 机器人，同样支持多账号轮换负载。
 
 https://github.com/lss233/chatgpt-mirai-qq-bot
 
