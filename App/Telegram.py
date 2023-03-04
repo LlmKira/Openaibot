@@ -121,8 +121,9 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
                                                    photo=message.document,
                                                    call_func=FileReader().get_ai_image_info
                                                    )
-                BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
-                msg_text.append(f"{BlipInterrogatorText}")
+                if photo_text:
+                    BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                    msg_text.append(f"{BlipInterrogatorText}")
             except Exception as e:
                 logger.warning(f"Blip:{e}")
 
@@ -159,8 +160,9 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
                                                        photo=message.reply_to_message.document,
                                                        call_func=FileReader().get_ai_image_info
                                                        )
-                    BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
-                    msg_text.append(f"{BlipInterrogatorText}")
+                    if photo_text:
+                        BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                        msg_text.append(f"{BlipInterrogatorText}")
                 except Exception as e:
                     logger.warning(f"Blip:{e}")
     return "".join(msg_text)
