@@ -5,56 +5,52 @@
     "db": 0,
     "password": null
   },
-  "plugin": {
-    "details": "",
-    "time": "",
-    "week": "",
-    "duckgo": ""
-  },
   "proxy": {
     "status": false,
     "url": "http://127.0.0.1:7890"
   },
-  "moderation_type": [
-    "sexual",
-    "hate/threatening",
-    "sexual/minors",
-    "violence",
-    "violence/graphic"
-  ],
+  "backend": {
+    "type": "chatgpt",
+    "openai": {
+      "model": "text-davinci-003",
+      "token_limit": 4000
+    },
+    "chatgpt": {
+      "model": "gpt-3.5-turbo",
+      "token_limit": 4000
+    }
+  },
   "media": {
     "blip": {
       "status": false,
       "api": "http://127.0.0.1:10885/upload/"
     },
     "sticker": {
-      "status": true,
-      "penalty": 0.95
+      "status": false,
+      "penalty": 0.9
     }
   },
-  "backend": {
-    "type": "openai",
-    "openai": {
-      "model": "text-davinci-003",
-      "token_limit": 4000
-    },
-    "chatgpt": {
-      "api": null,
-      "agree": false
-    }
-  },
+  "moderation_type": [
+    "self-harm",
+    "hate",
+    "sexual",
+    "hate/threatening",
+    "sexual/minors",
+    "violence",
+    "violence/graphic"
+  ],
   "tts": {
     "status": true,
-    "type": "vits",
+    "type": "none",
     "vits": {
       "api": "http://127.0.0.1:9557/tts/generate",
-      "limit": 200,
-      "model_name": "xxxx_epxxxhs.pth",
+      "limit": 70,
+      "model_name": "some.pth",
       "speaker_id": 0
     },
     "azure": {
       "key": [
-        "eaedxxxxxxxxxxxxxxxxxxx"
+        ""
       ],
       "limit": 70,
       "speaker": {
