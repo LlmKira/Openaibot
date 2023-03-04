@@ -228,6 +228,22 @@ When using the user/group authorization command, you need to follow the real ID 
 | text-babbage-001 | 2048        | $0.0005  /1K tokens                                           |
 | text-ada-001     | 2048        | $0.0004  /1K tokens                                           |
 
+### Keyword filtering configuration
+
+To prevent malicious inducement and attacks, we have two measures: OpenAI TosApi filtering and simplified/traditional
+keyword filtering.
+
+- Simplified/traditional keyword filtering
+
+If not exist, the sensitive word file will be automatically initialized into `Data/Danger.form`, and it can be disabled
+by clearing it to one line.
+
+- OpenAI TosApi filtering
+
+Leave the inspection type array empty to disable the filter.
+
+Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/service).
+
 ### 🌽 `/Config` File
 
 Our `llm-kira` dependency library is stored in the current package directory when there is no Redis support.
