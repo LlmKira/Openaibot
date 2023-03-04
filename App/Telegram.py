@@ -11,7 +11,7 @@ import tzlocal
 import tempfile
 import time
 from collections import deque
-from typing import Optional, Union
+from typing import Optional, Union, Callable, Awaitable
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -21,7 +21,7 @@ from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
 from utils import Setting, Sticker
-from utils.Blip import BlipServer
+from utils.Blip import BlipServer, FileReader
 from utils.Chat import Utils, PhotoRecordUtils, ConfigUtils
 from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
 from utils.Frequency import Vitality
@@ -63,7 +63,10 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
-async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types.Sticker]) -> Optional[str]:
+async def recognize_photo(bot: AsyncTeleBot,
+                          photo: Union[types.PhotoSize, types.Sticker, types.Document],
+                          call_func: Callable[[str], Awaitable[str]] = str,
+                          ) -> Optional[str]:
     _file_info = await bot.get_file(photo.file_id)
     _history = PhotoRecordUtils.getKey(_file_info.file_unique_id)
     if _history:
@@ -74,8 +77,7 @@ async def recognize_photo(bot: AsyncTeleBot, photo: Union[types.PhotoSize, types
     with tempfile.NamedTemporaryFile(suffix=".png") as f:
         f.write(downloaded_file)
         f.flush()
-        BlipInterrogatorText = await BlipInterrogator.generate_caption(
-            image_file=f.name)
+        BlipInterrogatorText = await call_func(f.name)
         if BlipInterrogatorText:
             PhotoRecordUtils.setKey(_file_info.file_unique_id, BlipInterrogatorText)
     return BlipInterrogatorText
@@ -88,51 +90,80 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
     :param message:
     :return:
     """
-    if not BlipInterrogator:
-        return ""
-    msg_text = None
+    msg_text = []
     if message.sticker and BlipInterrogator:
         try:
-            photo_text = await recognize_photo(bot=bot, photo=message.sticker)
-            msg_text = f"![Emoji|{photo_text}]"
+            photo_text = await recognize_photo(bot=bot,
+                                               photo=message.reply_to_message.sticker,
+                                               call_func=BlipInterrogator.generate_caption
+                                               )
+            msg_text.append(f"![Sticker|{photo_text}]")
         except Exception as e:
             logger.warning(f"Blip:{e}")
-        if msg_text:
-            return msg_text
-    if message.reply_to_message:
-        if message.reply_to_message.sticker and BlipInterrogator and not message.sticker:
-            try:
-                photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.sticker)
-                msg_text = f"![Emoji|{photo_text}]"
-            except Exception as e:
-                logger.warning(f"Blip:{e}")
-            if msg_text:
-                return msg_text
 
     if message.photo and BlipInterrogator:
         msg_caption = message.caption if message.caption else ""
         # RECOGNIZE File
         try:
-            photo_text = await recognize_photo(bot=bot, photo=message.photo[-1])
+            photo_text = await recognize_photo(bot=bot,
+                                               photo=message.photo[-1],
+                                               call_func=BlipInterrogator.generate_caption)
             BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
-            msg_text = f"{BlipInterrogatorText}"
+            msg_text.append(f"{BlipInterrogatorText}")
         except Exception as e:
             logger.warning(f"Blip:{e}")
-        if msg_text:
-            return msg_text
+
+    if message.document:
+        if message.document.mime_type in ["image/png"]:
+            msg_caption = message.caption if message.caption else ""
+            try:
+                photo_text = await recognize_photo(bot=bot,
+                                                   photo=message.document,
+                                                   call_func=FileReader().get_ai_image_info
+                                                   )
+                BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                msg_text.append(f"{BlipInterrogatorText}")
+            except Exception as e:
+                logger.warning(f"Blip:{e}")
+
+    if msg_text:
+        return "".join(msg_text)
+
     if message.reply_to_message:
-        if message.reply_to_message.photo and BlipInterrogator and not message.photo:
+        if message.reply_to_message.sticker and BlipInterrogator and not message.sticker:
+            try:
+                photo_text = await recognize_photo(bot=bot,
+                                                   photo=message.reply_to_message.sticker,
+                                                   call_func=BlipInterrogator.generate_caption
+                                                   )
+                msg_text.append(f"![Sticker|{photo_text}]")
+            except Exception as e:
+                logger.warning(f"Blip:{e}")
+        if message.reply_to_message.photo and BlipInterrogator:
             msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
             # RECOGNIZE File
             try:
-                photo_text = await recognize_photo(bot=bot, photo=message.reply_to_message.photo[-1])
+                photo_text = await recognize_photo(bot=bot,
+                                                   photo=message.reply_to_message.photo[-1],
+                                                   call_func=BlipInterrogator.generate_caption
+                                                   )
                 BlipInterrogatorText = f"![Photo|{photo_text}]\n{msg_caption}"
-                msg_text = f"{BlipInterrogatorText}"
+                msg_text.append(f"{BlipInterrogatorText}")
             except Exception as e:
                 logger.warning(f"Blip:{e}")
-            if msg_text:
-                return msg_text
-    return ""
+        if message.reply_to_message.document:
+            if message.reply_to_message.document.mime_type in ["image/png"]:
+                msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
+                try:
+                    photo_text = await recognize_photo(bot=bot,
+                                                       photo=message.reply_to_message.document,
+                                                       call_func=FileReader().get_ai_image_info
+                                                       )
+                    BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                    msg_text.append(f"{BlipInterrogatorText}")
+                except Exception as e:
+                    logger.warning(f"Blip:{e}")
+    return "".join(msg_text)
 
 
 async def get_message(message: types.Message):
@@ -140,6 +171,8 @@ async def get_message(message: types.Message):
     msg_text = ""
     if message:
         msg_text = message.text
+    if message.document:
+        msg_text = message.caption if message.caption else ""
     if message.photo:
         msg_text = message.caption if message.caption else ""
     if message.sticker:
@@ -208,7 +241,7 @@ class BotRunner(object):
                 await bot.reply_to(message, await Event.Help(_config))
 
         # 群聊
-        @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['supergroup', 'group'])
+        @bot.message_handler(content_types=['text', 'sticker', 'photo', 'document'], chat_types=['supergroup', 'group'])
         async def group_msg(message: types.Message):
             _hand = await get_message(message)
             _hand: User_Message
@@ -324,7 +357,7 @@ class BotRunner(object):
                         Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
         # 私聊
-        @bot.message_handler(content_types=['text', 'sticker', 'photo'], chat_types=['private'])
+        @bot.message_handler(content_types=['text', 'sticker', 'photo', 'document'], chat_types=['private'])
         async def handle_private_msg(message: types.Message):
             _hand = await get_message(message)
             # 检查管理员指令
