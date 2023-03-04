@@ -230,10 +230,10 @@ When using the user/group authorization command, you need to follow the real ID 
 
 ### Keyword filtering configuration
 
-To prevent malicious inducement and attacks, we have two measures: OpenAI TosApi filtering and simplified/traditional
+To prevent malicious inducement and attacks, we have two measures: OpenAI TosApi filtering and simplified/traditional Chinese
 keyword filtering.
 
-- Simplified/traditional keyword filtering
+- Simplified/traditional Chinese keyword filtering(Only For Chinese)
 
 If not exist, the sensitive word file will be automatically initialized into `Data/Danger.form`, and it can be disabled
 by clearing it to one line.
