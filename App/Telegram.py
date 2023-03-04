@@ -122,7 +122,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
                                                    call_func=FileReader().get_ai_image_info
                                                    )
                 if photo_text:
-                    BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                    BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nHint:Prompt is Non-modifiable&InEnglish)\n{msg_caption}"
                     msg_text.append(f"{BlipInterrogatorText}")
                 else:
                     msg_text.append(f"![Photo](Prompt:None)")
@@ -163,7 +163,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
                                                        call_func=FileReader().get_ai_image_info
                                                        )
                     if photo_text:
-                        BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nPrompt OutputFormat->Non-modifiable&InEnglish)\n{msg_caption}"
+                        BlipInterrogatorText = f"![Photo](Prompt:<|[{photo_text}|>)\nHint:Prompt is Non-modifiable&InEnglish)\n{msg_caption}"
                         msg_text.append(f"{BlipInterrogatorText}")
                     else:
                         msg_text.append(f"![Photo](Prompt:None)")
