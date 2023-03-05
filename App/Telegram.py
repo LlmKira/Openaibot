@@ -114,7 +114,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             logger.warning(f"Blip:{e}")
 
     if message.document:
-        if message.document.mime_type in ["image/png"]:
+        if message.document.mime_type in ["image/png", "image/jpg"]:
             msg_caption = message.caption if message.caption else ""
             try:
                 photo_text = await recognize_photo(bot=bot,
@@ -155,7 +155,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             except Exception as e:
                 logger.warning(f"Blip:{e}")
         if message.reply_to_message.document:
-            if message.reply_to_message.document.mime_type in ["image/png"]:
+            if message.reply_to_message.document.mime_type in ["image/png", "image/jpg"]:
                 msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
                 try:
                     photo_text = await recognize_photo(bot=bot,
