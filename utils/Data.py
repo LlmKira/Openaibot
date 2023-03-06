@@ -205,7 +205,7 @@ class DefaultData(object):
             "statu": True,
             "input_limit": 800,
             "token_limit": 1000,
-            "hour_limit": 15000,
+            "hour_limit": 20000,
             "per_user_limit": 1,
             "usercold_time": 10,
             "groupcold_time": 1,
