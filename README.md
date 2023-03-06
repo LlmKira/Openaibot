@@ -11,32 +11,44 @@
 
 [中文](https://github.com/LlmKira/Openaibot/blob/main/README_ZH.md)
 
-全平台，多模态(语音/图片)理解，自维护套件，实时信息支持
+直觉性设计的全平台Bot，多轮会话管理，多模态(语音/图片)理解，自维护套件，交叉追溯回复。
 
 If you don't have the instant messaging platform you need or you want to develop a new application, you are welcome to
 contribute to this repository.
+
 You can develop a new Controller by using `Event.py`.
 
-We use the self-maintained llm framework [llm-kira](https://github.com/LLMKira/llm-kira) to implement the conversation
-client.
+Compatibility with multiple LLMs and integration with GPT and third-party systems is handled by
+our [llm-kira](https://github.com/LLMKira/llm-kira) project on
+GitHub.
 
 **Please submit an issue/discussion if you have a deployment issue rather than emailing me**
 
 ## 🥽 Feature
 
-* Async
-* Support for rate limiting
-* Support for private chats, group chats
-* Support for black and white list system
-* Support for usage management, persona, custom words style 🤖
-* Memory pool guarantees 1000 rounds of contextual memory 💾
-* Multi-platform, universal use, also supports local voice assistant 🗣️
-* Multiple Api key polling pools for easy management and overflow pop-ups 📊
-* Active search for content to reply to and support for Sticker replies 😊
-* Universal interface for multi-platform support, theoretically allows access to any chat platform 🌐
-* Content security removable components, also supports official Api content filtering 🔒
-* Real-time web indexing support, universal crawler (supports UrlQueryHtml url?q={}) 🕸️
-* Multimodal interaction support, image Blip comprehension support, voice recognition 👂 , sticker support 😎
+- It can accurately limit billing, with limits and ID binding. ⚡️
+- Supports asynchronous operations and can handle multiple requests simultaneously. 🚀
+- Allows for private and group chats, catering to different scenarios. 💬
+- Implements chat rate limiting to avoid overly frequent requests. ⏰
+- Provides entertainment and interactive features, allowing for proactive engagement with users. 🎉
+- Includes blacklists, whitelists, and quota systems to control conversation partners. 🔒
+- Designed for full compatibility and strong scalability, adapting to different application scenarios. 🔌
+- Features a memory pool that guarantees the storage of context memory for up to 1000 rounds, with dynamic construction.
+  💾
+- Supports management, roles, and custom writing styles, providing more personalized options. 🤖
+- Integrates Azure and Whisper local voice assistants, offering more ways for voice interaction. 🗣
+- Allows for polling of multiple API keys for easy management, with automatic expiration reminders. 📊
+- Supports multimodal interaction, including image Blip comprehension support, speech recognition, and sticker support.
+  👂😎
+- Has a sound content safety system, including removable content safety components and official API filtering of
+  content. 🔒
+- Theoretically supports cross-platform access to any chat platform. 🌐
+- The intuitive design of the chat allows for cross-replying, retracing replies, trigger-based replies, and the use of
+  stickers for added fun. 😊
+- Theoretical abstract design of third-party information injection LLM, supporting real-time content and automatic
+  injection of the latest information to assist in answering. 🕸
+- Self-maintaining model framework that supports any LLM model and any external API integration, abstracting and
+  unifying access to GPT3 and GPT3.5. 🤖
 
 ## 🪜 Deploy It
 
@@ -230,7 +242,8 @@ When using the user/group authorization command, you need to follow the real ID 
 
 ### Keyword filtering configuration
 
-To prevent malicious inducement and attacks, we have two measures: OpenAI TosApi filtering and simplified/traditional Chinese
+To prevent malicious inducement and attacks, we have two measures: OpenAI TosApi filtering and simplified/traditional
+Chinese
 keyword filtering.
 
 - Simplified/traditional Chinese keyword filtering(Only For Chinese)
