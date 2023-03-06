@@ -234,10 +234,11 @@ python3 clinet.py
 
 为了防范恶意的诱导和攻击，我们有 `Openai TosApi过滤` 和 `简繁关键词过滤` 两种措施。
 
-- 简繁关键词过滤
-  如果不存在，敏感词文件会被自动初始化进 `Data/Danger.form`，关闭只需要清空至一行即可。
+*简繁关键词过滤*
 
-- Openai TosApi过滤
+如果不存在，敏感词文件会被自动初始化进 `Data/Danger.form`，关闭只需要清空至一行即可。
+
+*Openai TosApi过滤*
 
 将审查类型数组留空即可关闭过滤器。
 
