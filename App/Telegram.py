@@ -101,6 +101,9 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         except Exception as e:
             logger.warning(f"Blip:{e}")
 
+    if msg_text:
+        return "".join(msg_text)
+
     if message.photo and BlipInterrogator:
         msg_caption = message.caption if message.caption else ""
         # RECOGNIZE File
@@ -112,6 +115,9 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             msg_text.append(f"{BlipInterrogatorText}")
         except Exception as e:
             logger.warning(f"Blip:{e}")
+
+    if msg_text:
+        return "".join(msg_text)
 
     if message.document:
         if message.document.mime_type in ["image/png", "image/jpg"]:
