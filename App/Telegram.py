@@ -101,9 +101,6 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         except Exception as e:
             logger.warning(f"Blip:{e}")
 
-    if msg_text:
-        return "".join(msg_text)
-
     if message.photo and BlipInterrogator:
         msg_caption = message.caption if message.caption else ""
         # RECOGNIZE File
@@ -116,11 +113,8 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         except Exception as e:
             logger.warning(f"Blip:{e}")
 
-    if msg_text:
-        return "".join(msg_text)
-
     if message.document:
-        if message.document.mime_type in ["image/png", "image/jpg"]:
+        if message.document.mime_type in ["image/png"]:
             msg_caption = message.caption if message.caption else ""
             try:
                 photo_text = await recognize_photo(bot=bot,
@@ -161,7 +155,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             except Exception as e:
                 logger.warning(f"Blip:{e}")
         if message.reply_to_message.document:
-            if message.reply_to_message.document.mime_type in ["image/png", "image/jpg"]:
+            if message.reply_to_message.document.mime_type in ["image/png"]:
                 msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
                 try:
                     photo_text = await recognize_photo(bot=bot,
@@ -350,7 +344,15 @@ class BotRunner(object):
                                                    )
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
-                        msg = await bot.reply_to(message, _caption)
+
+                        result = ''
+                        for c in _caption:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                                result += '\\' + c
+                            else:
+                                result += c
+
+                        msg = await bot.reply_to(message, result, parse_mode='MarkdownV2')
                         if EmojiPredict:
                             emoji = EmojiPredict.predict(prompt=_caption,
                                                          emoji_folder_dict=EmojiPredict.convert_folder(
@@ -364,7 +366,7 @@ class BotRunner(object):
                     else:
                         _trigger_message = await Event.Silent(_hand, _config)
                         if not _trigger_message.status:
-                            msg = await bot.reply_to(message, _friends_message.msg)
+                            msg = await bot.reply_to(message, _friends_message.msg, parse_mode='MarkdownV2')
                     if msg:
                         Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
@@ -403,7 +405,15 @@ class BotRunner(object):
                                              )
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
-                        await bot.reply_to(message, _caption)
+
+                        result = ''
+                        for c in _caption:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                                result += '\\' + c
+                            else:
+                                result += c
+
+                        await bot.reply_to(message, result, parse_mode='MarkdownV2')
                         if EmojiPredict:
                             emoji = EmojiPredict.predict(prompt=_caption,
                                                          emoji_folder_dict=EmojiPredict.convert_folder(
@@ -417,7 +427,7 @@ class BotRunner(object):
                     else:
                         _trigger_message = await Event.Silent(_hand, _config)
                         if not _trigger_message.status:
-                            await bot.reply_to(message, _friends_message.msg)
+                            await bot.reply_to(message, _friends_message.msg, parse_mode='MarkdownV2')
             if _real_id in _config.master:
                 _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config)
                 # 检查管理员指令
