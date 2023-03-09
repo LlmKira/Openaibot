@@ -101,6 +101,9 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         except Exception as e:
             logger.warning(f"Blip:{e}")
 
+    if msg_text:
+        return "".join(msg_text)
+
     if message.photo and BlipInterrogator:
         msg_caption = message.caption if message.caption else ""
         # RECOGNIZE File
@@ -113,8 +116,11 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
         except Exception as e:
             logger.warning(f"Blip:{e}")
 
+    if msg_text:
+        return "".join(msg_text)
+
     if message.document:
-        if message.document.mime_type in ["image/png"]:
+        if message.document.mime_type in ["image/png", "image/jpg"]:
             msg_caption = message.caption if message.caption else ""
             try:
                 photo_text = await recognize_photo(bot=bot,
@@ -155,7 +161,7 @@ async def parse_photo(bot: AsyncTeleBot, message: types.Message) -> str:
             except Exception as e:
                 logger.warning(f"Blip:{e}")
         if message.reply_to_message.document:
-            if message.reply_to_message.document.mime_type in ["image/png"]:
+            if message.reply_to_message.document.mime_type in ["image/png", "image/jpg"]:
                 msg_caption = message.reply_to_message.caption if message.reply_to_message.caption else ""
                 try:
                     photo_text = await recognize_photo(bot=bot,
@@ -366,7 +372,7 @@ class BotRunner(object):
                     else:
                         _trigger_message = await Event.Silent(_hand, _config)
                         if not _trigger_message.status:
-                            msg = await bot.reply_to(message, _friends_message.msg, parse_mode='MarkdownV2')
+                            msg = await bot.reply_to(message, _friends_message.msg)
                     if msg:
                         Utils.trackMsg(f"{_hand.from_chat.id}{msg.id}", user_id=_hand.from_user.id)
 
@@ -427,7 +433,7 @@ class BotRunner(object):
                     else:
                         _trigger_message = await Event.Silent(_hand, _config)
                         if not _trigger_message.status:
-                            await bot.reply_to(message, _friends_message.msg, parse_mode='MarkdownV2')
+                            await bot.reply_to(message, _friends_message.msg)
             if _real_id in _config.master:
                 _reply = await Event.MasterCommand(user_id=_real_id, Message=_hand, config=_config)
                 # 检查管理员指令
