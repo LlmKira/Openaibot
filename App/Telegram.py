@@ -350,7 +350,15 @@ class BotRunner(object):
                                                    )
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
-                        msg = await bot.reply_to(message, _caption)
+
+                        result = ''
+                        for c in _caption:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                                result += '\\' + c
+                            else:
+                                result += c
+
+                        msg = await bot.reply_to(message, result, parse_mode='MarkdownV2')
                         if EmojiPredict:
                             emoji = EmojiPredict.predict(prompt=_caption,
                                                          emoji_folder_dict=EmojiPredict.convert_folder(
@@ -403,7 +411,15 @@ class BotRunner(object):
                                              )
                     elif _friends_message.reply:
                         _caption = f"{_friends_message.reply}\n{_config.INTRO}"
-                        await bot.reply_to(message, _caption)
+
+                        result = ''
+                        for c in _caption:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                                result += '\\' + c
+                            else:
+                                result += c
+
+                        await bot.reply_to(message, result, parse_mode='MarkdownV2')
                         if EmojiPredict:
                             emoji = EmojiPredict.predict(prompt=_caption,
                                                          emoji_folder_dict=EmojiPredict.convert_folder(
