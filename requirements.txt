@@ -1,7 +1,6 @@
 pyTelegramBotAPI
 rtoml
 rich
-aiohttp
 redis
 loguru
 httpx
