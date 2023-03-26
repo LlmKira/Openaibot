@@ -38,37 +38,38 @@ class ProfileManager(object):
         _bot_full_name = f"{first_name}{last_name}"
         _bot_split_name = _bot_full_name.split()
         _bot_split_name: list
-        _bot_name = _bot_full_name if not len(_bot_split_name) > 1 else _bot_split_name[1]
+        _bot_name = _bot_full_name if not len(
+            _bot_split_name) > 1 else _bot_split_name[1]
         _bot_name = _bot_name if _bot_name else "Assistant"
         _bot_name = _bot_name[:12]
         return _bot_name
 
-    def access_api(self, bot_name=None, bot_id=None, init=False):
+    def access_base(self, bot_name=None, bot_id=None, init=False, mentions: str = None, domain: str = ''):
         global _bot_profile
         if init:
-            _profile = self.set_bot_profile(domain="api", bot_id=bot_id, bot_name=bot_name)
-            logger.success(f"Init API Bot Profile: {_profile}")
+            _profile = self.set_bot_profile(
+                domain=domain, bot_id=bot_id, bot_name=bot_name, mentions=mentions)
+            logger.success(
+                f"Init {domain.capitalize()} Bot Profile: {_profile}")
             return _profile
         else:
-            return ProfileReturn(**self.get_bot_profile(domain="api"))
+            return ProfileReturn(**self.get_bot_profile(domain=domain))
+
+    def access_api(self, bot_name=None, bot_id=None, init=False):
+        return self.access_base(bot_name=bot_name, bot_id=bot_id,
+                         init=init, domain='api')
 
     def access_telegram(self, bot_name: str = None, bot_id: int = None, mentions: str = None, init=False):
-        global _bot_profile
-        if init:
-            _profile = self.set_bot_profile(domain="telegram", bot_id=bot_id, bot_name=bot_name, mentions=mentions)
-            logger.success(f"Init Telegram Bot Profile: {_profile}")
-            return _profile
-        else:
-            return ProfileReturn(**self.get_bot_profile(domain="telegram"))
+        return self.access_base(bot_name=bot_name, bot_id=bot_id,
+                         init=init, domain='telegram', mentions=mentions)
 
     def access_qq(self, bot_name=None, bot_id=None, init=False):
-        global _bot_profile
-        if init:
-            _profile = self.set_bot_profile(domain="qq", bot_id=bot_id, bot_name=bot_name)
-            logger.success(f"Init QQ Bot Profile: {_profile}")
-            return _profile
-        else:
-            return ProfileReturn(**self.get_bot_profile(domain="qq"))
+        return self.access_base(bot_name=bot_name, bot_id=bot_id,
+                         init=init, domain='qq')
+
+    def access_wechat(self, bot_name=None, bot_id=None, init=False):
+        return self.access_base(bot_name=bot_name, bot_id=bot_id,
+                         init=init, domain='wechat')
 
     def set_bot_profile(self, domain=None, bot_id=None, bot_name=None, **kwargs):
         global _bot_profile

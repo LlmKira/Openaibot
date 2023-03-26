@@ -108,6 +108,19 @@ WHITE = "Group NOT in WHITE list"
 # 设置的代理，但是不代理 openai api, 只代理 bot
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
+# 微信
+[Controller.WeChat]
+my_name = '机器人名字' # 机器人名字，需自行设定
+master = ['yjsnpi_114514','tkgw_1919810'] # 管理员**微信号**。另外自己给自己发消息，默认按管理员处理
+host_port = 'tcp://127.0.0.1:10086' # WcFerry C++后端url
+debug = false # WcFerry 预留调试选项
+trigger = false
+INTRO = "POWER BY OPENAI"  # 后缀
+ABOUT = "Created by github.com/sudoskys/Openaibot" # 关于命令返回
+WHITE = "Group NOT in WHITE list" # 黑白名单提示
+# 此代理配置无用。代理需用户在Windows客户端自行设置。为兼容性而保留
+proxy = { status = false, url = 'http://114.51.4.19:19810' }
+
 # 基础对话事件服务器，Web支持或者音箱用
 [Controller.BaseServer]
 host = "127.0.0.1"
@@ -129,6 +142,10 @@ port = 9559
 - QQ
 
 [Configuring the QQ bot](https://graiax.cn/before/install_mirai.html)
+
+- 微信
+
+[微信部署指南](./README_WeChat_zh.md)
 
 ### 🌻 Run Bot
 
@@ -209,6 +226,7 @@ python3 clinet.py
 | QQ         | 101       |      |
 | Telegram   | 100       |      |
 | Api        | 103       |      |
+| WeChat     | 104       |      |
 
 ### 🥪 About Models
 
@@ -327,6 +345,7 @@ Network Plugins/Proxy Settings/自定义模型名称/语音服务/图片理解/C
 - [text_analysis_tools](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 - [duckduckgo_search](https://github.com/deedy5) @deedy5
+- [WeChatFerry](https://github.com/lich0821/WeChatFerry) @lich0821
 
 ## 🍞 Other similar projects
 

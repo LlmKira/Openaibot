@@ -119,6 +119,20 @@ WHITE = "Group NOT in WHITE list"
 # 设置的代理，只代理 bot  openai api->service.json 
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
+# WeChat
+[Controller.WeChat]
+my_name = 'MY_NAME' # BOT NAME SET BY YOURSELF
+master = ['yjsnpi_114514','tkgw_1919810'] # Admin WeChat ID
+host_port = 'tcp://127.0.0.1:10086' # WcFerry C++ Backend URL
+debug = false # WcFerry Debug Switch
+trigger = false
+INTRO = "POWER BY OPENAI"  # Postfix
+ABOUT = "Created by github.com/sudoskys/Openaibot"
+WHITE = "Group NOT in WHITE list"
+# Proxy setting is deprecated for WeChat, you should set
+# it on Windows Client by yourself
+proxy = { status = false, url = 'http://114.51.4.19:19810' }
+
 # 基础对话事件服务器，Web支持或者音箱用&Use by Voice Assistant
 [Controller.BaseServer]
 host = "127.0.0.1"
@@ -139,6 +153,10 @@ Make sure *the bot is a group admin* or *privacy mode is turned off*.
 - QQ
 
 [Configuring the QQ bot](https://graiax.cn/before/install_mirai.html)
+
+- WeChat
+
+[Configuring WeChat Env.](./README_WeChat.md)
 
 ### 🌻 Run Bot
 
@@ -219,6 +237,7 @@ When using the user/group authorization command, you need to follow the real ID 
 | QQ         | 101       |      |
 | Telegram   | 100       |      |
 | Api        | 103       |      |
+| WeChat     | 104       |      |
 
 ### 🥪 About Models
 
@@ -342,6 +361,7 @@ Please see [Service Configuration Guide](https://llmkira.github.io/Docs/guide/se
 - [text_analysis_tools](https://github.com/murray-z/text_analysis_tools)
 - [MoeGoe Voice](https://github.com/CjangCjengh/MoeGoe)
 - [duckduckgo_search](https://github.com/deedy5) @deedy5
+- [WeChatFerry](https://github.com/lich0821/WeChatFerry) @lich0821
 
 ## 🍞 Other similar projects
 
