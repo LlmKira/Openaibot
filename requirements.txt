@@ -30,3 +30,4 @@ tzlocal
 psutil
 piexif
 pytz
+shortuuid
