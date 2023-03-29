@@ -143,6 +143,10 @@ class UserManager(object):
         _item = self._user
         return _item.get(key)
 
+    def reset(self):
+        self._renew(DefaultData.defaultUser())
+        return True
+
 
 class GroupManager(object):
     def __init__(self, uid: int):

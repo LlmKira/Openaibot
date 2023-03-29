@@ -1141,6 +1141,9 @@ async def MasterCommand(user_id: int, Message: User_Message, config):
                         _reply.append(_ev)
                         logger.info(_ev)
 
+            if "/reset_user" in command:
+                UserManager(0).reset()
+
             # UPDATE
             if command.startswith("/update_detect"):
                 keys, _error = initCensor()
