@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-# @Time    : 1/5/23 10:05 AM
-# @FileName: Frequency.py
+# @Time    : 2023/3/30 下午5:02
+# @Author  : sudoskys
+# @File    : trigger.py
 # @Software: PyCharm
-# @Github    ：sudoskys
+
+# TODO 需要重写底层库
 import random
 import re
 import time
@@ -11,21 +13,15 @@ import llm_kira
 from llm_kira.client.types import Interaction, PromptItem
 from llm_kira.utils.chat import Utils
 
-from utils.Data import User_Message, Service_Data, RedisConfig, DataWorker
+from utils.Data import ServiceData, RedisConfig
+from utils.Chat import UserMessage
 
-service = Service_Data.get_key()
+service = ServiceData.get_key()
 redis_conf = service["redis"]
 redis_config = RedisConfig(**redis_conf)
+
+
 # 工具数据类型
-Trigger = DataWorker(host=redis_config.host,
-                     port=redis_config.port,
-                     db=redis_config.db,
-                     password=redis_config.password,
-                     prefix="Open_Ai_bot_trigger_")
-
-GROUP_BUFFER = {}
-
-
 class CheckSeq(object):
     def __init__(self):
         self._help_keywords = ["怎么",
@@ -116,7 +112,7 @@ class Vitality(object):
         else:
             return len([])
 
-    def trigger(self, Message: User_Message, config):
+    def trigger(self, Message: UserMessage, config):
         """
         追踪群组消息上下文为 Catch 提供养分
         :param Message:
@@ -146,7 +142,7 @@ class Vitality(object):
                 return False
         return True
 
-    def check(self, Message: User_Message):
+    def check(self, Message: UserMessage):
         _text = Message.text
         _min = random.randint(10, 100)
         if len(_text) < 5:
@@ -184,15 +180,3 @@ class Vitality(object):
         if status:
             Trigger.setKey(self.group_id, "True", exN=60 * _min)
         return status
-
-
-"""
-                # 计算初始
-                message_cache = self.receiver.read_memory(plain_text=True, sign=True)
-                message_cache: list
-                message_cache = [item for item in message_cache if item]
-                if len(message_cache) < 20:
-                    return False
-                _cache = message_cache[:20]
-                if self.isHighestSentiment(text=_text, cache=_cache):
-"""

@@ -13,17 +13,18 @@ import re
 import time
 
 # from io import BytesIO
-from typing import Union, Tuple
+from typing import Tuple
 
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import Utils, Usage, GroupManager, UserManager, Header, Style, ConfigUtils
-from utils.Data import DictUpdate, DefaultData, Openai_Api_Key, Service_Data, User_Message, PublicReturn, ProxyConfig
-from utils.Setting import ProfileReturn
-from utils.TTS import TTS_Clint, TTS_REQ
-from utils.Detect import DFA, Censor, Detect
-from utils.Logging import LoadResponseError
+from utils.Chat import ConfigUtils, UserMessage
+from Handler.RateLimiter import Utils, Usage
+from utils.Data import DictUpdate, DefaultData, OpenaiApiKey, ServiceData, PublicReturn, ProxyConfig
+from Handler.Manager import ProfileReturn, Header, Style, UserManager, GroupManager
+from Handler.TTS import TTSClint, TTSMessage
+from utils.Detect import QueryDetector
+from utils.Error import LoadResponseError
 
 import llm_kira
 from llm_kira.utils.chat import Cut
@@ -36,11 +37,11 @@ from llm_kira.creator.engine import PromptEngine
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 
-OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
+OPENAI_API_KEY_MANAGER = OpenaiApiKey(file_path="./Config/api_keys.json")
 
-# fast text langdetect_kira
+# fast text langdetect_unicode
 
-_service = Service_Data.get_key()
+_service = ServiceData.get_key()
 REDIS_CONF = _service["redis"]
 TTS_CONF = _service["tts"]
 PLUGIN_TABLE = _service["plugin"]
@@ -101,34 +102,6 @@ llm_kira.setting.llmRetryTimeMax = 30
 llm_kira.setting.llmRetryTimeMin = 3
 llm_kira.setting.llmRetryAttempt = 2
 
-urlForm = {
-    "Danger.form": [
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2Z3d2RuL3NlbnNpdGl2ZS1zdG9wLXdvcmRzL21hc3Rlci8lRTYlOTQlQkYlRTYlQjIlQkIlRTclQjElQkIudHh0",
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1RlbGVjaGFCb3QvQW50aVNwYW0vbWFpbi9EYW5nZXIudHh0",
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FkbGVyZWQvRGFuZ2Vyb3VzU3BhbVdvcmRzL21hc3Rlci9EYW5nZXJvdXNTcGFtV29yZHMvR2VuZXJhbF9TcGFtV29yZHNfVjEuMC4xX0NOLm1pbi50eHQ=",
-        # 腾讯词库
-        # "aHR0cHM6Ly9naXRodWIuY29tL2NqaDA2MTMvdGVuY2VudC1zZW5zaXRpdmUtd29yZHMvYmxvYi9tYWluL3NlbnNpdGl2ZV93b3Jkc19saW5lcy50eHQ=",
-        # 国家 + 政党 + 人种
-        # "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2FkbGVyZWQvRGFuZ2Vyb3VzU3BhbVdvcmRzL21hc3Rlci9EYW5nZXJvdXNTcGFtV29yZHMvR2VuZXJhbF9TcGFtV29yZHNfVjEuMC4xX0NOLm1pbi50eHQ=",
-        "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0phaW1pbjEzMDQvc2Vuc2l0aXZlLXdvcmQtZGV0ZWN0b3IvbWFpbi9zYW1wbGVfZmlsZXMvc2FtcGxlX2Jhbm5lZF93b3Jkcy50eHQ=",
-    ]
-}
-
-
-def initCensor():
-    if PROXY_CONF.status:
-        proxies = {
-            'all://': PROXY_CONF.url,
-        }  # 'http://127.0.0.1:7890'  # url
-        return Censor.initWords(url=urlForm, home_dir="./Data/", proxy=proxies)
-    else:
-        return Censor.initWords(url=urlForm, home_dir="./Data/")
-
-
-if not pathlib.Path("./Data/Danger.form").exists():
-    initCensor()
-# 过滤器
-ContentDfa = DFA(path="./Data/Danger.form")
 
 global _csonfig
 
@@ -136,7 +109,7 @@ global _csonfig
 # IO
 def load_csonfig():
     global _csonfig
-    now_table = DefaultData.defaultConfig()
+    now_table = DefaultData.default_config()
     _csonfig = ConfigUtils.getKey("config")
     DictUpdate.dict_update(now_table, _csonfig)
     _csonfig = now_table
@@ -173,10 +146,10 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         return
 
     try:
-        from fatlangdetect import detect
+        from Component.langdetect_fasttext import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""), low_memory=True).get("lang").upper()
     except Exception as e:
-        from langdetect_kira import detect
+        from Component.langdetect_unicode import detect
         lang_type = detect(text=text.replace("\n", "").replace("\r", ""))[0][0].upper()
 
     if TTS_CONF["type"] == "vits":
@@ -192,14 +165,14 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         _new_text = "".join(_spell)
         _new_text = "[LENGTH]1.4[LENGTH]" + _new_text
         # 接受数据
-        result, _error = await TTS_Clint.request_vits_server(
-            url=_vits_config["api"],
-            params=TTS_REQ(task_id=user_id,
-                           text=_new_text,
-                           model_name=_vits_config["model_name"],
-                           speaker_id=_vits_config["speaker_id"],
-                           audio_type="ogg"
-                           )
+        result, _error = await TTSClint.request_vits_server(
+            url=_vits_config["sign_api"],
+            params=TTSMessage(task_id=user_id,
+                              text=_new_text,
+                              model_name=_vits_config["model_name"],
+                              speaker_id=_vits_config["speaker_id"],
+                              audio_type="ogg"
+                              )
         )
         if not result:
             logger.error(f"TTS:{user_id} --type:vits --content: {text}:{len(text)} --{_error}")
@@ -217,7 +190,7 @@ async def TTSSupportCheck(text, user_id, limit: bool = True):
         if not _speaker:
             logger.info(f"TTS:{user_id} --type:azure --content: {text}:{len(text)} --this type lang not supported")
             return
-        result, _error = await TTS_Clint.request_azure_server(
+        result, _error = await TTSClint.request_azure_server(
             key=_azure_config["key"],
             location=_azure_config["location"],
             text=_new_text,
@@ -322,7 +295,7 @@ class Reply(object):
         _prompt = prompt.prompt
         _harm = await self.openai_moderation(prompt=_prompt.prompt)
         if _harm:
-            _info = DefaultData.getRefuseAnswer()
+            _info = DefaultData.get_refuse_answer()
             await asyncio.sleep(random.randint(1, 4))
             _think.hook(random.choice(["sad"]))
             return PublicReturn(status=True, trace="Req", reply=f"{_info}\nYou talk too {_harm}.")
@@ -369,7 +342,7 @@ class Reply(object):
                         _style = {}
                 _result = []
                 try:
-                    if len(_prompt.text) > 5 and Detect().isQuery(_prompt.text):
+                    if len(_prompt.text) > 5 and QueryDetector.is_query(_prompt.text):
                         _result = await prompt.build_skeleton(query=_prompt,
                                                               llm_task="Summary Text" if len(
                                                                   _prompt.text) > 20 else None,
@@ -401,28 +374,28 @@ class Reply(object):
                 return PublicReturn(status=False, trace="Req", msg="NO SUPPORT METHOD")
         except RateLimitError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:RateLimitError Reach Limit|Overload"
+            _deal = f"{DefaultData.get_wait_answer()}\nDetails:RateLimitError Reach Limit|Overload"
             logger.error(f"RUN:Openai Error:{e}")
         except ServiceUnavailableError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:ServiceUnavailableError Server:500"
+            _deal = f"{DefaultData.get_wait_answer()}\nDetails:ServiceUnavailableError Server:500"
             logger.error(f"RUN:Openai Error:{e}")
         except AuthenticationError as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:AuthenticationError"
+            _deal = f"{DefaultData.get_wait_answer()}\nDetails:AuthenticationError"
             logger.error(f"RUN:Openai Error:{e}")
         except LLMException as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:llm-kira tips error"
+            _deal = f"{DefaultData.get_wait_answer()}\nDetails:llm-kira tips error"
             logger.error(f"RUN:Openai Error:{e}")
         except Exception as e:
             _usage = 0
-            _deal = f"{DefaultData.getWaitAnswer()}\nDetails:Unknown Error"
+            _deal = f"{DefaultData.get_wait_answer()}\nDetails:Unknown Error"
             logger.error(f"RUN:Openai Error:{e}")
         # 更新额度
         _AnalysisUsage = self._UsageManager.renewUsage(usage=_usage)
         # 更新统计
-        DefaultData().setAnalysis(usage={f"{self.user}": _AnalysisUsage.total_usage})
+        DefaultData().set_analysis(usage={f"{self.user}": _AnalysisUsage.total_usage})
         # 人性化处理
         _deal = ContentDfa.filter_all(_deal)
         _deal = Utils.Humanization(_deal)
@@ -587,7 +560,7 @@ async def PromptType(text, types: str = "group") -> PublicReturn:
     return PublicReturn(status=True, msg=types, data=_prompt_types, trace="PromptPreprocess")
 
 
-async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
+async def Group(Message: UserMessage, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param bot_profile:
@@ -726,7 +699,7 @@ async def Group(Message: User_Message, bot_profile: ProfileReturn, config) -> Pu
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Error Occur~Check Bot Env/Config~nya")
 
 
-async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> PublicReturn:
+async def Friends(Message: UserMessage, bot_profile: ProfileReturn, config) -> PublicReturn:
     """
     根据文本特征分发决策
     :param bot_profile:
@@ -872,7 +845,7 @@ async def Friends(Message: User_Message, bot_profile: ProfileReturn, config) -> 
         return PublicReturn(status=True, msg=f"OK", trace="Error", reply="Oh no~ Check Bot Env/Config~ nya")
 
 
-async def Trigger(Message: User_Message, config) -> PublicReturn:
+async def Trigger(Message: UserMessage, config) -> PublicReturn:
     """
     :param Message: group id
     :param config:
@@ -885,7 +858,7 @@ async def Trigger(Message: User_Message, config) -> PublicReturn:
     return PublicReturn(status=False, trace="No trigger")
 
 
-async def Trace(Message: User_Message, config) -> PublicReturn:
+async def Trace(Message: UserMessage, config) -> PublicReturn:
     """
     :param Message: group id
     :param config:
@@ -897,7 +870,7 @@ async def Trace(Message: User_Message, config) -> PublicReturn:
     return PublicReturn(status=False, trace="No Trace")
 
 
-async def Silent(Message: User_Message, config) -> PublicReturn:
+async def Silent(Message: UserMessage, config) -> PublicReturn:
     """
     :param Message: group id
     :param config:
@@ -909,7 +882,7 @@ async def Silent(Message: User_Message, config) -> PublicReturn:
     return PublicReturn(status=False, trace="No silent")
 
 
-async def Cross(Message: User_Message, config) -> PublicReturn:
+async def Cross(Message: UserMessage, config) -> PublicReturn:
     """
     :param Message: group id
     :param config:
@@ -921,7 +894,7 @@ async def Cross(Message: User_Message, config) -> PublicReturn:
     return PublicReturn(status=False, trace="No Cross")
 
 
-async def GroupAdminCommand(Message: User_Message, config):
+async def GroupAdminCommand(Message: UserMessage, config):
     load_csonfig()
     _reply = []
     group_id = Message.from_chat.id
@@ -969,7 +942,7 @@ async def GroupAdminCommand(Message: User_Message, config):
     return _reply
 
 
-async def MasterCommand(user_id: int, Message: User_Message, config):
+async def MasterCommand(user_id: int, Message: UserMessage, config):
     load_csonfig()
     _reply = []
     if user_id in config.master:

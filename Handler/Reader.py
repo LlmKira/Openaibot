@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 1/30/23 11:01 AM
-# @FileName: Blip.py
+# @FileName: Reader.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 import PIL.Image
@@ -10,6 +10,8 @@ import json
 import pathlib
 from typing import Optional
 from loguru import logger
+
+# 调用基础单元
 from utils.Network import NetworkClient
 
 

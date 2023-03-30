@@ -1,9 +1,11 @@
 from threading import Lock
 
-class pLock(object):
+
+class ThreadingLock(object):
     __instance = None
+
     @staticmethod
-    def getInstance():
-        if pLock.__instance is None:
-            pLock.__instance = Lock()
-        return pLock.__instance
+    def get_instance():
+        if ThreadingLock.__instance is None:
+            ThreadingLock.__instance = Lock()
+        return ThreadingLock.__instance

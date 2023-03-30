@@ -3,7 +3,6 @@
 # @FileName: DataWorker.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import ast
 import json
 import pathlib
 import random
@@ -12,40 +11,41 @@ import time
 # 缓冲
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import Optional, Union
 from loguru import logger
 from pydantic import BaseModel
 
-from utils.Lock import pLock
-
-redis_installed = True
-
-try:
-    from redis import Redis, ConnectionPool
-except Exception:
-    redis_installed = False
+from utils.Chat import FromChat, FromUser, UserMessage
+from utils.Lock import ThreadingLock
 
 
-class from_chat(BaseModel):
-    id: int
-    name: str = "作业群"
+class DictUpdate(object):
+    """
+    字典深度更新
+    """
 
+    @staticmethod
+    def dict_update(raw, new):
+        DictUpdate.dict_update_iter(raw, new)
+        DictUpdate.dict_add(raw, new)
 
-class from_user(BaseModel):
-    id: int
-    name = "猫娘"
-    admin: bool = False
+    @staticmethod
+    def dict_update_iter(raw, new):
+        for key in raw:
+            if key not in new.keys():
+                continue
+            if isinstance(raw[key], dict) and isinstance(new[key], dict):
+                DictUpdate.dict_update(raw[key], new[key])
+            else:
+                raw[key] = new[key]
 
-
-class User_Message(BaseModel):
-    id: int = 0
-    from_user: from_user
-    from_chat: from_chat
-    text: str
-    prompt: list
-    date: int = int(time.time() * 1000)
-    reply_user_id: Optional[int]
-    reply_chat_id: Optional[int]
+    @staticmethod
+    def dict_add(raw, new):
+        update_dict = {}
+        for key in new:
+            if key not in raw.keys():
+                update_dict[key] = new[key]
+        raw.update(update_dict)
 
 
 def create_message(
@@ -70,13 +70,13 @@ def create_message(
     message = {
         "text": text,
         "prompt": prompt,
-        "from_user": from_user(id=user_id, name=user_name),
-        "from_chat": from_chat(id=group_id, name=group_name),
+        "from_user": FromUser(id=user_id, name=user_name),
+        "from_chat": FromChat(id=group_id, name=group_name),
         "reply_user_id": reply_user_id,
         "reply_chat_id": reply_chat_id,
         "date": date
     }
-    return User_Message(**message)
+    return UserMessage(**message)
 
 
 class PublicReturn(BaseModel):
@@ -88,7 +88,7 @@ class PublicReturn(BaseModel):
     trace: str = ""
 
 
-class Usage_Data(BaseModel):
+class UsageData(BaseModel):
     user: str
     now: int
     usage: int
@@ -113,7 +113,7 @@ class DefaultData(object):
     """
 
     @staticmethod
-    def getWaitAnswer():
+    def get_wait_answer():
         _wait_child = ["6 ", "? ", "别 ", "呃呃 ", "我不好说，", "害怕，",
                        "？？？？", "....", "666 ", "勿Cue，", "忙着呢 ", "等我打个电话...",
                        "等我查查字典...", "亲，", "别急", "", "", "", "", "",
@@ -134,7 +134,7 @@ class DefaultData(object):
         return _info
 
     @staticmethod
-    def getRefuseAnswer():
+    def get_refuse_answer():
         _censor_child = ["你说啥呢？", "我不说,", "不懂年轻人,", "6 ", "? ", "别 ", "呃呃 ", "我不好说，", "害怕，",
                          "我想说的是", "我想强调的是...", "没意思", "无聊...", "你以为我会回你？", "",
                          "我想指出的是，", "我想重申的是，", "[叛逆]", "[傲娇]", "？？？？", "....", "666 ",
@@ -200,7 +200,7 @@ class DefaultData(object):
         return s[:n] + mask + s[n + num_chars:]
 
     @staticmethod
-    def defaultConfig():
+    def default_config():
         return {
             "statu": True,
             "input_limit": 800,
@@ -221,16 +221,16 @@ class DefaultData(object):
         }
 
     @staticmethod
-    def defaultKeys():
+    def default_keys():
         return {"OPENAI_API_KEY": []}
 
     @staticmethod
-    def defaultAnalysis():
+    def default_analysis():
         return {"frequency": 0, "usage": {}}
 
-    def setAnalysis(self,
-                    **kwargs
-                    ):
+    def set_analysis(self,
+                     **kwargs
+                     ):
         """
         frequency,
         usage,
@@ -238,13 +238,14 @@ class DefaultData(object):
         :param kwargs:
         :return:
         """
-        _Analysis = self.defaultAnalysis()
+        _Analysis = self.default_analysis()
         if pathlib.Path("./analysis.json").exists():
             with open("./analysis.json", encoding="utf-8") as f:
                 try:
                     _data = json.load(f)
-                except:
+                except Exception as e:
                     _data = {}
+                    logger.error(e)
                 DictUpdate.dict_update(_Analysis, _data)
         DictUpdate.dict_update(_Analysis, kwargs)
         with open("./analysis.json", "w+", encoding="utf8") as f:
@@ -300,7 +301,7 @@ class DefaultData(object):
             "media": {
                 "blip": {
                     "status": False,
-                    "api": "http://127.0.0.1:10885/upload/"
+                    "sign_api": "http://127.0.0.1:10885/upload/"
                 },
                 "sticker": {
                     "status": True,
@@ -320,7 +321,7 @@ class DefaultData(object):
                 "status": False,
                 "type": "vits",
                 "vits": {
-                    "api": "http://127.0.0.1:9557/tts/generate",
+                    "sign_api": "http://127.0.0.1:9557/tts/generate",
                     "limit": 70,
                     "model_name": "some.pth",
                     "speaker_id": 0
@@ -337,16 +338,16 @@ class DefaultData(object):
         }
 
 
-class Service_Data(object):
+class ServiceData(object):
     """
     管理 Api
     """
 
     @staticmethod
-    def get_key(filePath: str = "./Config/service.json"):
+    def get_key(file_path: str = "./Config/service.json"):
         now_table = DefaultData.defaultService()
-        if pathlib.Path(filePath).exists():
-            with open(filePath, encoding="utf-8") as f:
+        if pathlib.Path(file_path).exists():
+            with open(file_path, encoding="utf-8") as f:
                 _config = json.load(f)
                 DictUpdate.dict_update(now_table, _config)
                 _config = now_table
@@ -355,34 +356,29 @@ class Service_Data(object):
             return now_table
 
     @staticmethod
-    def save_key(_config, filePath: str = "./Config/service.json"):
-        with open(filePath, "w+", encoding="utf8") as f:
+    def save_key(_config, file_path: str = "./Config/service.json"):
+        with open(file_path, "w+", encoding="utf8") as f:
             json.dump(_config, f, indent=4, ensure_ascii=False)
 
 
-class Openai_Api_Key(object):
-    """
-    管理 Api
-    """
+class OpenaiApiKey:
 
-    def __init__(self, filePath: str = "./Config/api_keys.json"):
-        self.__filePath = filePath
+    def __init__(self, file_path: str = "./Config/api_keys.json"):
+        self.file_path = file_path
 
     def _save_key(self, config: dict) -> None:
-        pLock.getInstance().acquire()
-        with open(self.__filePath, "w+", encoding="utf8") as f:
-            json.dump(config, f, indent=4, ensure_ascii=False)
-        pLock.getInstance().release()
+        with ThreadingLock.get_instance():
+            with open(self.file_path, "w+", encoding="utf8") as f:
+                json.dump(config, f, indent=4, ensure_ascii=False)
 
     def __get_config(self):
-        now_table = DefaultData.defaultKeys()
-        if pathlib.Path(self.__filePath).exists():
-            pLock.getInstance().acquire()
-            with open(self.__filePath, encoding="utf-8") as f:
-                _config = json.load(f)
-                DictUpdate.dict_update(now_table, _config)
-                _config = now_table
-            pLock.getInstance().release()
+        now_table = DefaultData.default_keys()
+        if pathlib.Path(self.file_path).exists():
+            with ThreadingLock.get_instance():
+                with open(self.file_path, encoding="utf-8") as f:
+                    _config = json.load(f)
+                    DictUpdate.dict_update(now_table, _config)
+                    _config = now_table
             return _config
         else:
             return now_table
@@ -456,95 +452,6 @@ class ExpiringDict(OrderedDict):
         for key, expiration_time in self.expirations.items():
             if datetime.now() > expiration_time:
                 super().pop(key)
-
-
-class DataWorker(object):
-    """
-    Redis 数据基类
-    """
-
-    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Openaibot_'):
-        self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
-        # self.con = Redis(connection_pool=self.redis) -> use this when necessary
-        #
-        # {chat_id: {user_id: {'state': None, 'data': {}}, ...}, ...}
-        self.prefix = prefix
-        if not redis_installed:
-            raise Exception("Redis is not installed. Install it via 'pip install redis'")
-
-    def setKey(self, key, obj, exN=None):
-        connection = Redis(connection_pool=self.redis)
-        connection.set(self.prefix + str(key), json.dumps(obj), ex=exN)
-        connection.close()
-        return True
-
-    def deleteKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        connection.delete(self.prefix + str(key))
-        connection.close()
-        return True
-
-    def getKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        result = connection.get(self.prefix + str(key))
-        connection.close()
-        if result:
-            return json.loads(result)
-        else:
-            return {}
-
-    def addToList(self, key, listData: list):
-        data = self.getKey(key)
-        if isinstance(data, str):
-            listGet = ast.literal_eval(data)
-        else:
-            listGet = []
-        listGet = listGet + listData
-        listGet = list(set(listGet))
-        if self.setKey(key, str(listGet)):
-            return True
-
-    def getList(self, key):
-        listGet = ast.literal_eval(self.getKey(key))
-        if not listGet:
-            listGet = []
-        return listGet
-
-
-class DictUpdate(object):
-    """
-    字典深度更新
-    """
-
-    @staticmethod
-    def dict_update(raw, new):
-        DictUpdate.dict_update_iter(raw, new)
-        DictUpdate.dict_add(raw, new)
-
-    @staticmethod
-    def dict_update_iter(raw, new):
-        for key in raw:
-            if key not in new.keys():
-                continue
-            if isinstance(raw[key], dict) and isinstance(new[key], dict):
-                DictUpdate.dict_update(raw[key], new[key])
-            else:
-                raw[key] = new[key]
-
-    @staticmethod
-    def dict_add(raw, new):
-        update_dict = {}
-        for key in new:
-            if key not in raw.keys():
-                update_dict[key] = new[key]
-        raw.update(update_dict)
-
-
-def getPuffix(self, fix):
-    connection = Redis(connection_pool=self.redis)
-    listGet = connection.scan_iter(f"{fix}*")
-    connection.close()
-    return listGet
 
 
 def limit_dict_size(dicts, max_size):

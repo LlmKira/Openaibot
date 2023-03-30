@@ -6,13 +6,13 @@
 
 import random
 import subprocess
-
 from pydantic import BaseModel
 
+# 调用基础单元
 from utils.Network import NetworkClient
 
 
-class TTS_REQ(BaseModel):
+class TTSMessage(BaseModel):
     model_name: str = ""
     task_id: int = 1
     text: str = "[ZH]你好[ZH]"
@@ -20,7 +20,7 @@ class TTS_REQ(BaseModel):
     audio_type: str = "ogg"
 
 
-class TTS_Clint(object):
+class TTSClint(object):
     @staticmethod
     def decode_audio(encoded_data):
         import base64
@@ -39,7 +39,7 @@ class TTS_Clint(object):
         if not _key:
             return False, "Azure Key Empty"
         try:
-            result = await Azure_TTS(key=_key, location=location).get_speech(text=text, speaker=speaker)
+            result = await AzureTTS(key=_key, location=location).get_speech(text=text, speaker=speaker)
             tmp_path = "tmp.ogg"
             audio_path = "audio.ogg"
             with open(tmp_path, "wb+") as f:
@@ -53,7 +53,7 @@ class TTS_Clint(object):
             return result, ""
 
     @staticmethod
-    async def request_vits_server(url: str, params: TTS_REQ):
+    async def request_vits_server(url: str, params: TTSMessage):
         """
         接收配置中的参数和构造的数据类，返回字节流
         :param url:
@@ -62,7 +62,7 @@ class TTS_Clint(object):
         """
         # 发起请求
         try:
-            result = await VITS_TTS(url=url).get_speech(params=params)
+            result = await VitsTTS(url=url).get_speech(params=params)
         except Exception as e:
             return False, e
         try:
@@ -70,7 +70,7 @@ class TTS_Clint(object):
                 return False, "No Api Result"
             if not isinstance(result.get("audio"), str):
                 return False, "No Audio Data"
-            data = TTS_Clint.decode_audio(result["audio"])
+            data = TTSClint.decode_audio(result["audio"])
             tmp_path = "tmp.ogg"
             audio_path = "audio.ogg"
             with open(tmp_path, "wb+") as f:
@@ -84,12 +84,12 @@ class TTS_Clint(object):
             return data, ""
 
 
-class VITS_TTS(object):
+class VitsTTS(object):
     def __init__(self, url, timeout: int = 30, proxy: str = None):
         self.__url = url
         self.__client = NetworkClient(timeout=timeout, proxy=proxy)
 
-    async def get_speech(self, params: TTS_REQ):
+    async def get_speech(self, params: TTSMessage):
         """
         返回 json
         :param params:
@@ -114,11 +114,11 @@ class VITS_TTS(object):
         return response_data
 
 
-class Azure_TTS(object):
+class AzureTTS(object):
     def __init__(self, key: str, location: str, timeout: int = 30, proxy: str = None):
         """
         Azure TTS 类型
-        :param key: api 密钥
+        :param key: sign_api 密钥
         :param location: 服务器组
         :param timeout: 超时
         :param proxy: 代理

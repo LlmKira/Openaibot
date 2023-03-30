@@ -16,10 +16,10 @@ from llm_kira.client import Optimizer
 from llm_kira.client.llms import OpenAiParam
 from pydantic import BaseModel
 from App.Event import ContentDfa, TTSSupportCheck
-from utils.Data import Service_Data, Openai_Api_Key, DefaultData, DictUpdate
+from utils.Data import ServiceData, OpenaiApiKey, DefaultData, DictUpdate
 from loguru import logger
 
-_service = Service_Data.get_key()
+_service = ServiceData.get_key()
 _redis_conf = _service["redis"]
 _tts_conf = _service["tts"]
 _plugin_table = _service["plugin"]
@@ -31,7 +31,7 @@ app = FastAPI()
 # IO
 def load_csonfig():
     global _csonfig
-    now_table = DefaultData.defaultConfig()
+    now_table = DefaultData.default_config()
     if pathlib.Path("./Config/config.json").exists():
         with open("./Config/config.json", encoding="utf-8") as f:
             _csonfig = json.load(f)
@@ -45,7 +45,7 @@ def load_csonfig():
 load_csonfig()
 
 llm_kira.setting.redisSetting = llm_kira.setting.RedisConfig(**_redis_conf)
-OPENAI_API_KEY_MANAGER = Openai_Api_Key(filePath="./Config/api_keys.json")
+OPENAI_API_KEY_MANAGER = OpenaiApiKey(file_path="./Config/api_keys.json")
 
 
 class Prompt(BaseModel):

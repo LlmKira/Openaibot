@@ -3,12 +3,10 @@
 # @FileName: Controller.py.py
 # @Software: PyCharm
 # @Github: purofle
-import asyncio
 import time
 from collections import deque
 from typing import Union, Optional
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from graia.amnesia.message import MessageChain
 from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
 from graia.ariadne.message import Source, Quote
@@ -21,21 +19,22 @@ from graiax import silkcoder
 from loguru import logger
 
 from App import Event
-from utils import Setting
-from utils.Chat import Utils
-from utils.Data import create_message, User_Message, PublicReturn, DefaultData
-from utils.Frequency import Vitality
+from Handler import Manager
+from utils.Chat import UserMessage
+from Handler.RateLimiter import Utils
+from utils.Data import create_message, PublicReturn, DefaultData
+from Component.vitality import Vitality
 
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
-ProfileManager = Setting.ProfileManager()
+ProfileManager = Manager.ProfileManager()
 
 
 def get_user_message(
         message: MessageChain,
         member: Union[Member, Friend],
-        group: Optional[Group] = None) -> User_Message:
+        group: Optional[Group] = None) -> UserMessage:
     return create_message(
         state=101,
         user_id=member.id,  # qq 号
@@ -74,7 +73,7 @@ class BotRunner:
             elif message == "/help":
                 await app.send_message(friend, await Event.Help(self.config), quote=source)
 
-        async def get_message_chain(_hand: User_Message):
+        async def get_message_chain(_hand: UserMessage):
             request_timestamps.append(time.time())
 
             if not _hand.text.startswith("/"):
@@ -129,7 +128,7 @@ class BotRunner:
                              group: Group,
                              source: Source):
             _hand = get_user_message(msg, member=member, group=group)
-            _hand: User_Message
+            _hand: UserMessage
             _at_me = f'@{bot.account} '
             get_request_frequency()
             started = False
@@ -207,7 +206,7 @@ class BotRunner:
                 request_timestamps.popleft()
             # 计算请求频率
             request_frequency = len(request_timestamps)
-            DefaultData().setAnalysis(qq=request_frequency)
+            DefaultData().set_analysis(qq=request_frequency)
             return request_frequency
 
         Ariadne.launch_blocking()

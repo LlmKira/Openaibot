@@ -20,18 +20,20 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
 from App import Event
-from utils import Setting, Sticker
-from utils.Blip import BlipServer, FileReader
-from utils.Chat import Utils, PhotoRecordUtils, ConfigUtils
-from utils.Data import DefaultData, User_Message, create_message, PublicReturn, Service_Data
-from utils.Frequency import Vitality
+from utils import Sticker
+from Handler import Manager
+from Handler.Reader import BlipServer, FileReader
+from utils.Chat import PhotoRecordUtils, ConfigUtils, UserMessage
+from Handler.RateLimiter import Utils
+from utils.Data import DefaultData, create_message, PublicReturn, ServiceData
+from Component.vitality import Vitality
 
-_service = Service_Data.get_key()
+_service = ServiceData.get_key()
 BLIP_CONF = _service["media"]["blip"]
 STICKER_CONF = _service["media"]["sticker"]
 
 if BLIP_CONF.get("status"):
-    BlipBackEnd = BLIP_CONF.get("api")
+    BlipBackEnd = BLIP_CONF.get("sign_api")
     BlipInterrogator = BlipServer(api=BlipBackEnd)
 else:
     BlipInterrogator = None
@@ -48,7 +50,7 @@ else:
 TIME_INTERVAL = 60 * 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
-ProfileManager = Setting.ProfileManager()
+ProfileManager = Manager.ProfileManager()
 
 
 async def set_cron(funcs, second: int):
@@ -244,7 +246,7 @@ class BotRunner(object):
         @bot.message_handler(commands=["start", 'about', "help"], chat_types=['private'])
         async def handle_command(message):
             _hand = await get_message(message)
-            _hand: User_Message
+            _hand: UserMessage
             if "/start" in _hand.text:
                 await bot.reply_to(message, await Event.Start(_config))
             elif "/about" in _hand.text:
@@ -256,11 +258,11 @@ class BotRunner(object):
         @bot.message_handler(content_types=['text', 'sticker', 'photo', 'document'], chat_types=['supergroup', 'group'])
         async def group_msg(message: types.Message):
             _hand = await get_message(message)
-            _hand: User_Message
+            _hand: UserMessage
             started = False
 
             # Self Known
-            _bot_profile = Setting.ProfileManager().access_telegram(init=False)
+            _bot_profile = Manager.ProfileManager().access_telegram(init=False)
             if _bot_profile.mentions:
                 if f"@{_bot_profile.mentions} " in _hand.text or _hand.text.endswith(f" @{_bot_profile.mentions}"):
                     # 消声处理
@@ -382,7 +384,7 @@ class BotRunner(object):
             _hand = await get_message(message)
             # 检查管理员指令
             _real_id = message.from_user.id
-            _hand: User_Message
+            _hand: UserMessage
             request_timestamps.append(time.time())
 
             # 私聊嘛
@@ -460,7 +462,7 @@ class BotRunner(object):
                 request_timestamps.popleft()
             # 计算请求频率
             request_frequency = len(request_timestamps)
-            DefaultData().setAnalysis(telegram=request_frequency)
+            DefaultData().set_analysis(telegram=request_frequency)
             return request_frequency
 
         async def main():

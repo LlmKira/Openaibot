@@ -1,6 +1,6 @@
 pyTelegramBotAPI
 rtoml
-rich
+python-dotenv
 redis
 loguru
 httpx

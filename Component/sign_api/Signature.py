@@ -1,4 +1,5 @@
-import hmac, base64
+import base64
+import hmac
 
 
 class APISignature(object):

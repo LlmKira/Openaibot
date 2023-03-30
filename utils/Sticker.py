@@ -7,15 +7,15 @@ import os
 import pathlib
 import random
 from loguru import logger
-from llm_kira.utils.chat import Utils
 
 
+# TODO 修复情感评分
 class Classifiers(object):
     def __init__(self, prompt):
         self.prompt = prompt
 
     def run(self):
-        _score = Utils.sentiment(self.prompt).get("score")
+        _score = random.randint(-2, 2)  # Utils.sentiment(self.prompt).get("score")
         _type = ""
         if _score > 1.5:
             _type = "positive"

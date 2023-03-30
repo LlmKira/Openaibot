@@ -105,7 +105,7 @@ trigger = false # Proactive response when appropriate
 INTRO = "POWER BY OPENAI"  # Suffixes for replies
 ABOUT = "Created by github.com/LLMKira/Openaibot" # /about
 WHITE = "Group NOT in WHITE list" # Whitelist/Blacklist tips
-# Proxy set, but does not proxy openai api, only bot
+# Proxy set, but does not proxy openai sign_api, only bot
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 # Telegram Bot
@@ -116,7 +116,7 @@ trigger = false
 INTRO = "POWER BY OPENAI"
 ABOUT = "Created by github.com/LLMKira/Openaibot"
 WHITE = "Group NOT in WHITE list"
-# 设置的代理，只代理 bot  openai api->service.json 
+# 设置的代理，只代理 bot  openai sign_api->service.json 
 proxy = { status = false, url = "http://127.0.0.1:7890" }
 
 # 基础对话事件服务器，Web支持或者音箱用&Use by Voice Assistant
