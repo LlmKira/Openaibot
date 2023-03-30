@@ -3,16 +3,34 @@
 # @Author  : sudoskys
 # @File    : RateLimiter.py
 # @Software: PyCharm
-import time
 from typing import Union
-
 from loguru import logger
-
 from Handler.Manager import UserManager
 from utils.Data import DefaultData, ServiceData, RedisConfig, UsageData
 
+import time
 
-# TODO WAIT FIX
+
+class RateLimiter:
+    def __init__(self, max_requests, interval):
+        self.max_requests = max_requests
+        self.interval = interval
+        self.requests = []
+
+    def allow_request(self):
+        now = int(time.time())
+        cutoff = now - self.interval
+
+        # Remove any requests that fall outside the interval window
+        self.requests = [r for r in self.requests if r > cutoff]
+
+        # Check if the number of remaining requests is less than the allowed maximum
+        if len(self.requests) < self.max_requests:
+            self.requests.append(now)
+            return True
+        else:
+            return False
+
 
 class Utils(object):
     @staticmethod

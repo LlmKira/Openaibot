@@ -44,7 +44,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test_feature / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -135,11 +135,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /Config/api_keys.json
-/test/text_analysis_tools/
+/test_feature/text_analysis_tools/
 Config/config.json
 /Assistants/record.wav
 /Assistants/recording.wav
-/test/Rawdata/openai_kira_/
+/test_feature/Rawdata/openai_kira_/
 /Assistants/config.json
 /Assistants/sound/
 /Data/sticker/src/

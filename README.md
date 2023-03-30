@@ -150,7 +150,7 @@ npm install pm2@latest -g
 # or
 yarn global add pm2
 
-# test bot
+# test_feature bot
 python3 main.py
 
 # run bot
