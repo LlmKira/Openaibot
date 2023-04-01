@@ -1,10 +1,12 @@
 {
-    "apps": [{
-      "name": "openaibot main",
+  "apps": [
+    {
+      "name": "openai_bot main",
       "script": "python3 main.py",
       "instances": 1,
       "error_file": "main_error.log",
       "out_file": "main_out.log",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
-    }]
+    }
+  ]
 }

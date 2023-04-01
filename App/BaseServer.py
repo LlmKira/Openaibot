@@ -16,7 +16,7 @@ class BotRunner:
         try:
             host = self.config.host
         except Exception as e:
-            logger.warning("ApiServer Conf Host Missing")
+            logger.warning(f"ApiServer Conf Host Missing {e}")
             host = '127.0.0.1'
         uvicorn.run('App.EventServer:app',
                     host=host,

@@ -13,8 +13,8 @@ import llm_kira
 from llm_kira.client.types import Interaction, PromptItem
 from llm_kira.utils.chat import Utils
 
-from utils.Data import ServiceData, RedisConfig
-from utils.Chat import UserMessage
+from utils.data import ServiceData, RedisConfig
+from utils.chat import UserMessage
 
 service = ServiceData.get_key()
 redis_conf = service["redis"]

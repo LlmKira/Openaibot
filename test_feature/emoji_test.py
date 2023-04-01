@@ -3,6 +3,10 @@
 # @FileName: emoji_test.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
+
+# pip install tweetnlp
+
 import tweetnlp
 
 # MODEL

@@ -31,3 +31,6 @@ psutil
 piexif
 pytz
 shortuuid
+pymongo
+motor
+

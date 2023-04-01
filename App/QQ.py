@@ -7,6 +7,7 @@ import time
 from collections import deque
 from typing import Union, Optional
 
+#######
 from graia.amnesia.message import MessageChain
 from graia.ariadne.connection.config import config, HttpClientConfig, WebsocketClientConfig
 from graia.ariadne.message import Source, Quote
@@ -17,18 +18,21 @@ from graia.ariadne import Ariadne
 from graia.ariadne.model import Profile
 from graiax import silkcoder
 from loguru import logger
-
+#######
 from App import Event
-from Handler import Manager
-from utils.Chat import UserMessage
-from Handler.RateLimiter import Utils
-from utils.Data import create_message, PublicReturn, DefaultData
+
+from Handler import manager
+from Handler.rate_limiter import Utils
+from Handler.profile import GlobalProfileManager
+
 from Component.vitality import Vitality
+
+from utils.chat import create_message, UserMessage
+from utils.data import PublicReturn, DefaultData
 
 time_interval = 60 * 5
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
-ProfileManager = Manager.ProfileManager()
 
 
 def get_user_message(
@@ -80,7 +84,7 @@ class BotRunner:
                 _hand.text = f"/chat {_hand.text}"
             # _friends_message = await Event.Text(_hand, self.config)
             _friends_message = await Event.Friends(Message=_hand,
-                                                   bot_profile=ProfileManager.access_qq(init=False),
+                                                   bot_profile=GlobalProfileManager.access_qq(init=False),
                                                    config=self.config
                                                    )
 
@@ -104,7 +108,7 @@ class BotRunner:
             _me: Profile = await bot.get_bot_profile()
             _name = _me.nickname
             _bot_profile = {"id": bot.account, "name": _name}
-            ProfileManager.access_qq(bot_name=_name, bot_id=bot.account, init=True)
+            GlobalProfileManager.access_qq(bot_name=_name, bot_id=bot.account, init=True)
 
         @bot.broadcast.receiver("FriendMessage")
         async def chat(app: Ariadne, msg: MessageChain, friend: Friend, source: Source):
@@ -182,7 +186,7 @@ class BotRunner:
             if started:
                 request_timestamps.append(time.time())
                 _friends_message = await Event.Group(Message=_hand,
-                                                     bot_profile=ProfileManager.access_qq(init=False),
+                                                     bot_profile=GlobalProfileManager.access_qq(init=False),
                                                      config=self.config
                                                      )
                 _friends_message: PublicReturn

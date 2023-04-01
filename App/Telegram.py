@@ -19,14 +19,17 @@ from telebot import util, types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
+import Handler.profile
 from App import Event
-from utils import Sticker
-from Handler import Manager
-from Handler.Reader import BlipServer, FileReader
-from utils.Chat import PhotoRecordUtils, ConfigUtils, UserMessage
-from Handler.RateLimiter import Utils
-from utils.Data import DefaultData, create_message, PublicReturn, ServiceData
+from utils import sticker
+from Handler import manager
+from Handler.reader import BlipServer, FileReader
+from utils.chat import PhotoRecordUtils, ConfigUtils, UserMessage
+from Handler.rate_limiter import Utils
+from utils.data import DefaultData, PublicReturn, ServiceData
 from Component.vitality import Vitality
+from utils.chat import create_message
+from Handler.profile import GlobalProfileManager
 
 _service = ServiceData.get_key()
 BLIP_CONF = _service["media"]["blip"]
@@ -42,7 +45,7 @@ if STICKER_CONF.get("status"):
     STICKER_PENALTY = STICKER_CONF.get("penalty")
     STICKER_PENALTY = STICKER_PENALTY if STICKER_PENALTY else 0.9
     STICKER_PENALTY = STICKER_PENALTY if 0 < STICKER_PENALTY < 1 else 0.9
-    EmojiPredict = Sticker.StickerPredict()
+    EmojiPredict = sticker.StickerPredict()
 else:
     STICKER_PENALTY = 0.9
     EmojiPredict = None
@@ -50,7 +53,8 @@ else:
 TIME_INTERVAL = 60 * 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
-ProfileManager = Manager.ProfileManager()
+
+
 
 
 async def set_cron(funcs, second: int):
@@ -262,7 +266,7 @@ class BotRunner(object):
             started = False
 
             # Self Known
-            _bot_profile = Manager.ProfileManager().access_telegram(init=False)
+            _bot_profile = Handler.profile.ProfileManager().access_telegram(init=False)
             if _bot_profile.mentions:
                 if f"@{_bot_profile.mentions} " in _hand.text or _hand.text.endswith(f" @{_bot_profile.mentions}"):
                     # 消声处理
@@ -338,7 +342,7 @@ class BotRunner(object):
                     _hand.prompt.append(_recognized_photo_text)
                 _friends_message = await Event.Group(Message=_hand,
                                                      config=_config,
-                                                     bot_profile=ProfileManager.access_telegram(init=False)
+                                                     bot_profile=GlobalProfileManager.access_telegram(init=False)
                                                      )
                 _friends_message: PublicReturn
                 if _friends_message.status:
@@ -355,7 +359,8 @@ class BotRunner(object):
 
                         result = ''
                         for c in _caption:
-                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.',
+                                     '!']:
                                 result += '\\' + c
                             else:
                                 result += c
@@ -400,7 +405,7 @@ class BotRunner(object):
                     _hand.prompt.append(_recognized_photo_text)
                 _friends_message = await Event.Friends(Message=_hand,
                                                        config=_config,
-                                                       bot_profile=ProfileManager.access_telegram(init=False)
+                                                       bot_profile=GlobalProfileManager.access_telegram(init=False)
                                                        )
                 _friends_message: PublicReturn
                 if _friends_message.status:
@@ -416,7 +421,8 @@ class BotRunner(object):
 
                         result = ''
                         for c in _caption:
-                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+                            if c in ['_', '*', '[', ']', '(', ')', '~', '>', '#', '+', '-', '=', '|', '{', '}', '.',
+                                     '!']:
                                 result += '\\' + c
                             else:
                                 result += c
@@ -470,8 +476,8 @@ class BotRunner(object):
             _bot_id = _me.id
             _first_name = _me.first_name if _me.first_name else ""
             _last_name = _me.last_name if _me.last_name else ""
-            _bot_name = ProfileManager.name_generate(first_name=_first_name, last_name=_last_name)
-            ProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, mentions=_me.username, init=True)
+            _bot_name = GlobalProfileManager.name_generate(first_name=_first_name, last_name=_last_name)
+            GlobalProfileManager.access_telegram(bot_name=_bot_name, bot_id=_bot_id, mentions=_me.username, init=True)
             await asyncio.gather(
                 bot.polling(non_stop=True, skip_pending=True, allowed_updates=util.update_types),
                 set_cron(get_request_frequency, second=5)

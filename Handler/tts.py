@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 12/20/22 12:37 PM
-# @FileName: TTS.py
+# @FileName: tts.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 
@@ -9,7 +9,7 @@ import subprocess
 from pydantic import BaseModel
 
 # 调用基础单元
-from utils.Network import NetworkClient
+from utils.network import NetworkClient
 
 
 class TTSMessage(BaseModel):

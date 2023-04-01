@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import pathlib
 
-from .Censor import Censor, DFA
+from .censor import Censor, DFA
 
 from pydantic import BaseSettings, SecretStr
 

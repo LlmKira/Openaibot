@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/3/29 下午10:21
 # @Author  : sudoskys
-# @File    : Censor.py
+# @File    : censor.py
 # @Software: PyCharm
 import base64
 import pathlib

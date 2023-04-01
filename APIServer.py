@@ -10,10 +10,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 import App.Event as AppEvent
-from Component.sign_api.Signature import APISignature
-from Handler import Manager
-from utils.Base import TOMLConfig
-from utils.Data import create_message, PublicReturn
+import Handler.profile
+from Component.sign_api.signature import APISignature
+from Handler import manager
+from utils.base import TOMLConfig
+from utils.chat import create_message
+from utils.data import PublicReturn
+
+from Handler.profile import GlobalProfileManager
 
 
 class ReqBody(BaseModel):
@@ -28,7 +32,6 @@ class ReqBody(BaseModel):
 
 api_cfg = TOMLConfig().parse_file(os.path.split(os.path.realpath(__file__))[0] + '/Config/sign_api.toml')
 _config = AppEvent.load_csonfig()
-ProfileManager = Manager.ProfileManager()
 
 
 def pre_signature_check(reqbody):
@@ -130,7 +133,7 @@ async def admin(body: ReqBody, action: str):
 if __name__ == '__main__':
     import uvicorn
 
-    ProfileManager.access_api(bot_name=api_cfg.botname[:6], bot_id=api_cfg.botid, init=True)
+    GlobalProfileManager.access_api(bot_name=api_cfg.botname[:6], bot_id=api_cfg.botid, init=True)
     uvicorn.run('APIServer:app', host=api_cfg['uvicorn_host'], port=api_cfg['uvicorn_port'],
                 reload=False, log_level=api_cfg['uvicorn_loglevel'],
                 workers=api_cfg['uvicorn_workers'])

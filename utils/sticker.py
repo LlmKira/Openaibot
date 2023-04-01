@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2/1/23 11:01 AM
-# @FileName: Sticker.py
+# @FileName: sticker.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 import os

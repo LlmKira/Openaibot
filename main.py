@@ -10,7 +10,7 @@ from loguru import logger
 import sys
 import importlib
 
-from utils.Base import TOMLConfig
+from utils.base import TOMLConfig
 
 logger.remove()
 handler_id = logger.add(sys.stderr, level="INFO")
@@ -22,8 +22,8 @@ logger.add(sink='run.log',
            rotation="100 MB",
            enqueue=True)
 
-logger.debug("Debug Mode On")
-logger.info("NEWS Channel:https://t.me/Openaibot_channel")
+# logger.debug("Debug Mode On")
+logger.info("Update News Channel:https://t.me/Openaibot_channel")
 
 CONFIG_FILE = str(Path.cwd()) + "/Config/app.toml"
 if not pathlib.Path(CONFIG_FILE).exists():
@@ -52,5 +52,6 @@ def start():
         exit()
 
 
-if __name__ == '__main__':  # 兼容Windows multiprocessing
+if __name__ == '__main__':
+    # 兼容Windows multiprocessing
     start()

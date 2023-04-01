@@ -15,9 +15,9 @@ from pydantic import (
 )
 
 # 二级数据类
-from tts import VITS, Azure
-from proxy import ProxySetting
-from llm import OpenAISetting, ChatGPTSetting
+from .tts import VITS, Azure
+from .proxy import ProxySetting
+from .llm import OpenAISetting, ChatGPTSetting
 
 # 提前导入加载变量
 load_dotenv()

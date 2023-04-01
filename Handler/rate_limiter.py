@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/3/30 下午5:23
 # @Author  : sudoskys
-# @File    : RateLimiter.py
+# @File    : rate_limiter.py
 # @Software: PyCharm
 from typing import Union
 from loguru import logger
-from Handler.Manager import UserManager
-from utils.Data import DefaultData, ServiceData, RedisConfig, UsageData
+from Handler.manager import UserManager
+from utils.data import DefaultData, ServiceData, RedisConfig, UsageData
 
 import time
 
 
-class RateLimiter:
+class RateLimiter(object):
     def __init__(self, max_requests, interval):
         self.max_requests = max_requests
         self.interval = interval
@@ -33,55 +33,6 @@ class RateLimiter:
 
 
 class Utils(object):
-    @staticmethod
-    def forget_me(user_id, group_id):
-        from llm_kira.utils.data import MsgFlow
-        _cid = DefaultData.composing_uid(user_id=user_id, chat_id=group_id)
-        return MsgFlow(uid=_cid).forget()
-
-    @staticmethod
-    def extract_arg(arg):
-        return arg.split()[1:]
-
-    @staticmethod
-    def tokenizer(s: str) -> float:
-        """
-        谨慎的计算器，会预留 5 token
-        :param s:
-        :return:
-        """
-        # 统计中文字符数量
-        num_chinese = len([c for c in s if ord(c) > 127])
-        # 统计非中文字符数量
-        num_non_chinese = len([c for c in s if ord(c) <= 127])
-        return int(num_chinese * 2 + num_non_chinese * 0.25) + 5
-
-    @staticmethod
-    def Humanization(strs):
-        return strs.lstrip('？?!！：。')
-
-    @staticmethod
-    def WaitFlood(user, group, usercold_time: int = None, groupcold_time: int = None):
-        load_csonfig()
-        if usercold_time is None:
-            usercold_time = _csonfig["usercold_time"]
-        if groupcold_time is None:
-            groupcold_time = _csonfig["groupcold_time"]
-        if DataUtils.getKey(f"flood_user_{user}"):
-            # double req in 3 seconds
-            return True
-        else:
-            if _csonfig["usercold_time"] > 1:
-                DataUtils.setKey(f"flood_user_{user}", "FAST", exN=usercold_time)
-        # User
-        if DataUtils.getKey(f"flood_group_{group}"):
-            # double req in 3 seconds
-            return True
-        else:
-            if _csonfig["groupcold_time"] > 1:
-                DataUtils.setKey(f"flood_group_{group}", "FAST", exN=groupcold_time)
-        return False
-
     @staticmethod
     def get_head_foot(prompt: str, cap: int = 12):
         body = prompt
@@ -141,11 +92,6 @@ class Usage(object):
         _service = ServiceData.get_key()
         _redis_conf = _service["redis"]
         _redis_config = RedisConfig(**_redis_conf)
-        self.__Data = DataWorker(host=_redis_config.host,
-                                 port=_redis_config.port,
-                                 db=_redis_config.db,
-                                 password=_redis_config.password,
-                                 prefix="Open_Ai_bot_usage_")
 
     def __get_usage(self):
         _usage = self.__Data.getKey(f"{self.__uid}_usage")

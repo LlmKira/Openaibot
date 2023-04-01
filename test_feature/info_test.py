@@ -6,7 +6,7 @@
 
 from PIL import Image
 
-from Handler.Reader import FileReader
+from Handler.reader import FileReader
 
 text_info, _r = FileReader().get_ai_image_info(Image.open("001.png"))
 print(type(text_info))

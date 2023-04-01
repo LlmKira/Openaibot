@@ -18,13 +18,14 @@ from typing import Tuple
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
-from utils.Chat import ConfigUtils, UserMessage
-from Handler.RateLimiter import Utils, Usage
-from utils.Data import DictUpdate, DefaultData, OpenaiApiKey, ServiceData, PublicReturn, ProxyConfig
-from Handler.Manager import ProfileReturn, Header, Style, UserManager, GroupManager
-from Handler.TTS import TTSClint, TTSMessage
-from utils.Detect import QueryDetector
-from utils.Error import LoadResponseError
+from utils.chat import ConfigUtils, UserMessage
+from Handler.rate_limiter import Utils, Usage
+from utils.data import DictUpdate, DefaultData, OpenaiApiKey, ServiceData, PublicReturn, ProxyConfig
+from Handler.manager import Header, Style, UserManager, GroupManager
+from Handler.profile import ProfileReturn
+from Handler.tts import TTSClint, TTSMessage
+from utils.detect import QueryDetector
+from utils.error import LoadResponseError
 
 import llm_kira
 from llm_kira.utils.chat import Cut
@@ -101,7 +102,6 @@ llm_kira.setting.llmRetryTime = 2
 llm_kira.setting.llmRetryTimeMax = 30
 llm_kira.setting.llmRetryTimeMin = 3
 llm_kira.setting.llmRetryAttempt = 2
-
 
 global _csonfig
 
@@ -374,23 +374,23 @@ class Reply(object):
                 return PublicReturn(status=False, trace="Req", msg="NO SUPPORT METHOD")
         except RateLimitError as e:
             _usage = 0
-            _deal = f"{DefaultData.get_wait_answer()}\nDetails:RateLimitError Reach Limit|Overload"
+            _deal = f"{DefaultData.replace_error()}\nDetails:RateLimitError Reach Limit|Overload"
             logger.error(f"RUN:Openai Error:{e}")
         except ServiceUnavailableError as e:
             _usage = 0
-            _deal = f"{DefaultData.get_wait_answer()}\nDetails:ServiceUnavailableError Server:500"
+            _deal = f"{DefaultData.replace_error()}\nDetails:ServiceUnavailableError Server:500"
             logger.error(f"RUN:Openai Error:{e}")
         except AuthenticationError as e:
             _usage = 0
-            _deal = f"{DefaultData.get_wait_answer()}\nDetails:AuthenticationError"
+            _deal = f"{DefaultData.replace_error()}\nDetails:AuthenticationError"
             logger.error(f"RUN:Openai Error:{e}")
         except LLMException as e:
             _usage = 0
-            _deal = f"{DefaultData.get_wait_answer()}\nDetails:llm-kira tips error"
+            _deal = f"{DefaultData.replace_error()}\nDetails:llm-kira tips error"
             logger.error(f"RUN:Openai Error:{e}")
         except Exception as e:
             _usage = 0
-            _deal = f"{DefaultData.get_wait_answer()}\nDetails:Unknown Error"
+            _deal = f"{DefaultData.replace_error()}\nDetails:Unknown Error"
             logger.error(f"RUN:Openai Error:{e}")
         # 更新额度
         _AnalysisUsage = self._UsageManager.renewUsage(usage=_usage)
@@ -476,47 +476,6 @@ async def RemindSet(user_id,
         return PublicReturn(status=True, msg=f"设定:{_remind}\nNo reply this msg", trace="Remind")
     Header(uid=_user_id).set({})
     return PublicReturn(status=True, msg=f"I refuse Remind Command", trace="Remind")
-
-
-async def StyleSet(user_id, text) -> PublicReturn:
-    """
-    :param user_id:
-    :param text:
-    :return: Ture 代表设定成功
-    """
-    _text = text
-    _user_id = user_id
-    _style_r = _text.split(" ", 1)
-    if len(_style_r) < 2:
-        return PublicReturn(status=False, msg=f"", trace="StyleSet")
-    _style = _style_r[1]
-    if Utils.tokenizer(_style) > 800:
-        return PublicReturn(status=True, msg=f"过长:{_style}", trace="StyleSet")
-    _style_token_list = re.split("[,，]", _style)
-    _token = {}
-    if _csonfig.get("allow_change_style"):
-        for item in _style_token_list:
-            item = str(item)
-            _weight = round(item.count("(") + item.count("{") + 1 - item.count("[") * 1.5)
-            item = item.replace("(", "").replace("{", "").replace("[", "").replace(")", "").replace("}", "").replace(
-                "]", "")
-            _weight = _weight if _weight <= 20 else 2
-            _weight = _weight if _weight >= -80 else 0
-            _encode_token = llm_kira.utils.chat.gpt_tokenizer.encode(item)
-            _love = {str(token): _weight for token in _encode_token}
-            _child_token = {}
-            for token, weight in _love.items():
-                token = str(token)
-                if token in _token.keys():
-                    __weight = _token.get(token) + _weight
-                else:
-                    __weight = _weight
-                _child_token[token] = __weight
-            _token.update(_child_token)
-        Style(uid=_user_id).set(_token)
-        return PublicReturn(status=True, msg=f"Style:{_style}\nNo reply this msg", trace="StyleSet")
-    Style(uid=_user_id).set(_token)
-    return PublicReturn(status=True, msg=f"I refuse StyleSet Command", trace="StyleSet")
 
 
 async def PromptType(text, types: str = "group") -> PublicReturn:

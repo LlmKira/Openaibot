@@ -16,7 +16,7 @@ from llm_kira.client import Optimizer
 from llm_kira.client.llms import OpenAiParam
 from pydantic import BaseModel
 from App.Event import ContentDfa, TTSSupportCheck
-from utils.Data import ServiceData, OpenaiApiKey, DefaultData, DictUpdate
+from utils.data import ServiceData, OpenaiApiKey, DefaultData, DictUpdate
 from loguru import logger
 
 _service = ServiceData.get_key()
