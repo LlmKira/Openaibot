@@ -7,17 +7,15 @@
 from contextlib import asynccontextmanager
 
 from loguru import logger
-from typing import Union, Optional, Dict, Any
-
-from utils.data import DictUpdate
+# from typing import Union, Optional, Dict, Any
+# from utils.data import DictUpdate
+from utils.chat import MessageToolBox
 from utils.setting.config import AppConfig
-from utils.setting.user import ChatSystemConfig, UserConfig
-
+from utils.setting.user import ChatSystemConfig, UserConfig, GroupConfig
+from utils.setting.keymanager import ApiKeySettings
 from Component.data import file_client, mongo_client
 from Component.cache import CacheNameSpace
 
-
-# TODO Manager使用新数据库类和数据类重写，请转移到 Manager Handler
 
 class ConfigManager:
     """
@@ -74,7 +72,9 @@ class UserManager(object):
         if not _read:
             _data = UserConfig(uid=uid)
         else:
-            _data = UserConfig(uid=uid, **_read)
+            _read.update({"uid": uid})
+            _data = UserConfig(uid=uid)
+            _data = _data.parse_obj(_read)
         return _data
 
     async def save(self, data: UserConfig):
@@ -93,12 +93,14 @@ class GroupManager(object):
     async def read(self, uid: int):
         _read = await self.client.find_one({"uid": uid})
         if not _read:
-            _data = UserConfig(uid=uid)
+            _data = GroupConfig(uid=uid)
         else:
-            _data = UserConfig(uid=uid, **_read)
+            _read.update({"uid": uid})
+            _data = GroupConfig(uid=uid)
+            _data = _data.parse_obj(_read)
         return _data
 
-    async def save(self, data: UserConfig):
+    async def save(self, data: GroupConfig):
         # 如果存在记录则更新
         if await self.client.find_one({"uid": data.uid}):
             await self.client.update_one({"uid": data.uid}, {"$set": data.dict()})
@@ -120,78 +122,44 @@ class Header(object):
             return str(_usage)
 
     async def set(self, context):
-        return self.client.read_data(f"{self._uid}", context)
+        return self.client.set_data(f"{self._uid}", context)
 
 
-"""
+class ApiKeyManager(object):
+    ERROR_MESSAGES = {
+        "billing_not_active": "认证资料过期: --type billing_not_active --auth {}",
+        "insufficient_quota": "Overused ApiKey: --type insufficient_quota --auth {}",
+        "invalid_api_key": "Invalid ApiKey: --type invalid_api_key --auth {}"
+    }
 
-class OpenaiApiKey:
-
-    def __init__(self, file_path: str = "./Config/api_keys.json"):
+    def __init__(self, file_path):
+        self.client = file_client
         self.file_path = file_path
 
-    def _save_key(self, config: dict) -> None:
-        with ThreadingLock.get_instance():
-            with open(self.file_path, "w+", encoding="utf8") as f:
-                json.dump(config, f, indent=4, ensure_ascii=False)
+    async def get_keys(self) -> ApiKeySettings:
+        _key_data = await self.client.async_read_json(file_path=self.file_path)
+        _object = ApiKeySettings(**_key_data)
+        return _object
 
-    def __get_config(self):
-        now_table = DefaultData.default_keys()
-        if pathlib.Path(self.file_path).exists():
-            with ThreadingLock.get_instance():
-                with open(self.file_path, encoding="utf-8") as f:
-                    _config = json.load(f)
-                    DictUpdate.dict_update(now_table, _config)
-                    _config = now_table
-            return _config
-        else:
-            return now_table
+    async def set_keys(self, keys: ApiKeySettings):
+        await self.client.async_write_json(file_path=self.file_path, data=keys.json())
 
-    def get_key(self) -> Optional[list]:
-        _config = self.__get_config()
-        return _config.get('OPENAI_API_KEY')
-
-    def add_key(self, key: str) -> str:
-        _config = self.__get_config()
-        _config['OPENAI_API_KEY'].append(key)
-        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        self._save_key(config=_config)
-        return key
-
-    def pop_key(self, key: str) -> Optional[str]:
-        _config = self.__get_config()
-        if key not in _config['OPENAI_API_KEY']:
-            return
-        _config['OPENAI_API_KEY'].remove(key)
-        _config["OPENAI_API_KEY"] = list(set(_config["OPENAI_API_KEY"]))
-        self._save_key(config=_config)
-        return key
-
-    def warn_api_key(self, key: str, log: str = "unknown error happened"):
-        self.pop_key(key)
-        _masked_key = DefaultData.mask_middle(key, 4)
+    async def warn_openai_key(self, key: str, log: str = "unknown error happened"):
+        _object = await self.get_keys()
+        _masked_key = MessageToolBox.mask_middle(key, 4)
         logger.warning(f"Api Key be Removed:{_masked_key},because {log}")
+        _object.Openai.pop(key, None)
+        await self.set_keys(_object)
 
-    def check_api_key(self, resp: dict, auth: str):
-        # 读取
-        _error = ["invalid_request_error", "billing_not_active", "billing_not_active", "insufficient_quota"]
+    async def callback_api_key(self, resp: dict, auth: str):
+        _error_type = ["invalid_request_error", "billing_not_active", "billing_not_active", "insufficient_quota"]
         # 弹出
-        ERROR = resp.get("error")
-        if ERROR:
-            logg = None
-            pop_key = False
-            if ERROR.get('type') == "billing_not_active":
-                pop_key = True
-                logg = f"认证资料过期: --type billing_not_active --auth {DefaultData.mask_middle(auth, 4)}"
-            if ERROR.get('type') == "insufficient_quota":
-                pop_key = True
-                logg = f"Overused ApiKey:  --type insufficient_quota --auth {DefaultData.mask_middle(auth, 4)}"
-            if ERROR.get('code') == "invalid_api_key":
-                pop_key = True
-                logg = f"非法 ApiKey: --type invalid_api_key --auth {DefaultData.mask_middle(auth, 4)}"
-            if pop_key:
-                self.warn_api_key(key=auth, log=logg)
+        error = resp.get("error")
+        if error:
+            error_type = error.get('type')
+            if error_type in self.ERROR_MESSAGES:
+                logg = self.ERROR_MESSAGES[error_type].format(MessageToolBox.mask_middle(auth, 4))
+                await self.warn_openai_key(key=auth, log=logg)
             else:
-                logg = f"{ERROR.get('type')}"
+                logg = f"{error.get('type')} -- {error.get('message')}"
                 logger.warning(logg)
-"""

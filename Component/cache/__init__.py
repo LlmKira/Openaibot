@@ -4,24 +4,6 @@
 # @File    : __init__.py.py
 # @Software: PyCharm
 
-from .bucket import ElaraClientWrapper, RedisClientWrapper, cache, AbstractDataClass
+from .bucket import ElaraClientWrapper, RedisClientWrapper, cache, AbstractDataClass, CacheNameSpace
 
 __all__ = ["ElaraClientWrapper", "cache", "RedisClientWrapper", "CacheNameSpace"]
-
-
-# 包装一下
-class CacheNameSpace:
-    """
-    缓存命名空间, 用于区分不同的缓存
-    """
-
-    def __init__(self, prefix):
-        self.prefix = prefix
-
-    async def set_data(self, key, value, timeout: int = None):
-        key = f"{self.prefix}_{key}"
-        return await cache.set_data(key, value, timeout=timeout)
-
-    async def read_data(self, key):
-        key = f"{self.prefix}_{key}"
-        return await cache.read_data(key)

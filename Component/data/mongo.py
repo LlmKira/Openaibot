@@ -74,7 +74,9 @@ async def ping():
     return await mongo_client.ping()
 
 
-if not asyncio.run(ping()):
+loop = asyncio.get_event_loop()
+_ping = loop.run_until_complete(ping())
+if not _ping:
     logger.error('MONGO DISCONNECT:Please configure the MONGODB_DSN variable in .env')
     raise ValueError('MONGO DISCONNECT')
 logger.success(f'MongoClientWrapper loaded successfully in {mongo_dsn}')

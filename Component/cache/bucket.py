@@ -73,8 +73,8 @@ class RedisClientWrapper(AbstractDataClass):
 
     def __init__(self, backend, prefix=PREFIX):
         self.prefix = prefix
-        self.connection_pool = ConnectionPool.from_url(backend)
-        self._redis = Redis(connection_pool=self.connection_pool)
+        self.connection_pool = redis.asyncio.ConnectionPool.from_url(backend)
+        self._redis = redis.asyncio.Redis(connection_pool=self.connection_pool)
 
     async def ping(self):
         return await self._redis.ping()
@@ -121,3 +121,20 @@ except Exception as e:
     raise ValueError('REDIS DISCONNECT')
 else:
     logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')
+
+
+class CacheNameSpace(object):
+    """
+    缓存命名空间, 用于区分不同的缓存
+    """
+
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    async def set_data(self, key, value, timeout: int = None):
+        key = f"{self.prefix}_{key}"
+        return await cache.set_data(key, value, timeout=timeout)
+
+    async def read_data(self, key):
+        key = f"{self.prefix}_{key}"
+        return await cache.read_data(key)

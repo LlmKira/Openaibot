@@ -5,10 +5,11 @@
 # @Software: PyCharm
 import json
 import asyncio
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 
-class FileClientWrapper:
+class FileClientWrapper(object):
     def __init__(self):
         self.lock = asyncio.Lock()
         self.loop = asyncio.get_event_loop()
@@ -17,6 +18,8 @@ class FileClientWrapper:
 
     def read_json(self, file_path):
         self.file_path = file_path
+        if not os.path.exists(file_path):
+            return {}
         with open(file_path) as f:
             data = json.load(f)
         return data
