@@ -6,6 +6,8 @@
 
 from dotenv import load_dotenv
 from typing import Set, List, Dict, Optional, Any, Union, Literal
+
+from loguru import logger
 from pydantic import (
     BaseModel,
     BaseSettings,
@@ -59,14 +61,20 @@ class ModerationSettings(BaseSettings):
 
 class TTSSettings(BaseSettings):
     status: bool = False
-    select: Literal['vits', 'azure'] = None
-    vits: VITS = None
-    azure: Azure = None
+    select: Literal['vits', 'azure'] = "vits"
+    vits: VITS = VITS()
+    azure: Azure = Azure()
 
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
         env_prefix = "TTS_"
+
+    @validator('select')
+    def check_select(cls, v):
+        if v not in ['vits', 'azure']:
+            raise ValueError("TTS引擎选择错误")
+        return v
 
 
 class MediaSettings(BaseSettings):
@@ -79,6 +87,14 @@ class MediaSettings(BaseSettings):
         env_file = '.env'
         env_file_encoding = 'utf-8'
         env_prefix = "MEDIA_"
+
+    @validator('sticker_penalty')
+    def check_sticker_penalty(cls, v):
+        if v > 1 or v < 0:
+            # auto adjust
+            logger.warning("sticker_penalty 超出范围，自动调整为 0.95")
+            return 0.95
+        return v
 
 
 class DataSettings(BaseSettings):

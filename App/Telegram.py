@@ -19,18 +19,32 @@ from telebot import util, types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 
-import Handler.profile
-from App import Event
-from utils import sticker
-from Handler import manager
+from Handler.manager import ServiceManagerObj
 from Handler.reader import BlipServer, FileReader
-from utils.chat import PhotoRecordUtils, ConfigUtils, UserMessage
-from Handler.rate_limiter import Utils
-from utils.data import DefaultData, PublicReturn, ServiceData
-from Component.vitality import Vitality
-from utils.chat import create_message
 from Handler.profile import GlobalProfileManager
 
+from utils.chat import UserMessage
+from utils.data import PublicReturn
+from utils.chat import create_message
+from utils.setting.config import AppConfig
+
+
+# from Component.vitality import Vitality
+
+# from App import Event
+# from utils import sticker
+
+# 初始化全局配置
+async def load_service_config() -> AppConfig:
+    async with ServiceManagerObj.retrieve_data() as _service:
+        return _service
+
+
+loop = asyncio.get_event_loop()
+ServiceData: AppConfig = loop.run_until_complete(load_service_config())
+print(ServiceData)
+
+"""
 _service = ServiceData.get_key()
 BLIP_CONF = _service["media"]["blip"]
 STICKER_CONF = _service["media"]["sticker"]
@@ -49,12 +63,10 @@ if STICKER_CONF.get("status"):
 else:
     STICKER_PENALTY = 0.9
     EmojiPredict = None
-
+"""
 TIME_INTERVAL = 60 * 60
 # 使用 deque 存储请求时间戳
 request_timestamps = deque()
-
-
 
 
 async def set_cron(funcs, second: int):

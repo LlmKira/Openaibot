@@ -8,14 +8,14 @@ from pydantic import BaseModel
 
 
 class VITS(BaseModel):
-    api: str
-    limit: int
-    model_name: str
-    speaker_id: int
+    api: str = "https://api.vits.ai"
+    limit: int = 100
+    model_name: str = "vits"
+    speaker_id: int = 0
 
 
 class Azure(BaseModel):
-    key: List[str]
-    limit: int
-    speaker: Dict[str, str]
-    location: str
+    key: List[str] = []
+    limit: int = 100
+    speaker: Dict[str, str] = {"ZH": "zh-CN-XiaoxiaoNeural", "EN": "en-US-JessaNeural"}
+    location: str = "eastus"

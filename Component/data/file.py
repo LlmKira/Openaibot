@@ -27,7 +27,7 @@ class FileClientWrapper(object):
     def write_json(self, file_path, data):
         self.file_path = file_path
         with open(file_path, 'w+') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
     async def async_read_json(self, file_path):
         async with self.lock:

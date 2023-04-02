@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # 全局共享管理器
+import pathlib
 from contextlib import asynccontextmanager
 
 from loguru import logger
@@ -22,19 +23,20 @@ class ConfigManager:
     运行配置管理器
     """
 
-    def __init__(self):
+    def __init__(self, file_path: str = "Config/config.json"):
         self.client = file_client
+        self.file_path = file_path
 
     @asynccontextmanager
-    async def retrieve_data(self, file_path: str = "Config/config.json"):
+    async def retrieve_data(self, ):
         try:
-            _read = await self.client.async_read_json(file_path=file_path)
+            _read = await self.client.async_read_json(file_path=self.file_path)
             if not _read:
                 _read = ChatSystemConfig()
             else:
                 _read = ChatSystemConfig(**_read)
             yield _read
-            await self.client.async_write_json(file_path=file_path, data=_read.json())
+            await self.client.async_write_json(file_path=self.file_path, data=_read.dict())
         finally:
             pass
 
@@ -44,19 +46,20 @@ class ServiceManager(object):
     外设组件服务管理器
     """
 
-    def __init__(self):
+    def __init__(self, file_path: str = "Config/rocket.json"):
         self.client = file_client
+        self.file_path = file_path
 
     @asynccontextmanager
-    async def retrieve_data(self, file_path: str = "Config/service.json"):
+    async def retrieve_data(self):
         try:
-            _read = await self.client.async_read_json(file_path=file_path)
+            _read = await self.client.async_read_json(file_path=self.file_path)
             if not _read:
                 _read = AppConfig()
             else:
                 _read = AppConfig(**_read)
             yield _read
-            await self.client.async_write_json(file_path=file_path, data=_read.json())
+            await self.client.async_write_json(file_path=self.file_path, data=_read.dict())
         finally:
             pass
 
@@ -67,7 +70,7 @@ class UserManager(object):
         """
         self.client = mongo_client.with_database(db_name).with_collection(collection)
 
-    async def read(self, uid: int):
+    async def read(self, uid: int) -> UserConfig:
         _read = await self.client.find_one({"uid": uid})
         if not _read:
             _data = UserConfig(uid=uid)
@@ -109,20 +112,24 @@ class GroupManager(object):
             await self.client.insert_one(data.dict())
 
 
-class Header(object):
-    def __init__(self, uid):
+class NoteManager(object):
+    """
+    Redis Note
+    """
+
+    def __init__(self, uid, space: str = "note"):
         self._uid = str(uid)
-        self.client = CacheNameSpace("header")
+        self.client = CacheNameSpace(space)
 
     async def get(self):
-        _usage = self.client.read_data(f"{self._uid}")
-        if not _usage:
+        _header = self.client.read_data(f"{self._uid}")
+        if not _header:
             return ""
         else:
-            return str(_usage)
+            return str(_header)
 
     async def set(self, context):
-        return self.client.set_data(f"{self._uid}", context)
+        return self.client.set_data(f"{self._uid}", str(context))
 
 
 class ApiKeyManager(object):
@@ -163,3 +170,9 @@ class ApiKeyManager(object):
             else:
                 logg = f"{error.get('type')} -- {error.get('message')}"
                 logger.warning(logg)
+
+
+if pathlib.Path("../Config").exists():
+    ServiceManagerObj = ServiceManager(file_path="../Config/rocket.json")
+else:
+    ServiceManagerObj = ServiceManager(file_path="Config/rocket.json")

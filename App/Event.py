@@ -18,10 +18,10 @@ from typing import Tuple
 from loguru import logger
 
 # from App.chatGPT import PrivateChat
-from utils.chat import ConfigUtils, UserMessage
-from Handler.rate_limiter import Utils, Usage
-from utils.data import DictUpdate, DefaultData, OpenaiApiKey, ServiceData, PublicReturn, ProxyConfig
-from Handler.manager import Header, Style, UserManager, GroupManager
+from utils.chat import UserMessage
+from Handler.rate_limiter import
+from utils.data import DictUpdate, PublicReturn
+from Handler.manager import UserManager, GroupManager, ServiceManagerObj
 from Handler.profile import ProfileReturn
 from Handler.tts import TTSClint, TTSMessage
 from utils.detect import QueryDetector
@@ -38,25 +38,19 @@ from llm_kira.creator.engine import PromptEngine
 from llm_kira.error import RateLimitError, ServiceUnavailableError, AuthenticationError, LLMException
 from llm_kira.radio.anchor import DuckgoCraw, SearchCraw
 
+from utils.setting.config import AppConfig
+
 OPENAI_API_KEY_MANAGER = OpenaiApiKey(file_path="./Config/api_keys.json")
 
-# fast text langdetect_unicode
 
-_service = ServiceData.get_key()
-REDIS_CONF = _service["redis"]
-TTS_CONF = _service["tts"]
-PLUGIN_TABLE = _service["plugin"]
-# End
-PLUGIN_TABLE.pop("search", None)
-PLUGIN_TABLE.pop("duckgo", None)
+async def load_service_config() -> AppConfig:
+    async with ServiceManagerObj.retrieve_data() as _service:
+        return _service
 
-PROXY_CONF = ProxyConfig(**_service["proxy"])
-HARM_TYPE = _service["moderation_type"]
-HARM_TYPE = list(set(HARM_TYPE))
 
-# Backend
-BACKEND_CONF = _service["backend"]
-CHAT_OPTIMIZER = Optimizer.SinglePoint
+loop = asyncio.get_event_loop()
+ServiceData: AppConfig = loop.run_until_complete(load_service_config())
+print(ServiceData)
 
 # Limit
 if not BACKEND_CONF.get("type"):
