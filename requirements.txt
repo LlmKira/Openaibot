@@ -23,7 +23,6 @@ requests>=2.22.0
 graiax-silkcoder
 graia-broadcast
 graia-ariadne
-pycorrector
 nextcord
 aiohttp>=3.8.0
 tzlocal
