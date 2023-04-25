@@ -8,7 +8,7 @@ import httpx
 import re
 from utils import Setting
 from utils.Base import StrListTool
-import pycorrector
+# import pycorrector
 
 
 def get_start_name(prompt: str, bot_name=None):
@@ -190,10 +190,12 @@ class DFA:
                 if str(s) and s not in self.ban_words_set:
                     self.ban_words_set.add(s)
                     self.ban_words_list.append(str(s))
+                    """
                     sentence = pycorrector.simplified2traditional(s)
                     if sentence != s:
                         self.ban_words_set.add(sentence)
                         self.ban_words_list.append(str(sentence))
+                    """
         self.add_hash_dict(self.ban_words_list)
 
     def change_words(self, path):
