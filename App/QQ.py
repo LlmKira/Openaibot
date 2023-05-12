@@ -20,9 +20,41 @@ from utils.Frequency import Vitality
 from nakuru import (
     CQHTTP,
     GroupMessage,
-    PrivateMessage,
+    FriendMessage,
     FriendRequest
 )
 from nakuru.entities.components import Plain
 
 _service = Service_Data.get_key()
+
+class BotRunner(object):
+    def __init__(self, config):
+        self.bot = config
+        self.proxy = config.proxy
+    def botCreate(self):
+        if not all([self.bot.host, self.bot.port, self.bot.http_port]):
+            logger.error('QQ Bot parameters insufficient, not starting!')
+            return
+        bot = CQHTTP(host=self.bot.host,
+                     port=self.bot.port,
+                     http_port=self.bot.http_port,
+                     token=self.bot.token)
+        if not bot:
+            logger.error('Failed to start QQ bot!')
+            return
+        return bot, self.bot
+    def universalHandler(self, app: CQHTTP, source: Union[FriendMessage, GroupMessage]):
+        isGroup = True if isinstance(source, GroupMessage) else False
+        # TODO
+    def run(self):
+        bot, _config = self.botCreate()
+        @bot.receiver("GroupMessage")
+        async def _(app: CQHTTP, source: GroupMessage):
+            self.universalHandler(app, source)
+        @bot.receiver("FriendMessage")
+        async def _(app: CQHTTP, source: FriendMessage):
+            self.universalHandler(app, source)
+        @bot.receiver("FriendRequest")
+        async def _(app: CQHTTP, source: FriendRequest):
+            if(self.bot.autoAcceptNewFriend):
+                await app.setFriendRequest(source.flag, True)
