@@ -147,12 +147,6 @@ def save_csonfig():
     ConfigUtils.setKey("config", _csonfig)
 
 
-try:
-    ConfigUtils.getKey("config")
-except Exception as e:
-    logger.error(f"U Should Config Redis First")
-    exit(1)
-
 # Init
 if not ConfigUtils.getKey("config"):
     if pathlib.Path("./Config/config.json").exists():
