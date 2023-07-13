@@ -10,7 +10,7 @@ from utils.Base import ReadConfig
 from loguru import logger
 import sys
 import importlib
-
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
 logger.remove()
 handler_id = logger.add(sys.stderr, level="INFO")
 
@@ -34,8 +34,8 @@ config = ReadConfig().parseFile(CONFIG_FILE)
 def start():
     ctrlConfig = config.Controller
     try:
-        from concurrent.futures import ThreadPoolExecutor
         with ThreadPoolExecutor(max_workers=len(ctrlConfig)) as p:
+            futures = []
             for starter in ctrlConfig:
                 if not Path(f"App/{starter}.py").exists():
                     logger.warning(f"Skip Controller {starter} ,Do Not Exist.")
@@ -44,12 +44,14 @@ def start():
                     logger.success(f"Set Controller {starter}.")
                 module = importlib.import_module('App.' + starter)
                 # 使用 ThreadPoolExecutor 的 submit 方法
-                task = p.submit(module.BotRunner(ctrlConfig.get(starter)).run)
-                # print(task.exception())
+                future = p.submit(module.BotRunner(ctrlConfig.get(starter)).run)
+                futures.append(future)
+            # 等待所有任务完成
+            wait(futures, return_when=ALL_COMPLETED)
     except KeyboardInterrupt:
         logger.info('Caught Ctrl-C, Exiting.')
         exit()
 
-
-if __name__ == '__main__':  # 兼容Windows multiprocessing
+if __name__ == '__main__':
     start()
+    logger.info('All tasks completed, exiting.')

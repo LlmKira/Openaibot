@@ -43,17 +43,38 @@ class BotRunner(object):
             logger.error('Failed to start QQ bot!')
             return
         return bot, self.bot
-    def universalHandler(self, app: CQHTTP, source: Union[FriendMessage, GroupMessage]):
-        isGroup = True if isinstance(source, GroupMessage) else False
+    async def universalHandler(self, app: CQHTTP, source: Union[FriendMessage, GroupMessage]):
+        target = 'Group' if isinstance(source, GroupMessage) else 'Friend'
+        fromID = source.group_id if hasattr(source, 'group_id') else source.user_id
+        sendFunc = getattr(app, f'send{target}Message') # call app.send[Group/Friend]Message by sendFunc
+        
+        if source.raw_message.startswith('/start'):
+            sendFunc(fromID, await Event.Start())
+            return
+        elif source.raw_message.startswith('/help'):
+            sendFunc(fromID, await Event.Help())
+            return
+        elif source.raw_message.startswith('/about'):
+            sendFunc(fromID, await Event.About())
+            return
+        
+        # -----build message info-----
+        messageObject = create_message(
+            user_id=source.user_id,
+            user_name=source.sender.nickname,
+            group_id=source.group_id if target == 'Group' else source.user_id,
+            text=source.raw_message,
+            state=101
+        )
         # TODO
     def run(self):
         bot, _config = self.botCreate()
         @bot.receiver("GroupMessage")
         async def _(app: CQHTTP, source: GroupMessage):
-            self.universalHandler(app, source)
+            await self.universalHandler(app, source)
         @bot.receiver("FriendMessage")
         async def _(app: CQHTTP, source: FriendMessage):
-            self.universalHandler(app, source)
+            await self.universalHandler(app, source)
         @bot.receiver("FriendRequest")
         async def _(app: CQHTTP, source: FriendRequest):
             if(self.bot.autoAcceptNewFriend):
