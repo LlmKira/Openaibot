@@ -9,6 +9,9 @@
 
 <h2 align="center">OpenaiBot</h2>
 
+## experimental project
+https://github.com/LlmKira/LLMBot
+
 [中文说明](https://github.com/LlmKira/Openaibot/blob/main/README_ZH.md)
 
 直觉性设计的全平台Bot，多轮会话管理，多模态(语音/图片)理解，自维护套件，交叉追溯回复。
