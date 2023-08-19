@@ -9,8 +9,7 @@
 
 <h2 align="center">OpenaiBot</h2>
 
-## experimental project
-https://github.com/LlmKira/LLMBot
+## [experimental project](https://github.com/LlmKira/LLMBot)
 
 [中文说明](https://github.com/LlmKira/Openaibot/blob/main/README_ZH.md)
 
