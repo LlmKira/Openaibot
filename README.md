@@ -9,7 +9,9 @@
 
 <h2 align="center">OpenaiBot</h2>
 
-## [experimental project](https://github.com/LlmKira/LLMBot)
+## [Imitation of the ChatGpt plugin system for 2.0](https://github.com/LlmKira/LLMBot)
+
+>**This project lost progress due to too many local changes, I have switched to developing 2.0 forward looking projects**
 
 [中文说明](https://github.com/LlmKira/Openaibot/blob/main/README_ZH.md)
 
