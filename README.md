@@ -28,9 +28,9 @@ Most of the functionality of this project can be done by plugins.
 
 ### 🧀 Preview of some plugins
 
-| Sticker Converter                     | Timer Func                        |
-|---------------------------------------|-----------------------------------|
-| ! [sticker](. /docs/sticker_func.gif) | ! [timer](. /docs/timer_func.gif) | !
+| Sticker Converter                   | Timer Func                      |
+|-------------------------------------|---------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | !
 
 ## 📝 Deployment Guide
 
