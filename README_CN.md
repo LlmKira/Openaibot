@@ -4,21 +4,24 @@
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
 ![docker workflow](https://github.com/llmkira/llmbot/actions/workflows/docker-ci.yaml/badge.svg)
 
-LLMBot 是基于消息队列的机器人助手，可以装载插件完成许多功能。由Openai的新 Feature `Func Calling` 支持实现。
+LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。由 Openai 的新
+Feature `gpt-function-call`
+支持实现。
 
-与之前的项目不同的是，此项目尝试基于消息平台复刻 ChatGpt 的插件系统。实现部分或更进一步的功能。
+与之前的项目不同的是，此项目尝试基于消息平台复刻 ChatGpt 的插件系统，实现部分或更进一步的功能。
 
 > 因为 func call 为 feature,所以只支持 Openai 类型的 api, 不打算支持没有 func call 的 LLM
 
 ## 📦 Feature
 
-- 📦 中间件/插件系统，可以自由扩展
-- 📝 消息系统，脱离平台和时间限制
-- 📎 订阅系统，可以订阅多个发送者
-- 📬 自定义 ApiKey 和 后端
+- 🍪 通过自然语言调用若干预先定义好的功能函数
+- 📝 消息系统，定义发送接收端和数据即可递送至链中
+- 📎 订阅系统，可以订阅除了结对发送者外的多个发送者，兼具推送功能
+- 📦 非问答绑定，不限时间不限发送端触发回复
+- 📬 自定义 ApiKey 和 后端，追溯发送者的鉴权信息
 - 🍾 简洁交互设计
-- 🎵 细化的消费记录
-- 🍰 联网插件实现
+- 🎵 细化的消费数据存储，统计插件的额度消耗情况
+- 🍰 自带联网插件实现
 
 ### 🧀 部分插件预览
 

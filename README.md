@@ -6,25 +6,25 @@
 
 [中文手册](README_CN.md)
 
-LLMBot is a message queue based bot helper that can be loaded with plugins to perform many functions. Validation project
-for the Gpt Func Call and Broadcast mechanisms.
+LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
+with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`
+support.
 
-Unlike the `OpenaiBot` project, this project tries to replicate ChatGpt's plugin system based on a messaging platform.
-Implement some or more features.
+Unlike previous projects, this project tries to replicate ChatGpt's plugin system based on the messaging platform,
+implementing some or more features.
 
-Most of the functionality of this project can be done by plugins.
-
-> Because func call is a feature, it only supports Openai type api, not LLM without func call.
+> Because func call is a feature, it only supports Openai type api, and does not intend to support LLM without func
+> call.
 
 ## 📦 Feature
 
-- 📦 middleware/plugin system, can be freely extended.
-- 📝 Messaging system, free from platform and time constraints
-- 📎 Subscription system, can subscribe to multiple senders
-- 📬 Customized ApiKey and backend
-- 🍾 Simple interaction design to avoid cumbersome permission validation
-- 🎵 Fine-grained consumption records
-- 🍰 Networking plugin implementation
+- 🍪 Call a number of pre-defined functions in natural language.
+- 📝 Messaging system, define send receivers and data can be delivered to the llm chain.
+- 📎 Subscription system, which can subscribe to multiple senders in addition to paired senders, with push functionality.
+- 📦 Non-question-and-answer binding, unlimited time and unlimited sender triggered response.
+- 📬 Customizable ApiKey and Endpoint, traceability of sender authentication info.
+- 🍾 Easy Interactive Experience.
+- 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
 
 ### 🧀 Preview of some plugins
 
