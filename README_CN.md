@@ -1,4 +1,4 @@
-# LLMBot
+# OpenaiBot/LLMBot
 
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sudoskys/llmbot/latest)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
