@@ -1,0 +1,5 @@
+nltk
+numpy
+jieba
+fasttext-wheel
+scikit-learn
