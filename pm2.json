@@ -1,10 +1,20 @@
 {
-    "apps": [{
-      "name": "openaibot main",
-      "script": "python3 main.py",
+  "apps": [
+    {
+      "name": "sender",
+      "script": "python3 start_sender.py",
       "instances": 1,
-      "error_file": "main_error.log",
-      "out_file": "main_out.log",
+      "error_file": "sender.log",
+      "out_file": "sender.log",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
-    }]
+    },
+    {
+      "name": "receiver",
+      "script": "python3 start_receiver.py",
+      "instances": 1,
+      "error_file": "receiver.log",
+      "out_file": "receiver.log",
+      "log_date_format": "YYYY-MM-DD HH-mm-ss"
+    }
+  ]
 }

@@ -1,17 +1,50 @@
-version: '3.9'
+version: '3.3'
 
 services:
-  openaibot:
-    image: sudoskys/openaibot:main
-    command: python3 main.py
-    volumes:
-      - ./:/app
+  llmbot:
+    image: sudoskys/llmbot:latest
+    container_name: llmbot
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 1500M
+        reservations:
+          cpus: '0.25'
+          memory: 500M
     depends_on:
       - redis
+      - rabbitmq
+    environment:
+      AMQP_DSN: amqp://admin:admin@rabbitmq:5672
+      REDIS_DSN: redis://redis:6379/0
+    env_file:
+      - .env
+    networks:
+      - app-tier
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbit
+    hostname: rabbitmq
+    restart: on-failure
+    ports:
+      - 15672:15672
+      - 5672:5672
+    environment:
+      TZ: Asia/Shanghai
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - ./data:/var/lib/rabbitmq
     networks:
       - app-tier
   redis:
+    container_name: redis-server
     image: redis:latest
+    restart: on-failure
+    environment:
+      - TZ=Asia/Shanghai
     volumes:
       - ./redis:/data
     ports:

@@ -1,32 +1,41 @@
 pyTelegramBotAPI
-rtoml
-rich
-redis
-loguru
-httpx
-apscheduler
-nltk
-fastapi
-pydantic
-uvicorn
-jieba
-Pillow
-pathlib
+pathlib>=1.0.1
+loguru>=0.5.3
+polling
+
+
+# Network
+httpx>=0.23.3
+socksio
+
+pydantic<2.0.0
+beautifulsoup4>=4.11.1
+python-dotenv
+# DB
 elara
-numpy
-llm_kira<=0.7.4
-scikit-learn
-beautifulsoup4
-wget
-fasttext-wheel
-requests>=2.22.0
-graiax-silkcoder
-graia-broadcast
-graia-ariadne
-nextcord
-aiohttp>=3.8.0
-tzlocal
-psutil
-piexif
-pytz
+redis>=4.5.4
+aio_pika
+
+# utils
+arclet-alconna
 shortuuid
+tiktoken
+nest-asyncio
+apscheduler
+tzlocal
+
+# plugin
+feedparser==6.0.10
+pillow
+inscriptis
+bilibili-api-python
+httpcore <=0.15
+duckduckgo_search
+
+# NLP
+nltk
+numpy
+jieba
+fasttext-wheel
+scikit-learn
+cjieba

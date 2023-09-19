@@ -1,18 +1,14 @@
 Config/*.toml
-!Config/app_exp.toml
 .idea
-
+run.log
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-Assistants/*.wav
-analysis.json
 
 # C extensions
 *.so
-Config/*.json
-Data/*.form
+redis
 # Distribution / packaging
 .Python
 build/
@@ -134,12 +130,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/Config/api_keys.json
-/test/text_analysis_tools/
-Config/config.json
-/Assistants/record.wav
-/Assistants/recording.wav
-/test/Rawdata/openai_kira_/
-/Assistants/config.json
-/Assistants/sound/
-/Data/sticker/src/
+/data/
