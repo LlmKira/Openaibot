@@ -3,6 +3,8 @@
 # @Author  : sudoskys
 # @File    : components.py
 # @Software: PyCharm
+
+# ATTENTION:禁止调用上层任何包，否则会导致循环引用
 from typing import Literal, Optional
 
 from pydantic import BaseModel, root_validator, Field
@@ -96,3 +98,22 @@ class Function(BaseModel):
         参数可以被数据模型所定义
         """
         self.parameters.properties = schema.schema()["properties"]
+
+
+class File(BaseModel):
+    file_id: str = Field(None, description="文件ID")
+    file_name: str = Field(None, description="文件名")
+    file_url: str = Field(None, description="文件URL")
+
+    # hash able
+    def __eq__(self, other):
+        if isinstance(other, File):
+            return (self.file_id == other.file_id) and (self.file_name == other.file_name)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.file_id) + hash(self.file_name)

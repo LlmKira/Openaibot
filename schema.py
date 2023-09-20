@@ -12,6 +12,7 @@ from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from cache.redis import cache
+from sdk.schema import File
 
 
 def generate_md5_short_id(data):
@@ -34,25 +35,6 @@ def generate_md5_short_id(data):
     # 生成唯一的短ID
     short_id = hex_digest[:8]
     return short_id
-
-
-class File(BaseModel):
-    file_id: str = Field(None, description="文件ID")
-    file_name: str = Field(None, description="文件名")
-    file_url: str = Field(None, description="文件URL")
-
-    # hash able
-    def __eq__(self, other):
-        if isinstance(other, File):
-            return (self.file_id == other.file_id) and (self.file_name == other.file_name)
-        else:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.file_id) + hash(self.file_name)
 
 
 class RawMessage(BaseModel):
