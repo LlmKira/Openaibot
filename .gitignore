@@ -8,7 +8,7 @@ __pycache__/
 
 # C extensions
 *.so
-redis
+/redis/
 # Distribution / packaging
 .Python
 build/
