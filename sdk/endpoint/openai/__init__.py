@@ -76,7 +76,7 @@ class Openai(BaseModel):
     function_call: Optional[str] = None
     """
     # If you want to force the model to call a specific function you can do so by setting function_call: {"name": "<insert-function-name>"}. 
-    # You can also force the model to generate a user-facing messages by setting function_call: "none". 
+    # You can also force the model to generate a user-facing messages_box by setting function_call: "none". 
     # Note that the default behavior (function_call: "auto") is for the model to decide on its own whether to call a function and if so which function to call.
     """
 
@@ -182,7 +182,7 @@ class Openai(BaseModel):
                                                                          model=self.model,
                                                                          )
         if num_tokens_from_messages > self.get_token_limit(self.model):
-            raise ValidationError("messages num_tokens > max_tokens")
+            raise ValidationError("messages_box num_tokens > max_tokens")
 
         # Clear tokenizer encode cache
         # TokenizerObj.clear_cache()

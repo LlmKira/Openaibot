@@ -161,7 +161,7 @@ class TaskHeader(BaseModel):
         _file_name = []
         if file:
             for _file in file:
-                _file_name.append(f"![{_file.file_name}]")
+                _file_name.append(_file.file_prompt)
         head_message = _convert(message)
         head_message.file = file
         if not hide_file_info:

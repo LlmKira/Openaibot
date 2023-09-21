@@ -63,6 +63,7 @@ class TelegramBotRunner(object):
                 name = f"{_file_info.file_id}.jpg"
             if isinstance(file, types.Document):
                 name = file.file_name
+            # TODO 等待断点来规范化文件类型等消息
             return await RawMessage.upload_file(name=name, data=downloaded_file)
 
         async def create_task(message: types.Message, funtion_enable: bool = False):

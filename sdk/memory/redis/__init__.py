@@ -8,14 +8,14 @@ import redis
 from loguru import logger
 from pydantic import BaseSettings, Field, root_validator
 
-from sdk.schema import Message
+from sdk.schema import Message, FileMessage, TextMessage, parse_message_dict
 from .utils import get_client
 
 
 class RedisChatMessageHistory(object):
     class RedisSettings(BaseSettings):
         redis_url: str = Field("redis://localhost:6379/0", env="REDIS_DSN")
-        redis_key_prefix: str = "llm_message_store_0:"
+        redis_key_prefix: str = "llm_message_store_1:"
 
         class Config:
             env_file = '.env'
@@ -62,11 +62,11 @@ class RedisChatMessageHistory(object):
         return self.key_prefix + self.session_id
 
     @property
-    def messages(self) -> List[Message]:  # type: ignore
-        """Retrieve the messages from Redis"""
+    def messages(self) -> List[BaseMessage]:  # type: ignore
+        """Retrieve the messages_box from Redis"""
         _items = self.redis_client.lrange(self.key, 0, -1)
         items = [json.loads(m.decode("utf-8")) for m in _items[::-1]]
-        messages = [Message.parse_obj(m) for m in items]
+        messages = [parse_message_dict(m) for m in items]
         return messages
 
     def add_message(self, message: Message) -> None:

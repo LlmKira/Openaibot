@@ -13,7 +13,7 @@ from loguru import logger
 
 from schema import TaskHeader
 from sdk.func_call import TOOL_MANAGER
-from sdk.schema import Message
+from sdk.schema import Message, parse_message_dict
 from task import Task
 
 
@@ -31,7 +31,7 @@ class FunctionReceiver(object):
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         if not _task.task_meta.parent_call:
             return None
-        _function = Message.parse_obj(_task.task_meta.parent_call)
+        _function = parse_message_dict(_task.task_meta.parent_call)
         _function: Message
         if not _function.function_call:
             return None
