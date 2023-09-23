@@ -125,6 +125,7 @@ class StickerTool(BaseTool):
         try:
             _file = []
             for item in task.message:
+                assert isinstance(item, RawMessage), "item must be RawMessage"
                 if item.file:
                     for i in item.file:
                         _file.append(i)

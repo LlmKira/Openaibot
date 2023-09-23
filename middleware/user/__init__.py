@@ -37,6 +37,8 @@ class SubManager(object):
 
     @property
     def llm_driver(self):
+        if not self.sub_info.update_driver:
+            return openai.Openai.Driver()
         return self.sub_info.llm_driver
 
     async def block_plugin(self, plugin_name: str):
@@ -53,9 +55,11 @@ class SubManager(object):
             self.sub_info.llm_driver.endpoint = endpoint
         if api_key:
             self.sub_info.llm_driver.api_key = api_key
+        self.sub_info.update_driver = True
         await self._upload(user_id=self.sub_info.user_id)
 
     async def clear_endpoint(self):
+        self.sub_info.update_driver = False
         self.sub_info.llm_driver = openai.Openai.Driver()
         await self._upload(user_id=self.sub_info.user_id)
 

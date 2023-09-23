@@ -136,14 +136,14 @@ class TaskHeader(BaseModel):
         从telegram消息中构建任务
         """
 
-        if trace_back_message is None:
+        if (trace_back_message is None) or (not all(trace_back_message)):
             trace_back_message = []
         if file is None:
             file = []
 
         def _convert(_message: types.Message) -> Optional[RawMessage]:
-            if not _message or not _message.text:
-                return None
+            if not _message:
+                raise ValueError(f"Message is empty")
             if isinstance(_message, types.Message):
                 user_id = _message.from_user.id
                 chat_id = _message.chat.id
@@ -154,7 +154,7 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text,
+                text=text if text else f"{type(_message)}",
                 created_at=created_at
             )
 
@@ -163,6 +163,7 @@ class TaskHeader(BaseModel):
             for _file in file:
                 _file_name.append(_file.file_prompt)
         head_message = _convert(message)
+        assert head_message, "HeadMessage is empty"
         head_message.file = file
         if not hide_file_info:
             head_message.text += "\n" + "\n".join(_file_name)

@@ -52,7 +52,7 @@ class Openai(BaseModel):
         def check_key(cls, v):
             if v:
                 if not str(v).startswith("sk-"):
-                    raise ValidationError("api_key must start with `sk-`")
+                    logger.warning("OpenaiDriver:api_key should start with `sk-`")
                 # if not len(str(v)) == 51:
                 #    raise ValidationError("api_key must be 51 characters long")
             else:
@@ -157,7 +157,7 @@ class Openai(BaseModel):
         """
         # check
         if not response.get("choices"):
-            raise ValidationError("message is empty")
+            raise ValidationError("Message is empty")
 
         _message = Message.parse_obj(response.get("choices")[0].get("message"))
         return _message
@@ -209,8 +209,8 @@ class Openai(BaseModel):
                 json_body=True
             )
         except httpx.ConnectError as e:
-            logger.error(f"openai connect error: {e}")
+            logger.error(f"Openai connect error: {e}")
             raise e
         if self.echo:
-            logger.debug(f"openai response: {_response}")
+            logger.info(f"Openai response: {_response}")
         return _response

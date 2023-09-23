@@ -106,13 +106,13 @@ class OpenaiMiddleware(object):
 
         # 消息缓存读取和转换
         # 断点
-        logger.debug(f" [x] Openai request:{message}")
+        logger.info(f" [x] Openai request --org {driver.org_id} --url {driver.endpoint} --message {message} ")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
             messages=message,
             functions=_functions,
-            echo=True
+            echo=False
         )
 
         # 调用Openai

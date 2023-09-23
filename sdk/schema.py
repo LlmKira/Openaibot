@@ -209,6 +209,7 @@ class FileMessage(Message):
 
     @property
     def message(self) -> Message:
+        assert hasattr(self.file, "file_name"), "obj not ok"
         content = f"(Operable File)[{self.file.file_name}]/{self.caption[:20]}.../"
         # 最终向API发送的消息
         return Message(

@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import ssl
 import time
 from typing import List
 
@@ -14,6 +15,7 @@ from telebot import TeleBot
 from middleware.llm_task import OpenaiMiddleware
 from receiver import function
 from schema import TaskHeader, RawMessage
+from sdk.error import RateLimitError
 from sdk.func_call import TOOL_MANAGER
 from sdk.schema import Message
 from sdk.utils import sync
@@ -95,6 +97,13 @@ class TelegramSender(object):
                 reply_to_message_id=reply_to_message_id
             )
 
+    def error(self, chat_id, reply_to_message_id, text):
+        self.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_to_message_id=reply_to_message_id
+        )
+
     async def function(self, chat_id, reply_to_message_id, task: TaskHeader, message: Message):
         if not message.function_call:
             raise ValueError("message not have function_call,forward type error")
@@ -142,11 +151,17 @@ class TelegramReceiver(object):
         try:
             _message = await llm_agent.func_message()
             print(f" [x] LLM Message {_message}")
+            assert _message, "message is empty"
             return _message
+        except ssl.SSLSyscallError as e:
+            logger.error(f"Network ssl error: {e},that maybe caused by bad proxy")
+            raise e
+        except RateLimitError as e:
+            logger.error(f"ApiEndPoint:{e}")
+            raise ValueError(f"Authentication expiration, overload or other issues with the Api Endpoint")
         except Exception as e:
             logger.exception(e)
-            # return await message.ack()
-            return None
+            raise e
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
@@ -180,7 +195,14 @@ class TelegramReceiver(object):
             )
 
         _llm.build(write_back=True)  # 回写任何原始消息
-        _message = await self.llm_request(_llm)
+        try:
+            _message = await self.llm_request(_llm)
+        except Exception as e:
+            return __sender__.error(
+                chat_id=_task.receiver.chat_id,
+                reply_to_message_id=_task.receiver.message_id,
+                text=f"🦴 Sorry, your request failed because: {e}"
+            )
 
         # 拦截函数调用
         if hasattr(_message, "function_call"):

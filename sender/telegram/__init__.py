@@ -56,11 +56,12 @@ class TelegramBotRunner(object):
             return _got.status in ['administrator', 'sender']
 
         async def telegram_to_file(file):
+            assert hasattr(file, "file_id"), "file_id not found"
             name = file.file_id
             _file_info = await bot.get_file(file.file_id)
             downloaded_file = await bot.download_file(_file_info.file_path)
             if isinstance(file, types.PhotoSize):
-                name = f"{_file_info.file_id}.jpg"
+                name = f"{_file_info.file_unique_id}.jpg"
             if isinstance(file, types.Document):
                 name = file.file_name
             # TODO 等待断点来规范化文件类型等消息,确保可以传入正常的文件ID
@@ -76,14 +77,16 @@ class TelegramBotRunner(object):
                 if message.document.file_size < 1024 * 1024 * 10:
                     _file.append(await telegram_to_file(message.document))
             logger.info(f"telegram:create task from {message.chat.id} {message.text} funtion_enable:{funtion_enable}")
-            return await TelegramTask.send_task(
-                task=TaskHeader.from_telegram(
-                    message,
-                    file=_file,
-                    task_meta=TaskHeader.Meta(function_enable=funtion_enable),
-                    trace_back_message=[message.reply_to_message]
-                )
-            )
+            try:
+                await TelegramTask.send_task(
+                    task=TaskHeader.from_telegram(
+                        message,
+                        file=_file,
+                        task_meta=TaskHeader.Meta(function_enable=funtion_enable),
+                        trace_back_message=[message.reply_to_message]
+                    ))
+            except Exception as e:
+                logger.exception(e)
 
         @bot.message_handler(commands='clear_rset', chat_types=['private'])
         async def listen_clear_rset_command(message: types.Message):
