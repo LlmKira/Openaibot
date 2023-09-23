@@ -26,7 +26,8 @@ MODEL = Literal[
     "gpt-3.5-turbo",
     "gpt-4-0314",
     "gpt-4-0613",
-    "gpt-4"]
+    "gpt-4"
+]
 
 
 class Openai(BaseModel):
@@ -42,6 +43,7 @@ class Openai(BaseModel):
     class Driver(BaseSettings):
         endpoint: HttpUrl = Field("https://api.openai.com/v1/chat/completions", env='OPENAI_API_ENDPOINT')
         api_key: str = Field(None, env='OPENAI_API_KEY')
+        org_id: Optional[str] = Field(None, env='OPENAI_API_ORG_ID')
 
         # token: Tokenizer = TokenizerObj
         @validator("api_key")
@@ -69,7 +71,7 @@ class Openai(BaseModel):
             extra = "allow"
 
     config: Driver
-    model: MODEL = "gpt-3.5-turbo-0613"
+    model: MODEL = Field("gpt-3.5-turbo-0613", env='OPENAI_API_MODEL')
     messages: List[Message]
     functions: Optional[List[Function]] = None
 
@@ -188,15 +190,19 @@ class Openai(BaseModel):
         # TokenizerObj.clear_cache()
         _data = self.dict(exclude_none=True, exclude={"config", "echo"})
         # 返回请求
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Authorization": f"Bearer {self.config.api_key}",
+            "api-key": f"{self.config.api_key}",
+        }
+        if self.config.org_id:
+            headers["Openai-Organization"] = self.config.org_id
         try:
             _response = await request(
                 method="POST",
                 url=self.config.endpoint,
                 data=_data,
-                headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Authorization": f"Bearer {self.config.api_key}"
-                },
+                headers=headers,
                 proxy=self.get_proxy_settings().proxy_address,
                 json_body=True
             )
