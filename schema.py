@@ -4,6 +4,7 @@
 # @File    : schema.py
 # @Software: PyCharm
 import hashlib
+import pickle
 import time
 from io import BytesIO
 from typing import Union, List, Any, Literal, Optional
@@ -57,13 +58,18 @@ class RawMessage(BaseModel):
         return v
 
     @staticmethod
-    async def download_file(file_id):
-        return await cache.read_data(file_id)
+    async def download_file(file_id) -> Optional[File.Data]:
+        file = await cache.read_data(file_id)
+        if not file:
+            return None
+        file_obj: File.Data = pickle.loads(file)
+        return file_obj
 
     @staticmethod
     async def upload_file(name, data):
         _key = str(generate_md5_short_id(data))
-        await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
+        await cache.set_data(key=_key, value=pickle.dumps(File.Data(file_name=name, file_data=data)),
+                             timeout=60 * 60 * 24 * 7)
         return File(file_id=_key, file_name=name)
 
     @classmethod

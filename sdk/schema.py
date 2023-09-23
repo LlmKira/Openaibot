@@ -64,6 +64,14 @@ class Function(BaseModel):
 
 
 class File(BaseModel):
+    class Data(BaseModel):
+        file_name: str
+        file_data: bytes = Field(None, description="文件数据")
+
+        @property
+        def pair(self):
+            return self.file_name, self.file_data
+
     file_id: str = Field(None, description="文件ID")
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")

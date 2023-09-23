@@ -132,12 +132,12 @@ class StickerTool(BaseTool):
             _set = Sticker.parse_obj(arg)
             _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
             # 去掉None
-            _file_obj = [BytesIO(item) for item in _file_obj if item]
+            _file_obj = [item for item in _file_obj if item]
             _result = []
             if not _file_obj:
                 return
             for item in _file_obj:
-                image = await resize_image(item)
+                image = await resize_image(BytesIO(item.file_data))
                 file = BytesIO()
                 file.name = "sticker.webp"
                 image.save(file, "WEBP")

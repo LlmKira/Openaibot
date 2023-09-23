@@ -17,7 +17,7 @@ from receiver import function
 from schema import TaskHeader, RawMessage
 from sdk.error import RateLimitError
 from sdk.func_call import TOOL_MANAGER
-from sdk.schema import Message
+from sdk.schema import Message, File
 from sdk.utils import sync
 from setting.telegram import BotSetting
 from task import Task
@@ -49,28 +49,29 @@ class TelegramSender(object):
                     self.bot.send_document(chat_id=chat_id, document=file_obj.file_url,
                                            reply_to_message_id=reply_to_message_id, caption=file_obj.file_name)
                     continue
-                _data = sync(RawMessage.download_file(file_obj.file_id))
+                _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
+
                 if not _data:
                     logger.error(f"file download failed {file_obj.file_id}")
                     continue
                 if file_obj.file_name.endswith(".jpg") or file_obj.file_name.endswith(".png"):
                     self.bot.send_photo(
                         chat_id=chat_id,
-                        photo=(file_obj.file_name, _data),
+                        photo=_data.pair,
                         reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
                 elif file_obj.file_name.endswith(".ogg"):
                     self.bot.send_voice(
                         chat_id=chat_id,
-                        voice=(file_obj.file_name, _data),
+                        voice=_data.pair,
                         reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
                 else:
                     self.bot.send_document(
                         chat_id=chat_id,
-                        document=(file_obj.file_name, _data), reply_to_message_id=reply_to_message_id,
+                        document=_data.pair, reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
             try:
