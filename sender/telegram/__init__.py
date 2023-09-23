@@ -32,7 +32,7 @@ class TelegramBotRunner(object):
         self.bot = None
         self.proxy = None
 
-    def telegram(self):
+    async def telegram(self):
         if not BotSetting.available:
             logger.warning("Sender Runtime:TelegramBot Setting not available")
             return None
@@ -63,7 +63,7 @@ class TelegramBotRunner(object):
                 name = f"{_file_info.file_id}.jpg"
             if isinstance(file, types.Document):
                 name = file.file_name
-            # TODO 等待断点来规范化文件类型等消息
+            # TODO 等待断点来规范化文件类型等消息,确保可以传入正常的文件ID
             return await RawMessage.upload_file(name=name, data=downloaded_file)
 
         async def create_task(message: types.Message, funtion_enable: bool = False):
@@ -274,7 +274,7 @@ class TelegramBotRunner(object):
         bot.add_custom_filter(asyncio_filters.ChatFilter())
         bot.add_custom_filter(asyncio_filters.StateFilter(bot))
         logger.success("Sender Runtime:TelegramBot start")
-        bot.infinity_polling(
+        await bot.infinity_polling(
             allowed_updates=util.update_types,
             skip_pending=True,
             timeout=60,

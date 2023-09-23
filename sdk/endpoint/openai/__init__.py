@@ -45,6 +45,8 @@ class Openai(BaseModel):
         api_key: str = Field(None, env='OPENAI_API_KEY')
         org_id: Optional[str] = Field(None, env='OPENAI_API_ORG_ID')
 
+        # TODO:AZURE API VERSION
+
         # token: Tokenizer = TokenizerObj
         @validator("api_key")
         def check_key(cls, v):
