@@ -142,7 +142,7 @@ class TranslateTool(BaseTool):
         async def _fill_box(text):
             try:
                 await asyncio.sleep(2)
-                result = await self.llm_task(task=task, task_desc=f"Translate text to {target_lang}",
+                result = await self.llm_task(task=task, task_desc=f"Translate text to {target_lang},as origin format",
                                              raw_data=text)
             except Exception as e:
                 logger.error(e)
