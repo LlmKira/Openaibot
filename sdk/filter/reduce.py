@@ -40,7 +40,7 @@ class Cluster(object):
         self.cluster = Birch(threshold=threshold, n_clusters=None)
         self.cluster.fit_predict(self.weight)
 
-    def build(self) -> list[Any]:
+    def build(self) -> List[Any]:
         # self.cluster.labels_  对应 类别 {index: 类别} 类别值int值 相同值代表同一类
         # cluster_dict key为Birch聚类后的每个类，value为 title对应的index
         cluster_dict = {}

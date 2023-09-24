@@ -97,7 +97,7 @@ class Scraper(BaseModel):
         order: int
 
     # 消息列表
-    messages_box: list[Sorter] = []
+    messages_box: List[Sorter] = []
     # 最大消息数
     max_messages: int = 12
 

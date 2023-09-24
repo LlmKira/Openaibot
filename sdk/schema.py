@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import asyncio
 # ATTENTION:禁止调用上层任何包，否则会导致循环引用
-from typing import Literal, Optional, Coroutine
+from typing import Literal, Optional, Coroutine, List
 
 from loguru import logger
 from pydantic import BaseModel, root_validator, Field
@@ -38,7 +38,7 @@ class Function(BaseModel):
     name: str = Field(None, description="函数名称", regex=r"^[a-zA-Z0-9_]+$")
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
-    required: list[str] = []
+    required: List[str] = []
 
     def add_property(self, property_name: str,
                      property_type: Literal["string", "integer", "number", "boolean", "object"],

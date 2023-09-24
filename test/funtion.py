@@ -4,7 +4,7 @@
 # @File    : test_funtion.py
 # @Software: PyCharm
 import json
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class Function(BaseModel):
     name: str
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
-    required: list[str]
+    required: List[str]
 
     def add_property(self, property_name: str,
                      property_type: Literal["string", "integer", "number", "boolean", "object"],
