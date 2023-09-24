@@ -76,6 +76,12 @@ class TelegramBotRunner(object):
             if message.document:
                 if message.document.file_size < 1024 * 1024 * 10:
                     _file.append(await telegram_to_file(message.document))
+            if message.reply_to_message:
+                if message.reply_to_message.photo:
+                    _file.append(await telegram_to_file(message.reply_to_message.photo[-1]))
+                if message.reply_to_message.document:
+                    if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
+                        _file.append(await telegram_to_file(message.reply_to_message.document))
             logger.info(f"telegram:create task from {message.chat.id} {message.text} funtion_enable:{funtion_enable}")
             try:
                 await TelegramTask.send_task(
