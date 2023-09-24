@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : search.py
 # @Software: PyCharm
+import os
 
 from loguru import logger
 from pydantic import BaseModel
@@ -124,7 +125,7 @@ class SearchTool(BaseTool):
     async def llm_task(task, task_desc, raw_data):
         _submanager = SubManager(user_id=task.sender.user_id)
         driver = _submanager.llm_driver  # 由发送人承担接受者的成本
-        model_name = "gpt-3.5-turbo-0613"
+        model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,

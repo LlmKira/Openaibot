@@ -260,6 +260,18 @@ class TelegramBotRunner(object):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
+            if is_command(text=message.text, command="/tool"):
+                _paper = ''
+                _tool = TOOL_MANAGER.get_all_function()
+                for name, c in _tool.items():
+                    c: Function
+                    _paper += f"{c.name} - {c.description}\n"
+                return await bot.reply_to(message,
+                                          text=formatting.format_text(formatting.mbold("🔧 Tool List"),
+                                                                      escape_markdown(_paper),
+                                                                      separator="\n"),
+                                          parse_mode="MarkdownV2"
+                                          )
             if is_command(text=message.text, command="/chat"):
                 return await create_task(message, funtion_enable=__default_function_enable__)
             if is_command(text=message.text, command="/task"):

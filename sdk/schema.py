@@ -124,6 +124,25 @@ class Message(BaseModel):
         return self
 
     @classmethod
+    def create_short_task(cls, task_desc, refer, role: str = None):
+        """
+        生成task
+        """
+        if not role:
+            role = "[RULE]Please complete the order according to the task description refer to given information, if can't complete, please reply 'give up'"
+        return [
+            Message(
+                role="system",
+                content=role,
+            ),
+            Message(
+                role="user",
+                content=f"{refer} <hint>{task_desc}<hint>",
+                name="task"
+            )
+        ]
+
+    @classmethod
     def create_task_message_list(cls, task_desc, refer, role: str = None):
         """
         生成task

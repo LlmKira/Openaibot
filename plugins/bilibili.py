@@ -72,7 +72,7 @@ class BiliBiliSearch(BaseTool):
             import bilibili_api
             return True
         except ImportError as e:
-            logger.error(f"plugin:package <bilibili_api> not installed:{e}")
+            logger.error(f"plugin:bilibili:package <bilibili_api> not installed:{e}")
             return False
 
     def func_message(self, message_text):
@@ -121,7 +121,7 @@ class BiliBiliSearch(BaseTool):
         """
         _submanager = SubManager(user_id=task.sender.user_id)
         driver = _submanager.llm_driver  # 由发送人承担接受者的成本
-        model_name = "gpt-3.5-turbo-0613"
+        model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
