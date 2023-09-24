@@ -44,7 +44,9 @@ Please make sure that your server has more than `1G` of RAM, otherwise it will r
 ### Docker
 
 ```shell
+cd Openaibot
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+
 ```
 
 Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)

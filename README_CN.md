@@ -60,7 +60,9 @@ alarm.add_property(
 ### Docker
 
 ```shell
+cd Openaibot
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+
 ```
 
 安装 Docker 可以参考 [官方文档](https://docs.docker.com/engine/install/ubuntu/)
