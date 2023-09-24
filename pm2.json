@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "sender",
+      "name": "llm_sender",
       "script": "python3 start_sender.py",
       "instances": 1,
       "error_file": "sender.log",
@@ -9,7 +9,7 @@
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     },
     {
-      "name": "receiver",
+      "name": "llm_receiver",
       "script": "python3 start_receiver.py",
       "instances": 1,
       "error_file": "receiver.log",
