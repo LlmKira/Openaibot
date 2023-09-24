@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field, BaseSettings
 
@@ -35,6 +35,7 @@ class UserInfo(BaseSettings):
     plugin_subs: Plugin = Field(Plugin(), description="插件的设置")
     costs: List[Cost] = Field([], description="消费记录")
     llm_driver: openai.Openai.Driver = openai.Openai.Driver()
+    update_driver: bool = False
 
     def total_cost(self):
         return sum([cost.token_usage for cost in self.costs])

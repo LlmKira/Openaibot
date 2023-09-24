@@ -26,7 +26,8 @@ MODEL = Literal[
     "gpt-3.5-turbo",
     "gpt-4-0314",
     "gpt-4-0613",
-    "gpt-4"]
+    "gpt-4"
+]
 
 
 class Openai(BaseModel):
@@ -42,13 +43,16 @@ class Openai(BaseModel):
     class Driver(BaseSettings):
         endpoint: HttpUrl = Field("https://api.openai.com/v1/chat/completions", env='OPENAI_API_ENDPOINT')
         api_key: str = Field(None, env='OPENAI_API_KEY')
+        org_id: Optional[str] = Field(None, env='OPENAI_API_ORG_ID')
+
+        # TODO:AZURE API VERSION
 
         # token: Tokenizer = TokenizerObj
         @validator("api_key")
         def check_key(cls, v):
             if v:
                 if not str(v).startswith("sk-"):
-                    raise ValidationError("api_key must start with `sk-`")
+                    logger.warning("OpenaiDriver:api_key should start with `sk-`")
                 # if not len(str(v)) == 51:
                 #    raise ValidationError("api_key must be 51 characters long")
             else:
@@ -69,14 +73,14 @@ class Openai(BaseModel):
             extra = "allow"
 
     config: Driver
-    model: MODEL = "gpt-3.5-turbo-0613"
+    model: MODEL = Field("gpt-3.5-turbo-0613", env='OPENAI_API_MODEL')
     messages: List[Message]
     functions: Optional[List[Function]] = None
 
     function_call: Optional[str] = None
     """
     # If you want to force the model to call a specific function you can do so by setting function_call: {"name": "<insert-function-name>"}. 
-    # You can also force the model to generate a user-facing messages by setting function_call: "none". 
+    # You can also force the model to generate a user-facing messages_box by setting function_call: "none". 
     # Note that the default behavior (function_call: "auto") is for the model to decide on its own whether to call a function and if so which function to call.
     """
 
@@ -153,7 +157,7 @@ class Openai(BaseModel):
         """
         # check
         if not response.get("choices"):
-            raise ValidationError("message is empty")
+            raise ValidationError("Message is empty")
 
         _message = Message.parse_obj(response.get("choices")[0].get("message"))
         return _message
@@ -182,27 +186,31 @@ class Openai(BaseModel):
                                                                          model=self.model,
                                                                          )
         if num_tokens_from_messages > self.get_token_limit(self.model):
-            raise ValidationError("messages num_tokens > max_tokens")
+            raise ValidationError("messages_box num_tokens > max_tokens")
 
         # Clear tokenizer encode cache
         # TokenizerObj.clear_cache()
         _data = self.dict(exclude_none=True, exclude={"config", "echo"})
         # 返回请求
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Authorization": f"Bearer {self.config.api_key}",
+            "api-key": f"{self.config.api_key}",
+        }
+        if self.config.org_id:
+            headers["Openai-Organization"] = self.config.org_id
         try:
             _response = await request(
                 method="POST",
                 url=self.config.endpoint,
                 data=_data,
-                headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Authorization": f"Bearer {self.config.api_key}"
-                },
+                headers=headers,
                 proxy=self.get_proxy_settings().proxy_address,
                 json_body=True
             )
         except httpx.ConnectError as e:
-            logger.error(f"openai connect error: {e}")
+            logger.error(f"Openai connect error: {e}")
             raise e
         if self.echo:
-            logger.debug(f"openai response: {_response}")
+            logger.info(f"Openai response: {_response}")
         return _response

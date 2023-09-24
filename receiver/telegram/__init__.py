@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import ssl
 import time
 from typing import List
 
@@ -14,8 +15,9 @@ from telebot import TeleBot
 from middleware.llm_task import OpenaiMiddleware
 from receiver import function
 from schema import TaskHeader, RawMessage
+from sdk.error import RateLimitError
 from sdk.func_call import TOOL_MANAGER
-from sdk.schema import Message
+from sdk.schema import Message, File
 from sdk.utils import sync
 from setting.telegram import BotSetting
 from task import Task
@@ -47,28 +49,29 @@ class TelegramSender(object):
                     self.bot.send_document(chat_id=chat_id, document=file_obj.file_url,
                                            reply_to_message_id=reply_to_message_id, caption=file_obj.file_name)
                     continue
-                _data = sync(RawMessage.download_file(file_obj.file_id))
+                _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
+
                 if not _data:
                     logger.error(f"file download failed {file_obj.file_id}")
                     continue
                 if file_obj.file_name.endswith(".jpg") or file_obj.file_name.endswith(".png"):
                     self.bot.send_photo(
                         chat_id=chat_id,
-                        photo=(file_obj.file_name, _data),
+                        photo=_data.pair,
                         reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
                 elif file_obj.file_name.endswith(".ogg"):
                     self.bot.send_voice(
                         chat_id=chat_id,
-                        voice=(file_obj.file_name, _data),
+                        voice=_data.pair,
                         reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
                 else:
                     self.bot.send_document(
                         chat_id=chat_id,
-                        document=(file_obj.file_name, _data), reply_to_message_id=reply_to_message_id,
+                        document=_data.pair, reply_to_message_id=reply_to_message_id,
                         caption=file_obj.file_name
                     )
             try:
@@ -94,6 +97,13 @@ class TelegramSender(object):
                 text=item.content,
                 reply_to_message_id=reply_to_message_id
             )
+
+    def error(self, chat_id, reply_to_message_id, text):
+        self.bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_to_message_id=reply_to_message_id
+        )
 
     async def function(self, chat_id, reply_to_message_id, task: TaskHeader, message: Message):
         if not message.function_call:
@@ -142,11 +152,17 @@ class TelegramReceiver(object):
         try:
             _message = await llm_agent.func_message()
             print(f" [x] LLM Message {_message}")
+            assert _message, "message is empty"
             return _message
+        except ssl.SSLSyscallError as e:
+            logger.error(f"Network ssl error: {e},that maybe caused by bad proxy")
+            raise e
+        except RateLimitError as e:
+            logger.error(f"ApiEndPoint:{e}")
+            raise ValueError(f"Authentication expiration, overload or other issues with the Api Endpoint")
         except Exception as e:
             logger.exception(e)
-            # return await message.ack()
-            return None
+            raise e
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
@@ -180,7 +196,14 @@ class TelegramReceiver(object):
             )
 
         _llm.build(write_back=True)  # 回写任何原始消息
-        _message = await self.llm_request(_llm)
+        try:
+            _message = await self.llm_request(_llm)
+        except Exception as e:
+            return __sender__.error(
+                chat_id=_task.receiver.chat_id,
+                reply_to_message_id=_task.receiver.message_id,
+                text=f"🦴 Sorry, your request failed because: {e}"
+            )
 
         # 拦截函数调用
         if hasattr(_message, "function_call"):

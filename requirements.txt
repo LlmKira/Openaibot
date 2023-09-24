@@ -39,3 +39,6 @@ jieba
 fasttext-wheel
 scikit-learn
 cjieba
+
+unstructured[docx,pptx]
+tenacity

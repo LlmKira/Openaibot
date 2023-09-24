@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : llm_task.py
 # @Software: PyCharm
+import os
 from typing import List, Literal
 
 from loguru import logger
@@ -95,7 +96,8 @@ class OpenaiMiddleware(object):
         """
         处理消息转换和调用工具
         """
-        model_name = "gpt-3.5-turbo-0613"
+        # 模型内容
+        model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         self.scraper.reduce_messages(limit=openai.Openai.get_token_limit(model=model_name))
         message = self.scraper.get_messages()
         _functions = self.functions if self.functions else None
@@ -104,13 +106,13 @@ class OpenaiMiddleware(object):
 
         # 消息缓存读取和转换
         # 断点
-        logger.debug(f" [x] Openai request:{message}")
+        logger.info(f" [x] Openai request --org {driver.org_id} --url {driver.endpoint} --message {message} ")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
             messages=message,
             functions=_functions,
-            echo=True
+            echo=False
         )
 
         # 调用Openai

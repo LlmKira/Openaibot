@@ -97,6 +97,17 @@ async def request(
             code=resp.status_code,
             message=f"{resp.status_code}:{_error.get('type')}:{_error.get('message')}"
         )
+    if isinstance(req_data.get("message"), str):
+        if call_func:
+            call_func(
+                req_data,
+                headers
+            )
+        _status = req_data.get("status")
+        llm_error_handler(
+            code=_status,
+            message=f"{resp.status_code}:{req_data.get('message')}"
+        )
     return req_data
 
 
@@ -131,6 +142,3 @@ def __clean():
         loop.run_until_complete(__clean_task())
     else:
         loop.create_task(__clean_task())
-
-
-

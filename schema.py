@@ -4,6 +4,7 @@
 # @File    : schema.py
 # @Software: PyCharm
 import hashlib
+import pickle
 import time
 from io import BytesIO
 from typing import Union, List, Any, Literal, Optional
@@ -12,6 +13,7 @@ from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from cache.redis import cache
+from sdk.schema import File
 
 
 def generate_md5_short_id(data):
@@ -36,25 +38,6 @@ def generate_md5_short_id(data):
     return short_id
 
 
-class File(BaseModel):
-    file_id: str = Field(None, description="文件ID")
-    file_name: str = Field(None, description="文件名")
-    file_url: str = Field(None, description="文件URL")
-
-    # hash able
-    def __eq__(self, other):
-        if isinstance(other, File):
-            return (self.file_id == other.file_id) and (self.file_name == other.file_name)
-        else:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.file_id) + hash(self.file_name)
-
-
 class RawMessage(BaseModel):
     user_id: int = Field(None, description="用户ID")
     chat_id: int = Field(None, description="群组ID")
@@ -75,13 +58,18 @@ class RawMessage(BaseModel):
         return v
 
     @staticmethod
-    async def download_file(file_id):
-        return await cache.read_data(file_id)
+    async def download_file(file_id) -> Optional[File.Data]:
+        file = await cache.read_data(file_id)
+        if not file:
+            return None
+        file_obj: File.Data = pickle.loads(file)
+        return file_obj
 
     @staticmethod
     async def upload_file(name, data):
         _key = str(generate_md5_short_id(data))
-        await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
+        await cache.set_data(key=_key, value=pickle.dumps(File.Data(file_name=name, file_data=data)),
+                             timeout=60 * 60 * 24 * 7)
         return File(file_id=_key, file_name=name)
 
     @classmethod
@@ -154,14 +142,14 @@ class TaskHeader(BaseModel):
         从telegram消息中构建任务
         """
 
-        if trace_back_message is None:
+        if (trace_back_message is None) or (not all(trace_back_message)):
             trace_back_message = []
         if file is None:
             file = []
 
         def _convert(_message: types.Message) -> Optional[RawMessage]:
-            if not _message or not _message.text:
-                return None
+            if not _message:
+                raise ValueError(f"Message is empty")
             if isinstance(_message, types.Message):
                 user_id = _message.from_user.id
                 chat_id = _message.chat.id
@@ -172,15 +160,16 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text,
+                text=text if text else f"{type(_message)}",
                 created_at=created_at
             )
 
         _file_name = []
         if file:
             for _file in file:
-                _file_name.append(f"![{_file.file_name}]")
+                _file_name.append(_file.file_prompt)
         head_message = _convert(message)
+        assert head_message, "HeadMessage is empty"
         head_message.file = file
         if not hide_file_info:
             head_message.text += "\n" + "\n".join(_file_name)

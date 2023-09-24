@@ -12,7 +12,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from sdk.filter.evaluate import Sim
-from sdk.schema import Message
+from sdk.schema import Message, standardise
 
 
 # 生成MD5
@@ -29,7 +29,7 @@ class Tokenizer(object):
         self.__encode_cache = {}
 
     def num_tokens_from_messages(self, messages: List[Message], model="gpt-3.5-turbo-0613") -> int:
-        """Return the number of tokens used by a list of messages."""
+        """Return the number of tokens used by a list of messages_box."""
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
@@ -60,6 +60,7 @@ class Tokenizer(object):
             )
         num_tokens = 0
         for message in messages:
+            message = standardise(message)
             num_tokens += tokens_per_message
             for key, value in message.dict().items():
                 if isinstance(value, dict):
@@ -85,7 +86,7 @@ class Scraper(BaseModel):
     """
     刮削器
     始终按照顺序排列，削除得分低的条目
-    Scraper is a class that sorts a list of messages by their score.
+    Scraper is a class that sorts a list of messages_box by their score.
     """
 
     class Sorter(BaseModel):
@@ -96,7 +97,7 @@ class Scraper(BaseModel):
         order: int
 
     # 消息列表
-    messages: list[Sorter] = []
+    messages_box: list[Sorter] = []
     # 最大消息数
     max_messages: int = 12
 
@@ -107,18 +108,18 @@ class Scraper(BaseModel):
     def add_message(self, message: Message, score: float):
         if hasattr(message, "function_call"):
             return None
-        self.messages.append(self.Sorter(message=message, score=score, order=self.tick))
+        self.messages_box.append(self.Sorter(message=message, score=score, order=self.tick))
         self.tick += 1
         # 按照顺序排序
-        self.messages.sort(key=lambda x: x.order)
-        while len(self.messages) > self.max_messages:
-            self.messages.pop(0)
+        self.messages_box.sort(key=lambda x: x.order)
+        while len(self.messages_box) > self.max_messages:
+            self.messages_box.pop(0)
 
     # 方法：获取消息
     def get_messages(self) -> List[Message]:
         # 按照顺序排序
-        self.messages.sort(key=lambda x: x.order)
-        _message = [message.message for message in self.messages]
+        self.messages_box.sort(key=lambda x: x.order)
+        _message = [standardise(sorter.message) for sorter in self.messages_box]
         # 去重
         # [*dict.fromkeys(_message)]
         # -> unhashable type: 'Message'
@@ -145,7 +146,7 @@ class Scraper(BaseModel):
 
     # 方法：获取消息数
     def get_num_messages(self) -> int:
-        return len(self.messages)
+        return len(self.messages_box)
 
     # 方法：清除消息到负载
     def reduce_messages(self, limit: int = 2048):
@@ -158,11 +159,11 @@ class Scraper(BaseModel):
         # 执行删除操作
         if TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
             # 从最旧开始删除
-            self.messages.sort(key=lambda x: x.order)
+            self.messages_box.sort(key=lambda x: x.order)
             while TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
-                if len(self.messages) > 1:
-                    self.messages.pop(0)
+                if len(self.messages_box) > 1:
+                    self.messages_box.pop(0)
                 else:
-                    self.messages[0].message.content = self.messages[0].message.content[:limit]
+                    self.messages_box[0].message.content = self.messages_box[0].message.content[:limit]
         # 按照顺序排序
-        self.messages.sort(key=lambda x: x.order)
+        self.messages_box.sort(key=lambda x: x.order)
