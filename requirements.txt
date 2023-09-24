@@ -42,3 +42,5 @@ cjieba
 
 unstructured[docx,pptx]
 tenacity
+PySocks
+requests[socks]
