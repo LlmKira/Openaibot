@@ -29,6 +29,16 @@ implementing some or more features.
 - 🍾 Easy Interactive Experience.
 - 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
 
+### 🎬 Platform support
+
+| Platform | Support | Tip     |
+|----------|---------|---------|
+| Telegram | ✅       |         |
+| Discord  | ❌       | Working |
+| QQ       | ❌       |         |
+| Wechat   | ❌       |         |
+| Twitter  | ❌       |         |
+
 ### 🧀 Preview of some plugins
 
 | Sticker Converter                   | Timer Func                      | Translate                                    |
@@ -101,6 +111,8 @@ docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
 Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)
 
 Install docker-compose can refer to [docker-compose docs](https://docs.docker.com/compose/install/)
+
+Install docker-desktop can refer to [docker-desktop docs](https://www.docker.com/products/docker-desktop/)
 
 ### PM2
 

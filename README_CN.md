@@ -27,6 +27,16 @@ Feature `gpt-function-call`
 - 🍰 自带联网插件实现
 - 📦 文件交互支持
 
+### 🎬  平台支持
+
+| 平台       | 支持情况 | 备注 |
+|----------|------|----|
+| Telegram | ✅    |    |
+| Discord  | ❌    |    |
+| QQ       | ❌    |    |
+| Wechat   | ❌    |    |
+| Twitter  | ❌    |    |
+
 ### 🧀 部分插件预览
 
 | Sticker Converter                   | Timer Func                      | Translate Func                               |
@@ -121,6 +131,8 @@ docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
 安装 Docker Compose 可以参考 [官方文档](https://docs.docker.com/compose/install/)
 
 或者 [博客文章](https://krau.top/posts/install-docker-one-key)
+
+Windows 用户可以安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ### PM2
 
