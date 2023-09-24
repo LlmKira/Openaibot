@@ -63,6 +63,12 @@ alarm.add_property(
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
 ```
 
+安装 Docker 可以参考 [官方文档](https://docs.docker.com/engine/install/ubuntu/)
+
+安装 Docker Compose 可以参考 [官方文档](https://docs.docker.com/compose/install/)
+
+或者 [博客文章](https://krau.top/posts/install-docker-one-key)
+
 ### PM2
 
 ````

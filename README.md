@@ -47,6 +47,10 @@ Please make sure that your server has more than `1G` of RAM, otherwise it will r
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
 ```
 
+Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)
+
+Install docker-compose can refer to [docker-compose docs](https://docs.docker.com/compose/install/)
+
 ### PM2
 
 ````
