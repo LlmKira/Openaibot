@@ -41,27 +41,7 @@ Make sure your system is UTF8, `dpkg-reconfigure locales`
 
 Please make sure that your server has more than `1G` of RAM, otherwise it will reboot indefinitely with PM2.
 
-### Docker
-
-```shell
-cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
-
-```
-
-Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)
-
-Install docker-compose can refer to [docker-compose docs](https://docs.docker.com/compose/install/)
-
-### PM2
-
-````
-apt install npm
-npm install pm2 -g
-pm2 start pm2.json
-````
-
-### Shell
+### 🌻 Configuration
 
 - (Optional) Resolving conflicts
 
@@ -108,7 +88,29 @@ docker run -d -p 5672:5672 -p 15672:15672 \
 docker ps -l
 ```  
 
-- ▶️ Run
+## ▶️ Run
+
+### Docker
+
+```shell
+cd Openaibot
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+
+```
+
+Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)
+
+Install docker-compose can refer to [docker-compose docs](https://docs.docker.com/compose/install/)
+
+### PM2
+
+````
+apt install npm
+npm install pm2 -g
+pm2 start pm2.json
+````
+
+### Shell
 
 ```bash
 python3 start_sender.py

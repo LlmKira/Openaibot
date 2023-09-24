@@ -57,29 +57,7 @@ alarm.add_property(
 
 请确认您服务器的内存大于 `1G`,否则使用 PM2 会无限重启。
 
-### Docker
-
-```shell
-cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
-
-```
-
-安装 Docker 可以参考 [官方文档](https://docs.docker.com/engine/install/ubuntu/)
-
-安装 Docker Compose 可以参考 [官方文档](https://docs.docker.com/compose/install/)
-
-或者 [博客文章](https://krau.top/posts/install-docker-one-key)
-
-### PM2
-
-````
-apt install npm
-npm install pm2 -g
-pm2 start pm2.json
-````
-
-### Shell
+### 🌻 配置
 
 - (可选) 解决冲突
 
@@ -128,7 +106,31 @@ docker run -d -p 5672:5672 -p 15672:15672 \
 docker ps -l
 ```  
 
-- ▶️ 运行
+## ▶️ 运行
+
+### Docker
+
+```shell
+cd Openaibot
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+
+```
+
+安装 Docker 可以参考 [官方文档](https://docs.docker.com/engine/install/ubuntu/)
+
+安装 Docker Compose 可以参考 [官方文档](https://docs.docker.com/compose/install/)
+
+或者 [博客文章](https://krau.top/posts/install-docker-one-key)
+
+### PM2
+
+````
+apt install npm
+npm install pm2 -g
+pm2 start pm2.json
+````
+
+### Shell
 
 ```bash
 python3 start_sender.py
