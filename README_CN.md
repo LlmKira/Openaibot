@@ -55,6 +55,8 @@ alarm.add_property(
 
 请确认您的系统为UTF8，`dpkg-reconfigure locales`
 
+请确认您服务器的内存大于 `1G`,否则使用 PM2 会无限重启。
+
 ### Docker
 
 ```shell
@@ -80,6 +82,15 @@ pm2 start pm2.json
 ```bash
 cp .env.example .env
 nano .env
+
+```
+
+- 克隆项目
+
+```bash
+git clone https://github.com/LlmKira/Openaibot.git
+cd Openaibot
+pip install -r requirements.txt
 
 ```
 

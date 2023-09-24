@@ -39,6 +39,8 @@ implementing some or more features.
 
 Make sure your system is UTF8, `dpkg-reconfigure locales`
 
+Please make sure that your server has more than `1G` of RAM, otherwise it will reboot indefinitely with PM2.
+
 ### Docker
 
 ```shell
