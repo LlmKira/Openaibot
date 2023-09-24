@@ -59,6 +59,15 @@ pm2 start pm2.json
 
   `pip uninstall llm-kira`
 
+- Clone the project
+
+```bash
+git clone https://github.com/LlmKira/Openaibot.git
+cd Openaibot
+pip install -r requirements.txt
+
+```
+
 - 🛠 Configure the `.env` file
 
 ```bash

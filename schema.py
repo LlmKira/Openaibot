@@ -9,11 +9,14 @@ import time
 from io import BytesIO
 from typing import Union, List, Any, Literal, Optional
 
+import nest_asyncio
 from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from cache.redis import cache
 from sdk.schema import File
+
+nest_asyncio.apply()
 
 
 def generate_md5_short_id(data):
