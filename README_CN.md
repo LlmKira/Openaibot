@@ -29,9 +29,9 @@ Feature `gpt-function-call`
 
 ### 🧀 部分插件预览
 
-| Sticker Converter                   | Timer Func                      | Translate Func                          |
-|-------------------------------------|---------------------------------|-----------------------------------------|
-| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_func.gif) |
+| Sticker Converter                   | Timer Func                      | Translate Func                               |
+|-------------------------------------|---------------------------------|----------------------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
 
 ```python3
 __plugin_name__ = "set_alarm_reminder"

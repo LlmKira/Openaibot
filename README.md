@@ -31,9 +31,9 @@ implementing some or more features.
 
 ### 🧀 Preview of some plugins
 
-| Sticker Converter                   | Timer Func                      | Translate                               |
-|-------------------------------------|---------------------------------|-----------------------------------------|
-| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_func.gif) |
+| Sticker Converter                   | Timer Func                      | Translate                                    |
+|-------------------------------------|---------------------------------|----------------------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
 
 ## 📝 Deployment Guide
 
