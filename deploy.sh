@@ -13,20 +13,14 @@ else
 fi
 
 echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
-
-read -r -p "$(tput setaf 6)This script will install Docker, Redis, RabbitMQ, Node.js, NPM, PM2, and the Openaibot project. THAT ACTION MAY BREAK YOUR SYSTEM. Do you want to proceed? (y/n):$(tput sgr0) " choice
-case "$choice" in
-[yY][eE][sS] | [yY])
-  ;;
-[nN][oO] | [nN])
+echo "$(tput setaf 6)This script will install Docker, Redis, RabbitMQ, Node.js, NPM, PM2, and the Openaibot project. THAT ACTION MAY BREAK YOUR SYSTEM. Do you want to proceed? (y/n):$(tput sgr0) "
+read -r choice
+if [[ $choice =~ ^([yY][eE][sS]|[yY])$ ]]; then
+  sleep 1s
+else
   echo "$(tput setaf 1)Installation cancelled.$(tput sgr0)"
   exit 0
-  ;;
-*)
-  echo "invalid..."
-  exit 1
-  ;;
-esac
+fi
 
 # Function to handle errors and exit
 handle_error() {
