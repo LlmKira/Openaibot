@@ -6,6 +6,7 @@ if [ -d "Openaibot" ]; then
   cd Openaibot || exit
   # Update the Openaibot project
   git pull || echo "Failed,pls update it by yourself."
+  echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
   exit 0
 else
   # Clone the project if not already cloned
