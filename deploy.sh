@@ -3,10 +3,9 @@
 # Check if the Openaibot directory exists
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
 if [ -d "Openaibot" ]; then
-  cd Openaibot || exit
+  # shellcheck disable=SC2164
+  cd Openaibot && git pull && echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
   # Update the Openaibot project
-  git pull || echo "Failed,pls update it by yourself."
-  echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
   exit 0
 else
   # Clone the project if not already cloned
@@ -97,7 +96,7 @@ else
 fi
 
 # Change directory to the project
-cd Openaibot || exit
+cd Openaibot || echo "DO NOT" && exit
 
 # Install project dependencies
 echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
