@@ -22,14 +22,21 @@ if ! [ -x "$(command -v docker)" ]; then
 fi
 echo "$(tput setaf 2)Docker installation complete.$(tput sgr0)"
 
-# Check if Redis is installed, otherwise exit
-echo "$(tput setaf 6)Installing Redis...$(tput sgr0)"
-if ! [ -x "$(command -v redis-server)" ]; then
-  apt-get install redis
-  systemctl enable redis.service --now
-  exit 1
+# Pull Redis image
+echo "$(tput setaf 6)Pulling Redis image...$(tput sgr0)"
+if [[ $(docker images -q redis:latest) == "" ]]; then
+  docker pull redis:latest
 fi
-echo "$(tput setaf 2)Redis installation complete.$(tput sgr0)"
+echo "$(tput setaf 2)Redis image pull complete.$(tput sgr0)"
+
+# Run Redis container if not already running
+echo "$(tput setaf 6)Starting Redis container...$(tput sgr0)"
+if ! docker inspect -f '{{.State.Running}}' redis &>/dev/null; then
+  docker run -d -p 6379:6379 \
+    --name redis \
+    redis:latest
+fi
+echo "$(tput setaf 2)Redis container started successfully.$(tput sgr0)"
 
 # Pull RabbitMQ image
 echo "$(tput setaf 6)Pulling RabbitMQ image...$(tput sgr0)"
@@ -73,7 +80,7 @@ if [ -d "Openaibot" ]; then
     case $option in
     "Update Openaibot")
       # Change directory to the project
-      cd Openaibot  exit
+      cd Openaibot || exit
 
       # Update the Openaibot project
       git pull
