@@ -4,27 +4,12 @@
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
 if [ -d "Openaibot" ]; then
   # Menu prompt for Openaibot directory options
-  select option in "Update Openaibot" "Install Openaibot"; do
-    case $option in
-    "Update Openaibot")
-      # Change directory to the project
-      cd Openaibot || exit
-
-      # Update the Openaibot project
-      git pull
-
-      # Exit the menu
-      break
-      ;;
-    "Do nothing")
-      # Exit the menu and continue with installation
-      break
-      ;;
-    *)
-      echo "$(tput setaf 1)Invalid option. Please select a valid option.$(tput sgr0)"
-      ;;
-    esac
-  done
+  read -r -p "$(tput setaf 6)You may have already install Openaibot,do you want to update it? (y/n):$(tput sgr0) " choice
+  if [[ ! $choice =~ ^[Yy]$ ]]; then
+    cd Openaibot || exit
+    # Update the Openaibot project
+    git pull || echo "Failed,pls do it by yourself."
+  fi
 else
   # Clone the project if not already cloned
   git clone https://github.com/LlmKira/Openaibot.git
