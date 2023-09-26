@@ -1,3 +1,5 @@
+![cover](https://raw.githubusercontent.com/LLMKira/Docs/main/docs/cover.png)
+
 # OpenaiBot/LLMBot
 
 [![Docker Image Size (tag)](https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
@@ -50,6 +52,13 @@ implementing some or more features.
 Make sure your system is UTF8, `dpkg-reconfigure locales`
 
 Please make sure that your server has more than `1G` of RAM, otherwise it will reboot indefinitely with PM2.
+
+If you are using a brand-new server, you can use the following shell to automatically install:
+
+```shell
+curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && sh deploy.sh
+
+```
 
 ### 🌻 Configuration
 

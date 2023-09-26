@@ -1,3 +1,5 @@
+![cover](https://raw.githubusercontent.com/LLMKira/Docs/main/docs/cover.png)
+
 # OpenaiBot/LLMBot
 
 [![Docker Image Size (tag)](https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
@@ -27,7 +29,7 @@ Feature `gpt-function-call`
 - 🍰 自带联网插件实现
 - 📦 文件交互支持
 
-### 🎬  平台支持
+### 🎬 平台支持
 
 | 平台       | 支持情况 | 备注 |
 |----------|------|----|
@@ -66,6 +68,13 @@ alarm.add_property(
 请确认您的系统为UTF8，`dpkg-reconfigure locales`
 
 请确认您服务器的内存大于 `1G`,否则使用 PM2 会无限重启。
+
+如果你在使用一台崭新的服务器，你可以使用下面的Shell来尝试自动安装本项目。
+
+```shell
+curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && sh deploy.sh
+
+```
 
 ### 🌻 配置
 
