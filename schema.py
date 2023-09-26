@@ -108,6 +108,7 @@ class TaskHeader(BaseModel):
 
         callback_forward: bool = Field(False, description="非 LLM 转发")
         reprocess_needed: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
+        continue_step: int = Field(0, description="继续执行的步骤,发送启用 function call 的 continue")
 
         verify_needed: bool = Field(False, description="此请求被分流标记需要平台的权限验证才能被执行")
         parent_call: Any = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
@@ -163,7 +164,7 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text if text else f"{type(_message)}",
+                text=text if text else f"(poke)",  # Empty Message
                 created_at=created_at
             )
 

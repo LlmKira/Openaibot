@@ -32,7 +32,9 @@ class OpenaiMiddleware(object):
         self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id), ttl=60 * 60 * 1)
 
     def build(self, write_back):
-        # 先拉取记录再转换
+        """
+           构建消息和函数列表
+        """
         self.create_message(write_back=write_back)
         self.append_function()
         return self
