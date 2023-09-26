@@ -3,16 +3,9 @@
 # Check if the Openaibot directory exists
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
 if [ -d "Openaibot" ]; then
-  # Menu prompt for Openaibot directory options
-  read -r -p "$(tput setaf 6)You may have already install Openaibot,do you want to update it? (y/n):$(tput sgr0) " choice
-  if [[ ! $choice =~ ^[Yy]$ ]]; then
-    cd Openaibot || exit
-    # Update the Openaibot project
-    git pull || echo "Failed,pls do it by yourself."
-    exit
-  else
-    exit
-  fi
+  cd Openaibot || exit
+  # Update the Openaibot project
+  git pull || echo "Failed,pls update it by yourself."
 else
   # Clone the project if not already cloned
   git clone https://github.com/LlmKira/Openaibot.git
