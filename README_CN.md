@@ -72,7 +72,7 @@ alarm.add_property(
 如果你在使用一台崭新的服务器，你可以使用下面的Shell来尝试自动安装本项目。
 
 ```shell
-curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && sh deploy.sh
+curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && bash deploy.sh
 
 ```
 

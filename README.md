@@ -56,7 +56,7 @@ Please make sure that your server has more than `1G` of RAM, otherwise it will r
 If you are using a brand-new server, you can use the following shell to automatically install:
 
 ```shell
-curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && sh deploy.sh
+curl -LO https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh && bash deploy.sh
 
 ```
 
