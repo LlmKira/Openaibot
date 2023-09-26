@@ -1,4 +1,4 @@
-# Confirmation prompt
+#!/bin/bash
 
 # Check if the Openaibot directory exists
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
@@ -29,6 +29,7 @@ else
   # Clone the project if not already cloned
   git clone https://github.com/LlmKira/Openaibot.git
 fi
+
 echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
 
 read -r -p "$(tput setaf 6)This script will install Docker, Redis, RabbitMQ, Node.js, NPM, PM2, and the Openaibot project. THAT ACTION MAY BREAK YOUR SYSTEM. Do you want to proceed? (y/n):$(tput sgr0) " choice
