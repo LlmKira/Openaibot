@@ -15,39 +15,42 @@ handle_error() {
 trap 'handle_error' ERR
 
 # Check if Docker is installed
-echo "$(tput setaf 6)Installing Docker...$(tput sgr0)"
 if ! [ -x "$(command -v docker)" ]; then
   # Install Docker
+  echo "$(tput setaf 6)Installing Docker...$(tput sgr0)"
   curl -fsSL https://get.docker.com | bash -s docker
+else
+  echo "$(tput setaf 2)Docker already installed.$(tput sgr0)"
 fi
-echo "$(tput setaf 2)Docker installation complete.$(tput sgr0)"
 
 # Pull Redis image
-echo "$(tput setaf 6)Pulling Redis image...$(tput sgr0)"
 if [[ $(docker images -q redis:latest) == "" ]]; then
+  echo "$(tput setaf 6)Pulling Redis image...$(tput sgr0)"
   docker pull redis:latest
+  echo "$(tput setaf 2)Redis image pull complete.$(tput sgr0)"
 fi
-echo "$(tput setaf 2)Redis image pull complete.$(tput sgr0)"
-
 # Run Redis container if not already running
-echo "$(tput setaf 6)Starting Redis container...$(tput sgr0)"
 if ! docker inspect -f '{{.State.Running}}' redis &>/dev/null; then
+  echo "$(tput setaf 6)Starting Redis container...$(tput sgr0)"
   docker run -d -p 6379:6379 \
     --name redis \
     redis:latest
 fi
-echo "$(tput setaf 2)Redis container started successfully.$(tput sgr0)"
+if ! docker inspect -f '{{.State.Running}}' redis &>/dev/null; then
+  echo "$(tput setaf 1)Redis container started failed.$(tput sgr0)"
+else
+  echo "$(tput setaf 2)Redis container started successfully.$(tput sgr0)"
+fi
 
 # Pull RabbitMQ image
-echo "$(tput setaf 6)Pulling RabbitMQ image...$(tput sgr0)"
 if [[ $(docker images -q rabbitmq:3.10-management) == "" ]]; then
+  echo "$(tput setaf 6)Pulling RabbitMQ image...$(tput sgr0)"
   docker pull rabbitmq:3.10-management
+  echo "$(tput setaf 2)RabbitMQ image pull complete.$(tput sgr0)"
 fi
-echo "$(tput setaf 2)RabbitMQ image pull complete.$(tput sgr0)"
-
 # Run RabbitMQ container if not already running
-echo "$(tput setaf 6)Starting RabbitMQ container...$(tput sgr0)"
 if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
+  echo "$(tput setaf 6)Starting RabbitMQ container...$(tput sgr0)"
   docker run -d -p 5672:5672 -p 15672:15672 \
     -e RABBITMQ_DEFAULT_USER=admin \
     -e RABBITMQ_DEFAULT_PASS=admin \
@@ -55,7 +58,11 @@ if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
     --name rabbitmq \
     rabbitmq:3.10-management
 fi
-echo "$(tput setaf 2)RabbitMQ container started successfully.$(tput sgr0)"
+if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
+  echo "$(tput setaf 1)RabbitMQ container started failed.$(tput sgr0)"
+else
+  echo "$(tput setaf 2)RabbitMQ container started successfully.$(tput sgr0)"
+fi
 
 # Check if Node.js and NPM are installed, otherwise exit
 echo "$(tput setaf 6)Checking Node.js and NPM...$(tput sgr0)"
@@ -65,12 +72,15 @@ if ! [ -x "$(command -v node)" ] || ! [ -x "$(command -v npm)" ]; then
 fi
 echo "$(tput setaf 2)Node.js and NPM installation check complete.$(tput sgr0)"
 
+
 # Install PM2 globally if not already installed
-echo "$(tput setaf 6)Installing PM2...$(tput sgr0)"
 if ! [ -x "$(command -v pm2)" ]; then
+  echo "$(tput setaf 6)Installing PM2...$(tput sgr0)"
   npm install pm2 -g
+else
+  echo "$(tput setaf 2)PM2 already installed.$(tput sgr0)"
 fi
-echo "$(tput setaf 2)PM2 installation complete.$(tput sgr0)"
+
 
 # Check if the Openaibot directory exists
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
