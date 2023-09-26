@@ -9,6 +9,7 @@ if [ -d "Openaibot" ]; then
     cd Openaibot || exit
     # Update the Openaibot project
     git pull || echo "Failed,pls do it by yourself."
+    exit
   fi
 else
   # Clone the project if not already cloned
