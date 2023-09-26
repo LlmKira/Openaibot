@@ -115,8 +115,10 @@ echo "$(tput setaf 6)Starting project using PM2...$(tput sgr0)"
 pm2 start pm2.json
 echo "$(tput setaf 2)Project started using PM2.$(tput sgr0)"
 
+sleep 3s
+
 # Check if the project is already running
-if pm2 describe all | grep -q "status: online"; then
+if pm2 status | grep -E "^(llm_receiver|llm_sender).*(\b|^)online(\b|$)" >/dev/null; then
   echo "$(tput setaf 2)Project is already running.$(tput sgr0)"
 else
   echo "$(tput setaf 1)Project failed to start.$(tput sgr0)"
