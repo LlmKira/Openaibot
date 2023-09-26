@@ -1,4 +1,36 @@
 # Confirmation prompt
+
+# Check if the Openaibot directory exists
+echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
+if [ -d "Openaibot" ]; then
+  # Menu prompt for Openaibot directory options
+  select option in "Update Openaibot" "Install Openaibot"; do
+    case $option in
+    "Update Openaibot")
+      # Change directory to the project
+      cd Openaibot || exit
+
+      # Update the Openaibot project
+      git pull
+
+      # Exit the menu
+      break
+      ;;
+    "Do nothing")
+      # Exit the menu and continue with installation
+      break
+      ;;
+    *)
+      echo "$(tput setaf 1)Invalid option. Please select a valid option.$(tput sgr0)"
+      ;;
+    esac
+  done
+else
+  # Clone the project if not already cloned
+  git clone https://github.com/LlmKira/Openaibot.git
+fi
+echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
+
 read -r -p "$(tput setaf 6)This script will install Docker, Redis, RabbitMQ, Node.js, NPM, PM2, and the Openaibot project. THAT ACTION MAY BREAK YOUR SYSTEM. Do you want to proceed? (y/n):$(tput sgr0) " choice
 if [[ ! $choice =~ ^[Yy]$ ]]; then
   echo "$(tput setaf 1)Installation cancelled.$(tput sgr0)"
@@ -72,7 +104,6 @@ if ! [ -x "$(command -v node)" ] || ! [ -x "$(command -v npm)" ]; then
 fi
 echo "$(tput setaf 2)Node.js and NPM installation check complete.$(tput sgr0)"
 
-
 # Install PM2 globally if not already installed
 if ! [ -x "$(command -v pm2)" ]; then
   echo "$(tput setaf 6)Installing PM2...$(tput sgr0)"
@@ -80,38 +111,6 @@ if ! [ -x "$(command -v pm2)" ]; then
 else
   echo "$(tput setaf 2)PM2 already installed.$(tput sgr0)"
 fi
-
-
-# Check if the Openaibot directory exists
-echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
-if [ -d "Openaibot" ]; then
-  # Menu prompt for Openaibot directory options
-  select option in "Update Openaibot" "Skip Openaibot Update"; do
-    case $option in
-    "Update Openaibot")
-      # Change directory to the project
-      cd Openaibot || exit
-
-      # Update the Openaibot project
-      git pull
-
-      # Exit the menu
-      break
-      ;;
-    "Skip Openaibot Update")
-      # Exit the menu and continue with installation
-      break
-      ;;
-    *)
-      echo "$(tput setaf 1)Invalid option. Please select a valid option.$(tput sgr0)"
-      ;;
-    esac
-  done
-else
-  # Clone the project if not already cloned
-  git clone https://github.com/LlmKira/Openaibot.git
-fi
-echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
 
 # Change directory to the project
 cd Openaibot || exit
