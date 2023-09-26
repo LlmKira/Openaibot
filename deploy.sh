@@ -6,6 +6,8 @@ if [ -d "Openaibot" ]; then
   # Menu prompt for Openaibot directory options
   read -r -p "$(tput setaf 6)You may have already install Openaibot,do you want to update it? (y/n):$(tput sgr0) " choice
   if [[ ! $choice =~ ^[Yy]$ ]]; then
+    exit
+  else
     cd Openaibot || exit
     # Update the Openaibot project
     git pull || echo "Failed,pls do it by yourself."
