@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : bilibili.py
 # @Software: PyCharm
+import os
 
 import inscriptis
 from loguru import logger
@@ -95,12 +96,13 @@ class BiliBiliSearch(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=TaskHeader.Meta(
+                        callback_forward=True,
+                        callback=TaskHeader.Meta.Callback(
+                            role="function",
+                            name=__plugin_name__
+                        ),
+                    ),
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

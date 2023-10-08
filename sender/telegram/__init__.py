@@ -44,10 +44,20 @@ class TelegramBotRunner(object):
             asyncio_helper.proxy = self.proxy
             logger.info("TelegramBot proxy_tunnels being used!")
 
-        def is_command(text, command):
-            if text.startswith(f"{command} "):
+        def is_command(text, command, check_empty=False):
+            if check_empty:
+                if len(text.split(" ")) == 1:
+                    return False
+            if text.startswith(f"{command} ") or text.startswith(f"{command}@{BotSetting.bot_username}"):
                 return True
             if text == command:
+                return True
+            return False
+
+        def is_empty_command(text: str):
+            if not text.startswith("/"):
+                return False
+            if len(text.split(" ")) == 1:
                 return True
             return False
 
@@ -279,8 +289,12 @@ class TelegramBotRunner(object):
                                           parse_mode="MarkdownV2"
                                           )
             if is_command(text=message.text, command="/chat"):
+                if is_empty_command(text=message.text):
+                    return await bot.reply_to(message, text="?")
                 return await create_task(message, funtion_enable=__default_function_enable__)
             if is_command(text=message.text, command="/task"):
+                if is_empty_command(text=message.text):
+                    return await bot.reply_to(message, text="?")
                 return await create_task(message, funtion_enable=True)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
                 return await create_task(message, funtion_enable=__default_function_enable__)

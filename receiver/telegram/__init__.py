@@ -43,6 +43,9 @@ class TelegramSender(object):
             apihelper.proxy = None
 
     def forward(self, chat_id, reply_to_message_id, message: List[RawMessage]):
+        """
+        直接转发结果出来，不做任何处理
+        """
         for item in message:
             for file_obj in item.file:
                 if file_obj.file_url:
@@ -149,6 +152,9 @@ class TelegramReceiver(object):
 
     @staticmethod
     async def llm_request(llm_agent: OpenaiMiddleware):
+        """
+        构造请求
+        """
         try:
             _message = await llm_agent.func_message()
             print(f" [x] LLM Message {_message}")
@@ -171,7 +177,7 @@ class TelegramReceiver(object):
         _llm = OpenaiMiddleware(task=_task)
         print(" [x] Received Order %r" % _task)
 
-        # 拦截注入内容
+        # 回写插件的消息注入
         if _task.task_meta.callback_forward:
             # 此函数回写了这里携带了的历史回调消息
             _llm.write_back(
