@@ -241,18 +241,24 @@ class TelegramReceiver(object):
             # 继承函数
             functions = _task.task_meta.function_list
             if _task.task_meta.sign_as[0] == 0:
-                # 清空并重新装载
+                # 复制救赎
+                _task.task_meta.function_salvation_list = _task.task_meta.function_list
                 functions = []
-                for i, message in enumerate(_task.message):
+
+                # 重整
+                for _index, _message in enumerate(_task.message):
                     functions.extend(
                         TOOL_MANAGER.run_all_check(
-                            message_text=message.text
+                            message_text=_message.text
                         )
                     )
                 _task.task_meta.function_list = functions
+        if _task.task_meta.sign_as[0] == 0:
+            # 容错一层旧节点
+            functions.extend(_task.task_meta.function_salvation_list)
         # 构建通信代理
         _llm = OpenaiMiddleware(task=_task, function=functions)
-        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2, ensure_ascii=False)}")
+        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2)}")
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
             # 手动追加插件产生的线索消息
@@ -273,7 +279,7 @@ class TelegramReceiver(object):
                     auto_write_back=False
                 )
                 # 同时递交部署点
-                return _task, _llm
+                return _task, _llm, "callback_forward_reprocess"
             # 转发函数
             __sender__.forward(
                 chat_id=_task.receiver.chat_id,
@@ -281,26 +287,18 @@ class TelegramReceiver(object):
                 message=_task.message
             )
             # 同时递交部署点
-            return _task, _llm
+            return _task, _llm, "callback_forward_reprocess"
         await self._flash(llm=_llm, task=_task, intercept_function=True)
-        return None, None
+        return None, None, None
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
-        _task, _llm = await self.deal_message(message)
-        """
-        # 启动无函数应答循环
-        if _task:
-            if _task.task_meta.continue_step > 0:
-                _task.task_meta.continue_step -= 1
-                
-                await self._flash(llm=_llm, task=_task, intercept_function=True, disable_function=True)
-        """
+        _task, _llm, _point = await self.deal_message(message)
         # 启动链式函数应答循环
         if _task:
             chain: Chain = CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
             if chain:
-                logger.info(f"Catch chain callback")
+                logger.info(f"Catch chain callback\n--callback_send_by {_point}")
                 await Task(queue=chain.address).send_task(task=chain.arg)
 
     async def telegram(self):

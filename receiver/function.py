@@ -45,7 +45,7 @@ class ChainFunc(object):
                                           arg=TaskHeader(
                                               sender=_task_forward.sender,
                                               receiver=_task_forward.receiver,
-                                              task_meta=_task_forward.task_meta,
+                                              task_meta=meta,
                                               message=[]
                                           )))  # 追加任务
 

@@ -18,8 +18,8 @@ from sdk.memory.redis import RedisChatMessageHistory
 from sdk.utils import sync
 
 RULE = """[Assistant Rule]
-Meaningless consecutive use of functions is prohibited.
-
+Replying to large amounts of the same content continuously is prohibited.
+The assistant is required to be cute and smart.
 [Assistant Rule]"""
 
 
@@ -45,7 +45,7 @@ class OpenaiMiddleware(object):
               :param default_system: 是否添加默认系统时钟/环境消息
         """
         self.create_message(write_back=auto_write_back, default_system=default_system)
-        # self.append_function()
+        self.append_function()
         return self
 
     def write_back(self,
@@ -125,13 +125,17 @@ class OpenaiMiddleware(object):
         # 消息缓存读取和转换
         # 断点
         logger.info(f"[x] Openai request \n--message {message} \n--url {driver.endpoint} \n--org {driver.org_id} ")
+        if disable_function or not _functions:
+            logger.debug(f"[x] Openai function empty warn \n--disable function:{disable_function}")
+        if disable_function:
+            _functions = None
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
             # presence_penalty=0.5,
             # frequency_penalty=0.3,
             messages=message,
-            functions=_functions if not disable_function else None,
+            functions=_functions,
             echo=False
         )
 

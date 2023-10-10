@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
+import copy
 import hashlib
 import pickle
 import time
@@ -112,6 +113,7 @@ class TaskHeader(BaseModel):
 
         function_enable: bool = Field(False, description="功能开关")
         function_list: List[openai.Function] = Field([], description="功能列表")
+        function_salvation_list: List[openai.Function] = Field([], description="上回合的功能列表，用于容错")
 
         callback_forward: bool = Field(False, description="非 LLM 转发")
         callback_forward_reprocess: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
@@ -129,7 +131,7 @@ class TaskHeader(BaseModel):
         def child(self, name):
             self.sign_as = (self.sign_as[0] + 1, "child", name)
             self.limit_child -= 1
-            return self
+            return copy.deepcopy(self)
 
     class Location(BaseModel):
         platform: str = Field(None, description="平台")
