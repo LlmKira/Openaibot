@@ -106,7 +106,7 @@ class Scraper(BaseModel):
 
     # 方法：添加消息
     def add_message(self, message: Message, score: float):
-        if hasattr(message, "function_call"):
+        if not hasattr(message, "content"):
             return None
         self.messages_box.append(self.Sorter(message=message, score=score, order=self.tick))
         self.tick += 1

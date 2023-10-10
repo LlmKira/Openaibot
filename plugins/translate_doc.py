@@ -16,7 +16,7 @@ from middleware.user import UserInfo, SubManager
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.endpoint.openai import Function
-from sdk.func_call import BaseTool, listener
+from sdk.func_call import BaseTool, listener, Chain, CHAIN_MANAGER
 from sdk.schema import Message, File
 from task import Task
 
@@ -119,13 +119,11 @@ class TranslateTool(BaseTool):
         )
         # 调用Openai
         result = await endpoint.create()
-        _message = openai.Openai.parse_single_reply(response=result)
-        _usage = openai.Openai.parse_usage(response=result)
         await _submanager.add_cost(
-            cost=UserInfo.Cost(token_usage=_usage, token_uuid=driver.uuid, model_name=model_name)
+            cost=UserInfo.Cost(token_usage=result.usage.total_tokens, token_uuid=driver.uuid, model_name=model_name)
         )
-        assert _message.content, "llm_task.py:llm_task:content is None"
-        return _message.content
+        assert result.default_message.content, "llm_task.py:llm_task:content is None"
+        return result.default_message.content
 
     async def translate_docs(self, task: TaskHeader, file: File.Data, target_lang: str):
         if not file.file_name.endswith(('md', "txt")):
@@ -163,6 +161,16 @@ class TranslateTool(BaseTool):
         write_out_file.seek(0)
         return write_out_file
 
+    async def callback(self, sign: str, task: TaskHeader):
+        if sign == "reply":
+            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
+            if chain:
+                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
+                await Task(queue=chain.address).send_task(task=chain.arg)
+            return True
+        else:
+            return False
+
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
@@ -189,16 +197,19 @@ class TranslateTool(BaseTool):
                 translated_file = await self.translate_docs(task=task, file=item, target_lang=translate_arg.language)
                 file_obj = await RawMessage.upload_file(name=translated_file.name, data=translated_file.getvalue())
                 _result.append(file_obj)
+            # META
+            _meta = task.task_meta.child(__plugin_name__)
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = False
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=_meta,
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

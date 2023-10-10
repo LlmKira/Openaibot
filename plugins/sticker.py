@@ -12,7 +12,7 @@ from pydantic import validator, BaseModel
 
 from schema import TaskHeader, RawMessage
 from sdk.endpoint.openai import Function
-from sdk.func_call import BaseTool, listener
+from sdk.func_call import BaseTool, listener, Chain, CHAIN_MANAGER
 from task import Task
 
 __plugin_name__ = "convert_to_sticker"
@@ -118,6 +118,16 @@ class StickerTool(BaseTool):
         except Exception as e:
             logger.error(e)
 
+    async def callback(self, sign: str, task: TaskHeader):
+        if sign == "reply":
+            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
+            if chain:
+                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
+                await Task(queue=chain.address).send_task(task=chain.arg)
+            return True
+        else:
+            return False
+
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
@@ -144,17 +154,20 @@ class StickerTool(BaseTool):
                 file.seek(0)
                 file_obj = await RawMessage.upload_file(name="sticker.webp", data=file.getvalue())
                 _result.append(file_obj)
+            # META
+            _meta = task.task_meta.child(__plugin_name__)
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = False
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
 
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=_meta,
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

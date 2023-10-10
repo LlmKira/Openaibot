@@ -7,13 +7,14 @@ import hashlib
 import pickle
 import time
 from io import BytesIO
-from typing import Union, List, Any, Literal, Optional
+from typing import Union, List, Literal, Optional, Tuple
 
 import nest_asyncio
 from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from cache.redis import cache
+from sdk.endpoint import openai
 from sdk.schema import File
 
 nest_asyncio.apply()
@@ -98,25 +99,37 @@ class RawMessage(BaseModel):
 
 
 class TaskHeader(BaseModel):
+    """
+    任务链节点
+    """
+
     class Meta(BaseModel):
-        # Meta 信息混乱，我很担心
         class Callback(BaseModel):
             role: Literal["user", "system", "function", "assistant"] = Field("user", description="角色")
             name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
 
+        sign_as: Tuple[int, str, str] = Field((0, "root", "default"), description="签名")
+
         function_enable: bool = Field(False, description="功能开关")
+        function_list: List[openai.Function] = Field([], description="功能列表")
 
         callback_forward: bool = Field(False, description="非 LLM 转发")
-        reprocess_needed: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
+        callback_forward_reprocess: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
         continue_step: int = Field(0, description="继续执行的步骤,发送启用 function call 的 continue")
+        limit_child: int = Field(4, description="限制子节点数量")
 
-        verify_needed: bool = Field(False, description="此请求被分流标记需要平台的权限验证才能被执行")
-        parent_call: Any = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
-        callback: Callback = Field(Callback(), description="插件返回的消息头，标识了 function 的名字")
-        extra_args: dict = Field({}, description="任何额外参数")
+        verify_uuid: str = Field(None, description="用于验证重发")
+        parent_call: openai.OpenaiResult = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
+        callback: Callback = Field(Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
+        extra_args: dict = Field({}, description="用于提供额外参数")
 
         class Config:
             arbitrary_types_allowed = True
+
+        def child(self, name):
+            self.sign_as = (self.sign_as[0] + 1, "child", name)
+            self.limit_child -= 1
+            return self
 
     class Location(BaseModel):
         platform: str = Field(None, description="平台")
@@ -164,7 +177,7 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text if text else f"(poke)",  # Empty Message
+                text=text if text else f"(hi)",  # Empty Message
                 created_at=created_at
             )
 
@@ -202,7 +215,12 @@ class TaskHeader(BaseModel):
         )
 
     @classmethod
-    def from_function(cls, parent_call: Any, task_meta: Meta, receiver: Location, message: List[RawMessage] = None):
+    def from_function(cls,
+                      parent_call: openai.OpenaiResult,
+                      task_meta: Meta,
+                      receiver: Location,
+                      message: List[RawMessage] = None
+                      ):
         """
         从 Openai LLM Task中构建任务
         'function_call': {'name': 'set_alarm_reminder', 'arguments': '{\n  "delay": "5",\n  "content": "该吃饭了"\n}'}}
@@ -248,6 +266,8 @@ class TaskHeader(BaseModel):
                 created_at=int(time.time())
             )]
         )
+
+    # TODO 衍生子节点的方法
 
 
 def singleton(cls):

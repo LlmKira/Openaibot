@@ -4,13 +4,18 @@
 # @File    : func_call.py
 # @Software: PyCharm
 import re
+import threading
 from abc import ABC, abstractmethod
-from typing import Optional, Type, List, Union
+from typing import Any, List
+from typing import Optional, Type, Union
 
+import shortuuid
 from loguru import logger
 from pydantic import BaseModel
 
 from .endpoint.openai import Function
+
+threading_lock = threading.Lock()
 
 
 class BaseTool(ABC, BaseModel):
@@ -21,6 +26,7 @@ class BaseTool(ABC, BaseModel):
     function: Function
     keywords: List[str]
     pattern: Optional[re.Pattern] = None
+    require_auth: bool = False
 
     @abstractmethod
     def pre_check(self) -> Union[bool, str]:
@@ -56,6 +62,13 @@ class BaseTool(ABC, BaseModel):
     async def run(self, task, receiver, arg, **kwargs):
         """
         处理message，返回message
+        """
+        return ...
+
+    @abstractmethod
+    async def callback(self, sign: str, task):
+        """
+        回调
         """
         return ...
 
@@ -138,3 +151,47 @@ def listener(function: Function):
         return wrapper
 
     return decorator
+
+
+class Chain(BaseModel):
+    user_id: str
+    address: str
+    time: int = 0
+    arg: Any
+    uuid: str = shortuuid.uuid()
+
+
+class AuthReloader(object):
+    auth = {}
+    lock = threading.Lock()
+
+    def add_task(self, task: Chain):
+        with threading_lock:
+            self.auth[task.uuid] = task
+
+    def get_task(self, uuid: str) -> Optional[Chain]:
+        with threading_lock:
+            return self.auth.pop(uuid, None)
+
+
+class ChainReloader(object):
+    chain = {}
+
+    def add_task(self, task: Chain):
+        with threading_lock:
+            if task.user_id not in self.chain:
+                self.chain[task.user_id] = []
+            self.chain[task.user_id].append(task)
+            self.chain[task.user_id].sort(key=lambda x: x.time, reverse=True)
+
+    def get_task(self, user_id: str) -> Optional[Chain]:
+        with threading_lock:
+            if user_id in self.chain:
+                if len(self.chain[user_id]) > 0:
+                    _data = self.chain[user_id].pop()
+                    return _data
+            return None
+
+
+AUTH_MANAGER = AuthReloader()
+CHAIN_MANAGER = ChainReloader()

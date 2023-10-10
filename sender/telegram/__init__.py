@@ -92,13 +92,15 @@ class TelegramBotRunner(object):
                 if message.reply_to_message.document:
                     if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
                         _file.append(await telegram_to_file(message.reply_to_message.document))
-            logger.info(f"telegram:create task from {message.chat.id} {message.text} funtion_enable:{funtion_enable}")
+            message.text = message.text if message.text else ""
+            logger.info(
+                f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}")
             try:
                 await TelegramTask.send_task(
                     task=TaskHeader.from_telegram(
                         message,
                         file=_file,
-                        task_meta=TaskHeader.Meta(function_enable=funtion_enable),
+                        task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", "telegram")),
                         trace_back_message=[message.reply_to_message]
                     ))
             except Exception as e:

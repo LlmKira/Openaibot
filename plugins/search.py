@@ -12,7 +12,7 @@ from middleware.user import SubManager, UserInfo
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.endpoint.openai import Function
-from sdk.func_call import BaseTool, listener
+from sdk.func_call import BaseTool, listener, Chain, CHAIN_MANAGER
 from sdk.schema import Message
 from task import Task
 
@@ -28,6 +28,7 @@ search.add_property(
 
 
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
+    logger.debug(f"search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
     from sdk.filter import Sublimate
     with DDGS(timeout=20) as ddgs:
@@ -136,12 +137,20 @@ class SearchTool(BaseTool):
         )
         # 调用Openai
         result = await endpoint.create()
-        _message = openai.Openai.parse_single_reply(response=result)
-        _usage = openai.Openai.parse_usage(response=result)
         await _submanager.add_cost(
-            cost=UserInfo.Cost(token_usage=_usage, token_uuid=driver.uuid, model_name=model_name)
+            cost=UserInfo.Cost(token_usage=result.usage.total_tokens, token_uuid=driver.uuid, model_name=model_name)
         )
-        return _message.content
+        return result.default_message.content
+
+    async def callback(self, sign: str, task: TaskHeader):
+        if sign == "reply":
+            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
+            if chain:
+                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
+                await Task(queue=chain.address).send_task(task=chain.arg)
+            return True
+        else:
+            return False
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
@@ -150,19 +159,20 @@ class SearchTool(BaseTool):
         try:
             _set = Search.parse_obj(arg)
             _search_result = search_on_duckduckgo(_set.keywords)
-            _question = task.message[0].text
+
+            # META
+            _meta = task.task_meta.child(__plugin_name__)
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = True
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
                     receiver=receiver,  # 因为可能有转发，所以可以单配
-                    task_meta=TaskHeader.Meta(
-                        callback_forward=True,
-                        reprocess_needed=True,  # 立刻追加请求
-                        callback=TaskHeader.Meta.Callback(
-                            role="function",
-                            name=__plugin_name__
-                        ),
-                    ),
+                    task_meta=_meta,
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,
