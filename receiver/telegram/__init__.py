@@ -17,7 +17,7 @@ from receiver import function
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.error import RateLimitError
-from sdk.func_call import TOOL_MANAGER
+from sdk.func_call import TOOL_MANAGER, Chain, CHAIN_MANAGER
 from sdk.schema import Message, File
 from sdk.utils import sync
 from setting.telegram import BotSetting
@@ -234,6 +234,8 @@ class TelegramReceiver(object):
         """
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
+
+        # 函数重整策略
         functions = None
         if _task.task_meta.function_enable:
             # 继承函数
@@ -248,21 +250,21 @@ class TelegramReceiver(object):
                         )
                     )
                 _task.task_meta.function_list = functions
+        # 构建通信代理
         _llm = OpenaiMiddleware(task=_task, function=functions)
         logger.debug(f"[x] Received Order \n--order {_task.json(indent=2, ensure_ascii=False)}")
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
-            # 手动追加插件产生的帮助消息
+            # 手动追加插件产生的线索消息
             _llm.write_back(
                 role=_task.task_meta.callback.role,
                 name=_task.task_meta.callback.name,
                 message_list=_task.message
             )
-
-            # 插件数据处理语句
+            # 插件数据响应到前端
             if _task.task_meta.callback_forward_reprocess:
-                # 因为手动写回，于是禁用自动回写
-                # 防止AI去启动其他函数....临时禁用函数
+                # 手动写回则禁用从 Task 数据体自动回写
+                # 防止AI去启动其他函数，禁用函数
                 await self._flash(
                     llm=_llm,
                     task=_task,
@@ -272,12 +274,13 @@ class TelegramReceiver(object):
                 )
                 # 同时递交部署点
                 return _task, _llm
-            # 转发
+            # 转发函数
             __sender__.forward(
                 chat_id=_task.receiver.chat_id,
                 reply_to_message_id=_task.receiver.message_id,
                 message=_task.message
             )
+            # 同时递交部署点
             return _task, _llm
         await self._flash(llm=_llm, task=_task, intercept_function=True)
         return None, None
@@ -285,16 +288,20 @@ class TelegramReceiver(object):
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
         _task, _llm = await self.deal_message(message)
+        """
+        # 启动无函数应答循环
         if _task:
             if _task.task_meta.continue_step > 0:
                 _task.task_meta.continue_step -= 1
-                # 启动其他可选函数...
-                await self._flash(llm=_llm, task=_task, intercept_function=True)
+                
+                await self._flash(llm=_llm, task=_task, intercept_function=True, disable_function=True)
+        """
+        # 启动链式函数应答循环
         if _task:
-            reload_tool = TOOL_MANAGER.get_tool(name=_task.task_meta.callback.name)
-            if reload_tool:
-                logger.info(f"[286422]Chain child callback: {_task.receiver.platform}")
-                await reload_tool().callback(sign="reply", task=_task)
+            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
+            if chain:
+                logger.info(f"Catch chain callback")
+                await Task(queue=chain.address).send_task(task=chain.arg)
 
     async def telegram(self):
         if not BotSetting.available:
