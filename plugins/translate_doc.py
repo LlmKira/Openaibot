@@ -221,7 +221,7 @@ class TranslateTool(BaseTool):
                 )
             )
 
-            logger.debug("translate_doc say: {}".format(translate_arg))
+            logger.debug("Plugin:translate_doc say: {}".format(translate_arg))
         except Exception as e:
             logger.exception(e)
             await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))

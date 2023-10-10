@@ -8,7 +8,6 @@ import json
 from typing import List
 
 import tiktoken
-from loguru import logger
 from pydantic import BaseModel
 
 from sdk.filter.evaluate import Sim
@@ -118,12 +117,12 @@ class Scraper(BaseModel):
     # 方法：获取消息
     def get_messages(self) -> List[Message]:
         # 按照顺序排序
-        self.messages_box.sort(key=lambda x: x.order)
+        # self.messages_box.sort(key=lambda x: x.order)
         _message = [standardise(sorter.message) for sorter in self.messages_box]
         # 去重
         # [*dict.fromkeys(_message)]
         # -> unhashable type: 'Message'
-        logger.debug(_message)
+        # logger.debug(_message)
         return _message
 
     def build_messages(self):

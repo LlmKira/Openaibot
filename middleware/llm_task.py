@@ -19,6 +19,7 @@ from sdk.utils import sync
 
 RULE = """[Assistant Rule]
 Meaningless consecutive use of functions is prohibited.
+
 [Assistant Rule]"""
 
 
@@ -106,9 +107,11 @@ class OpenaiMiddleware(object):
             for _msg in _buffer:
                 self.message_history.add_message(message=_msg)
 
-    async def request_openai(self) -> openai.OpenaiResult:
+    async def request_openai(self, disable_function: bool = False) -> openai.OpenaiResult:
         """
         处理消息转换和调用工具
+        :param disable_function: 禁用函数
+        :return:
         """
         # 模型内容
         model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
@@ -121,14 +124,14 @@ class OpenaiMiddleware(object):
 
         # 消息缓存读取和转换
         # 断点
-        logger.info(f"[x] Openai request --org {driver.org_id} --url {driver.endpoint} --message {message} ")
+        logger.info(f"[x] Openai request \n--message {message} \n--url {driver.endpoint} \n--org {driver.org_id} ")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
             # presence_penalty=0.5,
             # frequency_penalty=0.3,
             messages=message,
-            functions=_functions,
+            functions=_functions if not disable_function else None,
             echo=False
         )
 
@@ -140,5 +143,5 @@ class OpenaiMiddleware(object):
         await self.sub_manager.add_cost(
             cost=UserInfo.Cost(token_usage=_usage, token_uuid=driver.uuid, model_name=model_name)
         )
-        logger.info(f"[x] Openai result --{result.dict()}")
+        logger.success(f"[x] Openai result \n--message {result.choices} \n--token {result.usage}")
         return result

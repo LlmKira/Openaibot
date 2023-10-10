@@ -30,6 +30,7 @@ bilibili.add_property(
 
 async def search_on_bilibili(keywords):
     from bilibili_api import search
+    logger.debug(f"Plugin:search_on_bilibili {keywords}")
     _result = await search.search_by_type(
         keyword=keywords,
         search_type=search.SearchObjectType.VIDEO,
@@ -73,7 +74,7 @@ class BiliBiliSearch(BaseTool):
             import bilibili_api
             return True
         except ImportError as e:
-            logger.error(f"plugin:bilibili:package <bilibili_api> not installed:{e}")
+            logger.error(f"Plugin:bilibili:package <bilibili_api> not installed:{e}")
             return False
 
     def func_message(self, message_text):

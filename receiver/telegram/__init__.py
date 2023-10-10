@@ -167,14 +167,14 @@ class TelegramReceiver(object):
         self.task = Task(queue=__receiver__)
 
     @staticmethod
-    async def llm_request(llm_agent: OpenaiMiddleware):
+    async def llm_request(llm_agent: OpenaiMiddleware, disable_function: bool = False):
         """
         校验包装，没有其他作用
         """
         try:
-            _result = await llm_agent.request_openai()
+            _result = await llm_agent.request_openai(disable_function=disable_function)
             _message = _result.default_message
-            print(f" [x] LLM Message {_message}")
+            logger.debug(f"[x] LLM Message Sent \n--message {_message}")
             assert _message, "message is empty"
             return _result
         except ssl.SSLSyscallError as e:
@@ -187,8 +187,51 @@ class TelegramReceiver(object):
             logger.exception(e)
             raise e
 
-    async def on_message(self, message: AbstractIncomingMessage):
-        await message.ack()
+    async def _flash(self,
+                     task: TaskHeader,
+                     llm: OpenaiMiddleware,
+                     auto_write_back: bool = True,
+                     intercept_function: bool = False,
+                     disable_function: bool = False
+                     ):
+        """
+        函数池刷新
+        :param auto_write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
+        :param intercept_function: 是否拦截函数调用转发到函数处理器
+        """
+        try:
+            llm.build(auto_write_back=auto_write_back)
+            try:
+                result = await self.llm_request(llm, disable_function=disable_function)
+            except Exception as e:
+                return __sender__.error(
+                    chat_id=task.receiver.chat_id,
+                    reply_to_message_id=task.receiver.message_id,
+                    text=f"🦴 Sorry, your request failed because: {e}"
+                )
+            if intercept_function:
+                # 拦截函数调用
+                if hasattr(result.default_message, "function_call"):
+                    return await __sender__.function(
+                        chat_id=task.receiver.chat_id,
+                        reply_to_message_id=task.receiver.message_id,
+                        task=task,
+                        llm=llm,  # IMPORTANT
+                        message=result.default_message,
+                        result=result
+                    )
+            return __sender__.reply(
+                chat_id=task.receiver.chat_id,
+                reply_to_message_id=task.receiver.message_id,
+                message=[result.default_message]
+            )
+        except Exception as e:
+            raise e
+
+    async def deal_message(self, message):
+        """
+        处理消息
+        """
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         functions = None
@@ -206,45 +249,7 @@ class TelegramReceiver(object):
                     )
                 _task.task_meta.function_list = functions
         _llm = OpenaiMiddleware(task=_task, function=functions)
-        print("[x] Received Order %r" % _task)
-
-        async def _flash(auto_write_back=True, intercept_function=False):
-            """
-
-            :param write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
-            :param intercept_function: 是否拦截函数调用转发到函数处理器
-            """
-            try:
-                _llm.build(auto_write_back=auto_write_back)
-                try:
-                    result = await self.llm_request(_llm)
-                except Exception as e:
-                    return __sender__.error(
-                        chat_id=_task.receiver.chat_id,
-                        reply_to_message_id=_task.receiver.message_id,
-                        text=f"🦴 Sorry, your request failed because: {e}"
-                    )
-                if intercept_function:
-                    # 拦截函数调用
-                    if hasattr(result.default_message, "function_call"):
-                        await __sender__.function(
-                            chat_id=_task.receiver.chat_id,
-                            reply_to_message_id=_task.receiver.message_id,
-                            task=_task,
-                            llm=_llm,  # IMPORTANT
-                            message=result.default_message,
-                            result=result
-                        )
-
-                        return None
-                __sender__.reply(
-                    chat_id=_task.receiver.chat_id,
-                    reply_to_message_id=_task.receiver.message_id,
-                    message=[result.default_message]
-                )
-            except Exception as e:
-                raise e
-
+        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2, ensure_ascii=False)}")
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
             # 手动追加插件产生的帮助消息
@@ -253,24 +258,43 @@ class TelegramReceiver(object):
                 name=_task.task_meta.callback.name,
                 message_list=_task.message
             )
+
+            # 插件数据处理语句
             if _task.task_meta.callback_forward_reprocess:
                 # 因为手动写回，于是禁用自动回写
-                return await _flash(intercept_function=True, auto_write_back=False)
-            reload_tool = TOOL_MANAGER.get_tool(name=_task.task_meta.callback.name)
-            if reload_tool:
-                logger.info(f"[260225]Chain child callback: {_task.receiver.platform}")
-                await reload_tool().callback(sign="reply", task=_task)
+                # 防止AI去启动其他函数....临时禁用函数
+                await self._flash(
+                    llm=_llm,
+                    task=_task,
+                    intercept_function=True,
+                    disable_function=True,
+                    auto_write_back=False
+                )
+                # 同时递交部署点
+                return _task, _llm
             # 转发
-            return __sender__.forward(
+            __sender__.forward(
                 chat_id=_task.receiver.chat_id,
                 reply_to_message_id=_task.receiver.message_id,
                 message=_task.message
             )
-        if _task.task_meta.continue_step > 0:
-            _task.task_meta.continue_step -= 1
-            # 不回写任何原始消息
-            return await _flash(intercept_function=True)
-        return await _flash(intercept_function=True)
+            return _task, _llm
+        await self._flash(llm=_llm, task=_task, intercept_function=True)
+        return None, None
+
+    async def on_message(self, message: AbstractIncomingMessage):
+        await message.ack()
+        _task, _llm = await self.deal_message(message)
+        if _task:
+            if _task.task_meta.continue_step > 0:
+                _task.task_meta.continue_step -= 1
+                # 启动其他可选函数...
+                await self._flash(llm=_llm, task=_task, intercept_function=True)
+        if _task:
+            reload_tool = TOOL_MANAGER.get_tool(name=_task.task_meta.callback.name)
+            if reload_tool:
+                logger.info(f"[286422]Chain child callback: {_task.receiver.platform}")
+                await reload_tool().callback(sign="reply", task=_task)
 
     async def telegram(self):
         if not BotSetting.available:

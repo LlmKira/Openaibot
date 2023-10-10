@@ -30,6 +30,7 @@ implementing some or more features.
 - 📬 Customizable ApiKey and Endpoint, traceability of sender authentication info.
 - 🍾 Easy Interactive Experience.
 - 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
+- 🍖 Continuous session design for function plug-ins
 
 ### 🎬 Platform support
 

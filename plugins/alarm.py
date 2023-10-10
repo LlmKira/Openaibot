@@ -102,7 +102,7 @@ class AlarmTool(BaseTool):
             logger.error(e)
 
     async def callback(self, sign: str, task: TaskHeader):
-        if sign == "resign":
+        if sign == "reply":
             chain: Chain = CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
             if chain:
                 logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
@@ -117,19 +117,21 @@ class AlarmTool(BaseTool):
         """
         try:
             _set = Alarm.parse_obj(arg)
+            #
+            _meta = task.task_meta.child(__plugin_name__)
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = False
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
 
             async def _send(receiver, _set):
                 await Task(queue=receiver.platform).send_task(
                     task=TaskHeader(
                         sender=task.sender,  # 继承发送者
                         receiver=receiver,  # 因为可能有转发，所以可以单配
-                        task_meta=TaskHeader.Meta(
-                            callback_forward=True,
-                            callback=TaskHeader.Meta.Callback(
-                                role="function",
-                                name=__plugin_name__
-                            ),
-                        ),
+                        task_meta=_meta,
                         message=[
                             RawMessage(
                                 user_id=receiver.user_id,
@@ -140,7 +142,7 @@ class AlarmTool(BaseTool):
                     )
                 )
 
-            logger.debug("set alarm {} minutes later".format(_set.delay))
+            logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
             SCHEDULER.add_job(
                 func=_send,
                 trigger="date",
@@ -151,6 +153,20 @@ class AlarmTool(BaseTool):
                 SCHEDULER.start()
             except Exception as e:
                 pass
+            await Task(queue=receiver.platform).send_task(
+                task=TaskHeader(
+                    sender=task.sender,  # 继承发送者
+                    receiver=receiver,  # 因为可能有转发，所以可以单配
+                    task_meta=_meta,
+                    message=[
+                        RawMessage(
+                            user_id=receiver.user_id,
+                            chat_id=receiver.chat_id,
+                            text=f"🍖 The alarm is now set,just wait for {_set.delay}s!"
+                        )
+                    ]
+                )
+            )
         except Exception as e:
             logger.exception(e)
             await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))

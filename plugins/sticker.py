@@ -46,6 +46,7 @@ class Sticker(BaseModel):
 
 
 async def resize_image(photo):
+    logger.debug(f"Plugin:resize_image")
     image = Image.open(photo)
     if (image.width and image.height) < 512:
         size1 = image.width

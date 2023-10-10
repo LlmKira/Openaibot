@@ -38,7 +38,7 @@ class ChainFunc(object):
                                                          item.name != ignore_func]
         except Exception as e:
             logger.warning(f"[362211]Remove function {ignore_func} failed")
-        # 注册任务点
+        # 注册部署点
         CHAIN_MANAGER.add_task(task=Chain(user_id=str(_task_forward.receiver.user_id),
                                           address=_task_forward.receiver.platform,
                                           time=int(time.time()),
@@ -70,7 +70,7 @@ class FunctionReceiver(object):
         message = _function.default_message
         if not message.function_call:
             return None
-        print("[x] Received Function %r" % message.function_call.name)
+        logger.debug("[x] Received Function %r" % message.function_call.name)
         # 运行函数
         _arg = json.loads(message.function_call.arguments)
         _tool = TOOL_MANAGER.get_tool(message.function_call.name)
@@ -90,10 +90,12 @@ class FunctionReceiver(object):
         # 运行函数
         await _tool().run(task=_task, receiver=_task.receiver, arg=_arg)
         # 注册区域，必须在run之后
+        """
         reload_tool = TOOL_MANAGER.get_tool(name=message.function_call.name)
         if reload_tool:
             logger.info(f"[875521]Chain child callback sent {message.function_call.name}")
             await reload_tool().callback(sign="resign", task=_task)
+        """
 
     async def function(self):
         logger.success("Receiver Runtime:Function Fork Cpu start")

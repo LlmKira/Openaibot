@@ -28,7 +28,7 @@ search.add_property(
 
 
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
-    logger.debug(f"search_on_duckduckgo {search_sentence}")
+    logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
     from sdk.filter import Sublimate
     with DDGS(timeout=20) as ddgs:
@@ -183,5 +183,5 @@ class SearchTool(BaseTool):
                 )
             )
         except Exception as e:
-            logger.exception(e)
             await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason="搜索失败了！")
+            logger.exception(e)
