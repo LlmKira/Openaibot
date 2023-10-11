@@ -30,7 +30,7 @@ pillow
 inscriptis
 bilibili-api-python
 httpcore <=0.15
-duckduckgo_search
+duckduckgo_search>=3.9.3
 
 # NLP
 nltk

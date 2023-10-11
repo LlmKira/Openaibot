@@ -4,8 +4,10 @@
 # @File    : app.py
 # @Software: PyCharm
 import asyncio
+import os
 import sys
 
+from dotenv import load_dotenv
 from loguru import logger
 
 import plugins
@@ -13,12 +15,14 @@ from .aps import aps_start
 from .function import FunctionReceiver
 from .telegram import TelegramReceiver
 
+load_dotenv()
 logger.remove()
 logger.add(sys.stderr,
-           level="DEBUG",
+           level="INFO" if os.getenv("LLMBOT_LOG_OUTPUT") != "DEBUG" else "DEBUG",
            colorize=True,
            enqueue=True
            )
+
 logger.add(sink='run.log',
            format="{time} - {level} - {message}",
            level="INFO",

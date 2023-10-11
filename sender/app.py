@@ -4,16 +4,22 @@
 # @File    : app.py
 # @Software: PyCharm
 import asyncio
+import os
 import sys
 
+from dotenv import load_dotenv
 from loguru import logger
 
 import plugins
 from .rss import RssApp
 from .telegram import TelegramBotRunner
 
+load_dotenv()
 logger.remove()
-handler_id = logger.add(sys.stderr, level="DEBUG")
+handler_id = logger.add(sys.stderr,
+                        level="INFO" if os.getenv("LLMBOT_LOG_OUTPUT") != "DEBUG" else "DEBUG",
+                        enqueue=True
+                        )
 logger.add(sink='run.log',
            format="{time} - {level} - {message}",
            level="INFO",
