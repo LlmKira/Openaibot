@@ -8,6 +8,7 @@ __receiver__ = "llm_task"
 
 import copy
 import json
+import os
 import time
 
 import shortuuid
@@ -110,6 +111,8 @@ class FunctionReceiver(object):
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
+        if os.getenv("LLMBOT_STOP_REPLY") == "0":
+            return None
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         # 没有任何参数

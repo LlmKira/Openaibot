@@ -350,6 +350,6 @@ class TelegramBotRunner(object):
         await bot.infinity_polling(
             allowed_updates=util.update_types,
             skip_pending=True,
-            timeout=60,
-            request_timeout=60
+            timeout=20,
+            request_timeout=20
         )

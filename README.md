@@ -160,6 +160,13 @@ clear_rset - wipe custom settings
 
 ```
 
+### 🥽 Environment variables
+
+| Variable name     | value | Description                                      |
+|-------------------|-------|--------------------------------------------------|
+| LLMBOT_STOP_REPLY | 0     | Stop receiver to reply if value is 0             |
+| LLMBOT_LOG_OUTPUT | DEBUG | Print LONG debug log on screen if value is DEBUG |
+
 ## 💻 How to develop?
 
 For plugin development, please refer to the sample plugins in the `plugins` directory.

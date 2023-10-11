@@ -7,7 +7,6 @@ import asyncio
 
 import aio_pika
 from aio_pika import Message, DeliveryMode
-from loguru import logger
 
 from schema import TaskHeader
 from setting.task import RabbitMQSetting
@@ -36,7 +35,9 @@ class Task(object):
             )
             # Sending the message
             await channel.default_exchange.publish(
-                message, routing_key=self.queue_name,
+                message,
+                routing_key=self.queue_name,
+                timeout=10
             )
             # logger.debug("生产者发送了任务：%r" % task.json())
 
