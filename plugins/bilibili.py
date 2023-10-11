@@ -9,11 +9,12 @@ import inscriptis
 from loguru import logger
 from pydantic import BaseModel
 
+from middleware.chain_box import Chain, CHAIN_MANAGER
 from middleware.user import SubManager, UserInfo
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.endpoint.openai import Function
-from sdk.func_call import BaseTool, listener, Chain, CHAIN_MANAGER
+from sdk.func_call import BaseTool, listener
 from sdk.schema import Message
 from task import Task
 
@@ -68,6 +69,7 @@ class BiliBiliSearch(BaseTool):
     silent: bool = True
     function: Function = bilibili
     keywords: list = ["哔哩哔哩", "b站", "B站", "视频", '搜索', '新闻', 'bilibili']
+    require_auth: bool = False
 
     def pre_check(self):
         try:
@@ -122,7 +124,7 @@ class BiliBiliSearch(BaseTool):
         环境互动实例，二次请求LLM且计费到发送者身上。
         一般是不用的，用于额外的数据格式化上。
         """
-        _submanager = SubManager(user_id=task.sender.user_id)
+        _submanager = SubManager(user_id=f"{task.sender.platform}:{task.sender.user_id}")
         driver = _submanager.llm_driver  # 由发送人承担接受者的成本
         model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         endpoint = openai.Openai(
@@ -142,7 +144,7 @@ class BiliBiliSearch(BaseTool):
 
     async def callback(self, sign: str, task: TaskHeader):
         if sign == "reply":
-            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
+            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
             if chain:
                 logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
                 await Task(queue=chain.address).send_task(task=chain.arg)

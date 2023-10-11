@@ -12,18 +12,18 @@ from .schema import UserInfo
 
 
 class SubManager(object):
-    def __init__(self, user_id: int):
+    def __init__(self, user_id: str):
         self.reload_exception = None
         self.sub_info: UserInfo = sync(self._sync(user_id=user_id))
         assert isinstance(self.sub_info, UserInfo), "sub info error"
 
-    async def _upload(self, user_id: int, ignore_exception=False):
+    async def _upload(self, user_id: str, ignore_exception=False):
         if self.reload_exception and not ignore_exception:
             logger.warning(f"you are upload a default sub info for {user_id} to wipe out the original data")
             return None
         await cache.set_data(key=f"sub:{user_id}", value=self.sub_info.json())
 
-    async def _sync(self, user_id: int):
+    async def _sync(self, user_id: str):
         _cache = await cache.read_data(key=f"sub:{user_id}")
         if not _cache:
             return UserInfo(user_id=user_id)

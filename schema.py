@@ -115,6 +115,7 @@ class TaskHeader(BaseModel):
         function_list: List[openai.Function] = Field([], description="功能列表")
         function_salvation_list: List[openai.Function] = Field([], description="上回合的功能列表，用于容错")
 
+        direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
         callback_forward: bool = Field(False, description="非 LLM 转发")
         callback_forward_reprocess: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
         continue_step: int = Field(0, description="继续执行的步骤,发送启用 function call 的 continue")
@@ -268,8 +269,6 @@ class TaskHeader(BaseModel):
                 created_at=int(time.time())
             )]
         )
-
-    # TODO 衍生子节点的方法
 
 
 def singleton(cls):

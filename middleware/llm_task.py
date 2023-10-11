@@ -17,10 +17,10 @@ from sdk.endpoint.openai.action import Scraper
 from sdk.memory.redis import RedisChatMessageHistory
 from sdk.utils import sync
 
-RULE = """[Assistant Rule]
-Replying to large amounts of the same content continuously is prohibited.
-The assistant is required to be cute and smart.
-[Assistant Rule]"""
+RULE = """[ASSISTANT RULE]
+# RE-SENDING THE FUNCTION WITH THE SAME PARAMETERS IS NOT ALLOWED.
+# DEMANDING ASSISTANT TO SPEAK IN A MORE HUMAN-LIKE MANNER.
+[ASSISTANT RULE]"""
 
 
 class OpenaiMiddleware(object):
@@ -35,8 +35,11 @@ class OpenaiMiddleware(object):
         if self.functions is None:
             self.functions = []
         self.task = task
-        self.sub_manager = SubManager(user_id=self.task.sender.user_id)  # 由发送人承担接受者的成本
-        self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id), ttl=60 * 60 * 1)
+        self.sub_manager = SubManager(user_id=f"{task.sender.platform}:{task.sender.user_id}")  # 由发送人承担接受者的成本
+        self.message_history = RedisChatMessageHistory(
+            session_id=f"{task.receiver.platform}:{task.receiver.user_id}",
+            ttl=60 * 60 * 1
+        )
 
     def build(self, auto_write_back, default_system: bool = True):
         """

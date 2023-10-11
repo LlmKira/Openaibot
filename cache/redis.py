@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import json
 import os
-from typing import Optional
+from typing import Optional, Tuple, List
 
 import redis
 from dotenv import load_dotenv
@@ -47,6 +47,26 @@ class RedisClientWrapper(AbstractDataClass):
             except Exception as e:
                 pass
         return data
+
+    async def lpush_data(self, key, value):
+        """
+        从左侧插入数据
+        :param key: str
+        :param value: json
+        """
+        # 验证是否可以被json序列化
+        return await self._redis.lpush(self.prefix + str(key), value)
+
+    async def lpop_data(self, key) -> Optional[str]:
+        _data = await self._redis.lpop(self.prefix + str(key))
+        if _data:
+            return _data.decode("utf-8")
+        return None
+
+    async def lrange_data(self, key, start_end: Tuple[int, int] = (0, -1)) -> List[str]:
+        _items = await self._redis.lrange(self.prefix + str(key), start=start_end[0], end=start_end[1])
+        items = [m.decode("utf-8") for m in _items[::-1]]
+        return items
 
 
 def check_redis_dsn(dsn):

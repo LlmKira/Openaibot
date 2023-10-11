@@ -23,5 +23,5 @@ def setup():
     for _, file, _ in pkgutil.iter_modules([pkg_path]):
         if not f"{file}" == "public":
             __import__(pkg_name + '.' + file)
-            logger.info(f"Plugin: loaded success:{file}")
+            logger.debug(f"Plugin: loaded success:{file}")
     logger.info("====== Plugin: setup finish ======")

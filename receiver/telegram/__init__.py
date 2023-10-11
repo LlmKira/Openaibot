@@ -10,14 +10,15 @@ from typing import List
 import telebot
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
-from telebot import TeleBot
+from telebot import TeleBot, formatting
 
+from middleware.chain_box import Chain, CHAIN_MANAGER
 from middleware.llm_task import OpenaiMiddleware
 from receiver import function
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.error import RateLimitError
-from sdk.func_call import TOOL_MANAGER, Chain, CHAIN_MANAGER
+from sdk.func_call import TOOL_MANAGER
 from sdk.schema import Message, File
 from sdk.utils import sync
 from setting.telegram import BotSetting
@@ -123,23 +124,39 @@ class TelegramSender(object):
         if not _tool:
             logger.warning(f"not found function {message.function_call.name}")
             return None
-        task_message = f"🦴 Task be created: {message.function_call.name} {message.function_call.arguments}"
+        task_message = formatting.format_text(
+            formatting.mbold("🦴 Task be created:") + formatting.mcode(message.function_call.name),
+            formatting.mcode(message.function_call.arguments),
+            separator="\n"
+        )
+        if task.task_meta.verify_uuid:
+            task_message = formatting.format_text(
+                formatting.mbold("🍫 Task "),
+                formatting.mcode(f"{task.task_meta.verify_uuid}"),
+                formatting.mbold("be authed: "),
+                formatting.mcode(message.function_call.name),
+                "\n",
+                formatting.mcode(message.function_call.arguments),
+                separator=" "
+            )
         if not _tool().silent:
             self.bot.send_message(
                 chat_id=chat_id,
                 text=task_message,
-                reply_to_message_id=reply_to_message_id
+                reply_to_message_id=reply_to_message_id,
+                parse_mode="MarkdownV2"
             )
-
         # 回写创建消息
         sign = f"<{task.task_meta.sign_as[0] + 1}>"
-        llm.write_back(
-            role="assistant",
-            name=message.function_call.name,
-            message_list=[
-                RawMessage(
-                    text=f"Okay,Task be created:{message.function_call.arguments}.")]
-        )
+        if not task.task_meta.verify_uuid:
+            # 二周目消息不回写，因为写过了
+            llm.write_back(
+                role="assistant",
+                name=message.function_call.name,
+                message_list=[
+                    RawMessage(
+                        text=f"Okay,Task be created:{message.function_call.arguments}.")]
+            )
         # 构建对应的消息
         receiver = task.receiver.copy()
         receiver.platform = __receiver__
@@ -234,8 +251,15 @@ class TelegramReceiver(object):
         """
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
-
-        # 函数重整策略
+        # 没有任何参数
+        if _task.task_meta.direct_reply:
+            __sender__.forward(
+                chat_id=_task.receiver.chat_id,
+                reply_to_message_id=_task.receiver.message_id,
+                message=_task.message
+            )
+            return None, None, None
+            # 函数重整策略
         functions = None
         if _task.task_meta.function_enable:
             # 继承函数
@@ -296,7 +320,7 @@ class TelegramReceiver(object):
         _task, _llm, _point = await self.deal_message(message)
         # 启动链式函数应答循环
         if _task:
-            chain: Chain = CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
+            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
             if chain:
                 logger.info(f"Catch chain callback\n--callback_send_by {_point}")
                 await Task(queue=chain.address).send_task(task=chain.arg)
