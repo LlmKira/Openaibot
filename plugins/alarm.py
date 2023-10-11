@@ -18,7 +18,7 @@ from task import Task
 
 __plugin_name__ = "set_alarm_reminder"
 
-alarm = Function(name=__plugin_name__, description="Set a timed reminder")
+alarm = Function(name=__plugin_name__, description="Set a timed reminder (only for minutes)")
 alarm.add_property(
     property_name="delay",
     property_description="The delay time, in minutes",
@@ -164,7 +164,7 @@ class AlarmTool(BaseTool):
                         RawMessage(
                             user_id=receiver.user_id,
                             chat_id=receiver.chat_id,
-                            text=f"🍖 The alarm is now set,just wait for {_set.delay}s!"
+                            text=f"🍖 The alarm is now set,just wait for {_set.delay} min!"
                         )
                     ]
                 )
