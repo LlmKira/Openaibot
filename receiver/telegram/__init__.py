@@ -307,7 +307,7 @@ class TelegramReceiver(object):
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
-        if os.getenv("LLMBOT_STOP_REPLY") == "0":
+        if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
         _task, _llm, _point = await self.deal_message(message)
         # 启动链式函数应答循环

@@ -111,7 +111,7 @@ class FunctionReceiver(object):
 
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
-        if os.getenv("LLMBOT_STOP_REPLY") == "0":
+        if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
