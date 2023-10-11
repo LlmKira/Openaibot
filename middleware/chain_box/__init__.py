@@ -16,7 +16,7 @@ from .schema import Chain
 class AuthReloader(object):
 
     async def add_auth(self, task: Chain):
-        _cache = await cache.set_data(key=f"auth:{task.uuid}", value=task.json())
+        _cache = await cache.set_data(key=f"auth:{task.uuid}", value=task.json(), timeout=60 * 60 * 24 * 7)
         return task.uuid
 
     async def get_auth(self, uuid: str, user_id: str) -> Optional[Chain]:
