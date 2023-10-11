@@ -30,6 +30,12 @@ Feature `gpt-function-call`
 - 📦 文件交互支持
 - 🍖 对函数插件的连续会话设计
 
+### 🧀 部分插件预览
+
+| Sticker Converter                   | Timer Func                      | Translate Func                               |
+|-------------------------------------|---------------------------------|----------------------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
+
 ### 🎬 平台支持
 
 | 平台       | 支持情况 | 备注 |
@@ -39,12 +45,6 @@ Feature `gpt-function-call`
 | QQ       | ❌    |    |
 | Wechat   | ❌    |    |
 | Twitter  | ❌    |    |
-
-### 🧀 部分插件预览
-
-| Sticker Converter                   | Timer Func                      | Translate Func                               |
-|-------------------------------------|---------------------------------|----------------------------------------------|
-| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
 
 ```python3
 __plugin_name__ = "set_alarm_reminder"
