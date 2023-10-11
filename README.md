@@ -1,6 +1,6 @@
-![cover](https://raw.githubusercontent.com/LLMKira/Docs/main/docs/cover.png)
+![cover](docs/project_cover.png)
 
-# OpenaiBot/LLMBot
+-----------------------
 
 [![Docker Image Size (tag)](https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
