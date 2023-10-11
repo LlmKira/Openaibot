@@ -15,6 +15,10 @@ LLMBot is a message queue based IM Bot developed around the concept of an intell
 with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`
 support.
 
+| Demo                              | 
+|-----------------------------------|
+| ![sticker](./docs/chain_chat.gif) | ![timer](./docs/timer_func.gif) |
+
 Unlike previous projects, this project tries to replicate ChatGpt's plugin system based on the messaging platform,
 implementing some or more features.
 

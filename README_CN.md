@@ -13,6 +13,10 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 Feature `gpt-function-call`
 支持实现。
 
+| Demo                              |
+|-----------------------------------|
+| ![sticker](./docs/chain_chat.gif) | ![timer](./docs/timer_func.gif) |
+
 与之前的项目不同的是，此项目尝试基于消息平台复刻 ChatGpt 的插件系统，实现部分或更进一步的功能。
 
 > 因为 func call 为 feature,所以只支持 Openai 类型的 api, 不打算支持没有 func call 的 LLM
