@@ -83,9 +83,9 @@ class ChainFunc(object):
 
         # 禁用子链使用出现过的函数
         try:
-            # if len(_task_forward.task_meta.function_list) > 2:
-            _task_forward.task_meta.function_list = [item for item in _task_forward.task_meta.function_list if
-                                                     item.name != ignore_func]
+            if len(_task_forward.task_meta.function_list) > 2:
+                _task_forward.task_meta.function_list = [item for item in _task_forward.task_meta.function_list if
+                                                         item.name != ignore_func]
         except Exception as e:
             logger.warning(f"[362211]Remove function {ignore_func} failed")
         # 注册部署点

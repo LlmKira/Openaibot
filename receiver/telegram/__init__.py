@@ -125,7 +125,7 @@ class TelegramSender(object):
             logger.warning(f"not found function {message.function_call.name}")
             return None
         task_message = formatting.format_text(
-            formatting.mbold("🦴 Task be created:") + formatting.mcode(message.function_call.name),
+            formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
             formatting.mcode(message.function_call.arguments),
             separator="\n"
         )
