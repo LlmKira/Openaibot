@@ -30,6 +30,38 @@ MODEL = Literal[
 ]
 
 
+class OpenaiResult(BaseModel):
+    class Usage(BaseModel):
+        prompt_tokens: int
+        completion_tokens: int
+        total_tokens: int
+
+    class Choices(BaseModel):
+        index: int
+        message: Message = None
+        finish_reason: str
+        delta: dict = None
+
+    id: str
+    object: str
+    created: int
+    model: str
+    choices: List[Choices]
+    usage: Usage
+
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
+
+    @property
+    def result_type(self):
+        return self.object
+
+    @property
+    def default_message(self):
+        return self.choices[0].message
+
+
 class Openai(BaseModel):
     class Proxy(BaseSettings):
         proxy_address: str = Field(None, env="OPENAI_API_PROXY")  # "all://127.0.0.1:7890"
@@ -170,7 +202,7 @@ class Openai(BaseModel):
 
     async def create(self,
                      **kwargs
-                     ):
+                     ) -> OpenaiResult:
         """
         请求
         :return:
@@ -208,9 +240,10 @@ class Openai(BaseModel):
                 proxy=self.get_proxy_settings().proxy_address,
                 json_body=True
             )
+            return_result = OpenaiResult.parse_obj(_response)
         except httpx.ConnectError as e:
             logger.error(f"Openai connect error: {e}")
             raise e
         if self.echo:
-            logger.info(f"Openai response: {_response}")
-        return _response
+            logger.info(f"Openai response: {return_result}")
+        return return_result

@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 echo "Are you sure you want to proceed? (y/n)"

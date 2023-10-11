@@ -4,13 +4,17 @@
 # @File    : func_call.py
 # @Software: PyCharm
 import re
+import threading
 from abc import ABC, abstractmethod
-from typing import Optional, Type, List, Union
+from typing import List
+from typing import Optional, Type, Union
 
 from loguru import logger
 from pydantic import BaseModel
 
 from .endpoint.openai import Function
+
+threading_lock = threading.Lock()
 
 
 class BaseTool(ABC, BaseModel):
@@ -21,6 +25,8 @@ class BaseTool(ABC, BaseModel):
     function: Function
     keywords: List[str]
     pattern: Optional[re.Pattern] = None
+    require_auth: bool = False
+    require_auth_kwargs: dict = {}
 
     @abstractmethod
     def pre_check(self) -> Union[bool, str]:
@@ -56,6 +62,13 @@ class BaseTool(ABC, BaseModel):
     async def run(self, task, receiver, arg, **kwargs):
         """
         处理message，返回message
+        """
+        return ...
+
+    @abstractmethod
+    async def callback(self, sign: str, task):
+        """
+        回调
         """
         return ...
 

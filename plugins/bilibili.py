@@ -3,11 +3,13 @@
 # @Author  : sudoskys
 # @File    : bilibili.py
 # @Software: PyCharm
+import os
 
 import inscriptis
 from loguru import logger
 from pydantic import BaseModel
 
+from middleware.chain_box import Chain, CHAIN_MANAGER
 from middleware.user import SubManager, UserInfo
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
@@ -29,6 +31,7 @@ bilibili.add_property(
 
 async def search_on_bilibili(keywords):
     from bilibili_api import search
+    logger.debug(f"Plugin:search_on_bilibili {keywords}")
     _result = await search.search_by_type(
         keyword=keywords,
         search_type=search.SearchObjectType.VIDEO,
@@ -66,13 +69,14 @@ class BiliBiliSearch(BaseTool):
     silent: bool = True
     function: Function = bilibili
     keywords: list = ["哔哩哔哩", "b站", "B站", "视频", '搜索', '新闻', 'bilibili']
+    require_auth: bool = False
 
     def pre_check(self):
         try:
             import bilibili_api
             return True
         except ImportError as e:
-            logger.error(f"plugin:bilibili:package <bilibili_api> not installed:{e}")
+            logger.error(f"Plugin:bilibili:package <bilibili_api> not installed:{e}")
             return False
 
     def func_message(self, message_text):
@@ -95,12 +99,13 @@ class BiliBiliSearch(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=TaskHeader.Meta(
+                        callback_forward=True,
+                        callback=TaskHeader.Meta.Callback(
+                            role="function",
+                            name=__plugin_name__
+                        ),
+                    ),
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,
@@ -119,7 +124,7 @@ class BiliBiliSearch(BaseTool):
         环境互动实例，二次请求LLM且计费到发送者身上。
         一般是不用的，用于额外的数据格式化上。
         """
-        _submanager = SubManager(user_id=task.sender.user_id)
+        _submanager = SubManager(user_id=f"{task.sender.platform}:{task.sender.user_id}")
         driver = _submanager.llm_driver  # 由发送人承担接受者的成本
         model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         endpoint = openai.Openai(
@@ -132,12 +137,20 @@ class BiliBiliSearch(BaseTool):
         )
         # 调用Openai
         result = await endpoint.create()
-        _message = openai.Openai.parse_single_reply(response=result)
-        _usage = openai.Openai.parse_usage(response=result)
         await _submanager.add_cost(
-            cost=UserInfo.Cost(token_usage=_usage, token_uuid=driver.uuid, model_name=model_name)
+            cost=UserInfo.Cost(token_usage=result.usage.total_tokens, token_uuid=driver.uuid, model_name=model_name)
         )
-        return _message.content
+        return result.default_message.content
+
+    async def callback(self, sign: str, task: TaskHeader):
+        if sign == "reply":
+            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
+            if chain:
+                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
+                await Task(queue=chain.address).send_task(task=chain.arg)
+            return True
+        else:
+            return False
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
@@ -146,19 +159,20 @@ class BiliBiliSearch(BaseTool):
         try:
             _set = Bili.parse_obj(arg)
             _search_result = await search_on_bilibili(_set.keywords)
-            _question = task.message[0].text
+
+            _meta = task.task_meta.child(__plugin_name__)
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = True
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
+
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
                     receiver=receiver,  # 因为可能有转发，所以可以单配
-                    task_meta=TaskHeader.Meta(
-                        callback_forward=True,
-                        reprocess_needed=True,
-                        callback=TaskHeader.Meta.Callback(
-                            role="function",
-                            name=__plugin_name__
-                        ),
-                    ),
+                    task_meta=_meta,
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

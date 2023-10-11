@@ -38,7 +38,7 @@ class Task(object):
             await channel.default_exchange.publish(
                 message, routing_key=self.queue_name,
             )
-            logger.debug("生产者发送了任务：%r" % task.json())
+            # logger.debug("生产者发送了任务：%r" % task.json())
 
     async def consuming_task(self, func: callable):
         connection = await aio_pika.connect_robust(self.amqp_url)

@@ -13,7 +13,7 @@ from .rss import RssApp
 from .telegram import TelegramBotRunner
 
 logger.remove()
-handler_id = logger.add(sys.stderr, level="INFO")
+handler_id = logger.add(sys.stderr, level="DEBUG")
 logger.add(sink='run.log',
            format="{time} - {level} - {message}",
            level="INFO",

@@ -3,9 +3,9 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
-from typing import List
+from typing import List, Union
 
-from pydantic import BaseModel, Field, BaseSettings
+from pydantic import BaseModel, Field, BaseSettings, validator
 
 from sdk.endpoint import openai
 
@@ -31,7 +31,7 @@ class UserInfo(BaseSettings):
                         ):
             return cls(cost_by=function_name, token_usage=token_usage, token_uuid=token_uuid, model_name=model_name)
 
-    user_id: int = Field(None, description="用户ID")
+    user_id: Union[str, int] = Field(None, description="用户ID")
     plugin_subs: Plugin = Field(Plugin(), description="插件的设置")
     costs: List[Cost] = Field([], description="消费记录")
     llm_driver: openai.Openai.Driver = openai.Openai.Driver()
@@ -39,3 +39,7 @@ class UserInfo(BaseSettings):
 
     def total_cost(self):
         return sum([cost.token_usage for cost in self.costs])
+
+    @validator("user_id")
+    def check_user_id(cls, v):
+        return str(v)
