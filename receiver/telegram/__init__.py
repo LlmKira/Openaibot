@@ -129,16 +129,6 @@ class TelegramSender(object):
             formatting.mcode(message.function_call.arguments),
             separator="\n"
         )
-        if task.task_meta.verify_uuid:
-            task_message = formatting.format_text(
-                formatting.mbold("🍫 Task "),
-                formatting.mcode(f"{task.task_meta.verify_uuid}"),
-                formatting.mbold("be authed: "),
-                formatting.mcode(message.function_call.name),
-                "\n",
-                formatting.mcode(message.function_call.arguments),
-                separator=" "
-            )
         if not _tool().silent:
             self.bot.send_message(
                 chat_id=chat_id,
@@ -148,15 +138,14 @@ class TelegramSender(object):
             )
         # 回写创建消息
         sign = f"<{task.task_meta.sign_as[0] + 1}>"
-        if not task.task_meta.verify_uuid:
-            # 二周目消息不回写，因为写过了
-            llm.write_back(
-                role="assistant",
-                name=message.function_call.name,
-                message_list=[
-                    RawMessage(
-                        text=f"Okay,Task be created:{message.function_call.arguments}.")]
-            )
+        # 二周目消息不回写，因为写过了
+        llm.write_back(
+            role="assistant",
+            name=message.function_call.name,
+            message_list=[
+                RawMessage(
+                    text=f"Okay,Task be created:{message.function_call.arguments}.")]
+        )
         # 构建对应的消息
         receiver = task.receiver.copy()
         receiver.platform = __receiver__
