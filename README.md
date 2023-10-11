@@ -32,6 +32,12 @@ implementing some or more features.
 - 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
 - 🍖 Continuous session design for function plug-ins
 
+### 🧀 Preview of some plugins
+
+| Sticker Converter                   | Timer Func                      | Translate                                    |
+|-------------------------------------|---------------------------------|----------------------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
+
 ### 🎬 Platform support
 
 | Platform | Support | Tip     |
@@ -41,12 +47,6 @@ implementing some or more features.
 | QQ       | ❌       |         |
 | Wechat   | ❌       |         |
 | Twitter  | ❌       |         |
-
-### 🧀 Preview of some plugins
-
-| Sticker Converter                   | Timer Func                      | Translate                                    |
-|-------------------------------------|---------------------------------|----------------------------------------------|
-| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
 
 ## 📝 Deployment Guide
 
