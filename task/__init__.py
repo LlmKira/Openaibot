@@ -15,12 +15,12 @@ from schema import TaskHeader
 from setting.task import RabbitMQSetting
 
 EXPIRATION_SECOND = 60 * 5  # 5min
-QUEUE_MAX_LENGTH = 233
+QUEUE_MAX_LENGTH = 120
 X_OVERFLOW = "reject-publish"  # 拒绝
 CONSUMER_PREFETCH_COUNT = 12  # 消息流控
 QUEUE_ARGUMENTS = {
     "x-max-length": QUEUE_MAX_LENGTH,  # 上限
-    "message-ttl": EXPIRATION_SECOND * 1000,  # 20min
+    # "message-ttl": EXPIRATION_SECOND * 1000,
     "x-overflow": X_OVERFLOW  # 拒绝
 }
 
