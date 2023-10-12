@@ -37,7 +37,7 @@ class Task(object):
             await channel.default_exchange.publish(
                 message,
                 routing_key=self.queue_name,
-                timeout=10
+                timeout=60 * 60 * 1
             )
             # logger.debug("生产者发送了任务：%r" % task.json())
 
