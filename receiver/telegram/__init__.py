@@ -211,11 +211,12 @@ class TelegramReceiver(object):
             try:
                 result = await self.llm_request(llm, disable_function=disable_function)
             except Exception as e:
-                return __sender__.error(
+                __sender__.error(
                     chat_id=task.receiver.chat_id,
                     reply_to_message_id=task.receiver.message_id,
                     text=f"🦴 Sorry, your request failed because: {e}"
                 )
+                return
             if intercept_function:
                 # 拦截函数调用
                 if hasattr(result.default_message, "function_call"):
@@ -306,16 +307,22 @@ class TelegramReceiver(object):
         return None, None, None
 
     async def on_message(self, message: AbstractIncomingMessage):
-        await message.ack()
-        if os.getenv("LLMBOT_STOP_REPLY") == "1":
-            return None
-        _task, _llm, _point = await self.deal_message(message)
-        # 启动链式函数应答循环
-        if _task:
-            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
-            if chain:
-                logger.info(f"Catch chain callback\n--callback_send_by {_point}")
-                await Task(queue=chain.address).send_task(task=chain.arg)
+        print(message.expiration)
+        try:
+            if os.getenv("LLMBOT_STOP_REPLY") == "1":
+                return None
+            _task, _llm, _point = await self.deal_message(message)
+            # 启动链式函数应答循环
+            if _task:
+                chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
+                if chain:
+                    logger.info(f"Catch chain callback\n--callback_send_by {_point}")
+                    await Task(queue=chain.address).send_task(task=chain.arg)
+        except Exception as e:
+            logger.exception(e)
+            await message.reject(requeue=False)
+        finally:
+            await message.ack(multiple=False)
 
     async def telegram(self):
         if not BotSetting.available:

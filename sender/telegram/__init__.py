@@ -106,13 +106,15 @@ class TelegramBotRunner(object):
             logger.info(
                 f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}")
             try:
-                await TelegramTask.send_task(
+                success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_telegram(
                         message,
                         file=_file,
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", "telegram")),
                         trace_back_message=[message.reply_to_message]
                     ))
+                if not success:
+                    await bot.reply_to(message, text=logs)
             except Exception as e:
                 logger.exception(e)
 

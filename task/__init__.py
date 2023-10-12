@@ -7,12 +7,22 @@ import asyncio
 
 import aio_pika
 from aio_pika import Message, DeliveryMode
+from aiormq import DeliveryError
+from loguru import logger
+from pamqp.commands import Basic
 
 from schema import TaskHeader
 from setting.task import RabbitMQSetting
 
-
-# 用于通知消息变换（GPT 中间件）
+EXPIRATION_SECOND = 60 * 5  # 5min
+QUEUE_MAX_LENGTH = 233
+X_OVERFLOW = "reject-publish"  # 拒绝
+CONSUMER_PREFETCH_COUNT = 12  # 消息流控
+QUEUE_ARGUMENTS = {
+    "x-max-length": QUEUE_MAX_LENGTH,  # 上限
+    "message-ttl": EXPIRATION_SECOND * 1000,  # 20min
+    "x-overflow": X_OVERFLOW  # 拒绝
+}
 
 
 class Task(object):
@@ -26,32 +36,59 @@ class Task(object):
     async def send_task(self, task: TaskHeader):
         connection = await aio_pika.connect_robust(self.amqp_url)
         async with connection:
-            channel = await connection.channel()
+            channel = await connection.channel(
+                publisher_confirms=True  # 消息确认
+            )
+            # 通道超时 2s
+            # await channel.initialize(timeout=2000)
+            # Creating a message
             message = Message(
-                task.json().encode("utf-8"), delivery_mode=DeliveryMode.PERSISTENT,
+                task.json().encode("utf-8"),
+                delivery_mode=DeliveryMode.PERSISTENT,
+                expiration=EXPIRATION_SECOND
             )
+            # Declaring queue
             await channel.declare_queue(
-                self.queue_name, durable=True,
+                self.queue_name,
+                arguments=QUEUE_ARGUMENTS,
+                durable=True  # 持续化
             )
+
             # Sending the message
-            await channel.default_exchange.publish(
-                message,
-                routing_key=self.queue_name,
-                timeout=60 * 60 * 1
-            )
-            # logger.debug("生产者发送了任务：%r" % task.json())
+            try:
+                confirmation = await channel.default_exchange.publish(
+                    message,
+                    routing_key=self.queue_name,
+                    timeout=10
+                )
+            except DeliveryError as e:
+                logger.error(f"[502231]Task Delivery failed with exception: {e.reason}")
+                return False, "🔭 Sorry,failure to reach the control centre, possibly i reach design limit 🧯"
+            except TimeoutError:
+                logger.error(f"[528532]Task Delivery timeout")
+                return False, "🔭 Sorry, failure to reach the control centre, ⏱ timeout"
+            else:
+                if not isinstance(confirmation, Basic.Ack):
+                    logger.error(f"[552123]Task Delivery failed with confirmation")
+                    return False, "🔭 Sorry, failure to reach the control centre, sender error"
+                else:
+                    logger.info("[621132]Task sent success")
+                    return True, "Task sent success"
 
     async def consuming_task(self, func: callable):
         connection = await aio_pika.connect_robust(self.amqp_url)
         async with connection:
             # Creating a channel
             channel = await connection.channel()
-            await channel.set_qos(prefetch_count=1)
+            # 通道超时 1s
+            # await channel.initialize(timeout=1000)
+            await channel.set_qos(prefetch_count=CONSUMER_PREFETCH_COUNT)  # 消息流控
 
             # Declaring queue
             queue = await channel.declare_queue(
                 self.queue_name,
-                durable=True,
+                arguments=QUEUE_ARGUMENTS,
+                durable=True  # 持续化
             )
             await queue.consume(func)
             await asyncio.Future()  # run forever

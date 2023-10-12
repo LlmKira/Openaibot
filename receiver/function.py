@@ -109,8 +109,7 @@ class FunctionReceiver(object):
     def __init__(self):
         self.task = Task(queue=__receiver__)
 
-    async def on_message(self, message: AbstractIncomingMessage):
-        await message.ack()
+    async def deal_message(self, message: AbstractIncomingMessage):
         if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
         # 解析数据
@@ -152,6 +151,15 @@ class FunctionReceiver(object):
             logger.info(f"[875521]Chain child callback sent {message.function_call.name}")
             await reload_tool().callback(sign="resign", task=_task)
         """
+
+    async def on_message(self, message: AbstractIncomingMessage):
+        try:
+            await self.deal_message(message=message)
+        except Exception as e:
+            logger.error(f"Function Receiver Error {e}")
+            await message.reject(requeue=False)
+        finally:
+            await message.ack(multiple=False)
 
     async def function(self):
         logger.success("Receiver Runtime:Function Fork Cpu start")

@@ -5,7 +5,7 @@ polling
 
 
 # Network
-httpx>=0.23.3
+httpx==0.24.1
 socksio
 
 pydantic<2.0.0
@@ -23,6 +23,7 @@ tiktoken
 nest-asyncio
 apscheduler
 tzlocal
+httpcore
 
 # plugin
 feedparser==6.0.10
