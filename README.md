@@ -162,10 +162,10 @@ clear_rset - wipe custom settings
 
 ### 🥽 Environment variables
 
-| Variable name     | value | Description                                      |
-|-------------------|-------|--------------------------------------------------|
-| LLMBOT_STOP_REPLY | 1     | Stop receiver to reply if value is 1             |
-| LLMBOT_LOG_OUTPUT | DEBUG | Print LONG debug log on screen if value is DEBUG |
+| Variable name       | value | Description                                      |
+|---------------------|-------|--------------------------------------------------|
+| `LLMBOT_STOP_REPLY` | 1     | Stop receiver to reply if value is 1             |
+| `LLMBOT_LOG_OUTPUT` | DEBUG | Print LONG debug log on screen if value is DEBUG |
 
 ## 💻 How to develop?
 
