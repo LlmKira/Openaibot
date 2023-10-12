@@ -171,7 +171,8 @@ clear_rset - wipe custom settings
 
 For plugin development, please refer to the sample plugins in the `plugins` directory.
 
-## 🤝 How can I contribute?
+- [] TODO: Plugin development documentation
 
-Feel free to submit a Pull Request, we'd love to receive your contribution! Please make sure your code conforms to our
-code specification and include a detailed description. Thank you for your support and contribution! 😊😊
+## 🤝 We need your help!
+
+Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!

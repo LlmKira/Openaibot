@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/18 下午6:11
 # @Author  : sudoskys
-# @File    : alarm.py
 # @Software: PyCharm
 import datetime
 import re
