@@ -2,38 +2,25 @@ pyTelegramBotAPI
 pathlib>=1.0.1
 loguru>=0.5.3
 polling
-
-
-# Network
-httpx==0.24.1
+httpx>=0.24.1
 socksio
 
 pydantic<2.0.0
-beautifulsoup4>=4.11.1
+beautifulsoup4
 python-dotenv
-# DB
+
 elara
 redis>=4.5.4
 aio_pika
 
-# utils
 arclet-alconna
 shortuuid
 tiktoken
 nest-asyncio
 apscheduler
 tzlocal
-httpcore
-
-# plugin
-feedparser==6.0.10
-pillow
-inscriptis
-bilibili-api-python
-httpcore <=0.15
-duckduckgo_search>=3.9.3
-
-# NLP
+contextvars
+pytz
 nltk
 numpy
 jieba
@@ -44,4 +31,11 @@ cjieba
 unstructured[docx,pptx]
 tenacity
 PySocks
-requests[socks]
+requests[socks]>=2.31.0
+
+feedparser==6.0.10
+pillow
+inscriptis
+bilibili-api-python
+duckduckgo_search>=3.9.3
+
