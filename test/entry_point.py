@@ -6,7 +6,7 @@
 
 import importlib_metadata
 
-_result = importlib_metadata.entry_points().select(group="llmbot.extra.plugin")
+_result = importlib_metadata.entry_points().select(group="llmkira.extra.plugin")
 print(type(_result))
 for item in _result:
     print(item.module)
