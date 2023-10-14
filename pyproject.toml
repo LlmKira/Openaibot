@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "License :: OSI Approved :: MIT License",
 ]
-packages = [{ include = "llmbot" }]
+packages = [{ include = "llmkira" }]
 
 [tool.poetry.dependencies]
 python = "^3.9,<3.13"
