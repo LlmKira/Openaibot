@@ -5,10 +5,10 @@
 # @Software: PyCharm
 
 
-from llmbot.sdk import Function
+from llmkira.sdk import Function
 
-from llmbot.sdk.func_calling.register import listener
-from llmbot.sdk import BaseTool
+from llmkira.sdk.func_calling.register import listener
+from llmkira.sdk import BaseTool
 
 search = Function(name="get_current_weather", description="Get the current weather")
 search.add_property(

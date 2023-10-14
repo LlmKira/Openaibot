@@ -4,6 +4,6 @@
 # @File    : start_receiver.py
 # @Software: PyCharm
 
-from llmbot.receiver import app
+from llmkira.receiver import app
 
 assert app.__area__ == "receiver", "receiver app error"

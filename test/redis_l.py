@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import time
 
-from llmbot.cache.redis import cache
+from llmkira.cache.redis import cache
 
 
 async def redis():
