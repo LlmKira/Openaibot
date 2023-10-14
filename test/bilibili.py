@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/22 下午2:15
 # @Author  : sudoskys
-# @File    : bilibili.py
+# @File    : _bilibili.py
 # @Software: PyCharm
 import json
 

@@ -5,9 +5,10 @@
 # @Software: PyCharm
 
 
-from sdk.endpoint.openai import Function
+from llmbot.sdk import Function
 
-from sdk.func_call import BaseTool, listener
+from llmbot.sdk.func_calling.register import listener
+from llmbot.sdk import BaseTool
 
 search = Function(name="get_current_weather", description="Get the current weather")
 search.add_property(

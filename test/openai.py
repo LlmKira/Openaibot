@@ -4,7 +4,7 @@
 # @File    : openai.py
 # @Software: PyCharm
 
-from sdk import openai
+from llmbot.sdk.endpoint import openai
 
 example_messages = [
     {

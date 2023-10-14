@@ -5,7 +5,7 @@
 # @Software: PyCharm
 from duckduckgo_search import DDGS
 
-from sdk.filter import Sublimate
+from llmbot.sdk import Sublimate
 
 search = "评价一下刀郎的罗刹海市？"
 key = ["刀郎"]
