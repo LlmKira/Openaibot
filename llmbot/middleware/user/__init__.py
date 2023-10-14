@@ -51,10 +51,13 @@ class SubManager(object):
         return self.sub_info.plugin_subs.lock
 
     async def set_endpoint(self, endpoint: str = None, api_key: str = None):
-        if endpoint:
-            self.sub_info.llm_driver.endpoint = endpoint
-        if api_key:
-            self.sub_info.llm_driver.api_key = api_key
+        """
+        这里容易产生鉴权错误和环境变量被泄漏的问题！！
+        # TODO: 优化鉴权机制
+        """
+        if not endpoint:
+            endpoint = "https://api.openai.com/v1/chat/completions"
+        self.sub_info.llm_driver = openai.Openai.Driver(endpoint=endpoint, api_key=api_key)
         self.sub_info.update_driver = True
         await self._upload(user_id=self.sub_info.user_id)
 
