@@ -1,4 +1,4 @@
-![cover](docs/project_cover.png)
+![cover](https://raw.githubusercontent.com/LlmKira/.github/main/llmbot/project_cover.png)
 
 -----------------------
 
@@ -27,14 +27,14 @@ implementing some or more features.
 
 ## 📦 Feature
 
-- 🍪 Call a number of pre-defined functions in natural language.
+- 🍪 Call a number of pre-defined functions in natural language, use `pip` install every plugin you need.
 - 📝 Messaging system, define send receivers and data can be delivered to the llm chain.
 - 📎 Subscription system, which can subscribe to multiple senders in addition to paired senders, with push functionality.
 - 📦 Non-question-and-answer binding, unlimited time and unlimited sender triggered response.
 - 📬 Customizable ApiKey and Endpoint, traceability of sender authentication info.
 - 🍾 Easy Interactive Experience.
 - 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
-- 🍖 Continuous session design for function plug-ins
+- 🍖 Continuous session design for function plugins
 
 ### 🧀 Preview of some plugins
 
