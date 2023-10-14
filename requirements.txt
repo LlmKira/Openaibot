@@ -6,7 +6,6 @@ httpx>=0.24.1
 socksio
 
 pydantic<2.0.0
-beautifulsoup4
 python-dotenv
 
 elara
@@ -36,6 +35,5 @@ requests[socks]>=2.31.0
 feedparser==6.0.10
 pillow
 inscriptis
-bilibili-api-python
 duckduckgo_search>=3.9.3
 

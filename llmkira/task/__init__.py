@@ -57,7 +57,7 @@ class Task(object):
                 logger.error(
                     f"[5941163]Rabbitmq Queue param validation error, try deleting the abnormal queue manually and retrying. "
                     f"\n--error {e}"
-                    f"\n--help |web: http://<database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
+                    f"\n--help |web: <database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
                 )
                 raise e
             # Sending the message
@@ -101,7 +101,7 @@ class Task(object):
                 logger.error(
                     f"[502231]Rabbitmq Queue parameter validation failed, try deleting the abnormal queue manually and retrying. "
                     f"\n--error {e}"
-                    f"\n--help |web: http://<database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
+                    f"\n--help |web: <database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
                 )
                 raise e
             await queue.consume(func)

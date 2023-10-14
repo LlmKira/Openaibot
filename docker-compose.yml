@@ -29,8 +29,8 @@ services:
     hostname: rabbitmq
     restart: on-failure
     ports:
-      - 15672:15672
-      - 5672:5672
+      - "15672:15672"
+      - "5672:5672"
     environment:
       TZ: Asia/Shanghai
       RABBITMQ_DEFAULT_USER: admin
@@ -48,7 +48,7 @@ services:
     volumes:
       - ./redis:/data
     ports:
-      - 6379:6379
+      - "6379:6379"
     networks:
       - app-tier
 

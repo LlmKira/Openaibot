@@ -30,13 +30,13 @@ print(result)
 ## Benchmark
 We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/cld2), [langid](https://github.com/saffsd/langid.py), and [langdetect](https://github.com/Mimino666/langdetect) on Wili-2018 dataset.
 
-|                          | fasttext    | langid      | langdetect  | cld2        |
-|--------------------------|-------------|-------------|-------------|-------------|
-| Average time (ms) | 0,158273381 | 1,726618705 | 12,44604317 | **0,028776978** |
-| 139 langs - not weighted   | 76,8        | 61,6        | 37,6        | **80,8**        |
-| 139 langs - pop weighted | **95,5**        | 93,1        | 86,6        | 92,7        |
-| 44 langs - not weighted    | **93,3**        | 89,2        | 81,6        | 91,5        |
-| 44 langs - pop weighted   | **96,6**        | 94,8        | 89,4        | 93,4        |
+|                          | fasttext    | langid      | langdetect  | cld2            |
+|--------------------------|-------------|-------------|-------------|-----------------|
+| Average time (ms)        | 0,158273381 | 1,726618705 | 12,44604317 | **0,028776978** |
+| 139 langs - not weighted | 76,8        | 61,6        | 37,6        | **80,8**        |
+| 139 langs - pop weighted | **95,5**    | 93,1        | 86,6        | 92,7            |
+| 44 langs - not weighted  | **93,3**    | 89,2        | 81,6        | 91,5            |
+| 44 langs - pop weighted  | **96,6**    | 94,8        | 89,4        | 93,4            |
 
 - `pop weighted` means recall for each language is multipled by [its number of speakers](https://en.wikipedia.org/wiki/List_of_languages_by_total_number_of_speakers).
 - 139 languages = all languages with ISO 639-1 2-letter code
