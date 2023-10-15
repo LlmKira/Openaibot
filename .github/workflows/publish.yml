@@ -5,9 +5,10 @@ on:
     tags:
       - lib*
   workflow_dispatch:
-    tags:
-      description: 'Test tags'
-      required: true
+    inputs:
+      tags:
+        description: 'Test tags'
+        required: true
 
 
 permissions:
