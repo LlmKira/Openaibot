@@ -2,7 +2,9 @@
 
 [![Docker Image Size (tag)](https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
+
 ![docker workflow](https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml/badge.svg)
+[![Package](https://github.com/LlmKira/Openaibot/actions/workflows/publish.yml/badge.svg)](https://github.com/LlmKira/Openaibot/actions/workflows/publish.yml)
 
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/Openai_LLM)
 [![Discord](https://img.shields.io/badge/Join-Discord-blue)](https://discord.gg/6QHNdwhdE5)
