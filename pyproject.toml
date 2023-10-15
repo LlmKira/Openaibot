@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmkira"
-version = "0.25.0"
+version = "0.25.1"
 description = "A chain message bot based on OpenAI"
 authors = ["llmkira <me@dianas.cyou>"]
 license = "MIT"
