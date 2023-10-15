@@ -4,9 +4,9 @@ import re
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from types import ModuleType
-from typing import Optional, Type, Dict, Any, List, Union, Set
+from typing import Optional, Type, Dict, Any, List, Union, Set, final
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 from ..schema import Function
 
@@ -15,14 +15,28 @@ class BaseTool(ABC, BaseModel):
     """
     基础工具类，所有工具类都应该继承此类
     """
+    __slots__ = ()
     silent: bool = False
     function: Function
-    keywords: List[str]
+    keywords: List[str] = Field([], description="关键词")
     pattern: Optional[re.Pattern] = None
     require_auth: bool = False
+    repeatable: bool = False
 
     # TODO 未来版本支持
     require_auth_kwargs: dict = {}
+
+    @final
+    @validator("keywords", pre=True)
+    def check_keywords(cls, v):
+        for i in v:
+            if not isinstance(i, str):
+                raise ValueError(f"keyword must be str, got {type(i)}")
+            if len(i) > 20:
+                raise ValueError(f"keyword must be less than 20 characters, got {len(i)}")
+            if len(i) < 2:
+                raise ValueError(f"keyword must be more than 2 characters, got {len(i)}")
+        return v
 
     @abstractmethod
     def pre_check(self) -> Union[bool, str]:

@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 import httpx
+from loguru import logger
 
 from .error import RateLimitError, ServiceUnavailableError, AuthenticationError
 
@@ -19,6 +20,19 @@ def llm_error_handler(code, message: str):
         raise AuthenticationError(message)
 
 
+def check_json_response(status_code, req_data: dict):
+    """
+    检查json响应
+    """
+    # 错误消息
+    if req_data.get("error", None):
+        _error = req_data.get("error", None)
+        raise Exception(f"{status_code}:{_error.get('type')}:{_error.get('message')}")
+    # 错误消息
+    if isinstance(req_data.get("message"), str):
+        raise Exception(f"{status_code}:{req_data.get('message')}")
+
+
 async def request(
         method: str,
         url: str,
@@ -32,7 +46,7 @@ async def request(
 ):
     """
     请求
-    :param call_func: 回调函数，用于调整结构
+    :param call_func: 错误回调函数
     :param method:
     :param url:
     :param params:
@@ -54,16 +68,15 @@ async def request(
         "data": data,
         "headers": headers,
     }
-
     # 更新
     config.update(kwargs)
     if json_body:
         config["headers"]["Content-Type"] = "application/json"
         config["data"] = json.dumps(config["data"]).encode()
-
     # SSL
     # config["ssl"] = False
 
+    # 请求
     session = get_session(proxy=proxy)
     resp = await session.request(**config)
 
@@ -74,36 +87,23 @@ async def request(
 
     # 检查响应头 Content-Type
     content_type = resp.headers.get("content-type")
+    if content_type.lower().find("application/json") == -1:
+        logger.error(f"[78652]Server send a invalid response {resp.text}")
+        raise Exception("Server send a invalid response with content-type:{}".format(content_type))
 
-    # Not application/json
-    if content_type.lower().index("application/json") == -1:
-        raise Exception("请求不是 application/json 类型")
-
-    # 提取内容
-    raw_data = resp.text
-    req_data: dict
-    req_data = json.loads(raw_data)
-
-    # Error
-    if req_data.get("error"):
-        # if ERROR.get('type') == "insufficient_quota":
+    try:
+        req_data: dict = json.loads(resp.text)
+    except json.JSONDecodeError:
+        if resp.status_code != 200:
+            raise Exception(f"Request {resp.status_code}:Request failed without any error message")
+        raise Exception("Server send a invalid json response")
+    try:
+        check_json_response(resp.status_code, req_data)
+    except Exception as e:
+        # Dict Message 格式校验失败
         if call_func:
-            call_func(
-                req_data,
-                headers
-            )
-        _error = req_data.get("error")
-        llm_error_handler(
-            code=resp.status_code,
-            message=f"{resp.status_code}:{_error.get('type')}:{_error.get('message')}"
-        )
-    if isinstance(req_data.get("message"), str):
-        if call_func:
-            call_func(
-                req_data,
-                headers
-            )
-        _status = req_data.get("status")
+            call_func(req_data, headers)
+        _status = req_data.get("status", None)
         llm_error_handler(
             code=_status,
             message=f"{resp.status_code}:{req_data.get('message')}"

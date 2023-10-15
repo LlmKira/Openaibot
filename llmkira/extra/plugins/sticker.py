@@ -7,15 +7,14 @@ from io import BytesIO
 from math import floor
 
 from PIL import Image
-from loguru import logger
-from pydantic import validator, BaseModel
-
 from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair, PluginMetadata
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from pydantic import validator, BaseModel
 
 __plugin_name__ = "convert_to_sticker"
 sticker = Function(name=__plugin_name__, description="Help user convert pictures to stickers")
@@ -102,12 +101,13 @@ class StickerTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=TaskHeader.Meta(
+                        callback_forward=True,
+                        callback=TaskHeader.Meta.Callback(
+                            role="function",
+                            name=__plugin_name__
+                        ),
+                    ),
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

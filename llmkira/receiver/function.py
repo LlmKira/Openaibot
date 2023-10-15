@@ -13,12 +13,13 @@ import time
 
 import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
+from loguru import logger
+
 from llmkira.middleware.chain_box import Chain, AUTH_MANAGER, CHAIN_MANAGER
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.task import Task, TaskHeader
-from loguru import logger
 
 
 class ChainFunc(object):
@@ -70,7 +71,17 @@ class ChainFunc(object):
         return
 
     @staticmethod
-    async def resign_chain(task: TaskHeader, ignore_func):
+    async def resign_chain(
+            task: TaskHeader,
+            parent_func: str,
+            repeatable: bool
+    ):
+        """
+        注册链
+        :param task: 任务
+        :param parent_func: 父函数
+        :param repeatable: 是否可重复
+        """
         _task_forward: TaskHeader = task.copy()
         meta = _task_forward.task_meta.child(__receiver__)
         meta.continue_step += 1
@@ -82,22 +93,31 @@ class ChainFunc(object):
         _task_forward.task_meta = meta
 
         # 禁用子链使用出现过的函数
+        # Repeatable
         try:
-            if len(_task_forward.task_meta.function_list) > 2:
-                _task_forward.task_meta.function_list = [item for item in _task_forward.task_meta.function_list if
-                                                         item.name != ignore_func]
+            if not repeatable:
+                _task_forward.task_meta.function_list = [
+                    item
+                    for item in _task_forward.task_meta.function_list
+                    if item.name != parent_func
+                ]
         except Exception as e:
-            logger.warning(f"[362211]Remove function {ignore_func} failed")
+            logger.error(e)
+            logger.warning(f"[362211]Remove function {parent_func} failed")
         # 注册部署点
-        await CHAIN_MANAGER.add_task(task=Chain(user_id=str(_task_forward.receiver.user_id),
-                                                address=_task_forward.receiver.platform,
-                                                time=int(time.time()),
-                                                arg=TaskHeader(
-                                                    sender=_task_forward.sender,
-                                                    receiver=_task_forward.receiver,
-                                                    task_meta=meta,
-                                                    message=[]
-                                                )))  # 追加任务
+        await CHAIN_MANAGER.add_task(
+            task=Chain(
+                user_id=str(_task_forward.receiver.user_id),
+                address=_task_forward.receiver.platform,
+                time=int(time.time()),
+                arg=TaskHeader(
+                    sender=_task_forward.sender,
+                    receiver=_task_forward.receiver,
+                    task_meta=meta,
+                    message=[]
+                )
+            )
+        )
 
 
 class FunctionReceiver(object):
@@ -109,6 +129,11 @@ class FunctionReceiver(object):
         self.task = Task(queue=__receiver__)
 
     async def deal_message(self, message: AbstractIncomingMessage):
+        """
+        处理message
+        :param message:
+        :return:
+        """
         if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
         # 解析数据
@@ -128,7 +153,8 @@ class FunctionReceiver(object):
         if not _tool_cls:
             logger.warning(f"Not found function {func_message.function_call.name}")
             return None
-        if _tool_cls().require_auth:
+        _tool_obj = _tool_cls()
+        if _tool_obj.require_auth:
             if not _task.task_meta.verify_uuid:
                 await ChainFunc.auth_chain(task=_task, func_name=func_message.function_call.name)
                 logger.warning(
@@ -139,9 +165,17 @@ class FunctionReceiver(object):
                 _task.task_meta.verify_uuid = None
 
         # 追加步骤
-        await ChainFunc.resign_chain(task=_task, ignore_func=func_message.function_call.name)
+        await ChainFunc.resign_chain(
+            task=_task,
+            parent_func=func_message.function_call.name,
+            repeatable=_tool_obj.repeatable
+        )
         # 运行函数
-        await _tool_cls().run(task=_task, receiver=_task.receiver, arg=_arg)
+        await _tool_obj.run(
+            task=_task,
+            receiver=_task.receiver,
+            arg=_arg
+        )
         # 注册区域，必须在run之后
         """
         reload_tool = .get_tool(name=message.function_call.name)
@@ -151,6 +185,11 @@ class FunctionReceiver(object):
         """
 
     async def on_message(self, message: AbstractIncomingMessage):
+        """
+        处理message
+        :param message:
+        :return:
+        """
         try:
             await self.deal_message(message=message)
         except Exception as e:

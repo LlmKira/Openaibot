@@ -1,0 +1,36 @@
+name-template: 'Release v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  $CHANGES
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'New Features'
+      - 'Support New Platform'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'Bug'
+      - 'Bugfix'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'PluginApi'
+      - 'Improve our documentation'
+  - title: '🎮 New Plugin'
+    labels:
+      - 'New plugin'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch

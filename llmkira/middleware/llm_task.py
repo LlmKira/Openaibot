@@ -7,20 +7,19 @@ import os
 import time
 from typing import List, Literal
 
-from loguru import logger
-
 from llmkira.middleware.user import SubManager, UserInfo
 from llmkira.schema import RawMessage
-from llmkira.task import TaskHeader
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.endpoint.openai import Message
 from llmkira.sdk.endpoint.openai.action import Scraper
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
+from llmkira.task import TaskHeader
 from llmkira.utils import sync
+from loguru import logger
 
 RULE = """[ASSISTANT RULE]
-# RE-SENDING THE FUNCTION WITH THE SAME PARAMETERS IS NOT ALLOWED.
-# DEMANDING ASSISTANT TO SPEAK IN A MORE HUMAN-LIKE MANNER.
+* RE-SENDING THE FUNCTION WITH THE SAME PARAMETERS IS NOT ALLOWED
+* SPEAK IN A MORE HUMAN-LIKE MANNER
 [ASSISTANT RULE]"""
 
 
@@ -85,7 +84,7 @@ class OpenaiMiddleware(object):
         if default_system:
             localtime = time.asctime(time.localtime(time.time()))
             rule = f"<Time|{localtime}>" + RULE
-            self.scraper.add_message(Message(role="system", name="law",
+            self.scraper.add_message(Message(role="system", name="system",
                                              content=rule),
                                      score=0)
         _history = []

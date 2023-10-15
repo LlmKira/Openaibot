@@ -8,19 +8,18 @@ import os
 from io import BytesIO
 from typing import List
 
-from loguru import logger
-from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, stop_after_delay, wait_fixed
-
+from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
 from llmkira.middleware.user import UserInfo, SubManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool, PluginMetadata
-from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.sdk.schema import Message, File
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, stop_after_delay, wait_fixed
 
 __plugin_name__ = "translate_file"
 translate = Function(name=__plugin_name__, description="Help user translate [ReadableFile],only support txt/md")
@@ -84,12 +83,13 @@ class TranslateTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=TaskHeader.Meta(
+                        callback_forward=True,
+                        callback=TaskHeader.Meta.Callback(
+                            role="function",
+                            name=__plugin_name__
+                        ),
+                    ),
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

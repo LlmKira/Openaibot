@@ -5,9 +5,6 @@
 # @Software: PyCharm
 import os
 
-from loguru import logger
-from pydantic import BaseModel
-
 from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
 from llmkira.middleware.user import SubManager, UserInfo
 from llmkira.schema import RawMessage
@@ -17,6 +14,8 @@ from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.sdk.schema import Message
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from pydantic import BaseModel
 
 __plugin_name__ = "search_in_google"
 
@@ -105,12 +104,13 @@ class SearchTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(callback_forward=True,
-                                              callback=TaskHeader.Meta.Callback(
-                                                  role="function",
-                                                  name=__plugin_name__
-                                              ),
-                                              ),
+                    task_meta=TaskHeader.Meta(
+                        callback_forward=True,
+                        callback=TaskHeader.Meta.Callback(
+                            role="function",
+                            name=__plugin_name__
+                        ),
+                    ),
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,
