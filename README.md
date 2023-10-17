@@ -89,7 +89,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 
 - (可选) 解决冲突
 
-`pip uninstall llm-kira`
+`pip uninstall llmkira`
 
 - 🛠 配置 `.env` 文件
 
