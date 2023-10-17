@@ -90,6 +90,7 @@ class BaseTool(ABC, BaseModel):
         """
         处理message，返回message
         """
+        env = kwargs.get("env", {})
         return ...
 
     @abstractmethod
