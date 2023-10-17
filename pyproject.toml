@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmkira"
-version = "0.25.1"
+version = "0.25.2"
 description = "A chain message bot based on OpenAI"
 authors = ["llmkira <me@dianas.cyou>"]
 license = "MIT"
@@ -18,7 +18,7 @@ packages = [{ include = "llmkira" }]
 [tool.poetry.dependencies]
 python = "^3.9,<3.13"
 pathlib = ">=1.0.1"
-pydantic = "<2.0.0"
+pydantic = { version = "^1.10.0", extras = ["dotenv"] }
 loguru = ">=0.5.3"
 httpx = "0.24.1"
 socksio = "^1.0.0"
