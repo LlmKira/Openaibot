@@ -15,17 +15,6 @@ permissions:
   contents: read
 
 jobs:
-  draft_release:
-    if: github.event_name == 'pull_request_target'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: release-drafter/release-drafter@v5
-        id: release-drafter
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
   release:
     runs-on: ubuntu-latest
     steps:
