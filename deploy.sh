@@ -4,6 +4,7 @@
 echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
 if [ -d "Openaibot" ]; then
   # shellcheck disable=SC2164
+  pip uninstall llmkira
   cd Openaibot && git pull && echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
   # Update the Openaibot project
   exit 0

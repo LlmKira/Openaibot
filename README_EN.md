@@ -71,7 +71,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 
 - (Optional) Resolving conflicts
 
-  `pip uninstall llm-kira`
+  `pip uninstall llmkira`
 
 - Clone the project
 
