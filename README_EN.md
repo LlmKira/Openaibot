@@ -185,3 +185,6 @@ We can't do it on our own at the moment:
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 
+## 📜 Agreement
+
+> This project has no relationship with OPENAI/ChatGpt.

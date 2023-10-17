@@ -208,3 +208,6 @@ We can't do it on our own at the moment:
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 
+## 📜 Agreement
+
+> 此项目与 Openai 官方无关，全称为 OpenAiBot，表示开放人工智能机器人，并不表示为 Openai 所属机器人。
