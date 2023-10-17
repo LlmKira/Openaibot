@@ -7,7 +7,7 @@ import asyncio
 
 import elara
 
-from llmkira.cache.base import AbstractDataClass, PREFIX
+from ..cache.base import AbstractDataClass, PREFIX
 
 
 class ElaraClientWrapper(AbstractDataClass):

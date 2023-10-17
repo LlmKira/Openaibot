@@ -8,13 +8,14 @@ import time
 from typing import Literal, Tuple, List, Union, Optional
 
 from dotenv import load_dotenv
+from loguru import logger
+from pydantic import BaseSettings, Field, BaseModel, root_validator
+from telebot import types
+
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.schema import File
 from llmkira.utils import sync
-from loguru import logger
-from pydantic import BaseSettings, Field, BaseModel, root_validator
-from telebot import types
 
 
 class RabbitMQ(BaseSettings):
@@ -107,14 +108,18 @@ class TaskHeader(BaseModel):
         user_id: int = Field(None, description="用户ID")
         message_id: int = Field(None, description="消息ID")
 
+        @property
+        def uid(self):
+            return f"{self.platform}:{self.user_id}"
+
     class Plugin(BaseModel):
         name: str = Field(None, description="插件名称")
         is_run_out: bool = Field(False, description="是否运行完毕")
         token_usage: int = Field(0, description="Token 用量")
 
     task_meta: Meta = Field(Meta(), description="任务元数据")
-    sender: Location = Field(None, description="发信人")
-    receiver: Location = Field(None, description="接收人")
+    sender: Location = Field(..., description="发信人")
+    receiver: Location = Field(..., description="接收人")
     message: List[RawMessage] = Field(None, description="消息内容")
 
     @classmethod

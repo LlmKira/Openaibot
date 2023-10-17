@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/9/24 上午12:48
-# @Author  : sudoskys
-# @File    : translate_doc.py
-# @Software: PyCharm
+__plugin_name__ = "translate_file"
+__openapi_version__ = "20231017"
+
+from llmkira.sdk.func_calling import verify_openapi_version
+
+verify_openapi_version(__plugin_name__, __openapi_version__)
 import asyncio
 import os
 from io import BytesIO
 from typing import List
 
-from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
+from loguru import logger
+from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, stop_after_delay, wait_fixed
+
 from llmkira.middleware.user import UserInfo, SubManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
@@ -17,11 +22,7 @@ from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.sdk.schema import Message, File
 from llmkira.task import Task, TaskHeader
-from loguru import logger
-from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, stop_after_delay, wait_fixed
 
-__plugin_name__ = "translate_file"
 translate = Function(name=__plugin_name__, description="Help user translate [ReadableFile],only support txt/md")
 translate.add_property(
     property_name="language",
@@ -163,14 +164,7 @@ class TranslateTool(BaseTool):
         return write_out_file
 
     async def callback(self, sign: str, task: TaskHeader):
-        if sign == "reply":
-            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
-            if chain:
-                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
-                await Task(queue=chain.address).send_task(task=chain.arg)
-            return True
-        else:
-            return False
+        return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
@@ -232,7 +226,7 @@ __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
     description="Translate readable file to target language",
     usage=str(TranslateTool().keywords),
-    openapi_version="20231013",
+    openapi_version=__openapi_version__,
     function={
         FuncPair(function=translate, tool=TranslateTool)
     },

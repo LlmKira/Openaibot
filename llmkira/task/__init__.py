@@ -99,7 +99,8 @@ class Task(object):
                 )
             except Exception as e:
                 logger.error(
-                    f"[502231]Rabbitmq Queue parameter validation failed, try deleting the abnormal queue manually and retrying. "
+                    f"[502231]Rabbitmq Queue parameter validation failed, try deleting the abnormal queue manually "
+                    f"and retrying."
                     f"\n--error {e}"
                     f"\n--help |web: <database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
                 )

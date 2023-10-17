@@ -24,28 +24,32 @@ class FrameworkInfo(BaseModel):
     exception: Optional[str] = None
 
 
-_current_openapi_version_: str = "20231013"
+_current_openapi_version_: str = "20231017"
 _openapi_version_: Dict[str, "FrameworkInfo"] = {
     _current_openapi_version_: FrameworkInfo(
         support=True,
         exception=None
     ),
+    "20231013": FrameworkInfo(
+        support=False,
+        exception="Chain Manager changed in ver.20231017"
+    )
 }
 
 
-def verify_openapi_version(name: str, metadata: "PluginMetadata"):
+def verify_openapi_version(name: str, openapi_version: str):
     """
     验证框架接口版本
     """
-    if not metadata:
+    if not openapi_version:
         return None
-    frame = _openapi_version_.get(metadata.openapi_version, None)
+    frame = _openapi_version_.get(openapi_version, None)
     if not frame:
         raise OpenApiError(
-            f"Plugin:{name}\n--error {metadata.openapi_version} not support")
+            f"OpenApiError:Plugin<{name}> --error {openapi_version} not support")
     if not frame.support:
         raise OpenApiError(
-            f"Plugin:{name}\n--error {frame.exception}")
+            f"OpenApiError:Plugin<{name}> --error {frame.exception}")
 
 
 def path_to_module_name(path: Path) -> str:

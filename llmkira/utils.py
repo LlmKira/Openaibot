@@ -7,9 +7,11 @@ bilibili_api.utils.sync
 """
 import asyncio
 import hashlib
-from typing import Coroutine
+from typing import Coroutine, Dict, List
 
 import nest_asyncio
+from telebot import formatting
+from telebot.formatting import escape_markdown
 
 nest_asyncio.apply()
 
@@ -19,6 +21,13 @@ def __ensure_event_loop():
         asyncio.get_event_loop()
     except Exception as e:
         asyncio.set_event_loop(asyncio.new_event_loop())
+
+
+def dict2message(data: Dict[str, str]) -> List[str]:
+    _res = []
+    for key, value in data.items():
+        _res.append("".join([formatting.mitalic(key), escape_markdown("="), f"`{escape_markdown(value)}`"]))
+    return _res
 
 
 def sync(coroutine: Coroutine):

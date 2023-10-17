@@ -3,8 +3,17 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import json
 
-from llmkira.middleware.chain_box import Chain, AUTH_MANAGER
+from loguru import logger
+from telebot import formatting, util
+from telebot import types
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
+from telebot.formatting import escape_markdown
+
+from llmkira.middleware.chain_box import Chain, AuthReloader
+from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
 from llmkira.middleware.user import SubManager
 from llmkira.schema import RawMessage
@@ -13,12 +22,6 @@ from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sender.telegram.utils import parse_command, is_valid_url
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
-from loguru import logger
-from telebot import formatting, util
-from telebot import types
-from telebot.async_telebot import AsyncTeleBot
-from telebot.asyncio_storage import StateMemoryStorage
-from telebot.formatting import escape_markdown
 
 StepCache = StateMemoryStorage()
 __sender__ = "telegram"
@@ -64,8 +67,8 @@ class TelegramBotRunner(object):
             _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
             return _got.status in ['administrator', 'sender']
 
-        async def auth_reloader(uuid, user_id):
-            chain: Chain = await AUTH_MANAGER.get_auth(uuid=uuid, user_id=str(user_id))
+        async def auth_reloader(uuid: str, platform: str, user_id: str) -> bool:
+            chain: Chain = await AuthReloader.from_meta(platform=platform, user_id=user_id).get_auth(uuid=uuid)
             if chain:
                 logger.info(f"Auth Task be sent\n--uuid {uuid} --user {user_id}")
                 await Task(queue=chain.address).send_task(task=chain.arg)
@@ -198,6 +201,33 @@ class TelegramBotRunner(object):
                 parse_mode="MarkdownV2"
             )
 
+        @bot.message_handler(commands='env', chat_types=['private'])
+        async def listen_env_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return None
+            _manager = EnvManager.from_meta(platform=__sender__, user_id=message.from_user.id)
+            try:
+                _meta_data = _manager.parse_env(env_string=_arg)
+                updated_env = await _manager.update_env(env=_meta_data)
+            except Exception as e:
+                logger.exception(f"[213562]env update failed {e}")
+                text = formatting.format_text(
+                    formatting.mbold("🧊 Failed"),
+                    separator="\n"
+                )
+            else:
+                text = formatting.format_text(
+                    formatting.mbold("🦴 Env Changed"),
+                    formatting.mcode(json.dumps(updated_env, indent=2)),
+                    separator="\n"
+                )
+            await bot.reply_to(
+                message,
+                text=text,
+                parse_mode="MarkdownV2"
+            )
+
         @bot.message_handler(commands='unbind', chat_types=['private'])
         async def listen_unbind_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
@@ -265,7 +295,7 @@ class TelegramBotRunner(object):
                 if not is_empty_command(text=message.text):
                     _cmd, _arg = parse_command(command=message.text)
                     try:
-                        _run = await auth_reloader(uuid=_arg, user_id=message.from_user.id)
+                        _run = await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
                     except Exception as e:
                         logger.error(f"[270563]auth_reloader failed {e}")
                         _run = None
@@ -326,7 +356,7 @@ class TelegramBotRunner(object):
                 if not is_empty_command(text=message.text):
                     _cmd, _arg = parse_command(command=message.text)
                     try:
-                        _run = await auth_reloader(uuid=_arg, user_id=message.from_user.id)
+                        _run = await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
                     except Exception as e:
                         logger.error(f"[270563]auth_reloader failed {e}")
                         _run = None

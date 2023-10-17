@@ -15,7 +15,8 @@ import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 
-from llmkira.middleware.chain_box import Chain, AUTH_MANAGER, CHAIN_MANAGER
+from llmkira.middleware.chain_box import Chain, AuthReloader, ChainReloader
+from llmkira.middleware.env_virtual import EnvManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.func_calling.register import ToolRegister
@@ -36,10 +37,10 @@ class ChainFunc(object):
             return None
         _task_forward.task_meta = meta
         # 注册部署点
-        task_id = await AUTH_MANAGER.add_auth(
-            task=Chain(
+        task_id = await AuthReloader(uid=_task_forward.receiver.uid).add_auth(
+            chain=Chain(
                 uuid=meta.verify_uuid,
-                user_id=str(_task_forward.receiver.user_id),
+                uid=_task_forward.receiver.uid,
                 address=__receiver__,  # 重要：转发回来这里
                 time=int(time.time()),
                 arg=TaskHeader(
@@ -74,13 +75,15 @@ class ChainFunc(object):
     async def resign_chain(
             task: TaskHeader,
             parent_func: str,
-            repeatable: bool
+            repeatable: bool,
+            deploy_child: int
     ):
         """
         注册链
         :param task: 任务
         :param parent_func: 父函数
         :param repeatable: 是否可重复
+        :param deploy_child: 是否部署子链
         """
         _task_forward: TaskHeader = task.copy()
         meta = _task_forward.task_meta.child(__receiver__)
@@ -104,10 +107,14 @@ class ChainFunc(object):
         except Exception as e:
             logger.error(e)
             logger.warning(f"[362211]Remove function {parent_func} failed")
+        # 放弃子链
+        if deploy_child == 0:
+            logger.debug(f"[112532] Function {parent_func} End its chain...")
+            return None
         # 注册部署点
-        await CHAIN_MANAGER.add_task(
-            task=Chain(
-                user_id=str(_task_forward.receiver.user_id),
+        await ChainReloader(uid=_task_forward.receiver.uid).add_task(
+            chain=Chain(
+                uid=_task_forward.receiver.uid,
                 address=_task_forward.receiver.platform,
                 time=int(time.time()),
                 arg=TaskHeader(
@@ -168,21 +175,18 @@ class FunctionReceiver(object):
         await ChainFunc.resign_chain(
             task=_task,
             parent_func=func_message.function_call.name,
-            repeatable=_tool_obj.repeatable
+            repeatable=_tool_obj.repeatable,
+            deploy_child=_tool_obj.deploy_child,
         )
+        _env_dict = await EnvManager.from_uid(uid=_task.receiver.uid).get_env_list(name_list=_tool_obj.env_required)
+        assert isinstance(_env_dict, dict), "env_dict must be dict"
         # 运行函数
-        await _tool_obj.run(
+        await _tool_obj.load(
             task=_task,
             receiver=_task.receiver,
-            arg=_arg
+            arg=_arg,
+            env=_env_dict
         )
-        # 注册区域，必须在run之后
-        """
-        reload_tool = .get_tool(name=message.function_call.name)
-        if reload_tool:
-            logger.info(f"[875521]Chain child callback sent {message.function_call.name}")
-            await reload_tool().callback(sign="resign", task=_task)
-        """
 
     async def on_message(self, message: AbstractIncomingMessage):
         """

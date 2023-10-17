@@ -7,19 +7,21 @@ import os
 import time
 from typing import List, Literal
 
-from llmkira.middleware.user import SubManager, UserInfo
-from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint import openai
-from llmkira.sdk.endpoint.openai import Message
-from llmkira.sdk.endpoint.openai.action import Scraper
-from llmkira.sdk.memory.redis import RedisChatMessageHistory
-from llmkira.task import TaskHeader
-from llmkira.utils import sync
 from loguru import logger
 
+from ..middleware.user import SubManager, UserInfo
+from ..schema import RawMessage
+from ..sdk.endpoint import openai
+from ..sdk.endpoint.openai import Message
+from ..sdk.endpoint.openai.action import Scraper
+from ..sdk.memory.redis import RedisChatMessageHistory
+from ..task import TaskHeader
+from ..utils import sync
+
 RULE = """[ASSISTANT RULE]
-* RE-SENDING THE FUNCTION WITH THE SAME PARAMETERS IS NOT ALLOWED
-* SPEAK IN A MORE HUMAN-LIKE MANNER
+* DO NOT RE-USE THE FUNCTION WITH SAME PARAMETERS
+* KEEP YOUR ANSWERS CONCISE AND NON-REPETITIVE
+* SPEAK IN MORE かわいい STYLE
 [ASSISTANT RULE]"""
 
 
