@@ -23,7 +23,7 @@ from . import (
     _module_name_to_plugin_name,
     path_to_module_name
 )
-from .error import escape_tag
+from .error import escape_tag, OpenApiError
 from .schema import Plugin, PluginMetadata
 
 
@@ -234,6 +234,10 @@ class PluginLoader(SourceFileLoader):
 
         try:
             super().exec_module(module)
+        except OpenApiError as e:
+            _revert_plugin(plugin)
+            logger.error(e)
+            return
         except Exception:
             _revert_plugin(plugin)
             raise

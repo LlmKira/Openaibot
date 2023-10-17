@@ -11,6 +11,7 @@ def help_message():
     /task - 任务
     /tool - 工具列表
     /clear - 删除自己的记录
+    /auth - 授权
     
 Private Chat Only:
     /bind - 绑定可选平台
@@ -18,4 +19,7 @@ Private Chat Only:
     /rset_endpoint - 自定义后端
     /rset_key - 设置openai
     /clear_rset - 抹除自定义设置
-    """
+    /env - 配置变量
+
+!Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
+"""

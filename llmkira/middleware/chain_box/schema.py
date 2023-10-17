@@ -10,16 +10,18 @@ from pydantic import BaseModel, Field, validator
 
 
 class Chain(BaseModel):
-    user_id: str = Field(None, description="user_id")
+    uid: str = Field(None, description="platform:user_id")
     address: str = Field(None, description="address")
     time: int = 0
     arg: Any = Field(None, description="arg")
     uuid: str = shortuuid.uuid()[0:8]
 
-    @validator("user_id")
+    @validator("uid")
     def check_user_id(cls, v):
+        if v.count(":") != 1:
+            raise ValueError("Chain:uid format error")
         if not v:
-            raise ValueError("Chain:user_id is empty")
+            raise ValueError("Chain:uid is empty")
         return v
 
     @validator("address")

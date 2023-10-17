@@ -7,7 +7,7 @@ import threading
 from typing import List, Dict
 from typing import Optional, Type
 
-from . import _openapi_version_, BaseTool, get_loaded_plugins
+from . import _openapi_version_, BaseTool, get_loaded_plugins, Plugin, get_plugin
 from .schema import FuncPair, Function
 
 threading_lock = threading.Lock()
@@ -21,10 +21,11 @@ class ToolRegister(object):
     def __init__(self):
         self.version = _openapi_version_
         self.pair_function: Dict[str, FuncPair] = {}
-        self.prepare()
+        self.plugins = get_loaded_plugins()
+        self.__prepare()
 
-    def prepare(self):
-        for item in get_loaded_plugins():
+    def __prepare(self):
+        for item in self.plugins:
             for sub_item in item.metadata.function:
                 self.pair_function[sub_item.name] = sub_item
 
@@ -33,10 +34,13 @@ class ToolRegister(object):
             return None
         return self.pair_function[name].tool
 
+    def get_plugin(self, name: str) -> Optional[Plugin]:
+        return get_plugin(name)
+
     @property
     def functions(self) -> Dict[str, Function]:
         _item: Dict[str, Function] = {}
-        for item in get_loaded_plugins():
+        for item in self.plugins:
             for sub_item in item.metadata.function:
                 _item[sub_item.name] = sub_item.function
         return _item
@@ -44,7 +48,7 @@ class ToolRegister(object):
     @property
     def tools(self) -> List[Type[BaseTool]]:
         _item: List[Type[BaseTool]] = []
-        for item in get_loaded_plugins():
+        for item in self.plugins:
             for sub_item in item.metadata.function:
                 _item.append(sub_item.tool)
         return _item

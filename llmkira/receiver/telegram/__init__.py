@@ -10,7 +10,11 @@ from typing import List
 
 import telebot
 from aio_pika.abc import AbstractIncomingMessage
-from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
+from loguru import logger
+from telebot import TeleBot, formatting
+
+from llmkira.middleware.chain_box import Chain, ChainReloader
+from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.schema import RawMessage
@@ -21,8 +25,6 @@ from llmkira.sdk.schema import Message, File
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
 from llmkira.utils import sync
-from loguru import logger
-from telebot import TeleBot, formatting
 
 __receiver__ = "telegram"
 
@@ -124,18 +126,46 @@ class TelegramSender(object):
         if not _tool:
             logger.warning(f"not found function {message.function_call.name}")
             return None
-        task_message = formatting.format_text(
+
+        tool = _tool()
+
+        _func_tips = [
             formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
             formatting.mcode(message.function_call.arguments),
+        ]
+
+        if tool.env_required:
+            __secret__ = await EnvManager.from_uid(
+                uid=task.receiver.uid
+            ).get_env_list(name_list=tool.env_required)
+            # 查找是否有空
+            _required_env = [
+                name
+                for name in tool.env_required
+                if not __secret__.get(name, None)
+            ]
+            _need_env_list = [
+                f"`{formatting.escape_markdown(name)}`"
+                for name in _required_env
+            ]
+            _need_env_str = ",".join(_need_env_list)
+            _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
+            help_docs = tool.env_help_docs(_required_env)
+            _func_tips.append(formatting.mitalic(help_docs))
+
+        task_message = formatting.format_text(
+            *_func_tips,
             separator="\n"
         )
-        if not _tool().silent:
+
+        if not tool.silent:
             self.bot.send_message(
                 chat_id=chat_id,
                 text=task_message,
                 reply_to_message_id=reply_to_message_id,
                 parse_mode="MarkdownV2"
             )
+
         # 回写创建消息
         sign = f"<{task.task_meta.sign_as[0] + 1}>"
         # 二周目消息不回写，因为写过了
@@ -146,6 +176,7 @@ class TelegramSender(object):
                 RawMessage(
                     text=f"Okay,Task be created:{message.function_call.arguments}.")]
         )
+
         # 构建对应的消息
         receiver = task.receiver.copy()
         receiver.platform = __receiver__
@@ -314,7 +345,7 @@ class TelegramReceiver(object):
             _task, _llm, _point = await self.deal_message(message)
             # 启动链式函数应答循环
             if _task:
-                chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(_task.receiver.user_id))
+                chain: Chain = await ChainReloader(uid=_task.receiver.uid).get_task()
                 if chain:
                     logger.info(f"Catch chain callback\n--callback_send_by {_point}")
                     await Task(queue=chain.address).send_task(task=chain.arg)

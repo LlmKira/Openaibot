@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/8/19 上午12:09
-# @Author  : sudoskys
-# @File    : sticker.py
-# @Software: PyCharm
+__plugin_name__ = "convert_to_sticker"
+__openapi_version__ = "20231017"
+
+from llmkira.sdk.func_calling import verify_openapi_version
+
+verify_openapi_version(__plugin_name__, __openapi_version__)
 from io import BytesIO
 from math import floor
 
 from PIL import Image
-from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
+from loguru import logger
+from pydantic import validator, BaseModel
+
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair, PluginMetadata
 from llmkira.task import Task, TaskHeader
-from loguru import logger
-from pydantic import validator, BaseModel
 
-__plugin_name__ = "convert_to_sticker"
+
 sticker = Function(name=__plugin_name__, description="Help user convert pictures to stickers")
 sticker.add_property(
     property_name="yes_no",
@@ -121,14 +123,7 @@ class StickerTool(BaseTool):
             logger.error(e)
 
     async def callback(self, sign: str, task: TaskHeader):
-        if sign == "reply":
-            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
-            if chain:
-                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
-                await Task(queue=chain.address).send_task(task=chain.arg)
-            return True
-        else:
-            return False
+        return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
@@ -191,7 +186,7 @@ __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
     description="Convert pictures to stickers",
     usage=str(StickerTool().keywords),
-    openapi_version="20231013",
+    openapi_version=__openapi_version__,
     function={
         FuncPair(function=sticker, tool=StickerTool)
     },

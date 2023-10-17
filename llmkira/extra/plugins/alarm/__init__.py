@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/8/18 下午6:11
-# @Author  : sudoskys
-# @Software: PyCharm
+__plugin_name__ = "set_alarm_reminder"
+__openapi_version__ = "20231017"
+
+from llmkira.sdk.func_calling import verify_openapi_version
+
+verify_openapi_version(__plugin_name__, __openapi_version__)
+
 import datetime
 import re
 import time
@@ -9,15 +13,13 @@ import time
 from loguru import logger
 from pydantic import validator, BaseModel
 
-from llmkira.middleware.chain_box import Chain, CHAIN_MANAGER
 from llmkira.receiver.aps import SCHEDULER
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.openai import Function
-from llmkira.sdk.func_calling import PluginMetadata, BaseTool, verify_openapi_version
+from llmkira.sdk.func_calling import PluginMetadata, BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.task import Task, TaskHeader
 
-__plugin_name__ = "set_alarm_reminder"
 alarm = Function(name=__plugin_name__, description="Set a timed reminder (only for minutes)")
 alarm.add_property(
     property_name="delay",
@@ -56,6 +58,8 @@ class AlarmTool(BaseTool):
     keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
     pattern = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
     require_auth: bool = True
+
+    # env_required: list = ["SCHEDULER", "TIMEZONE"]
 
     def pre_check(self):
         return True
@@ -103,14 +107,7 @@ class AlarmTool(BaseTool):
             logger.error(e)
 
     async def callback(self, sign: str, task: TaskHeader):
-        if sign == "reply":
-            chain: Chain = await CHAIN_MANAGER.get_task(user_id=str(task.receiver.user_id))
-            if chain:
-                logger.info(f"{__plugin_name__}:chain callback locate in {sign} be sent")
-                await Task(queue=chain.address).send_task(task=chain.arg)
-            return True
-        else:
-            return False
+        return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
@@ -179,10 +176,9 @@ __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
     description="Set a timed reminder (only for minutes)",
     usage="set_alarm_reminder 10 minutes later remind me to do something",
-    openapi_version="20231013",
+    openapi_version=__openapi_version__,
     function={
         FuncPair(function=alarm, tool=AlarmTool)
     },
     homepage="https://github.com/LlmKira"
 )
-verify_openapi_version(__plugin_name__, __plugin_meta__)
