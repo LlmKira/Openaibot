@@ -120,7 +120,7 @@ docker ps -l
 
 ```shell
 cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot
 
 ```
 

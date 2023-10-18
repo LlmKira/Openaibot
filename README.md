@@ -141,7 +141,7 @@ docker ps -l
 
 ```shell
 cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot
 
 ```
 
@@ -208,6 +208,10 @@ We can't do it on our own at the moment:
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 
-## 📜 Agreement
+## 📜 告知
 
 > 此项目与 Openai 官方无关，全称为 OpenAiBot，表示开放人工智能机器人，并不表示为 Openai 所属机器人。
+
+> 如果您所在辖区禁止使用 Openai 服务，请勿使用此项目。
+
+> 即使违反OSI，但公平起见，如果您所在辖区法律与本项目开源协议 *冲突* 或 *部分冲突*，禁止使用此项目。
