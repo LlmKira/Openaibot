@@ -26,6 +26,14 @@ class BaseTool(ABC, BaseModel):
     require_auth_kwargs: dict = {}
     env_required: List[str] = Field([], description="环境变量要求")
 
+    @final
+    @property
+    def name(self):
+        """
+        工具名称
+        """
+        return self.function.name
+
     def env_help_docs(self, empty_env: List[str]) -> str:
         """
         环境变量帮助文档

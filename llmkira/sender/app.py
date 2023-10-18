@@ -8,11 +8,11 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from llmkira import load_plugins
-from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugins
 from loguru import logger
 
-from .rss import RssApp
+from llmkira import load_plugins
+from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugins
+from .rss import RssAppRunner
 from .telegram import TelegramBotRunner
 
 load_dotenv()
@@ -30,13 +30,13 @@ logger.add(sink='run.log',
 
 __area__ = "sender"
 
-# 注册机器人事件
-telegram_bot = TelegramBotRunner().telegram()
-rss_app = RssApp()
+# 异步事件
+telegram_bot = TelegramBotRunner().run()
+rss_app = RssAppRunner().run(interval=60 * 60 * 1)
 
 func = [
     telegram_bot,
-    rss_app.rss_polling(interval=60 * 60 * 1),
+    rss_app,
 ]
 
 # 初始化插件系统

@@ -25,6 +25,7 @@ class ToolRegister(object):
         self.__prepare()
 
     def __prepare(self):
+        # 遍历所有插件
         for item in self.plugins:
             for sub_item in item.metadata.function:
                 self.pair_function[sub_item.name] = sub_item

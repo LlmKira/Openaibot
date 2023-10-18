@@ -223,10 +223,6 @@ UUID USERID KWARGS
 
 这可能是一个潜在的问题，我们的系统必须实现两个实例才能分离收发，必须需要同步API.
 
-### 失败的补偿处理
-
-错误禁用，手动复位。需要一个计数器。Func Loader 需要好好打磨。
-
 ### 产品定位
 
 针对个人还是多人？
@@ -240,4 +236,15 @@ UUID USERID KWARGS
 ### 同发送者消息上下文合并
 
 LLM 会不会有表现提升？
+
+### 失败的补偿处理
+
+错误禁用，手动复位。需要一个计数器。Func Loader 需要好好打磨。
+https://github.com/LlmKira/Openaibot/issues/268
+
+### 插件系统的冗余设计
+
+https://github.com/LlmKira/Openaibot/issues/284
+
+
 

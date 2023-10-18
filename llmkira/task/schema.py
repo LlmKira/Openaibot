@@ -123,23 +123,28 @@ class TaskHeader(BaseModel):
     message: List[RawMessage] = Field(None, description="消息内容")
 
     @classmethod
-    def from_telegram(cls, message: Union[types.Message],
+    def from_telegram(cls,
+                      message: Union[types.Message],
                       task_meta: Meta,
                       file: List[File] = None,
                       reply: bool = True,
                       hide_file_info: bool = False,
+                      deliver_back_message: List[types.Message] = None,
                       trace_back_message: List[types.Message] = None
                       ):
         """
         从telegram消息中构建任务
         """
 
-        if (trace_back_message is None) or (not all(trace_back_message)):
-            trace_back_message = []
-        if file is None:
-            file = []
+        # none -> []
+        trace_back_message = [] if not trace_back_message else trace_back_message
+        file = [] if not file else file
+        deliver_back_message = [] if not deliver_back_message else deliver_back_message
 
         def _convert(_message: types.Message) -> Optional[RawMessage]:
+            """
+            消息标准化
+            """
             if not _message:
                 raise ValueError(f"Message is empty")
             if isinstance(_message, types.Message):
@@ -152,26 +157,37 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text if text else f"(hi)",  # Empty Message
+                text=text if text else f"(empty message)",
                 created_at=created_at
             )
 
+        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+
+        # A
         _file_name = []
-        if file:
-            for _file in file:
-                _file_name.append(_file.file_prompt)
+        for _file in file:
+            _file_name.append(_file.file_prompt)
+        # 转换为标准消息
         head_message = _convert(message)
         assert head_message, "HeadMessage is empty"
+        # 附加文件信息
         head_message.file = file
+        # 追加元信息
         if not hide_file_info:
             head_message.text += "\n" + "\n".join(_file_name)
+
+        # 追加回溯消息
         message_list = []
         if trace_back_message:
             for item in trace_back_message:
-                message_list.append(_convert(item))
+                if item:
+                    message_list.append(_convert(item))
+        message_list.extend(deliver_message_list)
         message_list.append(head_message)
-        message_list = [item for item in message_list if item]
+
         # 去掉 None
+        message_list = [item for item in message_list if item]
+
         return cls(
             task_meta=task_meta,
             sender=cls.Location(
@@ -234,10 +250,12 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 message_id=None
             ),
-            message=[RawMessage(
-                user_id=user_id,
-                chat_id=user_id,
-                text=message_text,
-                created_at=int(time.time())
-            )]
+            message=[
+                RawMessage(
+                    user_id=user_id,
+                    chat_id=user_id,
+                    text=message_text,
+                    created_at=int(time.time())
+                )
+            ]
         )

@@ -17,6 +17,7 @@ from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
+from llmkira.receiver.schema import ReplyRunner
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.error import RateLimitError
@@ -24,6 +25,7 @@ from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import Message, File
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
+from llmkira.transducer import TransferManager
 from llmkira.utils import sync
 
 __receiver__ = "telegram"
@@ -33,7 +35,7 @@ from llmkira.middleware.router.schema import router_set
 router_set(role="receiver", name=__receiver__)
 
 
-class TelegramSender(object):
+class TelegramSender(ReplyRunner):
     """
     平台路由
     """
@@ -46,41 +48,47 @@ class TelegramSender(object):
         else:
             apihelper.proxy = None
 
-    def forward(self, chat_id, reply_to_message_id, message: List[RawMessage]):
+    def file_forward(self, chat_id, reply_to_message_id, file_list: List[File], **kwargs):
+        for file_obj in file_list:
+            if file_obj.file_url:
+                self.bot.send_document(chat_id=chat_id, document=file_obj.file_url,
+                                       reply_to_message_id=reply_to_message_id, caption=file_obj.file_name)
+                continue
+            _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
+            if not _data:
+                logger.error(f"file download failed {file_obj.file_id}")
+                continue
+            if file_obj.file_name.endswith((".jpg", ".png")):
+                self.bot.send_photo(
+                    chat_id=chat_id,
+                    photo=_data.pair,
+                    reply_to_message_id=reply_to_message_id,
+                    caption=file_obj.caption
+                )
+            elif file_obj.file_name.endswith(".ogg"):
+                self.bot.send_voice(
+                    chat_id=chat_id,
+                    voice=_data.pair,
+                    reply_to_message_id=reply_to_message_id,
+                    caption=file_obj.caption
+                )
+            else:
+                self.bot.send_document(
+                    chat_id=chat_id,
+                    document=_data.pair, reply_to_message_id=reply_to_message_id,
+                    caption=file_obj.caption
+                )
+
+    def forward(self, chat_id, reply_to_message_id, message: List[RawMessage], **kwargs):
         """
-        直接转发结果出来，不做任何处理
+        插件专用转发，是Task通用类型
         """
         for item in message:
-            for file_obj in item.file:
-                if file_obj.file_url:
-                    self.bot.send_document(chat_id=chat_id, document=file_obj.file_url,
-                                           reply_to_message_id=reply_to_message_id, caption=file_obj.file_name)
-                    continue
-                _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
-
-                if not _data:
-                    logger.error(f"file download failed {file_obj.file_id}")
-                    continue
-                if file_obj.file_name.endswith(".jpg") or file_obj.file_name.endswith(".png"):
-                    self.bot.send_photo(
-                        chat_id=chat_id,
-                        photo=_data.pair,
-                        reply_to_message_id=reply_to_message_id,
-                        caption=file_obj.file_name
-                    )
-                elif file_obj.file_name.endswith(".ogg"):
-                    self.bot.send_voice(
-                        chat_id=chat_id,
-                        voice=_data.pair,
-                        reply_to_message_id=reply_to_message_id,
-                        caption=file_obj.file_name
-                    )
-                else:
-                    self.bot.send_document(
-                        chat_id=chat_id,
-                        document=_data.pair, reply_to_message_id=reply_to_message_id,
-                        caption=file_obj.file_name
-                    )
+            self.file_forward(
+                chat_id=chat_id,
+                reply_to_message_id=reply_to_message_id,
+                file_list=item.file
+            )
             try:
                 self.bot.send_message(
                     chat_id=chat_id,
@@ -97,8 +105,20 @@ class TelegramSender(object):
                     reply_to_message_id=reply_to_message_id
                 )
 
-    def reply(self, chat_id, reply_to_message_id, message: List[Message]):
+    def reply(self, chat_id, reply_to_message_id, message: List[Message], **kwargs):
+        """
+        模型直转发，Message是Openai的类型
+        """
         for item in message:
+            _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
+            just_file, file_list = _transfer().build(message=item)
+            self.file_forward(
+                chat_id=chat_id,
+                reply_to_message_id=reply_to_message_id,
+                file_list=file_list
+            )
+            if just_file:
+                return None
             assert item.content, f"message content is empty"
             self.bot.send_message(
                 chat_id=chat_id,
@@ -106,7 +126,7 @@ class TelegramSender(object):
                 reply_to_message_id=reply_to_message_id
             )
 
-    def error(self, chat_id, reply_to_message_id, text):
+    def error(self, chat_id, reply_to_message_id, text, **kwargs):
         self.bot.send_message(
             chat_id=chat_id,
             text=text,
@@ -117,7 +137,9 @@ class TelegramSender(object):
                        task: TaskHeader,
                        llm: OpenaiMiddleware,
                        result: openai.OpenaiResult,
-                       message: Message):
+                       message: Message,
+                       **kwargs
+                       ):
         if not message.function_call:
             raise ValueError("message not have function_call,forward type error")
 
@@ -167,7 +189,7 @@ class TelegramSender(object):
             )
 
         # 回写创建消息
-        sign = f"<{task.task_meta.sign_as[0] + 1}>"
+        # sign = f"<{task.task_meta.sign_as[0] + 1}>"
         # 二周目消息不回写，因为写过了
         llm.write_back(
             role="assistant",
@@ -293,9 +315,7 @@ class TelegramReceiver(object):
                 # 重整
                 for _index, _message in enumerate(_task.message):
                     functions.extend(
-                        ToolRegister().filter_pair(
-                            key_phrases=_message.text,
-                        )
+                        ToolRegister().filter_pair(key_phrases=_message.text)
                     )
                 _task.task_meta.function_list = functions
         if _task.task_meta.sign_as[0] == 0:

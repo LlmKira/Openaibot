@@ -5,6 +5,7 @@
 # @Software: PyCharm
 import hashlib
 import pickle
+import time
 from io import BytesIO
 from typing import Union, List, Optional
 
@@ -44,7 +45,8 @@ class RawMessage(BaseModel):
     chat_id: int = Field(None, description="群组ID")
     text: str = Field(None, description="文本")
     file: List[File] = Field([], description="文件")
-    created_at: int = Field(None, description="创建时间")
+    created_at: int = Field(default_factory=int(time.time()), description="创建时间")
+    just_file: bool = Field(default=False, description="Send file only")
 
     class Config:
         arbitrary_types_allowed = True
