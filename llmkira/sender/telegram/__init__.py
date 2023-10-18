@@ -5,13 +5,6 @@
 # @Software: PyCharm
 import json
 
-from loguru import logger
-from telebot import formatting, util
-from telebot import types
-from telebot.async_telebot import AsyncTeleBot
-from telebot.asyncio_storage import StateMemoryStorage
-from telebot.formatting import escape_markdown
-
 from llmkira.middleware.chain_box import Chain, AuthReloader
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
@@ -22,6 +15,15 @@ from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sender.telegram.utils import parse_command, is_valid_url
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
+from llmkira.transducer import TransferManager
+from loguru import logger
+from telebot import formatting, util
+from telebot import types
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
+from telebot.formatting import escape_markdown
+
+from ..schema import Runner
 
 StepCache = StateMemoryStorage()
 __sender__ = "telegram"
@@ -29,12 +31,13 @@ TelegramTask = Task(queue=__sender__)
 __default_function_enable__ = True
 
 
-class TelegramBotRunner(object):
+class TelegramBotRunner(Runner):
+
     def __init__(self):
         self.bot = None
         self.proxy = None
 
-    async def telegram(self):
+    async def run(self):
         if not BotSetting.available:
             logger.warning("Sender Runtime:TelegramBot Setting not available")
             return None
@@ -76,7 +79,7 @@ class TelegramBotRunner(object):
             else:
                 return False
 
-        async def telegram_to_file(file):
+        async def upload(file):
             assert hasattr(file, "file_id"), "file_id not found"
             name = file.file_id
             _file_info = await bot.get_file(file.file_id)
@@ -85,7 +88,6 @@ class TelegramBotRunner(object):
                 name = f"{_file_info.file_unique_id}.jpg"
             if isinstance(file, types.Document):
                 name = file.file_name
-            # TODO 等待断点来规范化文件类型等消息,确保可以传入正常的文件ID
             return await RawMessage.upload_file(name=name, data=downloaded_file)
 
         async def create_task(message: types.Message, funtion_enable: bool = False):
@@ -93,27 +95,35 @@ class TelegramBotRunner(object):
             if message.text:
                 message.text = message.text.lstrip("/chat").lstrip("/task")
             if message.photo:
-                _file.append(await telegram_to_file(message.photo[-1]))
+                _file.append(await upload(message.photo[-1]))
             if message.document:
                 if message.document.file_size < 1024 * 1024 * 10:
-                    _file.append(await telegram_to_file(message.document))
+                    _file.append(await upload(message.document))
             if message.reply_to_message:
                 if message.reply_to_message.photo:
-                    _file.append(await telegram_to_file(message.reply_to_message.photo[-1]))
+                    _file.append(await upload(message.reply_to_message.photo[-1]))
                 if message.reply_to_message.document:
                     if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
-                        _file.append(await telegram_to_file(message.reply_to_message.document))
+                        _file.append(await upload(message.reply_to_message.document))
             message.text = message.text if message.text else ""
             logger.info(
-                f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}")
+                f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}"
+            )
+            # 任务构建
             try:
+                # 转析器
+                _transfer = TransferManager().sender_parser(agent_name=__sender__)
+                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                # Reply
                 success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_telegram(
                         message,
                         file=_file,
+                        deliver_back_message=deliver_back_message,
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", "telegram")),
                         trace_back_message=[message.reply_to_message]
-                    ))
+                    )
+                )
                 if not success:
                     await bot.reply_to(message, text=logs)
             except Exception as e:

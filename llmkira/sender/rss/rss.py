@@ -6,6 +6,8 @@
 
 
 # 这里其实是一个推送的单端实例，主要展示了 Router 的用法，让不同平台的推送可以通过 Router 进行交换
+# 但是这里的实现是有问题的，因为这里的推送是单端的，所以 Router 的作用其实是没有的，这里的 Router 只是为了展示
+# 为未来跨平台互动做准备
 
 import asyncio
 import json
@@ -18,13 +20,14 @@ from pydantic import BaseModel
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
-from llmkira.cache.redis import cache
-from llmkira.middleware.router import RouterManager
-from llmkira.middleware.router.schema import router_set
+from ..schema import Runner
+from ...cache.redis import cache
+from ...task import Task, TaskHeader
 
 __sender__ = "rss"
 
-from llmkira.task import Task, TaskHeader
+from ...middleware.router import RouterManager
+from ...middleware.router.schema import router_set
 
 router_set(role="sender", name=__sender__)
 
@@ -36,7 +39,7 @@ def sha1(string: str):
     return _sha1.hexdigest()[:10]
 
 
-class RssApp(object):
+class RssAppRunner(Runner):
 
     def parse_entry(self, entry):
         """
@@ -87,7 +90,7 @@ class RssApp(object):
                 )
                 continue
 
-    async def rss_polling(self, interval=60 * 60 * 1):
+    async def run(self, interval=60 * 60 * 1):
         logger.success("Sender Runtime:RSS Checker start")
         while True:
             # RSS 休眠
