@@ -5,7 +5,7 @@ polling
 httpx>=0.24.1
 socksio
 
-pydantic>1.10.0
+pydantic<2.0.0
 python-dotenv
 
 elara
