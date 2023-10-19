@@ -120,6 +120,11 @@ docker ps -l
 
 ## ▶️ Run
 
+We recommend running the database server with Docker.
+
+But we **don't recommend** running BOT in Docker because I often forget to package new dependence. 🥲
+So recommend using the PM2 panel(`pm2 start pm2.json`) to run the bot!
+
 ### Docker
 
 ```shell
