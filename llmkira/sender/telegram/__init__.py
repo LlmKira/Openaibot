@@ -53,7 +53,7 @@ class TelegramBotRunner(Runner):
 
     async def run(self):
         if not BotSetting.available:
-            logger.warning("Sender Runtime:TelegramBot Setting not available")
+            logger.warning("Sender Runtime:TelegramBot empty")
             return None
         self.bot = AsyncTeleBot(BotSetting.token, state_storage=StepCache)
         self.proxy = BotSetting.proxy_address
@@ -280,8 +280,9 @@ class TelegramBotRunner(Runner):
             _paper = [[c.name, c.description] for name, c in _tool.items()]
             arg = [
                 formatting.mbold(item[0]) +
-                formatting.mbold(" - ") +
-                formatting.mitalic(item[1])
+                "\n" +
+                escape_markdown(item[1]) +
+                "\n"
                 for item in _paper
             ]
             return await bot.reply_to(

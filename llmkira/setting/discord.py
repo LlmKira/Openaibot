@@ -23,7 +23,7 @@ class DiscordBot(BaseSettings):
     @validator('token')
     def proxy_address_validator(cls, v):
         if v is None:
-            raise ValueError('Bot token is None')
+            logger.warning(f"DiscordBot token is empty")
         return v
 
     @root_validator

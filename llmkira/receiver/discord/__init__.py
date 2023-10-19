@@ -423,7 +423,7 @@ class DiscordReceiver(object):
 
     async def discord(self):
         if not BotSetting.available:
-            logger.warning("Receiver Runtime:Discord Setting not available")
+            logger.warning("Receiver Runtime:Discord Setting empty")
             return None
         await discord_rest.start()
         __sender__.acquire()

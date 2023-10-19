@@ -69,7 +69,7 @@ class DiscordBotRunner(Runner):
 
     async def run(self):
         if not BotSetting.available:
-            logger.warning("Sender Runtime:Discord Setting not available")
+            logger.warning("Sender Runtime:Discord Setting empty")
             return None
         self.bot = hikari.GatewayBot(
             token=BotSetting.token,
