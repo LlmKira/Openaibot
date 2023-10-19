@@ -7,6 +7,7 @@ import copy
 import time
 from typing import Literal, Tuple, List, Union, Optional
 
+import hikari
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseSettings, Field, BaseModel, root_validator
@@ -103,10 +104,22 @@ class TaskHeader(BaseModel):
             return copy.deepcopy(self)
 
     class Location(BaseModel):
-        platform: str = Field(None, description="平台")
-        chat_id: int = Field(None, description="群组ID")
-        user_id: int = Field(None, description="用户ID")
-        message_id: int = Field(None, description="消息ID")
+        """
+        Union[str, int]
+        here .... address
+        """
+        platform: str = Field(None, description="platform")
+        user_id: int = Field(None, description="user id")
+        chat_id: int = Field(None, description="guild id(channel in dm)/Telegram chat id")
+        thread_id: int = Field(None, description="channel id/Telegram thread")
+        message_id: Union[str, int] = Field(None, description="message id")
+
+        @root_validator()
+        def to_string(cls, values):
+            for key in values:
+                if isinstance(values[key], int):
+                    values[key] = str(values[key])
+            return values
 
         @property
         def uid(self):
@@ -194,6 +207,7 @@ class TaskHeader(BaseModel):
                 platform="telegram",
                 chat_id=message.chat.id,
                 user_id=message.from_user.id,
+                # dm=message.chat.type == "private",
                 message_id=message.message_id if reply else None
             ),
             receiver=cls.Location(
@@ -258,4 +272,87 @@ class TaskHeader(BaseModel):
                     created_at=int(time.time())
                 )
             ]
+        )
+
+    @classmethod
+    def from_discord_hikari(cls,
+                            message: hikari.Message,
+                            task_meta: Meta,
+                            file: List[File] = None,
+                            reply: bool = True,
+                            hide_file_info: bool = False,
+                            deliver_back_message: List[hikari.Message] = None,
+                            trace_back_message: List[hikari.Message] = None
+                            ):
+        # none -> []
+        trace_back_message = [] if not trace_back_message else trace_back_message
+        file = [] if not file else file
+        deliver_back_message = [] if not deliver_back_message else deliver_back_message
+
+        def _convert(_message: hikari.Message) -> Optional[RawMessage]:
+            """
+            消息标准化
+            """
+            if not _message:
+                raise ValueError(f"Message is empty")
+            if isinstance(_message, hikari.Message):
+                user_id = message.author.id
+                chat_id = message.guild_id if message.guild_id else message.channel_id
+                thread_id = message.channel_id
+                text = _message.content
+                created_at = _message.created_at.timestamp()
+            else:
+                raise ValueError(f"Unknown message type {type(_message)}")
+            return RawMessage(
+                user_id=user_id,
+                chat_id=chat_id,
+                thread_id=thread_id,
+                text=text if text else f"(empty message)",
+                created_at=created_at
+            )
+
+        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+
+        # A
+        _file_name = []
+        for _file in file:
+            _file_name.append(_file.file_prompt)
+        # 转换为标准消息
+        head_message = _convert(message)
+        assert head_message, "HeadMessage is empty"
+        # 附加文件信息
+        head_message.file = file
+        # 追加元信息
+        if not hide_file_info:
+            head_message.text += "\n" + "\n".join(_file_name)
+
+        # 追加回溯消息
+        message_list = []
+        if trace_back_message:
+            for item in trace_back_message:
+                if item:
+                    message_list.append(_convert(item))
+        message_list.extend(deliver_message_list)
+        message_list.append(head_message)
+
+        # 去掉 None
+        message_list = [item for item in message_list if item]
+
+        return cls(
+            task_meta=task_meta,
+            sender=cls.Location(
+                platform="discord_hikari",
+                thread_id=message.channel_id,
+                chat_id=message.guild_id if message.guild_id else message.channel_id,
+                user_id=message.author.id,
+                message_id=message.id if reply else None
+            ),
+            receiver=cls.Location(
+                platform="discord_hikari",
+                thread_id=message.channel_id,
+                chat_id=message.guild_id if message.guild_id else message.channel_id,
+                user_id=message.author.id,
+                message_id=message.id if reply else None
+            ),
+            message=message_list
         )

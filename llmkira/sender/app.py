@@ -12,6 +12,7 @@ from loguru import logger
 
 from llmkira import load_plugins
 from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugins
+from .discord import DiscordBotRunner
 from .rss import RssAppRunner
 from .telegram import TelegramBotRunner
 
@@ -30,15 +31,6 @@ logger.add(sink='run.log',
 
 __area__ = "sender"
 
-# 异步事件
-telegram_bot = TelegramBotRunner().run()
-rss_app = RssAppRunner().run(interval=60 * 60 * 1)
-
-func = [
-    telegram_bot,
-    rss_app,
-]
-
 # 初始化插件系统
 load_plugins("llmkira/extra/plugins")
 load_from_entrypoint("llmkira.extra.plugin")
@@ -49,7 +41,10 @@ logger.success(f"\n===========Third Party Plugins Loaded==========\n >>{loaded_m
 
 async def _main():
     await asyncio.gather(
-        *func
+        # 异步事件
+        TelegramBotRunner().run(),
+        RssAppRunner().run(interval=60 * 60 * 1),
+        DiscordBotRunner().run(),
     )
 
 

@@ -1,4 +1,5 @@
 pyTelegramBotAPI
+hikari
 pathlib>=1.0.1
 loguru>=0.5.3
 polling

@@ -16,9 +16,8 @@ def help_message():
 Private Chat Only:
     /bind - 绑定可选平台
     /unbind - 解绑可选平台
-    /rset_endpoint - 自定义后端
-    /rset_key - 设置openai
-    /clear_rset - 抹除自定义设置
+    /set_endpoint - 自定义后端
+    /clear_endpoint - 抹除自定义设置
     /env - 配置变量
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.

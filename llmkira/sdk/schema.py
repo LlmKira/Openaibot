@@ -7,9 +7,10 @@ import asyncio
 # ATTENTION:禁止调用上层任何包，否则会导致循环引用
 from typing import Literal, Optional, Coroutine, List
 
-from llmkira.sdk.error import ValidationError
 from loguru import logger
 from pydantic import BaseModel, root_validator, Field
+
+from .error import ValidationError
 
 
 def _sync(coroutine: Coroutine):
@@ -74,7 +75,7 @@ class File(BaseModel):
     file_id: str = Field(None, description="文件ID")
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
-    caption: str = Field("", description="desc")
+    caption: str = Field(default='', description="文件注释")
 
     # hash able
     def __eq__(self, other):
@@ -91,7 +92,14 @@ class File(BaseModel):
 
     @property
     def file_prompt(self):
-        return f"[ReadableFile{self.dict()}]"
+        """
+        FOR LLM
+        """
+        _comment = '('
+        for key, value in self.dict().items():
+            if value:
+                _comment += f"{key}={value},"
+        return f"[ReadableFile{_comment[:-1]})]"
 
 
 class Message(BaseModel):

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmkira"
-version = "0.25.2"
+version = "0.25.3"
 description = "A chain message bot based on OpenAI"
 authors = ["llmkira <me@dianas.cyou>"]
 license = "Apache-2.0"
@@ -16,7 +16,7 @@ classifiers = [
 packages = [{ include = "llmkira" }]
 
 [tool.poetry.dependencies]
-python = "^3.9,<3.13"
+python = ">=3.9,<3.12"
 pathlib = ">=1.0.1"
 pydantic = { version = "^1.10.0", extras = ["dotenv"] }
 loguru = ">=0.5.3"
@@ -36,6 +36,7 @@ fasttext-wheel = "^0.9.2"
 tenacity = "^8.2.3"
 pysocks = "^1.7.1"
 flask-sqlalchemy = "^3.1.1"
+hikari = "^2.0.0.dev121"
 
 
 [build-system]

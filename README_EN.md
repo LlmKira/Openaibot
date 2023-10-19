@@ -46,13 +46,17 @@ implementing some or more features.
 
 ### 🎬 Platform support
 
-| Platform | Support | Tip     |
-|----------|---------|---------|
-| Telegram | ✅       |         |
-| Discord  | ❌       | Working |
-| QQ       | ❌       |         |
-| Wechat   | ❌       |         |
-| Twitter  | ❌       |         |
+| Platform | Support | Tip             |
+|----------|---------|-----------------|
+| Telegram | ✅       |                 |
+| Discord  | ✅       |                 |
+| QQ       | ❌       | Working         |
+| Wechat   | ❌       |                 |
+| Twitter  | ❌       |                 |
+| Slack    | ❌       |                 |
+| Matrix   | ❌       |                 |
+| IRC      | ❌       |                 |
+| ...      |         | Create issue/pr |
 
 ## 📝 Deployment Guide
 
@@ -156,10 +160,10 @@ tool - tool list
 bind - bind optional platforms
 unbind - unbind optional platforms
 clear - Delete your own records
-rset_endpoint - customize the backend
-rset_key - set openai
-clear_rset - wipe custom settings
+set_endpoint - customize the backend
+clear_endpoint - wipe custom settings
 auth - pass the task
+env - set secret
 
 ```
 

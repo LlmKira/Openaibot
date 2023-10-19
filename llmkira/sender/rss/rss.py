@@ -41,6 +41,9 @@ def sha1(string: str):
 
 class RssAppRunner(Runner):
 
+    async def upload(self, *args, **kwargs):
+        return
+
     def parse_entry(self, entry):
         """
         {

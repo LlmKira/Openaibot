@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/8/17 下午8:46
+# @Time    : 2023/10/18 下午10:46
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import atexit
 import os
 import ssl
-import time
 from typing import List
 
-import telebot
+import hikari
 from aio_pika.abc import AbstractIncomingMessage
+from hikari.impl import ProxySettings
 from loguru import logger
-from telebot import TeleBot, formatting
+from telebot import formatting
 
 from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
@@ -22,118 +23,161 @@ from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.error import RateLimitError
 from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.schema import Message, File
-from llmkira.setting.telegram import BotSetting
+from llmkira.sdk.schema import File, Message
+from llmkira.setting.discord import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from llmkira.utils import sync
 
-__receiver__ = "telegram"
+__receiver__ = "discord_hikari"
 
 from llmkira.middleware.router.schema import router_set
+from llmkira.transducer import TransferManager
 
 router_set(role="receiver", name=__receiver__)
 
+discord_rest: hikari.RESTApp = hikari.RESTApp(
+    proxy_settings=ProxySettings(
+        url=BotSetting.proxy_address
+    )
+)
 
-class TelegramSender(ReplyRunner):
+
+class DiscordSender(ReplyRunner):
     """
     平台路由
     """
 
     def __init__(self):
-        self.bot = TeleBot(token=BotSetting.token)
-        from telebot import apihelper
-        if BotSetting.proxy_address:
-            apihelper.proxy = {'https': BotSetting.proxy_address}
-        else:
-            apihelper.proxy = None
+        self.bot = None
 
-    def file_forward(self, receiver: TaskHeader.Location, file_list: List[File], **kwargs):
+    def acquire(self):
+        self.bot: hikari.impl.RESTClientImpl = discord_rest.acquire(
+            token=BotSetting.token,
+            token_type=hikari.TokenType.BOT
+        )
+
+    async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File], **kwargs):
         for file_obj in file_list:
+            # URL FIRST
             if file_obj.file_url:
-                self.bot.send_document(chat_id=receiver.chat_id, document=file_obj.file_url,
-                                       reply_to_message_id=receiver.message_id, caption=file_obj.file_name)
-                continue
+                async with self.bot as client:
+                    client: hikari.impl.RESTClientImpl
+                    _reply = None
+                    if receiver.thread_id != receiver.chat_id:
+                        _reply = await client.fetch_message(
+                            channel=receiver.thread_id,
+                            message=receiver.message_id
+                        )
+                    await client.create_message(
+                        channel=receiver.thread_id,
+                        attachment=hikari.files.URL(file_obj.file_url, filename=file_obj.file_name),
+                        reply=_reply,
+                    )
+                break
+            # DATA
             _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
+            file_warp = hikari.files.Bytes(_data.file_data, file_obj.file_name, mimetype="image/png")
             if file_obj.file_name.endswith((".jpg", ".png")):
-                self.bot.send_photo(
-                    chat_id=receiver.chat_id,
-                    photo=_data.pair,
-                    reply_to_message_id=receiver.message_id,
-                    caption=file_obj.caption
-                )
-            elif file_obj.file_name.endswith(".ogg"):
-                self.bot.send_voice(
-                    chat_id=receiver.chat_id,
-                    voice=_data.pair,
-                    reply_to_message_id=receiver.message_id,
-                    caption=file_obj.caption
-                )
+                async with self.bot as client:
+                    client: hikari.impl.RESTClientImpl
+                    _reply = None
+                    if receiver.thread_id != receiver.chat_id:
+                        _reply = await client.fetch_message(
+                            channel=receiver.thread_id,
+                            message=receiver.message_id
+                        )
+                    await client.create_message(
+                        channel=receiver.thread_id,
+                        embed=hikari.EmbedImage(
+                            resource=file_warp,
+                        ),
+                        reply=_reply
+                    )
             else:
-                self.bot.send_document(
-                    chat_id=receiver.chat_id,
-                    document=_data.pair,
-                    reply_to_message_id=receiver.message_id,
-                    caption=file_obj.caption
-                )
+                async with self.bot as client:
+                    client: hikari.impl.RESTClientImpl
+                    _reply = None
+                    if receiver.thread_id != receiver.chat_id:
+                        _reply = await client.fetch_message(
+                            channel=receiver.thread_id,
+                            message=receiver.message_id
+                        )
+                    await client.create_message(
+                        channel=receiver.thread_id,
+                        attachment=file_warp,
+                        reply=_reply
+                    )
 
-    def forward(self, receiver: TaskHeader.Location, message: List[RawMessage], **kwargs):
+    async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage], **kwargs):
         """
         插件专用转发，是Task通用类型
         """
         for item in message:
-            self.file_forward(
+            await self.file_forward(
                 receiver=receiver,
                 file_list=item.file
             )
-            try:
-                self.bot.send_message(
-                    chat_id=receiver.chat_id,
-                    text=item.text,
-                    reply_to_message_id=receiver.message_id,
-                    parse_mode="MarkdownV2"
-                )
-            except telebot.apihelper.ApiTelegramException as e:
-                time.sleep(3)
-                logger.error(f"telegram send message error, retry\n{e}")
-                self.bot.send_message(
-                    chat_id=receiver.chat_id,
-                    text=item.text,
-                    reply_to_message_id=receiver.message_id
+            async with self.bot as client:
+                client: hikari.impl.RESTClientImpl
+                _reply = None
+                if receiver.thread_id != receiver.chat_id:
+                    _reply = await client.fetch_message(
+                        channel=receiver.thread_id,
+                        message=receiver.message_id
+                    )
+                await client.create_message(
+                    channel=receiver.thread_id,
+                    content=item.text,
+                    reply=_reply
                 )
 
-    def reply(self, receiver: TaskHeader.Location, message: List[Message], **kwargs):
+    async def reply(self, receiver: TaskHeader.Location, message: List[Message], **kwargs):
         """
         模型直转发，Message是Openai的类型
         """
         for item in message:
             _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
             just_file, file_list = _transfer().build(message=item)
-            self.file_forward(
+            await self.file_forward(
                 receiver=receiver,
                 file_list=file_list
             )
             if just_file:
                 return None
             assert item.content, f"message content is empty"
-            self.bot.send_message(
-                chat_id=receiver.chat_id,
-                text=item.content,
-                reply_to_message_id=receiver.message_id
+            async with self.bot as client:
+                client: hikari.impl.RESTClientImpl
+                _reply = None
+                if receiver.thread_id != receiver.chat_id:
+                    _reply = await client.fetch_message(
+                        channel=receiver.thread_id,
+                        message=receiver.message_id
+                    )
+                await client.create_message(
+                    channel=receiver.thread_id,
+                    content=item.content,
+                    reply=_reply
+                )
+
+    async def error(self, receiver: TaskHeader.Location, text, **kwargs):
+        async with self.bot as client:
+            client: hikari.impl.RESTClientImpl
+            _reply = None
+            if receiver.thread_id != receiver.chat_id:
+                _reply = await client.fetch_message(
+                    channel=receiver.thread_id,
+                    message=receiver.message_id
+                )
+            await client.create_message(
+                channel=receiver.thread_id,
+                content=text,
+                reply=_reply
             )
 
-    def error(self, receiver: TaskHeader.Location, text, **kwargs):
-        self.bot.send_message(
-            chat_id=receiver.chat_id,
-            text=text,
-            reply_to_message_id=receiver.message_id
-        )
-
-    async def function(self,
-                       receiver: TaskHeader.Location,
+    async def function(self, receiver: TaskHeader.Location,
                        task: TaskHeader,
                        llm: OpenaiMiddleware,
                        result: openai.OpenaiResult,
@@ -153,7 +197,7 @@ class TelegramSender(ReplyRunner):
 
         _func_tips = [
             formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
-            formatting.mcode(message.function_call.arguments),
+            f"""```json\n{message.function_call.arguments}```""",
         ]
 
         if tool.env_required:
@@ -181,12 +225,19 @@ class TelegramSender(ReplyRunner):
         )
 
         if not tool.silent:
-            self.bot.send_message(
-                chat_id=receiver.chat_id,
-                text=task_message,
-                reply_to_message_id=receiver.message_id,
-                parse_mode="MarkdownV2"
-            )
+            async with self.bot as client:
+                client: hikari.impl.RESTClientImpl
+                _reply = None
+                if receiver.thread_id != receiver.chat_id:
+                    _reply = await client.fetch_message(
+                        channel=receiver.thread_id,
+                        message=receiver.message_id
+                    )
+                await client.create_message(
+                    channel=receiver.thread_id,
+                    content=task_message,
+                    reply=_reply
+                )
 
         # 回写创建消息
         # sign = f"<{task.task_meta.sign_as[0] + 1}>"
@@ -214,10 +265,10 @@ class TelegramSender(ReplyRunner):
         )
 
 
-__sender__ = TelegramSender()
+__sender__ = DiscordSender()
 
 
-class TelegramReceiver(object):
+class DiscordReceiver(object):
     """
     receive message from telegram
     """
@@ -263,7 +314,7 @@ class TelegramReceiver(object):
             try:
                 result = await self.llm_request(llm, disable_function=disable_function)
             except Exception as e:
-                __sender__.error(
+                await __sender__.error(
                     receiver=task.receiver,
                     text=f"🦴 Sorry, your request failed because: {e}"
                 )
@@ -278,7 +329,7 @@ class TelegramReceiver(object):
                         message=result.default_message,
                         result=result
                     )
-            return __sender__.reply(
+            return await __sender__.reply(
                 receiver=task.receiver,
                 message=[result.default_message]
             )
@@ -293,7 +344,7 @@ class TelegramReceiver(object):
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         # 没有任何参数
         if _task.task_meta.direct_reply:
-            __sender__.forward(
+            await __sender__.forward(
                 receiver=_task.receiver,
                 message=_task.message
             )
@@ -342,7 +393,7 @@ class TelegramReceiver(object):
                 # 同时递交部署点
                 return _task, _llm, "callback_forward_reprocess"
             # 转发函数
-            __sender__.forward(
+            await __sender__.forward(
                 receiver=_task.receiver,
                 message=_task.message
             )
@@ -370,8 +421,26 @@ class TelegramReceiver(object):
         finally:
             await message.ack(multiple=False)
 
-    async def telegram(self):
+    async def discord(self):
         if not BotSetting.available:
-            logger.warning("Receiver Runtime:TelegramBot Setting empty")
+            logger.warning("Receiver Runtime:Discord Setting empty")
             return None
-        await self.task.consuming_task(self.on_message)
+        await discord_rest.start()
+        __sender__.acquire()
+        try:
+            await self.task.consuming_task(self.on_message)
+        except KeyboardInterrupt:
+            logger.warning("Discord Receiver shutdown")
+        except Exception as e:
+            logger.exception(e)
+            raise e
+        finally:
+            await discord_rest.close()
+
+
+@atexit.register
+def __clean():
+    try:
+        sync(discord_rest.close())
+    except Exception as e:
+        logger.warning(f"Discord Receiver cleaning failed when exiting \n{e}")
