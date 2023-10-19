@@ -3,12 +3,22 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-from llmkira.cache.redis import cache
-from llmkira.utils import sync
+from urllib.parse import urlparse
+
 from loguru import logger
 
+from llmkira.cache.redis import cache
+from llmkira.utils import sync
 from .schema import UserInfo
 from ...sdk.endpoint import openai
+
+
+def is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
 
 
 class SubManager(object):
@@ -50,13 +60,16 @@ class SubManager(object):
             self.sub_info.plugin_subs.lock.remove(plugin_name)
         return self.sub_info.plugin_subs.lock
 
-    async def set_endpoint(self, endpoint: str = None, api_key: str = None):
+    async def set_endpoint(self, api_key: str, endpoint: str = None):
         """
         这里容易产生鉴权错误和环境变量被泄漏的问题！！
         # TODO: 优化鉴权机制
         """
         if not endpoint:
             endpoint = "https://api.openai.com/v1/chat/completions"
+        else:
+            assert is_valid_url(endpoint), "endpoint is not valid url"
+        assert api_key, "api key is empty"
         self.sub_info.llm_driver = openai.Openai.Driver(endpoint=endpoint, api_key=api_key)
         self.sub_info.update_driver = True
         await self._upload(user_id=self.sub_info.user_id)

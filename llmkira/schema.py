@@ -41,11 +41,14 @@ def generate_md5_short_id(data):
 
 
 class RawMessage(BaseModel):
-    user_id: int = Field(None, description="用户ID")
-    chat_id: int = Field(None, description="群组ID")
+    user_id: int = Field(None, description="user id")
+    chat_id: int = Field(None, description="guild id(channel in dm)/Telegram chat id")
+    thread_id: int = Field(None, description="channel id/Telegram thread")
+
     text: str = Field(None, description="文本")
     file: List[File] = Field([], description="文件")
-    created_at: int = Field(default_factory=int(time.time()), description="创建时间")
+
+    created_at: Union[int, float] = Field(default=int(time.time()), description="创建时间")
     just_file: bool = Field(default=False, description="Send file only")
 
     class Config:

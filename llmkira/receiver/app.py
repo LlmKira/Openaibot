@@ -8,12 +8,13 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from llmkira.sdk.func_calling import load_plugins, load_from_entrypoint, get_entrypoint_plugins
+from llmkira.receiver.telegram import TelegramReceiver
 from loguru import logger
 
+from llmkira.sdk.func_calling import load_plugins, load_from_entrypoint, get_entrypoint_plugins
 from .aps import aps_start
+from .discord import DiscordReceiver
 from .function import FunctionReceiver
-from .telegram import TelegramReceiver
 
 load_dotenv()
 logger.remove()
@@ -33,7 +34,8 @@ __area__ = "receiver"
 func = [
     aps_start(),
     FunctionReceiver().function(),
-    TelegramReceiver().telegram()
+    TelegramReceiver().telegram(),
+    DiscordReceiver().discord(),
 ]
 
 # 导入插件

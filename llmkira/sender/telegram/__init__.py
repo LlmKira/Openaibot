@@ -5,17 +5,6 @@
 # @Software: PyCharm
 import json
 
-from llmkira.middleware.chain_box import Chain, AuthReloader
-from llmkira.middleware.env_virtual import EnvManager
-from llmkira.middleware.router import RouterManager, Router
-from llmkira.middleware.user import SubManager
-from llmkira.schema import RawMessage
-from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.memory.redis import RedisChatMessageHistory
-from llmkira.sender.telegram.utils import parse_command, is_valid_url
-from llmkira.setting.telegram import BotSetting
-from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from loguru import logger
 from telebot import formatting, util
 from telebot import types
@@ -23,6 +12,16 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
+from llmkira.middleware.env_virtual import EnvManager
+from llmkira.middleware.router import RouterManager, Router
+from llmkira.middleware.user import SubManager
+from llmkira.schema import RawMessage
+from llmkira.sdk.func_calling.register import ToolRegister
+from llmkira.sdk.memory.redis import RedisChatMessageHistory
+from llmkira.sender.util_func import parse_command, is_command, is_empty_command, auth_reloader
+from llmkira.setting.telegram import BotSetting
+from llmkira.task import Task, TaskHeader
+from llmkira.transducer import TransferManager
 from ..schema import Runner
 
 StepCache = StateMemoryStorage()
@@ -37,6 +36,21 @@ class TelegramBotRunner(Runner):
         self.bot = None
         self.proxy = None
 
+    async def is_user_admin(self, message: types.Message):
+        _got = await self.bot.get_chat_member(message.chat.id, message.from_user.id)
+        return _got.status in ['administrator', 'sender']
+
+    async def upload(self, file):
+        assert hasattr(file, "file_id"), "file_id not found"
+        name = file.file_id
+        _file_info = await self.bot.get_file(file.file_id)
+        downloaded_file = await self.bot.download_file(_file_info.file_path)
+        if isinstance(file, types.PhotoSize):
+            name = f"{_file_info.file_unique_id}.jpg"
+        if isinstance(file, types.Document):
+            name = file.file_name
+        return await RawMessage.upload_file(name=name, data=downloaded_file)
+
     async def run(self):
         if not BotSetting.available:
             logger.warning("Sender Runtime:TelegramBot Setting not available")
@@ -49,62 +63,29 @@ class TelegramBotRunner(Runner):
             asyncio_helper.proxy = self.proxy
             logger.info("TelegramBot proxy_tunnels being used!")
 
-        def is_command(text, command, check_empty=False):
-            if check_empty:
-                if len(text.split(" ")) == 1:
-                    return False
-            if text.startswith(f"{command} ") or text.startswith(f"{command}@{BotSetting.bot_username}"):
-                return True
-            if text == command:
-                return True
-            return False
-
-        def is_empty_command(text: str):
-            if not text.startswith("/"):
-                return False
-            if len(text.split(" ")) == 1:
-                return True
-            return False
-
-        async def is_admin(message: types.Message):
-            _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
-            return _got.status in ['administrator', 'sender']
-
-        async def auth_reloader(uuid: str, platform: str, user_id: str) -> bool:
-            chain: Chain = await AuthReloader.from_meta(platform=platform, user_id=user_id).get_auth(uuid=uuid)
-            if chain:
-                logger.info(f"Auth Task be sent\n--uuid {uuid} --user {user_id}")
-                await Task(queue=chain.address).send_task(task=chain.arg)
-                return True
-            else:
-                return False
-
-        async def upload(file):
-            assert hasattr(file, "file_id"), "file_id not found"
-            name = file.file_id
-            _file_info = await bot.get_file(file.file_id)
-            downloaded_file = await bot.download_file(_file_info.file_path)
-            if isinstance(file, types.PhotoSize):
-                name = f"{_file_info.file_unique_id}.jpg"
-            if isinstance(file, types.Document):
-                name = file.file_name
-            return await RawMessage.upload_file(name=name, data=downloaded_file)
-
         async def create_task(message: types.Message, funtion_enable: bool = False):
+            """
+            创建任务
+            :param message: telegram message
+            :param funtion_enable: 是否启用功能
+            :return:
+            """
             _file = []
             if message.text:
                 message.text = message.text.lstrip("/chat").lstrip("/task")
+            if not message.text:
+                return None
             if message.photo:
-                _file.append(await upload(message.photo[-1]))
+                _file.append(await self.upload(message.photo[-1]))
             if message.document:
                 if message.document.file_size < 1024 * 1024 * 10:
-                    _file.append(await upload(message.document))
+                    _file.append(await self.upload(message.document))
             if message.reply_to_message:
                 if message.reply_to_message.photo:
-                    _file.append(await upload(message.reply_to_message.photo[-1]))
+                    _file.append(await self.upload(message.reply_to_message.photo[-1]))
                 if message.reply_to_message.document:
                     if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
-                        _file.append(await upload(message.reply_to_message.document))
+                        _file.append(await self.upload(message.reply_to_message.document))
             message.text = message.text if message.text else ""
             logger.info(
                 f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}"
@@ -120,7 +101,7 @@ class TelegramBotRunner(Runner):
                         message,
                         file=_file,
                         deliver_back_message=deliver_back_message,
-                        task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", "telegram")),
+                        task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                         trace_back_message=[message.reply_to_message]
                     )
                 )
@@ -129,8 +110,8 @@ class TelegramBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
-        @bot.message_handler(commands='clear_rset', chat_types=['private'])
-        async def listen_clear_rset_command(message: types.Message):
+        @bot.message_handler(commands='clear_endpoint', chat_types=['private'])
+        async def listen_clear_endpoint_command(message: types.Message):
             # _cmd, _arg = parse_command(command=message.text)
             _tips = "🪄 Done"
             await SubManager(user_id=f"{__sender__}:{message.from_user.id}").clear_endpoint()
@@ -143,43 +124,43 @@ class TelegramBotRunner(Runner):
                 parse_mode="MarkdownV2"
             )
 
-        @bot.message_handler(commands='rset_key', chat_types=['private'])
-        async def listen_rset_key_command(message: types.Message):
+        @bot.message_handler(commands='set_endpoint', chat_types=['private'])
+        async def listen_set_endpoint_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
             if not _arg:
                 return
-            if len(_arg) > 10:
-                _tips = "🪄 Done"
-                await SubManager(user_id=f"{__sender__}:{message.from_user.id}").set_endpoint(endpoint=_arg)
+            _arg = str(_arg)
+            _except = _arg.split("#", maxsplit=1)
+            if len(_except) == 2:
+                openai_key, openai_endpoint = _except
             else:
-                _tips = f"🪄 {_arg} is too short"
-            return await bot.reply_to(
-                message,
-                text=formatting.format_text(
-                    formatting.mbold(_tips),
-                    separator="\n"
-                ),
-                parse_mode="MarkdownV2"
-            )
-
-        @bot.message_handler(commands='rset_endpoint', chat_types=['private'])
-        async def listen_rset_endpoint_command(message: types.Message):
-            _cmd, _arg = parse_command(command=message.text)
-            if not _arg:
-                return
-            if is_valid_url(_arg):
-                _tips = "🪄 Done"
-                await SubManager(user_id=f"{__sender__}:{message.from_user.id}").set_endpoint(endpoint=_arg)
+                openai_key, openai_endpoint = (_arg, None)
+            try:
+                await SubManager(user_id=f"{__sender__}:{message.from_user.id}").set_endpoint(
+                    api_key=openai_key,
+                    endpoint=openai_endpoint
+                )
+            except Exception as e:
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold(f"🪄 Failed: {e}"),
+                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>"),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
             else:
-                _tips = f"🪄 {_arg} is not a valid url"
-            return await bot.reply_to(
-                message,
-                text=formatting.format_text(
-                    formatting.mbold(_tips),
-                    separator="\n"
-                ),
-                parse_mode="MarkdownV2"
-            )
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold("🪄 Done"),
+                        formatting.mbold(f"openai_key: {openai_key}"),
+                        formatting.mbold(f"openai_endpoint: {openai_endpoint}"),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
 
         @bot.message_handler(commands='bind', chat_types=['private'])
         async def listen_bind_command(message: types.Message):
@@ -293,6 +274,26 @@ class TelegramBotRunner(Runner):
                 parse_mode="MarkdownV2"
             )
 
+        @bot.message_handler(commands='tool', chat_types=['private', 'supergroup', 'group'])
+        async def listen_tool_command(message: types.Message):
+            _tool = ToolRegister().functions
+            _paper = [[c.name, c.description] for name, c in _tool.items()]
+            arg = [
+                formatting.mbold(item[0]) +
+                formatting.mbold(" - ") +
+                formatting.mitalic(item[1])
+                for item in _paper
+            ]
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🔧 Tool List"),
+                    *arg,
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['private'])
         async def handle_private_msg(message: types.Message):
             """
@@ -305,35 +306,18 @@ class TelegramBotRunner(Runner):
                 if not is_empty_command(text=message.text):
                     _cmd, _arg = parse_command(command=message.text)
                     try:
-                        _run = await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
+                        await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
                     except Exception as e:
+                        auth_result = "❌ Auth failed,You dont have permission or the task do not exist"
                         logger.error(f"[270563]auth_reloader failed {e}")
-                        _run = None
-                    if _run:
-                        return await bot.reply_to(message, text="🪄 Auth Pass")
-                    return await bot.reply_to(message,
-                                              text="❌ Auth failed,You dont have permission or the task do not exist"
-                                              )
+                    else:
+                        auth_result = "🪄 Auth Pass"
+                    return await bot.reply_to(
+                        message,
+                        text=auth_result
+                    )
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, funtion_enable=True)
-            if is_command(text=message.text, command="/tool"):
-                _tool = ToolRegister().functions
-                _paper = [[c.name, c.description] for name, c in _tool.items()]
-                arg = [
-                    formatting.mbold(item[0]) +
-                    formatting.mbold(" - ") +
-                    formatting.mitalic(item[1])
-                    for item in _paper
-                ]
-                return await bot.reply_to(
-                    message,
-                    text=formatting.format_text(
-                        formatting.mbold("🔧 Tool List"),
-                        *arg,
-                        separator="\n"
-                    ),
-                    parse_mode="MarkdownV2"
-                )
             return await create_task(message, funtion_enable=__default_function_enable__)
 
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['supergroup', 'group'])
@@ -344,42 +328,25 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            if is_command(text=message.text, command="/tool"):
-                _tool = ToolRegister().functions
-                _paper = [[c.name, c.description] for name, c in _tool.items()]
-                arg = [
-                    formatting.mbold(item[0]) +
-                    formatting.mbold(" - ") +
-                    formatting.mitalic(item[1])
-                    for item in _paper
-                ]
-                return await bot.reply_to(
-                    message,
-                    text=formatting.format_text(
-                        formatting.mbold("🔧 Tool List"),
-                        *arg,
-                        separator="\n"
-                    ),
-                    parse_mode="MarkdownV2"
-                )
             if is_command(text=message.text, command="/auth"):
                 if not is_empty_command(text=message.text):
                     _cmd, _arg = parse_command(command=message.text)
                     try:
-                        _run = await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
+                        await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
                     except Exception as e:
+                        auth_result = "❌ Auth failed,You dont have permission or the task do not exist"
                         logger.error(f"[270563]auth_reloader failed {e}")
-                        _run = None
-                    if _run:
-                        return await bot.reply_to(message, text="🪄 Auth Pass")
-                    return await bot.reply_to(message,
-                                              text="❌ Auth failed,You dont have permission or the task do not exist"
-                                              )
-            if is_command(text=message.text, command="/chat"):
+                    else:
+                        auth_result = "🪄 Auth Pass"
+                    return await bot.reply_to(
+                        message,
+                        text=auth_result
+                    )
+            if is_command(text=message.text, command="/chat", at_bot_username=BotSetting.bot_username):
                 if is_empty_command(text=message.text):
                     return await bot.reply_to(message, text="?")
                 return await create_task(message, funtion_enable=__default_function_enable__)
-            if is_command(text=message.text, command="/task"):
+            if is_command(text=message.text, command="/task", at_bot_username=BotSetting.bot_username):
                 if is_empty_command(text=message.text):
                     return await bot.reply_to(message, text="?")
                 return await create_task(message, funtion_enable=True)

@@ -22,12 +22,6 @@ class TelegramBot(BaseSettings):
         env_file = '.env'
         env_file_encoding = 'utf-8'
 
-    @validator('token')
-    def proxy_address_validator(cls, v):
-        if v is None:
-            raise ValueError('Bot token is None')
-        return v
-
     @root_validator
     def bot_id_validator(cls, values):
         if values.get('bot_id') is None:
@@ -44,7 +38,7 @@ class TelegramBot(BaseSettings):
                 values['bot_username'] = _bot.username
                 values['bot_link'] = f"https://t.me/{values['bot_username']}"
             except Exception as e:
-                logger.error(f"TelegramBot id is None, {e}")
+                logger.warning(f"TelegramBot id is None, {e}")
             else:
                 logger.success(f"TelegramBot connect success: {values.get('bot_username')}")
         return values

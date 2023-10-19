@@ -44,6 +44,8 @@ class EnvManager(object):
         return _c
 
     async def __get_env(self) -> dict:
+        if not cache:
+            raise Exception("Redis not connected")
         _cache = await cache.read_data(key=f"env:{self.uid}")
         if not isinstance(_cache, dict):
             return dict()

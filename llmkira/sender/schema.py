@@ -9,5 +9,9 @@ from abc import abstractmethod, ABC
 class Runner(ABC):
 
     @abstractmethod
+    async def upload(self, *args, **kwargs):
+        ...
+
+    @abstractmethod
     def run(self, *args, **kwargs):
-        pass
+        ...

@@ -8,27 +8,27 @@ from abc import ABCMeta, abstractmethod
 
 class ReplyRunner(object, metaclass=ABCMeta):
     @abstractmethod
-    def file_forward(self, chat_id, reply_to_message_id, file_list, **kwargs):
+    def file_forward(self, receiver, file_list, **kwargs):
         pass
 
     @abstractmethod
-    def forward(self, chat_id, reply_to_message_id, message, **kwargs):
+    def forward(self, receiver, message, **kwargs):
         """
         插件专用转发，是Task通用类型
         """
         pass
 
     @abstractmethod
-    def reply(self, chat_id, reply_to_message_id, message, **kwargs):
+    def reply(self, receiver, message, **kwargs):
         """
         模型直转发，Message是Openai的类型
         """
         pass
 
     @abstractmethod
-    def error(self, chat_id, reply_to_message_id, text, **kwargs):
+    def error(self, receiver, text, **kwargs):
         pass
 
     @abstractmethod
-    def function(self, chat_id, reply_to_message_id, task, llm, result, message, **kwargs):
+    def function(self, receiver, task, llm, result, message, **kwargs):
         pass

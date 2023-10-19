@@ -156,10 +156,10 @@ tool - tool list
 bind - bind optional platforms
 unbind - unbind optional platforms
 clear - Delete your own records
-rset_endpoint - customize the backend
-rset_key - set openai
-clear_rset - wipe custom settings
+set_endpoint - customize the backend
+clear_endpoint - wipe custom settings
 auth - pass the task
+env - set secret
 
 ```
 

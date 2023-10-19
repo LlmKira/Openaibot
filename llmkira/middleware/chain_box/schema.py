@@ -14,7 +14,7 @@ class Chain(BaseModel):
     address: str = Field(None, description="address")
     time: int = 0
     arg: Any = Field(None, description="arg")
-    uuid: str = shortuuid.uuid()[0:8]
+    uuid: str = Field(default=str(shortuuid.uuid()[0:5]).upper(), description="uuid")
 
     @validator("uid")
     def check_user_id(cls, v):
