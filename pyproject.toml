@@ -37,6 +37,7 @@ tenacity = "^8.2.3"
 pysocks = "^1.7.1"
 flask-sqlalchemy = "^3.1.1"
 hikari = "^2.0.0.dev121"
+hikari-crescent = "^0.6.4"
 
 
 [build-system]

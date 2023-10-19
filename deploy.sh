@@ -106,10 +106,10 @@ echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
 pip install -r requirements.txt
 echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
 
-# Copy .env.example to .env if .env doesn't exist
+# Copy .env.exp to .env if .env doesn't exist
 if [ ! -f ".env" ]; then
   echo "$(tput setaf 6)Copying .env.example to .env...$(tput sgr0)"
-  cp .env.example .env
+  cp .env.exp .env
   nano .env
   echo "$(tput setaf 2).env file copy complete.$(tput sgr0)"
 fi

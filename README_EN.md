@@ -89,7 +89,7 @@ pip install -r requirements.txt
 - 🛠 Configure the `.env` file
 
 ```bash
-cp .env.example .env
+cp .env.exp .env
 ```
 
 - ⚙️ Install dependencies

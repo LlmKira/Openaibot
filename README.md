@@ -99,7 +99,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 - 🛠 配置 `.env` 文件
 
 ```bash
-cp .env.example .env
+cp .env.exp .env
 nano .env
 
 ```
