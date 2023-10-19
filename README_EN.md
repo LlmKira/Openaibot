@@ -46,13 +46,17 @@ implementing some or more features.
 
 ### 🎬 Platform support
 
-| Platform | Support | Tip     |
-|----------|---------|---------|
-| Telegram | ✅       |         |
-| Discord  | ❌       | Working |
-| QQ       | ❌       |         |
-| Wechat   | ❌       |         |
-| Twitter  | ❌       |         |
+| Platform | Support | Tip             |
+|----------|---------|-----------------|
+| Telegram | ✅       |                 |
+| Discord  | ✅       |                 |
+| QQ       | ❌       | Working         |
+| Wechat   | ❌       |                 |
+| Twitter  | ❌       |                 |
+| Slack    | ❌       |                 |
+| Matrix   | ❌       |                 |
+| IRC      | ❌       |                 |
+| ...      |         | Create issue/pr |
 
 ## 📝 Deployment Guide
 

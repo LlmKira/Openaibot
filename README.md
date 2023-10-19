@@ -47,13 +47,17 @@ Feature `gpt-function-call`
 
 ### 🎬 平台支持
 
-| 平台       | 支持情况 | 备注 |
-|----------|------|----|
-| Telegram | ✅    |    |
-| Discord  | ❌    |    |
-| QQ       | ❌    |    |
-| Wechat   | ❌    |    |
-| Twitter  | ❌    |    |
+| 平台       | 支持情况 | 备注         |
+|----------|------|------------|
+| Telegram | ✅    |            |
+| Discord  | ✅    |            |
+| QQ       | ❌    | 计划中        |
+| Wechat   | ❌    |            |
+| Twitter  | ❌    |            |
+| Slack    | ❌    |            |
+| Matrix   | ❌    |            |
+| IRC      | ❌    |            |
+| ...      |      | 创建Issue/PR |
 
 ```python3
 __plugin_name__ = "set_alarm_reminder"
