@@ -51,6 +51,7 @@ Feature `gpt-function-call`
 |----------|------|------------|
 | Telegram | ✅    |            |
 | Discord  | ✅    |            |
+| Kook     | ✅    |            |
 | QQ       | ❌    | 计划中        |
 | Wechat   | ❌    |            |
 | Twitter  | ❌    |            |

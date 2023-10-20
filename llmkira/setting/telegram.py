@@ -5,7 +5,7 @@
 # @Software: PyCharm
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseSettings, Field, validator, root_validator
+from pydantic import BaseSettings, Field, root_validator
 
 
 class TelegramBot(BaseSettings):
@@ -23,7 +23,9 @@ class TelegramBot(BaseSettings):
         env_file_encoding = 'utf-8'
 
     @root_validator
-    def bot_id_validator(cls, values):
+    def bot_validator(cls, values):
+        if values['proxy_address']:
+            logger.success(f"TelegramBot proxy was set to {values['proxy_address']}")
         if values.get('bot_id') is None:
             try:
                 from telebot import TeleBot
@@ -38,7 +40,7 @@ class TelegramBot(BaseSettings):
                 values['bot_username'] = _bot.username
                 values['bot_link'] = f"https://t.me/{values['bot_username']}"
             except Exception as e:
-                logger.warning(f"TelegramBot id is None, {e}")
+                logger.warning(f"Telegrambot token is empty:{e}")
             else:
                 logger.success(f"TelegramBot connect success: {values.get('bot_username')}")
         return values

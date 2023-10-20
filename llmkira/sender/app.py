@@ -13,6 +13,7 @@ from loguru import logger
 from llmkira import load_plugins
 from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugins
 from .discord import DiscordBotRunner
+from .kook import KookBotRunner
 from .rss import RssAppRunner
 from .telegram import TelegramBotRunner
 
@@ -45,6 +46,7 @@ async def _main():
         TelegramBotRunner().run(),
         RssAppRunner().run(interval=60 * 60 * 1),
         DiscordBotRunner().run(),
+        KookBotRunner().run(),
     )
 
 

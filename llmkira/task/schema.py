@@ -8,6 +8,7 @@ import time
 from typing import Literal, Tuple, List, Union, Optional
 
 import hikari
+import khl
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseSettings, Field, BaseModel, root_validator
@@ -109,9 +110,9 @@ class TaskHeader(BaseModel):
         here .... address
         """
         platform: str = Field(None, description="platform")
-        user_id: int = Field(None, description="user id")
-        chat_id: int = Field(None, description="guild id(channel in dm)/Telegram chat id")
-        thread_id: int = Field(None, description="channel id/Telegram thread")
+        user_id: Union[str, int] = Field(None, description="user id")
+        chat_id: Union[str, int] = Field(None, description="guild id(channel in dm)/Telegram chat id")
+        thread_id: Union[str, int] = Field(None, description="channel id/Telegram thread")
         message_id: Union[str, int] = Field(None, description="message id")
 
         @root_validator()
@@ -352,6 +353,88 @@ class TaskHeader(BaseModel):
                 thread_id=message.channel_id,
                 chat_id=message.guild_id if message.guild_id else message.channel_id,
                 user_id=message.author.id,
+                message_id=message.id if reply else None
+            ),
+            message=message_list
+        )
+
+    @classmethod
+    def from_kook(cls,
+                  message: khl.Message,
+                  deliver_back_message: List[khl.Message],
+                  task_meta: Meta,
+                  trace_back_message: List[khl.Message],
+                  hide_file_info: bool = False,
+                  file: List[File] = None,
+                  reply: bool = True,
+                  ):
+        # none -> []
+        trace_back_message = [] if not trace_back_message else trace_back_message
+        file = [] if not file else file
+        deliver_back_message = [] if not deliver_back_message else deliver_back_message
+
+        def _convert(_message: khl.Message) -> Optional[RawMessage]:
+            """
+            消息标准化
+            """
+            if not _message:
+                raise ValueError(f"Message is empty")
+            if isinstance(_message, khl.Message):
+                user_id = message.author_id
+                chat_id = message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id
+                thread_id = message.ctx.channel.id
+                text = _message.content
+                created_at = _message.msg_timestamp
+            else:
+                raise ValueError(f"Unknown message type {type(_message)}")
+            return RawMessage(
+                user_id=user_id,
+                chat_id=chat_id,
+                thread_id=thread_id,
+                text=text if text else f"(empty message)",
+                created_at=created_at
+            )
+
+        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+
+        # A
+        _file_name = []
+        for _file in file:
+            _file_name.append(_file.file_prompt)
+        # 转换为标准消息
+        head_message = _convert(message)
+        assert head_message, "HeadMessage is empty"
+        # 附加文件信息
+        head_message.file = file
+        # 追加元信息
+        if not hide_file_info:
+            head_message.text += "\n" + "\n".join(_file_name)
+
+        # 追加回溯消息
+        message_list = []
+        if trace_back_message:
+            for item in trace_back_message:
+                if item:
+                    message_list.append(_convert(item))
+        message_list.extend(deliver_message_list)
+        message_list.append(head_message)
+
+        # 去掉 None
+        message_list = [item for item in message_list if item]
+        return cls(
+            task_meta=task_meta,
+            sender=cls.Location(
+                platform="kook",
+                thread_id=message.ctx.channel.id,
+                chat_id=message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id,
+                user_id=message.author_id,
+                message_id=message.id if reply else None
+            ),
+            receiver=cls.Location(
+                platform="kook",
+                thread_id=message.ctx.channel.id,
+                chat_id=message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id,
+                user_id=message.author_id,
                 message_id=message.id if reply else None
             ),
             message=message_list

@@ -1,6 +1,11 @@
 pyTelegramBotAPI
+
 hikari
 hikari-crescent
+
+khl.py
+
+nest-asyncio
 pathlib>=1.0.1
 loguru>=0.5.3
 polling
@@ -17,7 +22,7 @@ aio_pika
 arclet-alconna
 shortuuid
 tiktoken
-nest-asyncio
+
 apscheduler
 tzlocal
 contextvars

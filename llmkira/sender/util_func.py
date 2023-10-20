@@ -39,6 +39,7 @@ def is_command(text: str, command: str, at_bot_username: str = None, check_empty
     :param check_empty: check /command -> False
     :return: bool
     """
+    assert text, "text is empty"
     if check_empty:
         if len(text.split(" ")) == 1:
             return False
@@ -60,11 +61,9 @@ def is_empty_command(text: str):
     return False
 
 
-async def auth_reloader(uuid: str, platform: str, user_id: str) -> bool:
+async def auth_reloader(uuid: str, platform: str, user_id: str):
     chain: Chain = await AuthReloader.from_meta(platform=platform, user_id=user_id).get_auth(uuid=uuid)
-    if chain:
-        logger.info(f"Auth Task be sent\n--uuid {uuid} --user {user_id}")
-        await Task(queue=chain.address).send_task(task=chain.arg)
-        return True
-    else:
-        return False
+    if not chain:
+        raise Exception(f"Auth Task not found")
+    logger.info(f"Auth Task be sent\n--uuid {uuid} --user {user_id}")
+    await Task(queue=chain.address).send_task(task=chain.arg)

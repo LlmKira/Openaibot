@@ -15,6 +15,7 @@ from llmkira.sdk.func_calling import load_plugins, load_from_entrypoint, get_ent
 from .aps import aps_start
 from .discord import DiscordReceiver
 from .function import FunctionReceiver
+from .kook import KookReceiver
 
 load_dotenv()
 logger.remove()
@@ -36,6 +37,7 @@ func = [
     FunctionReceiver().function(),
     TelegramReceiver().telegram(),
     DiscordReceiver().discord(),
+    KookReceiver().kook(),
 ]
 
 # 导入插件
