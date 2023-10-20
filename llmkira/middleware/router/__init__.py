@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-from typing import List
+from typing import List, Union
 
 from llmkira.cache.redis import cache
 from llmkira.schema import singleton
@@ -32,9 +32,11 @@ class RouterManager(object):
             raise Exception(f"not found router info")
         return sub_info
 
-    def get_router_by_user(self, to_: str, user_id: int) -> List[Router]:
+    def get_router_by_user(self, to_: str, user_id: Union[str, int]) -> List[Router]:
         _all = self.router.router
-        return [router for router in _all if router.user_id == user_id and router.to_ == to_]
+        assert user_id, "user_id is None"
+        user_id = str(user_id)
+        return [router for router in _all if str(router.user_id) == str(user_id) and router.to_ == to_]
 
     def get_router_by_sender(self, from_: str) -> List[Router]:
         _all = self.router.router

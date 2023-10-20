@@ -53,7 +53,7 @@ class TelegramBotRunner(Runner):
 
     async def run(self):
         if not BotSetting.available:
-            logger.warning("Sender Runtime:TelegramBot empty")
+            logger.warning("Sender Runtime:TelegramBot not configured, skip")
             return None
         self.bot = AsyncTeleBot(BotSetting.token, state_storage=StepCache)
         self.proxy = BotSetting.proxy_address

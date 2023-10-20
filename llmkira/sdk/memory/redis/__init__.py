@@ -30,7 +30,7 @@ class RedisChatMessageHistory(object):
                 logger.error(error)
                 raise ValueError("Could not connect to Redis")
             else:
-                logger.success("Redis connect success")
+                logger.success("Sdk:Redis Mem Pool connected")
             return values
 
     def __init__(

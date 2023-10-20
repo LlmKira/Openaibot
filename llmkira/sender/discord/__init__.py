@@ -8,7 +8,6 @@ import random
 
 import crescent
 import hikari
-from hikari import Message
 from hikari.impl import ProxySettings
 from loguru import logger
 from telebot import formatting
@@ -69,9 +68,10 @@ class DiscordBotRunner(Runner):
 
     async def run(self):
         if not BotSetting.available:
-            logger.warning("Sender Runtime:Discord Setting empty")
+            logger.warning("Sender Runtime:Discord not configured, skip")
             return None
         self.bot = hikari.GatewayBot(
+            intents=hikari.Intents.ALL,
             token=BotSetting.token,
             proxy_settings=ProxySettings(
                 url=BotSetting.proxy_address
@@ -84,20 +84,19 @@ class DiscordBotRunner(Runner):
         client = crescent.Client(app=bot, model=model)
 
         # Task Creator
-        async def create_task(event: hikari.MessageCreateEvent, funtion_enable: bool = False):
+        async def create_task(message: hikari.Message, funtion_enable: bool = False):
             # event.message.embeds
             _file = []
-            for attachment in event.message.attachments:
+            for attachment in message.attachments:
                 try:
                     _file.append(await self.upload(attachment=attachment))
                 except Exception as e:
                     logger.exception(e)
                     _template: str = random.choice(_upload_error_message_template)
-                    await event.message.respond(
+                    await message.respond(
                         content=_template.format_map(map=MappingDefault(filename=attachment.filename, error=str(e))),
                         mentions_reply=True
                     )
-            message: Message = event.message
             if message.content:
                 message.content = message.content.lstrip("/chat").lstrip("/task")
             message.content = message.content if message.content else ""
@@ -180,7 +179,7 @@ class DiscordBotRunner(Runner):
                 router_list = _manager.get_router_by_user(user_id=ctx.user.id, to_=__sender__)
             except Exception as e:
                 logger.exception(e)
-                return ctx.respond(
+                return await ctx.respond(
                     content=f"`{e}`",
                     ephemeral=True
                 )
@@ -205,7 +204,7 @@ class DiscordBotRunner(Runner):
                 router_list = _manager.get_router_by_user(user_id=ctx.user.id, to_=__sender__)
             except Exception as e:
                 logger.exception(e)
-                return ctx.respond(
+                return await ctx.respond(
                     content=f"`{e}`",
                     ephemeral=True
                 )
@@ -307,29 +306,32 @@ class DiscordBotRunner(Runner):
         # Two input point
         @client.include
         @crescent.event
-        async def on_guild_create(event_: hikari.GuildMessageCreateEvent):
+        async def on_guild_create(event_: hikari.MessageCreateEvent):
             if event_.message.author.is_bot:
                 return
-
+            if not event_.content:
+                logger.info(f"discord_hikari:ignore a empty message")
+                return
+            # Bot may cant read message
             if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):
                 if is_empty_command(text=event_.content):
                     return await event_.message.respond(content="?")
-                return await create_task(event_, funtion_enable=__default_function_enable__)
-            if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):
+                return await create_task(event_.message, funtion_enable=__default_function_enable__)
+            if is_command(text=event_.content, command=f"{BotSetting.prefix}task"):
                 if is_empty_command(text=event_.content):
                     return await event_.message.respond(content="?")
-                return await create_task(event_, funtion_enable=True)
+                return await create_task(event_.message, funtion_enable=True)
             if event_.message.referenced_message:
                 # 回复了 Bot
                 if event_.message.referenced_message.author.id == bot.get_me().id:
-                    return await create_task(event_, funtion_enable=__default_function_enable__)
+                    return await create_task(event_.message, funtion_enable=__default_function_enable__)
 
         @client.include
         @crescent.event
-        async def on_guild_create(event_: hikari.DMMessageCreateEvent):
+        async def on_dm_create(event_: hikari.DMMessageCreateEvent):
             if event_.message.author.is_bot:
                 return
-            return await create_task(event_, funtion_enable=True)
+            return await create_task(event_.message, funtion_enable=True)
 
         logger.success("Sender Runtime:DiscordBot start")
         bot.run()

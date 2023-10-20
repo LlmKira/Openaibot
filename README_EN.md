@@ -50,6 +50,7 @@ implementing some or more features.
 |----------|---------|-----------------|
 | Telegram | ✅       |                 |
 | Discord  | ✅       |                 |
+| Kook     | ✅       |                 |
 | QQ       | ❌       | Working         |
 | Wechat   | ❌       |                 |
 | Twitter  | ❌       |                 |

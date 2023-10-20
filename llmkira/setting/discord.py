@@ -21,15 +21,17 @@ class DiscordBot(BaseSettings):
         env_file_encoding = 'utf-8'
 
     @validator('token')
-    def proxy_address_validator(cls, v):
+    def bot_token_validator(cls, v):
         if v is None:
             logger.warning(f"DiscordBot token is empty")
+        else:
+            logger.success(f"DiscordBot token ready")
         return v
 
     @root_validator
-    def bot_id_validator(cls, values):
-        if values.get('token'):
-            logger.success(f"DiscordBot token ready")  # {values.get('token')}")
+    def bot_setting_validator(cls, values):
+        if values['proxy_address']:
+            logger.success(f"DiscordBot proxy was set to {values['proxy_address']}")
         return values
 
     @property
