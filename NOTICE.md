@@ -16,6 +16,11 @@ limitations under the License.
 MIT License
 ==================================
 The MIT license applies to the files in:
-   folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
+folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
 
-如果您所在辖区法律与本项目开源协议 *冲突* 或 *部分冲突*，为了确保您的利益不被损害，开源协议只授予承认开源协议条款的辖区。
+如果您使用本项目的代码，即表示您同意遵守 Apache-2.0 协议。
+
+如其所在地法律特殊，不认为 Apache-2.0 协议所有条款均具有法律效力的，**且造成恶性法律后果的**，视为违约。
+
+注意，本项目因为 Openai TOS 禁止中国区域故不构成网络产品 且 本项目不提供服务，不适用《网络安全法》的第 22
+条规定。但是您仍然可以提交[漏洞报告](https://github.com/LlmKira/Openaibot/security/advisories)， 我们会尽快修复。
