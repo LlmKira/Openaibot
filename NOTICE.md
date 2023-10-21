@@ -18,6 +18,9 @@ MIT License
 The MIT license applies to the files in:
 folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
 
+==================================
+仅对部署者
+==================================
 如果您使用本项目的代码，即表示您同意遵守 Apache-2.0 协议。
 
 如其所在地法律特殊，不认为 Apache-2.0 协议所有条款均具有法律效力的，**且造成恶性法律后果的**，视为违约。
