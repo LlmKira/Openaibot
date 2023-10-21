@@ -16,6 +16,7 @@ from .aps import aps_start
 from .discord import DiscordReceiver
 from .function import FunctionReceiver
 from .kook import KookReceiver
+from .slack import SlackReceiver
 
 load_dotenv()
 logger.remove()
@@ -38,6 +39,7 @@ func = [
     TelegramReceiver().telegram(),
     DiscordReceiver().discord(),
     KookReceiver().kook(),
+    SlackReceiver().slack(),
 ]
 
 # 导入插件

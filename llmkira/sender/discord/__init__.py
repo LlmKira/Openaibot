@@ -312,15 +312,23 @@ class DiscordBotRunner(Runner):
             if not event_.content:
                 logger.info(f"discord_hikari:ignore a empty message")
                 return
+
             # Bot may cant read message
             if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):
                 if is_empty_command(text=event_.content):
                     return await event_.message.respond(content="?")
                 return await create_task(event_.message, funtion_enable=__default_function_enable__)
+
             if is_command(text=event_.content, command=f"{BotSetting.prefix}task"):
                 if is_empty_command(text=event_.content):
                     return await event_.message.respond(content="?")
                 return await create_task(event_.message, funtion_enable=True)
+
+            if is_command(text=event_.content, command=f"{BotSetting.prefix}ask"):
+                if is_empty_command(text=event_.content):
+                    return await event_.message.respond(content="?")
+                return await create_task(event_.message, funtion_enable=False)
+
             if event_.message.referenced_message:
                 # 回复了 Bot
                 if event_.message.referenced_message.author.id == bot.get_me().id:
@@ -331,7 +339,11 @@ class DiscordBotRunner(Runner):
         async def on_dm_create(event_: hikari.DMMessageCreateEvent):
             if event_.message.author.is_bot:
                 return
-            return await create_task(event_.message, funtion_enable=True)
+            if is_command(text=event_.content, command=f"{BotSetting.prefix}task"):
+                return await create_task(event_.message, funtion_enable=True)
+            if is_command(text=event_.content, command=f"{BotSetting.prefix}ask"):
+                return await create_task(event_.message, funtion_enable=False)
+            return await create_task(event_.message, funtion_enable=__default_function_enable__)
 
         logger.success("Sender Runtime:DiscordBot start")
         bot.run()

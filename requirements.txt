@@ -45,3 +45,6 @@ inscriptis
 duckduckgo_search>=3.9.3
 flask_sqlalchemy
 
+emoji
+websocket
+aiohttp

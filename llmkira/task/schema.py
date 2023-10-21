@@ -14,7 +14,7 @@ from loguru import logger
 from pydantic import BaseSettings, Field, BaseModel, root_validator
 from telebot import types
 
-from llmkira.schema import RawMessage
+from llmkira.schema import RawMessage, SlackMessageEvent
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.schema import File
 from llmkira.utils import sync
@@ -103,6 +103,31 @@ class TaskHeader(BaseModel):
             self.sign_as = (self.sign_as[0] + 1, "child", name)
             self.limit_child -= 1
             return copy.deepcopy(self)
+
+        @classmethod
+        def reply_notify(cls, **kwargs):
+            _child = cls()
+            _child.callback = None
+            _child.direct_reply = True
+            _child.callback_forward = False
+            _child.callback_forward_reprocess = False
+            return _child
+
+        @classmethod
+        def reply_raw(cls, plugin_name: str, task: "TaskHeader", callback: Callback):
+            _child = task.task_meta.child(plugin_name)
+            _child.callback = callback
+            _child.callback_forward = True
+            _child.callback_forward_reprocess = True
+            return _child
+
+        @classmethod
+        def reply_message(cls, plugin_name: str, task: "TaskHeader", callback: Callback):
+            _child = task.task_meta.child(plugin_name)
+            _child.callback = callback
+            _child.callback_forward = True
+            _child.callback_forward_reprocess = False
+            return _child
 
     class Location(BaseModel):
         """
@@ -362,8 +387,8 @@ class TaskHeader(BaseModel):
     def from_kook(cls,
                   message: khl.Message,
                   deliver_back_message: List[khl.Message],
-                  task_meta: Meta,
                   trace_back_message: List[khl.Message],
+                  task_meta: Meta,
                   hide_file_info: bool = False,
                   file: List[File] = None,
                   reply: bool = True,
@@ -436,6 +461,81 @@ class TaskHeader(BaseModel):
                 chat_id=message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id,
                 user_id=message.author_id,
                 message_id=message.id if reply else None
+            ),
+            message=message_list
+        )
+
+    @classmethod
+    def from_slack(cls,
+                   message: SlackMessageEvent,
+                   deliver_back_message,
+                   task_meta: Meta,
+                   hide_file_info: bool = False,
+                   file: List[File] = None,
+                   reply: bool = True,
+                   ):
+        """
+        https://api.slack.com/methods
+        """
+        # none -> []
+        deliver_back_message = [] if not deliver_back_message else deliver_back_message
+
+        def _convert(_message: SlackMessageEvent) -> Optional[RawMessage]:
+            """
+            消息标准化
+            """
+            if not _message:
+                raise ValueError(f"Message is empty")
+            if isinstance(_message, SlackMessageEvent):
+                user_id = message.user
+                chat_id = message.channel
+                thread_id = message.channel
+                text = _message.text
+                created_at = message.event_ts
+            else:
+                raise ValueError(f"Unknown message type {type(_message)}")
+            return RawMessage(
+                user_id=user_id,
+                chat_id=chat_id,
+                thread_id=thread_id,
+                text=text if text else f"(empty message)",
+                created_at=created_at
+            )
+
+        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+        # A
+        _file_prompt = []
+        for _file in file:
+            _file_prompt.append(_file.file_prompt)
+        # 转换为标准消息
+        now_message = _convert(message)
+        assert now_message, "HeadMessage is empty"
+        # 附加文件信息
+        now_message.file = file
+        # 追加文件元信息
+        if not hide_file_info:
+            now_message.text += "\n" + "\n".join(_file_prompt)
+
+        message_list = []
+        message_list.extend(deliver_message_list)
+        message_list.append(now_message)
+        # 去掉 None
+        message_list = [item for item in message_list if item]
+        return cls(
+            task_meta=task_meta,
+            sender=cls.Location(
+                platform="slack",
+                thread_id=message.channel,
+                chat_id=message.channel,
+                user_id=message.user,
+                message_id=message.thread_ts if reply else None
+            ),
+            receiver=cls.Location(
+                platform="slack",
+                thread_id=message.channel,
+                chat_id=message.channel,
+                user_id=message.user,
+                message_id=message.thread_ts if reply else None
             ),
             message=message_list
         )

@@ -21,7 +21,7 @@ class KookBot(BaseSettings):
         env_file_encoding = 'utf-8'
 
     @validator('token')
-    def proxy_address_validator(cls, v):
+    def token_validator(cls, v):
         if v is None:
             logger.warning(f"KookBot token is empty")
         else:

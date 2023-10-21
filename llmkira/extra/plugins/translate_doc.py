@@ -2,6 +2,8 @@
 __plugin_name__ = "translate_file"
 __openapi_version__ = "20231017"
 
+import re
+
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__plugin_name__, __openapi_version__)
@@ -52,6 +54,7 @@ class TranslateTool(BaseTool):
     """
     function: Function = translate
     keywords: list = ["translate", "转换", "convert", "翻译", "译", "md", 'txt']
+    file_match_required = re.compile(r".md|.txt")
 
     def pre_check(self):
         try:

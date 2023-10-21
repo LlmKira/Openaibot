@@ -2,6 +2,8 @@
 __plugin_name__ = "convert_to_sticker"
 __openapi_version__ = "20231017"
 
+import re
+
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__plugin_name__, __openapi_version__)
@@ -17,7 +19,6 @@ from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair, PluginMetadata
 from llmkira.task import Task, TaskHeader
-
 
 sticker = Function(name=__plugin_name__, description="Help user convert pictures to stickers")
 sticker.add_property(
@@ -79,6 +80,7 @@ class StickerTool(BaseTool):
     """
     function: Function = sticker
     keywords: list = ["转换", "贴纸", ".jpg", "图像", '图片']
+    file_match_required = re.compile(r".jpg|.png|.jpeg|.gif|.webp|.svg")
 
     def pre_check(self):
         return True
@@ -103,12 +105,13 @@ class StickerTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(
-                        callback_forward=True,
+                    task_meta=TaskHeader.Meta.reply_message(
+                        plugin_name=__plugin_name__,
                         callback=TaskHeader.Meta.Callback(
                             role="function",
                             name=__plugin_name__
                         ),
+                        task=task
                     ),
                     message=[
                         RawMessage(

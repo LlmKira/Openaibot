@@ -46,18 +46,18 @@ implementing some or more features.
 
 ### 🎬 Platform support
 
-| Platform | Support | Tip             |
-|----------|---------|-----------------|
-| Telegram | ✅       |                 |
-| Discord  | ✅       |                 |
-| Kook     | ✅       |                 |
-| QQ       | ❌       | Working         |
-| Wechat   | ❌       |                 |
-| Twitter  | ❌       |                 |
-| Slack    | ❌       |                 |
-| Matrix   | ❌       |                 |
-| IRC      | ❌       |                 |
-| ...      |         | Create issue/pr |
+| Platform | Support | File System | Tip                        |
+|----------|---------|-------------|----------------------------|
+| Telegram | ✅       | ✅           |                            |
+| Discord  | ✅       | ✅           |                            |
+| Kook     | ✅       | ✅           | No Support `Replies start` |
+| Slack    | ✅       | ✅           | No Support `Replies start` |
+| QQ       | ❌       |             |                            |
+| Wechat   | ❌       |             |                            |
+| Twitter  | ❌       |             |                            |
+| Matrix   | ❌       |             |                            |
+| IRC      | ❌       |             |                            |
+| ...      |         |             | Create issue/pr            |
 
 ## 📝 Deployment Guide
 

@@ -37,7 +37,7 @@ def help_message():
     `/auth` - activate a task (my power)
     `/bind` - bind third party platform
     `/unbind` - unbind platform
-    `/set_endpoint` - set endpoint
+    `/set_endpoint` - <apikey>#<endpoint>
     `/clear_endpoint` - clear endpoint and key
     `/env` - set environment variable
 

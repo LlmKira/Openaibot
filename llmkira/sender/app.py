@@ -15,6 +15,7 @@ from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugin
 from .discord import DiscordBotRunner
 from .kook import KookBotRunner
 from .rss import RssAppRunner
+from .slack import SlackBotRunner
 from .telegram import TelegramBotRunner
 
 load_dotenv()
@@ -47,6 +48,7 @@ async def _main():
         RssAppRunner().run(interval=60 * 60 * 1),
         DiscordBotRunner().run(),
         KookBotRunner().run(),
+        SlackBotRunner().run(),
     )
 
 
