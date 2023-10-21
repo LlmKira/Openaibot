@@ -97,7 +97,7 @@ class SlackSender(BaseSender):
             _message = ChatMessageCreator(
                 channel=receiver.chat_id,
                 thread_ts=receiver.message_id
-            ).update_content(message_text=item.text).get_message_payload()
+            ).update_content(message_text=item.text).get_message_payload(message_text=item.text)
             await self.bot.chat_postMessage(
                 **_message
             )
@@ -130,7 +130,7 @@ class SlackSender(BaseSender):
         _message = ChatMessageCreator(
             channel=receiver.chat_id,
             thread_ts=receiver.message_id
-        ).update_content(message_text=text).get_message_payload()
+        ).update_content(message_text=text).get_message_payload(message_text=text)
         await self.bot.chat_postMessage(
             **_message
         )
@@ -186,7 +186,7 @@ class SlackSender(BaseSender):
             _message = ChatMessageCreator(
                 channel=receiver.chat_id,
                 thread_ts=receiver.message_id
-            ).update_content(message_text=task_message).get_message_payload()
+            ).update_content(message_text=task_message).get_message_payload(message_text=task_message)
             await self.bot.chat_postMessage(
                 **_message
             )

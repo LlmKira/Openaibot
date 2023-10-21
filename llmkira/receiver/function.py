@@ -31,7 +31,7 @@ class ChainFunc(object):
         meta.continue_step += 1
         meta.callback_forward = False
         meta.callback_forward_reprocess = False
-        meta.verify_uuid = shortuuid.uuid()[0:8]
+        meta.verify_uuid = str(shortuuid.uuid()[0:8]).upper()
         # 追加中断
         if meta.limit_child <= 0:
             return None
@@ -63,7 +63,7 @@ class ChainFunc(object):
                     RawMessage(
                         user_id=_task_forward.receiver.user_id,
                         chat_id=_task_forward.receiver.chat_id,
-                        text=f"🔑 Type `/auth {task_id}` to confirm execution of function `{func_name}`"
+                        text=f"🔑 Type `/auth {task_id}` to run `{func_name}`, try !auth when no slash command."
                     )
                 ]
             )

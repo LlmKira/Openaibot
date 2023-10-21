@@ -389,11 +389,12 @@ class SlackBotRunner(Runner):
                 return await create_task(event_, funtion_enable=True)
             if is_command(text=_text, command="!ask"):
                 return await create_task(event_, funtion_enable=False)
-            if is_command(text=_text, command="!auth"):
-                _cmd, _arg = parse_command(command=_text)
+            if is_command(text=_text, command="!auth") or is_command(text=_text, command="`!auth"):
+                _cmd, _arg = parse_command(command=_text.strip("`"))
                 if not _arg:
                     return None
-                auth_result = await auth_chain(uuid=_text, user_id=event_.user)
+                _arg = str(_arg).strip("`")
+                auth_result = await auth_chain(uuid=_arg, user_id=event_.user)
                 return await bot.client.chat_postMessage(
                     channel=event_.channel,
                     text=auth_result,
