@@ -6,19 +6,20 @@
 
 def help_message():
     return """
-    /help - 帮助
-    /chat - 聊天
-    /task - 任务
+    /help - HELP YOURSELF
+    /chat - Chat with me :)
+    /task - Function enable
+    /ask - Chat with func_disable, 禁止函数
     /tool - 工具列表
     /clear - 删除自己的记录
-    /auth - 授权
+    /auth - POWER
     
 Private Chat Only:
-    /bind - 绑定可选平台
-    /unbind - 解绑可选平台
-    /set_endpoint - 自定义后端
-    /clear_endpoint - 抹除自定义设置
-    /env - 配置变量
+    /bind - RSS
+    /unbind - RSS
+    /set_endpoint - <apikey>#<endpoint>
+    /clear_endpoint - Clear endpoint and key
+    /env - 配置变量,use as shell
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
 """

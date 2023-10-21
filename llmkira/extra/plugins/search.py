@@ -99,17 +99,19 @@ class SearchTool(BaseTool):
 
     async def failed(self, platform, task, receiver, reason):
         try:
+            _meta = TaskHeader.Meta()
+            _meta.direct_reply = False
+            _meta.callback_forward = True
+            _meta.callback_forward_reprocess = False
+            _meta.callback = TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            )
             await Task(queue=platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(
-                        callback_forward=True,
-                        callback=TaskHeader.Meta.Callback(
-                            role="function",
-                            name=__plugin_name__
-                        ),
-                    ),
+                    task_meta=_meta,
                     message=[
                         RawMessage(
                             user_id=receiver.user_id,

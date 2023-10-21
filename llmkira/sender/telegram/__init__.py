@@ -250,7 +250,7 @@ class TelegramBotRunner(Runner):
             )
 
         @bot.message_handler(commands='clear', chat_types=['private', 'supergroup', 'group'])
-        async def listen_help_command(message: types.Message):
+        async def listen_clear_command(message: types.Message):
             RedisChatMessageHistory(session_id=f"{__sender__}:{message.from_user.id}", ttl=60 * 60 * 1).clear()
             return await bot.reply_to(
                 message,
@@ -295,6 +295,23 @@ class TelegramBotRunner(Runner):
                 parse_mode="MarkdownV2"
             )
 
+        @bot.message_handler(commands='auth', chat_types=['private', 'supergroup', 'group'])
+        async def listen_auth_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return None
+            try:
+                await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
+            except Exception as e:
+                auth_result = "❌ Auth failed,You dont have permission or the task do not exist"
+                logger.error(f"[270563]auth_reloader failed {e}")
+            else:
+                auth_result = "🪄 Auth Pass"
+            return await bot.reply_to(
+                message,
+                text=auth_result
+            )
+
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['private'])
         async def handle_private_msg(message: types.Message):
             """
@@ -303,22 +320,10 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            if is_command(text=message.text, command="/auth"):
-                if not is_empty_command(text=message.text):
-                    _cmd, _arg = parse_command(command=message.text)
-                    try:
-                        await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
-                    except Exception as e:
-                        auth_result = "❌ Auth failed,You dont have permission or the task do not exist"
-                        logger.error(f"[270563]auth_reloader failed {e}")
-                    else:
-                        auth_result = "🪄 Auth Pass"
-                    return await bot.reply_to(
-                        message,
-                        text=auth_result
-                    )
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, funtion_enable=True)
+            if is_command(text=message.text, command="/ask"):
+                return await create_task(message, funtion_enable=False)
             return await create_task(message, funtion_enable=__default_function_enable__)
 
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['supergroup', 'group'])
@@ -329,20 +334,6 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            if is_command(text=message.text, command="/auth"):
-                if not is_empty_command(text=message.text):
-                    _cmd, _arg = parse_command(command=message.text)
-                    try:
-                        await auth_reloader(uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__)
-                    except Exception as e:
-                        auth_result = "❌ Auth failed,You dont have permission or the task do not exist"
-                        logger.error(f"[270563]auth_reloader failed {e}")
-                    else:
-                        auth_result = "🪄 Auth Pass"
-                    return await bot.reply_to(
-                        message,
-                        text=auth_result
-                    )
             if is_command(text=message.text, command="/chat", at_bot_username=BotSetting.bot_username):
                 if is_empty_command(text=message.text):
                     return await bot.reply_to(message, text="?")
@@ -351,6 +342,10 @@ class TelegramBotRunner(Runner):
                 if is_empty_command(text=message.text):
                     return await bot.reply_to(message, text="?")
                 return await create_task(message, funtion_enable=True)
+            if is_command(text=message.text, command="/ask", at_bot_username=BotSetting.bot_username):
+                if is_empty_command(text=message.text):
+                    return await bot.reply_to(message, text="?")
+                return await create_task(message, funtion_enable=False)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
                 return await create_task(message, funtion_enable=__default_function_enable__)
             # 检查回复

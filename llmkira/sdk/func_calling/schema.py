@@ -25,6 +25,9 @@ class BaseTool(ABC, BaseModel):
     deploy_child: Literal[0, 1] = Field(1, description="如果为0，终结于此链点，不再向下传递")
     require_auth_kwargs: dict = {}
     env_required: List[str] = Field([], description="环境变量要求")
+    file_match_required: Optional[re.Pattern] = Field(None, description="文件名正则")
+
+    # exp: re.compile(r"file_id=([a-z0-9]{8})")
 
     @final
     @property

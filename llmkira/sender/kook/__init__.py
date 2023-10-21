@@ -47,7 +47,6 @@ class KookBotRunner(Runner):
         self.proxy = None
 
     async def upload(self, file_info: dict):
-        print(file_info)
         if not file_info.get("url"):
             return Exception("File url not found")
         if file_info.get("type") == "file":
@@ -314,10 +313,18 @@ class KookBotRunner(Runner):
                 if is_empty_command(text=msg.content):
                     return await msg.reply(content="?")
                 return await create_task(msg, funtion_enable=True)
+            if is_command(text=msg.content, command=f"/ask"):
+                if is_empty_command(text=msg.content):
+                    return await msg.reply(content="?")
+                return await create_task(msg, funtion_enable=False)
             # 追溯回复
 
-        async def on_dm_create(event_: PrivateMessage):
-            return await create_task(event_, funtion_enable=True)
+        async def on_dm_create(msg: PrivateMessage):
+            if is_command(text=msg.content, command="/task"):
+                return await create_task(msg, funtion_enable=True)
+            if is_command(text=msg.content, command="/ask"):
+                return await create_task(msg, funtion_enable=False)
+            return await create_task(msg, funtion_enable=__default_function_enable__)
 
         @bot.command(regex=r'[\s\S]*')
         async def handle_message(event_: Message):

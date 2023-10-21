@@ -9,6 +9,7 @@ from typing import Optional, Type
 
 from . import _openapi_version_, BaseTool, get_loaded_plugins, Plugin, get_plugin
 from .schema import FuncPair, Function
+from ...sdk.schema import File
 
 threading_lock = threading.Lock()
 
@@ -54,7 +55,7 @@ class ToolRegister(object):
                 _item.append(sub_item.tool)
         return _item
 
-    def filter_pair(self, key_phrases: str, ignore: List[str] = None) -> List[Function]:
+    def filter_pair(self, key_phrases: str, file_list: List[File] = None, ignore: List[str] = None) -> List[Function]:
         """
         过滤group中的函数
         """
@@ -62,8 +63,18 @@ class ToolRegister(object):
             ignore = []
         function_list = []
         for func_name, pair_cls in self.pair_function.items():
-            if pair_cls.tool().func_message(message_text=key_phrases):
+            _cls = pair_cls.tool()
+            if _cls.func_message(message_text=key_phrases):
+                # 关键词大类匹配成功
                 if func_name in ignore:
-                    continue
+                    continue  # 忽略函数
+                if _cls.file_match_required:
+                    if not file_list:
+                        break  # 需要文件但是没有文件
+                    for file in file_list:
+                        if _cls.file_match_required.match(file.file_name):
+                            continue  # 文件匹配成功
+                    else:
+                        continue  # 需要文件但是没有文件匹配成功
                 function_list.append(pair_cls.function)
         return function_list

@@ -4,24 +4,19 @@
 # @File    : __init__.py.py
 # @Software: PyCharm
 import atexit
-import os
-import ssl
 from typing import List
 
 import hikari
-from aio_pika.abc import AbstractIncomingMessage
 from hikari.impl import ProxySettings
 from loguru import logger
 from telebot import formatting
 
-from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
-from llmkira.receiver.schema import ReplyRunner
+from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
-from llmkira.sdk.error import RateLimitError
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import File, Message
 from llmkira.setting.discord import BotSetting
@@ -42,7 +37,7 @@ discord_rest: hikari.RESTApp = hikari.RESTApp(
 )
 
 
-class DiscordSender(ReplyRunner):
+class DiscordSender(BaseSender):
     """
     平台路由
     """
@@ -268,160 +263,13 @@ class DiscordSender(ReplyRunner):
 __sender__ = DiscordSender()
 
 
-class DiscordReceiver(object):
+class DiscordReceiver(BaseReceiver):
     """
     receive message from telegram
     """
 
-    def __init__(self):
-        self.task = Task(queue=__receiver__)
-
-    @staticmethod
-    async def llm_request(llm_agent: OpenaiMiddleware, disable_function: bool = False):
-        """
-        校验包装，没有其他作用
-        """
-        try:
-            _result = await llm_agent.request_openai(disable_function=disable_function)
-            _message = _result.default_message
-            logger.debug(f"[x] LLM Message Sent \n--message {_message}")
-            assert _message, "message is empty"
-            return _result
-        except ssl.SSLSyscallError as e:
-            logger.error(f"Network ssl error: {e},that maybe caused by bad proxy")
-            raise e
-        except RateLimitError as e:
-            logger.error(f"ApiEndPoint:{e}")
-            raise ValueError(f"Authentication expiration, overload or other issues with the Api Endpoint")
-        except Exception as e:
-            logger.exception(e)
-            raise e
-
-    async def _flash(self,
-                     task: TaskHeader,
-                     llm: OpenaiMiddleware,
-                     auto_write_back: bool = True,
-                     intercept_function: bool = False,
-                     disable_function: bool = False
-                     ):
-        """
-        函数池刷新
-        :param auto_write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
-        :param intercept_function: 是否拦截函数调用转发到函数处理器
-        """
-        try:
-            llm.build(auto_write_back=auto_write_back)
-            try:
-                result = await self.llm_request(llm, disable_function=disable_function)
-            except Exception as e:
-                await __sender__.error(
-                    receiver=task.receiver,
-                    text=f"🦴 Sorry, your request failed because: {e}"
-                )
-                return
-            if intercept_function:
-                # 拦截函数调用
-                if hasattr(result.default_message, "function_call"):
-                    return await __sender__.function(
-                        receiver=task.receiver,
-                        task=task,
-                        llm=llm,  # IMPORTANT
-                        message=result.default_message,
-                        result=result
-                    )
-            return await __sender__.reply(
-                receiver=task.receiver,
-                message=[result.default_message]
-            )
-        except Exception as e:
-            raise e
-
-    async def deal_message(self, message):
-        """
-        处理消息
-        """
-        # 解析数据
-        _task: TaskHeader = TaskHeader.parse_raw(message.body)
-        # 没有任何参数
-        if _task.task_meta.direct_reply:
-            await __sender__.forward(
-                receiver=_task.receiver,
-                message=_task.message
-            )
-            return None, None, None
-            # 函数重整策略
-        functions = None
-        if _task.task_meta.function_enable:
-            # 继承函数
-            functions = _task.task_meta.function_list
-            if _task.task_meta.sign_as[0] == 0:
-                # 复制救赎
-                _task.task_meta.function_salvation_list = _task.task_meta.function_list
-                functions = []
-
-                # 重整
-                for _index, _message in enumerate(_task.message):
-                    functions.extend(
-                        ToolRegister().filter_pair(key_phrases=_message.text)
-                    )
-                _task.task_meta.function_list = functions
-        if _task.task_meta.sign_as[0] == 0:
-            # 容错一层旧节点
-            functions.extend(_task.task_meta.function_salvation_list)
-        # 构建通信代理
-        _llm = OpenaiMiddleware(task=_task, function=functions)
-        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2)}")
-        # 插件直接转发与重处理
-        if _task.task_meta.callback_forward:
-            # 手动追加插件产生的线索消息
-            _llm.write_back(
-                role=_task.task_meta.callback.role,
-                name=_task.task_meta.callback.name,
-                message_list=_task.message
-            )
-            # 插件数据响应到前端
-            if _task.task_meta.callback_forward_reprocess:
-                # 手动写回则禁用从 Task 数据体自动回写
-                # 防止AI去启动其他函数，禁用函数
-                await self._flash(
-                    llm=_llm,
-                    task=_task,
-                    intercept_function=True,
-                    disable_function=True,
-                    auto_write_back=False
-                )
-                # 同时递交部署点
-                return _task, _llm, "callback_forward_reprocess"
-            # 转发函数
-            await __sender__.forward(
-                receiver=_task.receiver,
-                message=_task.message
-            )
-            # 同时递交部署点
-            return _task, _llm, "callback_forward_reprocess"
-        await self._flash(llm=_llm, task=_task, intercept_function=True)
-        return None, None, None
-
-    async def on_message(self, message: AbstractIncomingMessage):
-        # 过期时间
-        # print(message.expiration)
-        try:
-            if os.getenv("LLMBOT_STOP_REPLY") == "1":
-                return None
-            _task, _llm, _point = await self.deal_message(message)
-            # 启动链式函数应答循环
-            if _task:
-                chain: Chain = await ChainReloader(uid=_task.receiver.uid).get_task()
-                if chain:
-                    logger.info(f"Catch chain callback\n--callback_send_by {_point}")
-                    await Task(queue=chain.address).send_task(task=chain.arg)
-        except Exception as e:
-            logger.exception(e)
-            await message.reject(requeue=False)
-        finally:
-            await message.ack(multiple=False)
-
     async def discord(self):
+        self.set_core(sender=__sender__, task=Task(queue=__receiver__))
         if not BotSetting.available:
             logger.warning("Receiver Runtime:Discord Setting empty")
             return None
@@ -438,9 +286,10 @@ class DiscordReceiver(object):
             await discord_rest.close()
 
 
-@atexit.register
-def __clean():
-    try:
-        sync(discord_rest.close())
-    except Exception as e:
-        logger.warning(f"Discord Receiver cleaning failed when exiting \n{e}")
+if BotSetting.available:
+    @atexit.register
+    def __clean():
+        try:
+            sync(discord_rest.close())
+        except Exception as e:
+            logger.warning(f"Discord Receiver cleaning failed when exiting \n{e}")

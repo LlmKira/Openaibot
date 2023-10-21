@@ -96,7 +96,7 @@ class Sublimate(object):
                 if key in order_obj.text:
                     __score = __score + 1
             # 计算当前条目分数
-            _y_score = ((__score / __total + 1) * 100) * self.y_factor
+            _y_score = ((__score / (__total + 1)) * 100) * self.y_factor
             order_obj.y_score = _y_score
 
         # 相似度计算方法

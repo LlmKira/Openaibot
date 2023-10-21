@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/10/20 下午5:53
+# @Time    : 2023/10/21 下午6:25
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import ssl
 from typing import List
 
-from khl import HTTPRequester, Cert, api, MessageTypes
 from loguru import logger
+from slack_sdk.web.async_client import AsyncWebClient
 from telebot import formatting
 
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
+from llmkira.receiver.slack.creat_message import ChatMessageCreator
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import File, Message
-from llmkira.setting.kook import BotSetting
+from llmkira.setting.slack import BotSetting
 from llmkira.task import Task, TaskHeader
 from llmkira.utils import sync
 
-__receiver__ = "kook"
+__receiver__ = "slack"
 
 from llmkira.middleware.router.schema import router_set
 from llmkira.transducer import TransferManager
@@ -34,7 +36,7 @@ nest_asyncio.apply()
 router_set(role="receiver", name=__receiver__)
 
 
-class KookSender(BaseSender):
+class SlackSender(BaseSender):
     """
     平台路由
     """
@@ -42,72 +44,45 @@ class KookSender(BaseSender):
     def __init__(self):
         if not BotSetting.available:
             return
-        self.bot = HTTPRequester(cert=Cert(token=BotSetting.token))
-
-    async def create_asset(self, file: File.Data) -> str:
-        return (await self.bot.exec_req(api.Asset.create(file=file.pair)))['url']
-
-    async def send_message(self,
-                           channel_id: str,
-                           user_id: str,
-                           dm: bool,
-                           message_type: MessageTypes,
-                           content: str,
-                           ephemeral: bool = False,
-                           reply_message_id: str = None
-                           ):
-        try:
-            if dm:
-                message = api.DirectMessage.create(
-                    target_id=user_id,
-                    type=message_type,
-                    content=content,
-                    quote=reply_message_id
-                )
-            else:
-                message = api.Message.create(
-                    target_id=channel_id,
-                    type=message_type,
-                    content=content,
-                    quote=reply_message_id,
-                    temp_target_id=user_id if ephemeral else None,
-                )
-            _msg = await self.bot.exec_req(message)
-        except Exception as e:
-            raise ValueError(f"Kook msg send failed,{e}")
-        return _msg
+        ssl_cert = ssl.SSLContext()
+        if BotSetting.proxy_address:
+            self.proxy = BotSetting.proxy_address
+            logger.info("SlackBot proxy_tunnels being used in `AsyncWebClient`!")
+        self.bot = AsyncWebClient(
+            token=BotSetting.bot_token,
+            ssl=ssl_cert,
+            proxy=BotSetting.proxy_address
+        )
 
     async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File], **kwargs):
         for file_obj in file_list:
             # URL FIRST
             if file_obj.file_url:
-                await self.send_message(
-                    channel_id=receiver.thread_id,
-                    user_id=receiver.user_id,
-                    dm=receiver.thread_id == receiver.chat_id,
-                    message_type=MessageTypes.FILE,
-                    content=file_obj.file_url
+                await self.bot.files_upload_v2(
+                    file=file_obj.file_url,
+                    channels=receiver.chat_id,
+                    thread_ts=receiver.message_id,
+                    filename=file_obj.file_name,
                 )
             # DATA
             _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
-            if file_obj.file_name.endswith((".jpg", ".png")):
-                await self.send_message(
-                    channel_id=receiver.thread_id,
-                    user_id=receiver.user_id,
-                    dm=receiver.thread_id == receiver.chat_id,
-                    message_type=MessageTypes.IMG,
-                    content=await self.create_asset(file=_data)
+            try:
+                await self.bot.files_upload_v2(
+                    file=_data.file_data,
+                    filename=_data.file_name,
+                    channels=receiver.chat_id,
+                    thread_ts=receiver.message_id,
                 )
-            else:
-                await self.send_message(
-                    channel_id=receiver.thread_id,
-                    user_id=receiver.user_id,
-                    dm=receiver.thread_id == receiver.chat_id,
-                    message_type=MessageTypes.FILE,
-                    content=await self.create_asset(file=_data)
+            except Exception as e:
+                logger.error(e)
+                logger.error(f"file upload failed {file_obj.file_id}")
+                await self.bot.chat_postMessage(
+                    channel=receiver.chat_id,
+                    thread_ts=receiver.message_id,
+                    text=f"Failed,Server down,or bot do not have *Bot Token Scopes* of `files:write` scope to upload file."
                 )
 
     async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage], **kwargs):
@@ -119,12 +94,12 @@ class KookSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
-            await self.send_message(
-                channel_id=receiver.thread_id,
-                user_id=receiver.user_id,
-                dm=receiver.thread_id == receiver.chat_id,
-                message_type=MessageTypes.KMD,
-                content=item.text
+            _message = ChatMessageCreator(
+                channel=receiver.chat_id,
+                thread_ts=receiver.message_id
+            ).update_content(message_text=item.text).get_message_payload()
+            await self.bot.chat_postMessage(
+                **_message
             )
 
     async def reply(self, receiver: TaskHeader.Location, message: List[Message], **kwargs):
@@ -141,21 +116,23 @@ class KookSender(BaseSender):
             if just_file:
                 return None
             assert item.content, f"message content is empty"
-            await self.send_message(
-                channel_id=receiver.thread_id,
-                user_id=receiver.user_id,
-                dm=receiver.thread_id == receiver.chat_id,
-                message_type=MessageTypes.KMD,
-                content=item.content
+            _message = ChatMessageCreator(
+                channel=receiver.chat_id,
+                thread_ts=receiver.message_id
+            ).update_content(message_text=item.content).get_message_payload(message_text=item.content)
+            await self.bot.chat_postMessage(
+                channel=receiver.chat_id,
+                thread_ts=receiver.message_id,
+                text=item.content
             )
 
     async def error(self, receiver: TaskHeader.Location, text, **kwargs):
-        await self.send_message(
-            channel_id=receiver.thread_id,
-            user_id=receiver.user_id,
-            dm=receiver.thread_id == receiver.chat_id,
-            message_type=MessageTypes.TEXT,
-            content=text
+        _message = ChatMessageCreator(
+            channel=receiver.chat_id,
+            thread_ts=receiver.message_id
+        ).update_content(message_text=text).get_message_payload()
+        await self.bot.chat_postMessage(
+            **_message
         )
 
     async def function(self, receiver: TaskHeader.Location,
@@ -178,7 +155,7 @@ class KookSender(BaseSender):
 
         _func_tips = [
             formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
-            f"""```json\n{message.function_call.arguments}```""",
+            f"""```\n{message.function_call.arguments}```""",
         ]
 
         if tool.env_required:
@@ -206,12 +183,12 @@ class KookSender(BaseSender):
         )
 
         if not tool.silent:
-            await self.send_message(
-                channel_id=receiver.thread_id,
-                user_id=receiver.user_id,
-                dm=receiver.thread_id == receiver.chat_id,
-                message_type=MessageTypes.KMD,
-                content=task_message
+            _message = ChatMessageCreator(
+                channel=receiver.chat_id,
+                thread_ts=receiver.message_id
+            ).update_content(message_text=task_message).get_message_payload()
+            await self.bot.chat_postMessage(
+                **_message
             )
 
         # 回写创建消息
@@ -222,7 +199,9 @@ class KookSender(BaseSender):
             name=message.function_call.name,
             message_list=[
                 RawMessage(
-                    text=f"Okay,Task be created:{message.function_call.arguments}.")]
+                    text=f"Okay,Task be created:{message.function_call.arguments}."
+                )
+            ]
         )
 
         # 构建对应的消息
@@ -240,23 +219,24 @@ class KookSender(BaseSender):
         )
 
 
-__sender__ = KookSender()
+__sender__ = SlackSender()
 
 
-class KookReceiver(BaseReceiver):
+class SlackReceiver(BaseReceiver):
     """
     receive message from telegram
     """
 
-    async def kook(self):
+    async def slack(self):
         self.set_core(sender=__sender__, task=Task(queue=__receiver__))
         if not BotSetting.available:
-            logger.warning("Receiver Runtime:Kook Setting empty")
+            logger.warning("Receiver Runtime:Slack Setting empty")
             return None
         try:
+            logger.success("Receiver Runtime:Slack start")
             await self.task.consuming_task(self.on_message)
         except KeyboardInterrupt:
-            logger.warning("Kook Receiver shutdown")
+            logger.warning("Slack Receiver shutdown")
         except Exception as e:
             logger.exception(e)
             raise e
