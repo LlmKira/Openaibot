@@ -15,6 +15,7 @@ class DiscordBot(BaseSettings):
     token: str = Field(None, env='DISCORD_BOT_TOKEN')
     prefix: str = Field("/", env="DISCORD_BOT_PREFIX")
     proxy_address: str = Field(None, env="DISCORD_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
+    bot_id: str = Field(None)
 
     class Config:
         env_file = '.env'

@@ -3,11 +3,14 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import base64
+import binascii
 import json
 import random
 
 import crescent
 import hikari
+from hikari import Intents
 from hikari.impl import ProxySettings
 from loguru import logger
 from telebot import formatting
@@ -70,8 +73,15 @@ class DiscordBotRunner(Runner):
         if not BotSetting.available:
             logger.warning("Sender Runtime:Discord not configured, skip")
             return None
+        my_intents = (
+                Intents.GUILDS |
+                Intents.GUILD_MESSAGES |
+                Intents.DM_MESSAGES |
+                Intents.MESSAGE_CONTENT
+        )
+        logger.info(f"Sender Runtime:DiscordBot will start with intents:{my_intents}")
         self.bot = hikari.GatewayBot(
-            intents=hikari.Intents.ALL,
+            intents=my_intents,
             token=BotSetting.token,
             proxy_settings=ProxySettings(
                 url=BotSetting.proxy_address
@@ -82,6 +92,18 @@ class DiscordBotRunner(Runner):
         bot = self.bot
         model = StartUpEvent()
         client = crescent.Client(app=bot, model=model)
+        # Base64 解码
+        try:
+            _based = BotSetting.token.split(".", maxsplit=1)[0] + "=="
+            _bot_id = base64.b64decode(_based).decode("utf-8")
+        except UnicodeDecodeError as e:
+            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+        except binascii.Error as e:
+            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+        except Exception as e:
+            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+        else:
+            BotSetting.bot_id = _bot_id
 
         # Task Creator
         async def create_task(message: hikari.Message, funtion_enable: bool = False):
@@ -100,6 +122,9 @@ class DiscordBotRunner(Runner):
             if message.content:
                 message.content = message.content.lstrip("/chat").lstrip("/task")
             message.content = message.content if message.content else ""
+            _user_name = bot.get_me().username
+            if _user_name:
+                message.content = message.content.replace(f"<@{BotSetting.bot_id}>", f" @{_user_name} ")
             logger.info(
                 f"discord_hikari:create task from {message.channel_id} {message.content[:300]} funtion_enable:{funtion_enable}"
             )
@@ -306,13 +331,12 @@ class DiscordBotRunner(Runner):
         # Two input point
         @client.include
         @crescent.event
-        async def on_guild_create(event_: hikari.MessageCreateEvent):
+        async def on_guild_create(event_: hikari.GuildMessageCreateEvent):
             if event_.message.author.is_bot:
                 return
             if not event_.content:
-                logger.info(f"discord_hikari:ignore a empty message")
+                logger.info(f"discord_hikari:ignore a empty message,do you turn on the MESSAGE_CONTENT setting?")
                 return
-
             # Bot may cant read message
             if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):
                 if is_empty_command(text=event_.content):
@@ -328,6 +352,10 @@ class DiscordBotRunner(Runner):
                 if is_empty_command(text=event_.content):
                     return await event_.message.respond(content="?")
                 return await create_task(event_.message, funtion_enable=False)
+
+            if f"<@{BotSetting.bot_id}>" in event_.content:
+                # At 事件
+                return await create_task(event_.message, funtion_enable=__default_function_enable__)
 
             if event_.message.referenced_message:
                 # 回复了 Bot
