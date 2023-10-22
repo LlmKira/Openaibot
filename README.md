@@ -1,14 +1,28 @@
 ![cover](https://raw.githubusercontent.com/LlmKira/.github/main/llmbot/project_cover.png)
+------------------
 
-[![Docker Image Size (tag)](https://img.shields.io/badge/Docker-Image-blue)](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
-
-![docker workflow](https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml/badge.svg)
-[![Package](https://github.com/LlmKira/Openaibot/actions/workflows/publish.yml/badge.svg)](https://github.com/LlmKira/Openaibot/actions/workflows/publish.yml)
-
-[![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/Openai_LLM)
-[![Discord](https://img.shields.io/badge/Join-Discord-blue)](https://discord.gg/6QHNdwhdE5)
-
+<p align="center">
+<a href="https://hub.docker.com/repository/docker/sudoskys/llmbot/general">
+    <img src="https://img.shields.io/docker/pulls/sudoskys/llmbot" alt="docker">
+</a>
+<a href="https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml">
+    <img src="https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml/badge.svg" alt="docker workflow">
+</a>
+<br />
+<a href="https://t.me/Openai_LLM">
+    <img src="https://img.shields.io/badge/Join-Telegram-blue" alt="telegram">
+</a>
+<a href="https://discord.gg/6QHNdwhdE5">
+    <img src="https://img.shields.io/badge/Join-Discord-blue" alt="discord">
+</a>
+<br/>
+<a href="https://raw.githubusercontent.com/llmkira/openaibot/main/LICENSE">
+    <img src="https://img.shields.io/github/license/llmkira/openaibot" alt="license">
+</a>
+<a href="https://hub.docker.com/repository/docker/sudoskys/llmbot/builds">
+    <img src="https://img.shields.io/docker/v/sudoskys/llmbot" alt="docker build">
+</a>
+</p>
 
 <p align="center">
   <a href="https://llmkira.github.io/Docs/">🍩 部署文档</a> 
@@ -67,7 +81,7 @@ Feature `gpt-function-call`
 
 ## 📦 快速开始
 
-[🧀 部署文档](https://llmkira.github.io/Docs/)
+阅读 [🧀 部署文档](https://llmkira.github.io/Docs/) 获得更多信息。
 
 ### 🥞 自动安装
 
@@ -79,6 +93,8 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```
 
 ### 🥣 Docker
+
+Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
 
 ```shell
 
