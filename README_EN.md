@@ -9,9 +9,13 @@
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/Openai_LLM)
 [![Discord](https://img.shields.io/badge/Join-Discord-blue)](https://discord.gg/6QHNdwhdE5)
 
-[中文手册](README.md)
-
-[🧀 Dev&Deploy Docs](https://llmkira.github.io/Docs/en/)
+<p align="center">
+  <a href="https://llmkira.github.io/Docs/en">🍩 Deploy Docs</a> 
+  &
+  <a href="https://llmkira.github.io/Docs/en/dev/basic">🧀 Dev Docs</a>
+  &
+  <a href="README.md">📝 中文Readme</a>
+</p>
 
 LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
 with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`

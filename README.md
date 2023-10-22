@@ -9,9 +9,14 @@
 [![Telegram](https://img.shields.io/badge/Join-Telegram-blue)](https://t.me/Openai_LLM)
 [![Discord](https://img.shields.io/badge/Join-Discord-blue)](https://discord.gg/6QHNdwhdE5)
 
-[English Readme](README_EN.md)
 
-[🧀 开发&部署文档](https://llmkira.github.io/Docs/)
+<p align="center">
+  <a href="https://llmkira.github.io/Docs/">🍩 部署文档</a> 
+  &
+  <a href="https://llmkira.github.io/Docs/dev/basic">🧀 开发文档</a>
+  &
+  <a href="README_EN.md">📝 English Readme</a>
+</p>
 
 LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。由 Openai 的新
 Feature `gpt-function-call`
