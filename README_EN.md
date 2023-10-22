@@ -11,7 +11,7 @@
 
 [中文手册](README.md)
 
-[🧀 Plugin Dev Docs](https://llmkira.github.io/Docs/en/plugin/basic)
+[🧀 DeployDocs](https://llmkira.github.io/Docs/en/)
 
 LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
 with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`
@@ -19,7 +19,7 @@ support.
 
 | Demo                              | 
 |-----------------------------------|
-| ![sticker](./docs/chain_chat.gif) | ![timer](./docs/timer_func.gif) |
+| ![sticker](./docs/chain_chat.gif) |
 
 Unlike previous projects, this project tries to replicate ChatGpt's plugin system based on the messaging platform,
 implementing some or more features.
@@ -59,139 +59,43 @@ implementing some or more features.
 | IRC      | ❌       |             |                            |
 | ...      |         |             | Create issue/pr            |
 
-## 📝 Deployment Guide
+## 📦 Deploy
 
-Make sure your system is UTF8, `dpkg-reconfigure locales`
+[🧀 Deploy](https://llmkira.github.io/Docs/en/)
 
-Please make sure that your server has more than `1G` of RAM, otherwise it will reboot indefinitely with PM2.
+### 🥞 Automatic installation
 
-If you are using a brand-new server, you can use the following shell to automatically install:
+If you are using a brand new server, you can use the following shell to try to automatically install this project.
 
 ```shell
-curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
 
+curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
 ```
 
-### 🌻 Configuration
+### 🥣 Docker
 
-- (Optional) Resolving conflicts
+```shell
 
-  `pip uninstall llmkira`
-
-- Clone the project
-
-```bash
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install -r requirements.txt
-
-```
-
-- 🛠 Configure the `.env` file
-
-```bash
-cp .env.exp .env
-```
-
-- ⚙️ Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-- 🗄 Configure the database environment
-
-```bash
-# Install Redis
-apt-get install redis
-systemctl enable redis.service --now
-```
-
-```bash
-# Install RabbitMQ
-docker pull rabbitmq:3.10-management
-docker run -d -p 5672:5672 -p 15672:15672 \
-        -e RABBITMQ_DEFAULT_USER=admin \
-        -e RABBITMQ_DEFAULT_PASS=admin \
-        --hostname myRabbit \
-        --name rabbitmq \
-        rabbitmq:3.10-management 
-docker ps -l
-```  
-
-## ▶️ Run
-
-We recommend running the database server with Docker.
-
-But we **don't recommend** running BOT in Docker because I often forget to package new dependence. 🥲
-So recommend using the PM2 panel(`pm2 start pm2.json`) to run the bot!
-
-### Docker
-
-```shell
-cd Openaibot
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot
-
 ```
 
-Install docker can refer to [docker docs](https://docs.docker.com/engine/install/)
-
-Install docker-compose can refer to [docker-compose docs](https://docs.docker.com/compose/install/)
-
-Install docker-desktop can refer to [docker-desktop docs](https://www.docker.com/products/docker-desktop/)
-
-### PM2
-
-````
-apt install npm
-npm install pm2 -g
-pm2 start pm2.json
-````
-
-### Shell
-
-```bash
-python3 start_sender.py
-python3 start_receiver.py
-
-```
-
-## Basic commands
-
-```shell
-help - help
-chat - chat
-task - task
-tool - tool list
-bind - bind optional platforms
-unbind - unbind optional platforms
-clear - Delete your own records
-set_endpoint - customize the backend
-clear_endpoint - wipe custom settings
-auth - pass the task
-env - set secret
-
-```
-
-### 🥽 Environment variables
-
-| Variable name       | value | Description                                      |
-|---------------------|-------|--------------------------------------------------|
-| `LLMBOT_STOP_REPLY` | 1     | Stop receiver to reply if value is 1             |
-| `LLMBOT_LOG_OUTPUT` | DEBUG | Print LONG debug log on screen if value is DEBUG |
+Tip:If you use Docker to run your robot, you may encounter missing dependencies. Sometimes we forget to package new
+dependencies.
 
 ## 💻 How to develop?
 
 For plugin development, please refer to the sample plugins in the `plugins` directory.
 
-Plugin development please refer to [🧀 Plugin Dev Docs](https://llmkira.github.io/Docs/en/plugin/basic)
+Plugin development please refer to [🧀 Plugin Dev Docs](https://llmkira.github.io/Docs/en/dev/basic)
 
 ## 🤝 We need your help!
 
 We can't do it on our own at the moment:
 
-- [ ] Security checks on procedures
 - [ ] User Auth System
+- [ ] Security checks on procedures
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 
