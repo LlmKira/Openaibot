@@ -11,7 +11,7 @@
 
 [English Readme](README_EN.md)
 
-[🧀 部署文档](https://llmkira.github.io/Docs/)
+[🧀 开发&部署文档](https://llmkira.github.io/Docs/)
 
 LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。由 Openai 的新
 Feature `gpt-function-call`

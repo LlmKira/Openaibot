@@ -11,7 +11,7 @@
 
 [中文手册](README.md)
 
-[🧀 DeployDocs](https://llmkira.github.io/Docs/en/)
+[🧀 Dev&Deploy Docs](https://llmkira.github.io/Docs/en/)
 
 LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
 with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`
