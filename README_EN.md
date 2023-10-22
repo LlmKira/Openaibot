@@ -125,3 +125,6 @@ Feel free to submit a Pull Request or discuss, we'd love to receive your contrib
 ## 📜 Agreement
 
 > This project has no relationship with OPENAI/ChatGpt.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small)

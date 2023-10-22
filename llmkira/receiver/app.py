@@ -9,9 +9,9 @@ import sys
 
 from dotenv import load_dotenv
 from llmkira.receiver.telegram import TelegramReceiver
+from llmkira.sdk.func_calling import load_plugins, load_from_entrypoint, get_entrypoint_plugins
 from loguru import logger
 
-from llmkira.sdk.func_calling import load_plugins, load_from_entrypoint, get_entrypoint_plugins
 from .aps import aps_start
 from .discord import DiscordReceiver
 from .function import FunctionReceiver

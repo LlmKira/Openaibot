@@ -124,3 +124,5 @@ Feel free to submit a Pull Request or discuss, we'd love to receive your contrib
 > 此项目与 Openai 官方无关，全称为 OpenAiBot，表示开放人工智能机器人，并不表示为 Openai 所属机器人。
 
 > 如果您所在辖区禁止使用 Openai 服务，请勿使用此项目。
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small)
