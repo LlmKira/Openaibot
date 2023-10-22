@@ -105,7 +105,7 @@ class StickerTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta.reply_message(
+                    task_meta=task.task_meta.reply_message(
                         plugin_name=__plugin_name__,
                         callback=TaskHeader.Meta.Callback(
                             role="function",
