@@ -115,6 +115,8 @@ class DiscordSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
+            if item.just_file:
+                return None
             async with self.bot as client:
                 client: hikari.impl.RESTClientImpl
                 _reply = None

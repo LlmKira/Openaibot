@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
-import copy
 import time
 from typing import Literal, Tuple, List, Union, Optional
 
@@ -93,7 +92,8 @@ class TaskHeader(BaseModel):
 
         verify_uuid: str = Field(None, description="用于验证重发")
         parent_call: openai.OpenaiResult = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
-        callback: Callback = Field(Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
+        callback: Callback = Field(default=Callback(),
+                                   description="用于回写，插件返回的消息头，标识 function 的名字")
         extra_args: dict = Field({}, description="用于提供额外参数")
 
         class Config:
@@ -102,28 +102,25 @@ class TaskHeader(BaseModel):
         def child(self, name):
             self.sign_as = (self.sign_as[0] + 1, "child", name)
             self.limit_child -= 1
-            return copy.deepcopy(self)
+            return self.copy(deep=True)
 
-        @classmethod
-        def reply_notify(cls, **kwargs):
-            _child = cls()
-            _child.callback = None
+        def reply_notify(self, plugin_name: str, callback: Callback, **kwargs):
+            _child = self.child(plugin_name)
+            _child.callback = callback
             _child.direct_reply = True
             _child.callback_forward = False
             _child.callback_forward_reprocess = False
             return _child
 
-        @classmethod
-        def reply_raw(cls, plugin_name: str, task: "TaskHeader", callback: Callback):
-            _child = task.task_meta.child(plugin_name)
+        def reply_raw(self, plugin_name: str, callback: Callback, **kwargs):
+            _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
             _child.callback_forward_reprocess = True
             return _child
 
-        @classmethod
-        def reply_message(cls, plugin_name: str, task: "TaskHeader", callback: Callback):
-            _child = task.task_meta.child(plugin_name)
+        def reply_message(self, plugin_name: str, callback: Callback, **kwargs):
+            _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
             _child.callback_forward_reprocess = False

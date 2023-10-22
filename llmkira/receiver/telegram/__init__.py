@@ -55,12 +55,18 @@ class TelegramSender(BaseSender):
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
-            if file_obj.file_name.endswith((".jpg", ".png")):
+            if file_obj.file_name.endswith((".jpg", ".png", ".jpeg", ".gif")):
                 self.bot.send_photo(
                     chat_id=receiver.chat_id,
                     photo=_data.pair,
                     reply_to_message_id=receiver.message_id,
                     caption=file_obj.caption
+                )
+            elif file_obj.file_name.endswith(".webp"):
+                self.bot.send_sticker(
+                    chat_id=receiver.chat_id,
+                    reply_to_message_id=receiver.message_id,
+                    sticker=_data.pair,
                 )
             elif file_obj.file_name.endswith(".ogg"):
                 self.bot.send_voice(
@@ -86,6 +92,8 @@ class TelegramSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
+            if item.just_file:
+                return None
             try:
                 self.bot.send_message(
                     chat_id=receiver.chat_id,

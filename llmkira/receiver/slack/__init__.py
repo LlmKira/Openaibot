@@ -94,6 +94,8 @@ class SlackSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
+            if item.just_file:
+                return None
             _message = ChatMessageCreator(
                 channel=receiver.chat_id,
                 thread_ts=receiver.message_id

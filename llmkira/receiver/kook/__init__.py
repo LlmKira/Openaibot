@@ -93,7 +93,7 @@ class KookSender(BaseSender):
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
-            if file_obj.file_name.endswith((".jpg", ".png")):
+            if file_obj.file_name.endswith((".jpg", ".png", ".jpeg", ".gif", ".webp")):
                 await self.send_message(
                     channel_id=receiver.thread_id,
                     user_id=receiver.user_id,
@@ -119,6 +119,8 @@ class KookSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
+            if item.just_file:
+                return None
             await self.send_message(
                 channel_id=receiver.thread_id,
                 user_id=receiver.user_id,

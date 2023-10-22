@@ -64,7 +64,7 @@ class ChainFunc(object):
                         user_id=_task_forward.receiver.user_id,
                         chat_id=_task_forward.receiver.chat_id,
                         text=f"🔑 Type `/auth {task_id}` to run `{func_name}`"
-                             f"\ntry `!auth {task_id}` when no slash command."
+                             f"\ntry `!auth {task_id}` when no slash command"
                     )
                 ]
             )
