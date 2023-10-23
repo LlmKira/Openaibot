@@ -75,7 +75,7 @@ class BaseTool(ABC, BaseModel):
         return ...
 
     @abstractmethod
-    def func_message(self, message_text):
+    def func_message(self, message_text, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
@@ -90,7 +90,7 @@ class BaseTool(ABC, BaseModel):
         return None
 
     @abstractmethod
-    async def failed(self, platform, task, receiver, reason):
+    async def failed(self, platform, task, receiver, reason, **kwargs):
         """
         处理失败
         """

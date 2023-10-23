@@ -13,14 +13,13 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 
 from aio_pika.abc import AbstractIncomingMessage
-from loguru import logger
-
 from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.schema import RawMessage
 from llmkira.sdk.error import RateLimitError
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.task import Task, TaskHeader
+from loguru import logger
 
 
 class BaseSender(object, metaclass=ABCMeta):
@@ -202,5 +201,5 @@ class BaseReceiver(object):
         except Exception as e:
             logger.exception(e)
             await message.reject(requeue=False)
-        finally:
+        else:
             await message.ack(multiple=False)
