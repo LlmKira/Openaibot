@@ -33,7 +33,7 @@ class ChainFunc(object):
         meta.callback_forward_reprocess = False
         meta.verify_uuid = str(shortuuid.uuid()[0:8]).upper()
         # 追加中断
-        if meta.limit_child <= 0:
+        if meta.limit_child <= 1:
             return None
         _task_forward.task_meta = meta
         # 注册部署点
@@ -92,7 +92,7 @@ class ChainFunc(object):
         meta.callback_forward = False
         meta.callback_forward_reprocess = False
         # 追加中断
-        if meta.limit_child <= 0:
+        if meta.limit_child <= 1:
             return None
         _task_forward.task_meta = meta
 
