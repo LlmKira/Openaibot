@@ -5,6 +5,8 @@ hikari-crescent
 
 khl.py
 
+slack_bolt
+
 nest-asyncio
 pathlib>=1.0.1
 loguru>=0.5.3
