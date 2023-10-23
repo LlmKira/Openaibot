@@ -24,11 +24,15 @@ class FrameworkInfo(BaseModel):
     exception: Optional[str] = None
 
 
-_current_openapi_version_: str = "20231017"
+_current_openapi_version_: str = "20231024"
 _openapi_version_: Dict[str, "FrameworkInfo"] = {
     _current_openapi_version_: FrameworkInfo(
         support=True,
         exception=None
+    ),
+    "20231017": FrameworkInfo(
+        support=True,
+        exception="LoopRunner changed in ver.20231017"
     ),
     "20231013": FrameworkInfo(
         support=False,
