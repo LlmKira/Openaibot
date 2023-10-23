@@ -4,7 +4,7 @@
 # @File    : components.py
 # @Software: PyCharm
 import asyncio
-# ATTENTION:禁止调用上层任何包，否则会导致循环引用
+# ATTENTION:禁止调用上层任何schema包，否则会导致循环引用
 from typing import Literal, Optional, Coroutine, List
 
 from loguru import logger

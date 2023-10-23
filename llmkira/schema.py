@@ -14,6 +14,7 @@ from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from .sdk.schema import File
+from .sdk.schema import Message as OpenAIMessage
 
 nest_asyncio.apply()
 
@@ -51,6 +52,9 @@ class RawMessage(BaseModel):
     created_at: Union[int, float] = Field(default=int(time.time()), description="创建时间")
     just_file: bool = Field(default=False, description="Send file only")
 
+    loop_end: bool = Field(default=False, description="要求其他链条不处理此消息")
+    extra_kwargs: dict = Field(default={}, description="extra kwargs for loop")
+
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
@@ -79,6 +83,16 @@ class RawMessage(BaseModel):
         await cache.set_data(key=_key, value=pickle.dumps(File.Data(file_name=name, file_data=data)),
                              timeout=60 * 60 * 24 * 7)
         return File(file_id=_key, file_name=name)
+
+    @classmethod
+    def from_openai(cls, message: OpenAIMessage, locate: "TaskHeader.Location"):
+        # IMPORT FROM llmkira.task
+        return cls(
+            user_id=locate.user_id,
+            text=message.content,
+            chat_id=locate.chat_id,
+            created_at=int(time.time())
+        )
 
     @classmethod
     def from_telegram(cls, message: Union[types.Message, types.CallbackQuery]):

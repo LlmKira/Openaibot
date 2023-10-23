@@ -24,7 +24,6 @@ from llmkira.utils import sync
 __receiver__ = "kook"
 
 from llmkira.middleware.router.schema import router_set
-from llmkira.transducer import TransferManager
 
 # 魔法
 import nest_asyncio
@@ -134,13 +133,12 @@ class KookSender(BaseSender):
         模型直转发，Message是Openai的类型
         """
         for item in message:
-            _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
-            just_file, file_list = _transfer().build(message=item)
+            raw_message = await self.loop_turn_from_openai(platform_name=__receiver__, message=item, locate=receiver)
             await self.file_forward(
                 receiver=receiver,
-                file_list=file_list
+                file_list=raw_message.file
             )
-            if just_file:
+            if raw_message.just_file:
                 return None
             assert item.content, f"message content is empty"
             await self.send_message(

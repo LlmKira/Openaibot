@@ -21,7 +21,6 @@ from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sender.util_func import parse_command, is_command, is_empty_command, auth_reloader
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from ..schema import Runner
 
 StepCache = StateMemoryStorage()
@@ -93,14 +92,17 @@ class TelegramBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                _transfer = TransferManager().sender_parser(agent_name=__sender__)
-                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                deliver_back_message, _file = await self.loop_turn_only_message(
+                    platform_name=__sender__,
+                    message=message,
+                    file_list=_file
+                )
                 # Reply
                 success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_telegram(
                         message,
                         file=_file,
-                        deliver_back_message=deliver_back_message,
+                        deliver_back_message=[deliver_back_message],
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                         trace_back_message=[message.reply_to_message]
                     )

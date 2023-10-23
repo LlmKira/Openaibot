@@ -24,7 +24,6 @@ from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.discord import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from .event import help_message, _upload_error_message_template, MappingDefault
 from ..schema import Runner
 
@@ -131,14 +130,17 @@ class DiscordBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                _transfer = TransferManager().sender_parser(agent_name=__sender__)
-                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                deliver_back_message, _file = await self.loop_turn_only_message(
+                    platform_name=__sender__,
+                    message=message,
+                    file_list=_file
+                )
                 # Reply
                 success, logs = await DiscordTask.send_task(
                     task=TaskHeader.from_discord_hikari(
                         message,
                         file=_file,
-                        deliver_back_message=deliver_back_message,
+                        deliver_back_message=[deliver_back_message],
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                         trace_back_message=[]
                     )

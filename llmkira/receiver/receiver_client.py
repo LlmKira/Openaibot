@@ -13,16 +13,40 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 
 from aio_pika.abc import AbstractIncomingMessage
+from loguru import logger
+
 from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.schema import RawMessage
 from llmkira.sdk.error import RateLimitError
 from llmkira.sdk.func_calling import ToolRegister
+from llmkira.sdk.openapi.transducer import LoopRunner
 from llmkira.task import Task, TaskHeader
-from loguru import logger
 
 
 class BaseSender(object, metaclass=ABCMeta):
+
+    async def loop_turn_from_openai(self, platform_name, message, locate):
+        """
+        将 Openai 消息传入 Loop 进行修饰
+        此过程将忽略掉其他属性。只留下 content
+        """
+        loop_runner = LoopRunner()
+        trans_loop = loop_runner.get_receiver_loop(platform_name=platform_name)
+        _raw_message = RawMessage.from_openai(message=message, locate=locate)
+        await loop_runner.exec_loop(
+            pipe=trans_loop,
+            pipe_arg={
+                "message": _raw_message,
+            }
+        )
+        arg: dict = loop_runner.result_pipe_arg
+        if not arg.get("message"):
+            logger.error("Message Loop Lose Message")
+        raw_message: RawMessage = arg.get("message", _raw_message)
+        assert isinstance(raw_message, RawMessage), f"message type error {type(raw_message)}"
+        return raw_message
+
     @abstractmethod
     async def file_forward(self, receiver, file_list, **kwargs):
         pass
