@@ -149,13 +149,6 @@ class BaseReceiver(object):
         """
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
-        # 没有任何参数
-        if _task.task_meta.direct_reply:
-            await self.sender.forward(
-                receiver=_task.receiver,
-                message=_task.message
-            )
-            return None, None, None
         # 函数重整策略
         functions = []
         if _task.task_meta.function_enable:
@@ -178,6 +171,19 @@ class BaseReceiver(object):
         # 构建通信代理
         _llm = OpenaiMiddleware(task=_task, function=functions)
         logger.debug(f"[x] Received Order \n--order {_task.json(indent=2)}")
+        # 没有任何参数
+        if _task.task_meta.direct_reply:
+            # 手动追加插件产生的线索消息
+            _llm.write_back(
+                role=_task.task_meta.callback.role,
+                name=_task.task_meta.callback.name,
+                message_list=_task.message
+            )
+            await self.sender.forward(
+                receiver=_task.receiver,
+                message=_task.message
+            )
+            return _task, None, None
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
             # 手动追加插件产生的线索消息

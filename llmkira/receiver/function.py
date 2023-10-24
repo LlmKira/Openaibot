@@ -88,11 +88,16 @@ class ChainFunc(object):
         """
         _task_forward: TaskHeader = task.copy()
         meta = _task_forward.task_meta.child(__receiver__)
+        # 重置路由元数据，添加递归指标
         meta.continue_step += 1
         meta.callback_forward = False
         meta.callback_forward_reprocess = False
         # 追加中断
         if meta.limit_child <= 1:
+            return None
+        # 放弃子链
+        if deploy_child == 0:
+            logger.debug(f"[112532] Function {parent_func} End its chain...")
             return None
         _task_forward.task_meta = meta
 
@@ -108,10 +113,6 @@ class ChainFunc(object):
         except Exception as e:
             logger.error(e)
             logger.warning(f"[362211]Remove function {parent_func} failed")
-        # 放弃子链
-        if deploy_child == 0:
-            logger.debug(f"[112532] Function {parent_func} End its chain...")
-            return None
         # 注册部署点
         await ChainReloader(uid=_task_forward.receiver.uid).add_task(
             chain=Chain(
