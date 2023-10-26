@@ -41,6 +41,8 @@ hikari-crescent = "^0.6.4"
 khl-py = "^0.3.16"
 emoji = "^2.8.0"
 websocket = "^0.2.1"
+wrapt = "^1.15.0"
+motor = "^3.3.1"
 
 
 [build-system]

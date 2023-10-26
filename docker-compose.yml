@@ -15,6 +15,7 @@ services:
     depends_on:
       - redis
       - rabbitmq
+      - mongodb
     environment:
       AMQP_DSN: amqp://admin:admin@rabbitmq:5672
       REDIS_DSN: redis://redis:6379/0
@@ -49,6 +50,19 @@ services:
       - ./redis:/data
     ports:
       - "6379:6379"
+    networks:
+      - app-tier
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    restart: on-failure
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./mongodb:/data/db
+    ports:
+      - "27017:27017"
     networks:
       - app-tier
 

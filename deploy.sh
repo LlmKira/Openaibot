@@ -61,9 +61,9 @@ else
 fi
 
 # Pull RabbitMQ image
-if [[ $(docker images -q rabbitmq:3.10-management) == "" ]]; then
+if [[ $(docker images -q rabbitmq:3-management) == "" ]]; then
   echo "$(tput setaf 6)Pulling RabbitMQ image...$(tput sgr0)"
-  docker pull rabbitmq:3.10-management
+  docker pull rabbitmq:3-management
   echo "$(tput setaf 2)RabbitMQ image pull complete.$(tput sgr0)"
 fi
 # Run RabbitMQ container if not already running
@@ -74,13 +74,28 @@ if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
     -e RABBITMQ_DEFAULT_PASS=admin \
     --hostname myRabbit \
     --name rabbitmq \
-    rabbitmq:3.10-management
+    rabbitmq:3-management
 fi
 if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
   echo "$(tput setaf 1)RabbitMQ container started failed.$(tput sgr0)"
 else
   echo "$(tput setaf 2)RabbitMQ container started successfully.$(tput sgr0)"
 fi
+
+# Pull MongoDB image
+if [[ $(docker images -q mongo:latest) == "" ]]; then
+  echo "$(tput setaf 6)Pulling MongoDB image...$(tput sgr0)"
+  docker pull mongo:latest
+  echo "$(tput setaf 2)MongoDB image pull complete.$(tput sgr0)"
+fi
+# Run MongoDB container if not already running
+if ! docker inspect -f '{{.State.Running}}' mongo &>/dev/null; then
+  echo "$(tput setaf 6)Starting MongoDB container...$(tput sgr0)"
+  docker run -d -p 27017:27017 \
+    --name mongo \
+    mongo:latest
+fi
+
 
 # Check if Node.js and NPM are installed, otherwise exit
 echo "$(tput setaf 6)Checking Node.js and NPM...$(tput sgr0)"

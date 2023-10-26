@@ -20,6 +20,7 @@ python-dotenv
 elara
 redis>=4.5.4
 aio_pika
+motor
 
 arclet-alconna
 shortuuid
@@ -50,3 +51,4 @@ flask_sqlalchemy
 emoji
 websocket
 aiohttp
+wrapt
