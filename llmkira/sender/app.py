@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from llmkira import load_plugins
-from llmkira.sdk.func_calling import load_from_entrypoint, get_entrypoint_plugins
+from llmkira.sdk import load_from_entrypoint, get_entrypoint_plugins
 from .discord import DiscordBotRunner
 from .kook import KookBotRunner
 from .rss import RssAppRunner
