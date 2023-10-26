@@ -146,8 +146,8 @@ class PluginManager:
                     f"Module {module.__name__} is not loaded as a plugin! "
                     "Make sure not to import it before loading."
                 )
-            logger.opt(colors=True).success(
-                f'Succeeded to load plugin "<y>{escape_tag(plugin.name)}</y>"'
+            logger.opt(colors=True).info(
+                f'✨ Succeeded to load plugin "<y>{escape_tag(plugin.name)}</y>"'
                 + (
                     f' from "<m>{escape_tag(plugin.module_name)}</m>"'
                     if plugin.module_name != plugin.name
@@ -236,8 +236,8 @@ class PluginLoader(SourceFileLoader):
             super().exec_module(module)
         except OpenApiError as e:
             _revert_plugin(plugin)
-            logger.error(e)
-            return
+            logger.error(f"\n🔧{e}")
+            raise
         except Exception:
             _revert_plugin(plugin)
             raise
