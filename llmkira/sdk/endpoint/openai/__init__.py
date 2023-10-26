@@ -5,18 +5,19 @@
 # @Software: PyCharm
 __version__ = "0.0.1"
 
+import hashlib
+import os
 from typing import Union, List, Optional, Literal
 
 import httpx
 from dotenv import load_dotenv
-from llmkira.sdk.schema import Message, Function
-from llmkira.utils import sha1_encrypt
 from loguru import logger
 from pydantic import BaseModel, root_validator, validator, Field, HttpUrl, BaseSettings
 
 from .action import Tokenizer, TokenizerObj
 from ...error import ValidationError
 from ...network import request
+from ...schema import Message, Function
 
 load_dotenv()
 
@@ -28,6 +29,16 @@ MODEL = Literal[
     "gpt-4-0613",
     "gpt-4"
 ]
+
+
+def sha1_encrypt(string):
+    """
+    sha1加密算法
+    """
+
+    sha = hashlib.sha1(string.encode('utf-8'))
+    encrypts = sha.hexdigest()
+    return encrypts[:8]
 
 
 class OpenaiResult(BaseModel):
@@ -73,18 +84,32 @@ class Openai(BaseModel):
             arbitrary_types_allowed = True
 
     class Driver(BaseSettings):
-        endpoint: HttpUrl = Field("https://api.openai.com/v1/chat/completions", env='OPENAI_API_ENDPOINT')
-        api_key: str = Field(None, env='OPENAI_API_KEY')
-        org_id: Optional[str] = Field(None, env='OPENAI_API_ORG_ID')
+        """
+        不允许部分更新
+        """
+        endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
+        api_key: Optional[str] = Field(None)
+        org_id: Optional[str] = Field(None)
 
         # TODO:AZURE API VERSION
 
-        # token: Tokenizer = TokenizerObj
+        @classmethod
+        def from_public_env(cls):
+            openai_api_key = os.getenv("OPENAI_API_KEY", None)
+            openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", None)
+            openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
+            return cls(
+                endpoint=openai_endpoint,
+                api_key=openai_api_key,
+                org_id=openai_org_id,
+            )
+
         @validator("api_key")
         def check_key(cls, v):
             if v:
                 if not str(v).startswith("sk-"):
-                    logger.warning("OpenaiDriver:api_key should start with `sk-`")
+                    logger.warning("Validator:api_key should start with `sk-`")
+                # 严格检查
                 # if not len(str(v)) == 51:
                 #    raise ValidationError("api_key must be 51 characters long")
             else:
