@@ -80,7 +80,7 @@ class ChainFunc(object):
             deploy_child: int
     ):
         """
-        注册链
+        子链孩子函数，请注意，此处为高风险区域
         :param task: 任务
         :param parent_func: 父函数
         :param repeatable: 是否可重复
@@ -100,7 +100,6 @@ class ChainFunc(object):
             logger.debug(f"[112532] Function {parent_func} End its chain...")
             return None
         _task_forward.task_meta = meta
-
         # 禁用子链使用出现过的函数
         # Repeatable
         try:
