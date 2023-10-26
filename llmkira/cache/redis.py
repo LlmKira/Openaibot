@@ -9,10 +9,11 @@ from typing import Optional, Tuple, List
 
 import redis
 from dotenv import load_dotenv
-from llmkira.cache.base import AbstractDataClass, PREFIX
 from loguru import logger
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import ConnectionPool
+
+from llmkira.cache.base import AbstractDataClass, PREFIX
 
 
 class RedisClientWrapper(AbstractDataClass):
@@ -69,26 +70,20 @@ class RedisClientWrapper(AbstractDataClass):
 
 
 def check_redis_dsn(dsn):
-    try:
-        import redis
-        r = redis.from_url(dsn)
-        assert r.ping() is True
-    except Exception as exp:
-        logger.warning(f"Error connecting to Redis: {exp}")
-        return False
-    else:
-        return True
+    import redis
+    r = redis.from_url(dsn)
+    assert r.ping() is True
 
 
 # 加载 .env 文件
 load_dotenv()
-redis_url = os.getenv('REDIS_DSN', None)
-if not redis_url:
-    logger.warning('REDIS_DSN not found in .env, use default redis://localhost:6379/0')
-    redis_url = 'redis://localhost:6379/0'
+redis_url = os.getenv('REDIS_DSN', 'redis://localhost:6379/0')
 cache: Optional[RedisClientWrapper]
-if not check_redis_dsn(redis_url):
-    logger.warning('REDIS DISCONNECT,pls set REDIS_DSN in env')
+
+try:
+    check_redis_dsn(redis_url)
+except Exception as e:
+    logger.error(f'\n⚠️ Redis DISCONNECT,pls check REDIS_DSN in env\n--error: {e}')
     cache = None
 else:
     logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')
