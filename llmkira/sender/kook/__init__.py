@@ -204,6 +204,107 @@ class KookBotRunner(Runner):
                     type=MessageTypes.KMD
                 )
 
+        @bot.command(name='token_clear')
+        async def listen_token_clear_command(msg: Message):
+            try:
+                status = "🪄 Clear token success"
+                await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, msg.author_id),
+                    token=None
+                )
+            except Exception as e:
+                status = "❌ Clear token failed"
+                logger.error(f"[217835]token clear failed {e}")
+            if isinstance(msg, PublicMessage):
+                return await msg.reply(
+                    content=status,
+                    is_temp=True
+                )
+            if isinstance(msg, PrivateMessage):
+                return await msg.reply(
+                    content=status
+                )
+
+        @bot.command(name='token')
+        async def listen_token_command(
+                msg: Message,
+                token: str
+        ):
+            try:
+                token = await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, msg.author_id),
+                    token=token
+                )
+            except Exception as e:
+                return await msg.reply(
+                    content=f"❌ Set token failed\n`{e}`",
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+            else:
+                return await msg.reply(
+                    content=formatting.format_text(
+                        f"🪄 Set token success\n",
+                        token
+                    ),
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+
+        @bot.command(name='func_ban')
+        async def listen_func_ban_command(
+                msg: Message,
+                func_name: str
+        ):
+            try:
+                func_list = await UserControl.block_plugin(
+                    uid=UserControl.uid_make(__sender__, msg.author_id),
+                    plugin_name=func_name
+                )
+            except Exception as e:
+                return await msg.reply(
+                    content=f"❌ Ban failed\n`{e}`",
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+            else:
+                return await msg.reply(
+                    content=formatting.format_text(
+                        f"🪄 Ban success\n",
+                        f"**🔗 Current Ban**\n"
+                        f"{[f'`{item}`' for item in func_list]}"
+                    ),
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+
+        @bot.command(name='func_unban')
+        async def listen_func_unban_command(
+                msg: Message,
+                func_name: str
+        ):
+            try:
+                func_list = await UserControl.unblock_plugin(
+                    uid=UserControl.uid_make(__sender__, msg.author_id),
+                    plugin_name=func_name
+                )
+            except Exception as e:
+                return await msg.reply(
+                    content=f"❌ Unban failed\n`{e}`",
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+            else:
+                return await msg.reply(
+                    content=formatting.format_text(
+                        f"🪄 Ban success\n",
+                        f"**🔗 Current Ban**\n"
+                        f"{[f'`{item}`' for item in func_list]}"
+                    ),
+                    is_temp=True,
+                    type=MessageTypes.KMD
+                )
+
         @bot.command(name='bind')
         async def listen_bind_command(msg: Message, dsn: str):
             _manager = RouterManager()

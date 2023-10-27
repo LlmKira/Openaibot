@@ -20,6 +20,10 @@ Private Chat Only:
     /set_endpoint - <apikey>#<endpoint>
     /clear_endpoint - Clear endpoint and key
     /env - 配置变量,use as shell
+    /token - bind your token
+    /token_clear - clear your token
+    /func_ban - ban function
+    /func_unban - unban function
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
 """

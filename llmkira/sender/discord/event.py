@@ -40,6 +40,10 @@ def help_message():
     `/set_endpoint` - set endpoint
     `/clear_endpoint` - clear endpoint and key
     `/env` - set environment variable
+    `/token` - bind your service provider token
+    `/token_clear` - clear your service provider token
+    `/func_ban` - ban function
+    `/func_unban` - unban function
 
 **Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.**
 """.format(prefix=BotSetting.prefix)

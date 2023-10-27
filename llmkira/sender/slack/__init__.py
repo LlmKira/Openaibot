@@ -208,6 +208,117 @@ class SlackBotRunner(Runner):
                     )
                 )
 
+        @bot.command(command='/func_ban')
+        async def listen_func_ban_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.parse_obj(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            try:
+                func_list = await UserControl.block_plugin(
+                    uid=UserControl.uid_make(__sender__, command.user_id),
+                    plugin_name=_arg
+                )
+            except Exception as e:
+                logger.error(e)
+                return await respond(
+                    text=formatting.format_text(
+                        formatting.mbold(str(e), escape=False),
+                        separator="\n"
+                    )
+                )
+            return await respond(
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done", escape=False),
+                    formatting.mitalic("Function Ban List"),
+                    *[f"`{escape_markdown(item)}`" for item in func_list],
+                    separator="\n"
+                )
+            )
+
+        @bot.command(command='/func_unban')
+        async def listen_func_unban_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.parse_obj(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            try:
+                func_list = await UserControl.unblock_plugin(
+                    uid=UserControl.uid_make(__sender__, command.user_id),
+                    plugin_name=_arg
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await respond(
+                    text=formatting.format_text(
+                        formatting.mbold(str(e), escape=False),
+                        separator="\n"
+                    )
+                )
+            return await respond(
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done", escape=False),
+                    formatting.mitalic("Function Ban List"),
+                    *[f"`{escape_markdown(item)}`" for item in func_list],
+                    separator="\n"
+                )
+            )
+
+        @bot.command(command='/token')
+        async def listen_token_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.parse_obj(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            try:
+                token = await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, command.user_id),
+                    token=_arg
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await respond(
+                    text=formatting.format_text(
+                        formatting.mbold(str(e), escape=False),
+                        separator="\n"
+                    )
+                )
+            return await respond(
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done", escape=False),
+                    formatting.mcode(f"Bind Success {token}", escape=False),
+                    separator="\n"
+                )
+            )
+
+        @bot.command(command='/token_clear')
+        async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.parse_obj(command)
+            await ack()
+            try:
+                token = await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, command.user_id),
+                    token=None
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await respond(
+                    text=formatting.format_text(
+                        formatting.mbold(str(e)),
+                        separator="\n"
+                    )
+                )
+            return await respond(
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    formatting.mcode(f"Unbind Success {token}"),
+                    separator="\n"
+                )
+            )
+
         @bot.command(command='/bind')
         async def listen_bind_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.parse_obj(command)
@@ -231,6 +342,34 @@ class SlackBotRunner(Runner):
             return await respond(
                 text=formatting.format_text(
                     formatting.mbold("🪄 Done", escape=False),
+                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
+                    separator="\n"
+                )
+            )
+
+        @bot.command(command='/unbind')
+        async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.parse_obj(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            _manager = RouterManager()
+            try:
+                router = Router.build_from_receiver(receiver=__sender__, user_id=command.user_id, dsn=_arg)
+                _manager.remove_router(router=router)
+                router_list = _manager.get_router_by_user(user_id=command.user_id, to_=__sender__)
+            except Exception as e:
+                logger.exception(e)
+                return await respond(
+                    text=formatting.format_text(
+                        formatting.mbold(str(e)),
+                        separator="\n"
+                    )
+                )
+            return await respond(
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
                     *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
                     separator="\n"
                 )
@@ -261,34 +400,6 @@ class SlackBotRunner(Runner):
                 )
             await respond(
                 text=text
-            )
-
-        @bot.command(command='/unbind')
-        async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            _manager = RouterManager()
-            try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=command.user_id, dsn=_arg)
-                _manager.remove_router(router=router)
-                router_list = _manager.get_router_by_user(user_id=command.user_id, to_=__sender__)
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e)),
-                        separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done"),
-                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
-                    separator="\n"
-                )
             )
 
         @bot.command(command='/clear')

@@ -175,6 +175,107 @@ class TelegramBotRunner(Runner):
                     parse_mode="MarkdownV2"
                 )
 
+        @bot.message_handler(commands='func_ban', chat_types=['private'])
+        async def listen_func_ban_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            try:
+                func_list = await UserControl.block_plugin(
+                    uid=UserControl.uid_make(__sender__, message.from_user.id),
+                    plugin_name=_arg
+                )
+            except Exception as e:
+                logger.error(e)
+                return await bot.reply_to(message,
+                                          text=formatting.format_text(formatting.mbold(str(e)), separator="\n"),
+                                          parse_mode="MarkdownV2"
+                                          )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    formatting.mbold(f"Now your blocked function list is {func_list}"),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='func_unban', chat_types=['private'])
+        async def listen_func_unban_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            try:
+                func_list = await UserControl.unblock_plugin(
+                    uid=UserControl.uid_make(__sender__, message.from_user.id),
+                    plugin_name=_arg
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await bot.reply_to(message,
+                                          text=formatting.format_text(formatting.mbold(str(e)), separator="\n"),
+                                          parse_mode="MarkdownV2"
+                                          )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    formatting.mbold(f"Now your blocked function list is {func_list}"),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='token', chat_types=['private'])
+        async def listen_token_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            try:
+                token = await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, message.from_user.id),
+                    token=_arg
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await bot.reply_to(message,
+                                          text=formatting.format_text(formatting.mbold(str(e)), separator="\n"),
+                                          parse_mode="MarkdownV2"
+                                          )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    formatting.mbold(f"Your token is {token}"),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='token_clear', chat_types=['private'])
+        async def listen_token_clear_command(message: types.Message):
+            try:
+                await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, message.from_user.id),
+                    token=None
+                )
+            except Exception as e:
+                logger.exception(e)
+                return await bot.reply_to(message,
+                                          text=formatting.format_text(formatting.mbold(str(e)), separator="\n"),
+                                          parse_mode="MarkdownV2"
+                                          )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    formatting.mbold(f"Cleared"),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
         @bot.message_handler(commands='bind', chat_types=['private'])
         async def listen_bind_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
@@ -184,6 +285,36 @@ class TelegramBotRunner(Runner):
             try:
                 router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
                 _manager.add_router(router=router)
+                router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
+            except Exception as e:
+                logger.exception(e)
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold(str(e)),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='unbind', chat_types=['private'])
+        async def listen_unbind_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return None
+            _manager = RouterManager()
+            try:
+                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
+                _manager.remove_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
             except Exception as e:
                 logger.exception(e)
@@ -229,36 +360,6 @@ class TelegramBotRunner(Runner):
             await bot.reply_to(
                 message,
                 text=text,
-                parse_mode="MarkdownV2"
-            )
-
-        @bot.message_handler(commands='unbind', chat_types=['private'])
-        async def listen_unbind_command(message: types.Message):
-            _cmd, _arg = parse_command(command=message.text)
-            if not _arg:
-                return None
-            _manager = RouterManager()
-            try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
-                _manager.remove_router(router=router)
-                router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
-            except Exception as e:
-                logger.exception(e)
-                return await bot.reply_to(
-                    message,
-                    text=formatting.format_text(
-                        formatting.mbold(str(e)),
-                        separator="\n"
-                    ),
-                    parse_mode="MarkdownV2"
-                )
-            return await bot.reply_to(
-                message,
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done"),
-                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
-                    separator="\n"
-                ),
                 parse_mode="MarkdownV2"
             )
 

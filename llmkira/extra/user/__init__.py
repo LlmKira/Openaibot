@@ -3,10 +3,11 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-from typing import List, Union
+from typing import List, Union, Optional
 from urllib.parse import urlparse
 
 from llmkira.sdk.endpoint.openai import Openai, MODEL
+from llmkira.sdk.func_calling import ToolRegister
 from .client import UserCostClient, UserConfigClient, UserCost, UserConfig
 from .schema import UserDriverMode
 
@@ -99,20 +100,22 @@ class UserControl(object):
         return new_driver
 
     @staticmethod
-    def block_plugin(uid: str, plugin_name: str) -> list:
+    async def block_plugin(uid: str, plugin_name: str) -> list:
         """
         :param uid: user id
         :param plugin_name: plugin name
         :return: list
         """
-        _user_data = UserConfigClient().read_by_uid(uid=uid)
+        if not (plugin_name in ToolRegister().functions):
+            raise ValueError(f"plugin {plugin_name} is not exist :(")
+        _user_data = await UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)
         _user_data.plugin_subs.block(plugin_name=plugin_name)
-        UserConfigClient().update(uid=uid, data=_user_data)
+        await UserConfigClient().update(uid=uid, data=_user_data)
         return _user_data.plugin_subs.block_list
 
     @staticmethod
-    def unblock_plugin(uid: str, plugin_name: str) -> list:
+    async def unblock_plugin(uid: str, plugin_name: str) -> list:
         """
         :param uid: user id
         :param plugin_name: plugin name
@@ -121,5 +124,20 @@ class UserControl(object):
         _user_data = UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)
         _user_data.plugin_subs.unblock(plugin_name=plugin_name)
-        UserConfigClient().update(uid=uid, data=_user_data)
+        await UserConfigClient().update(uid=uid, data=_user_data)
         return _user_data.plugin_subs.block_list
+
+    @staticmethod
+    async def set_token(uid: str, token: Optional[str] = None):
+        """
+        :param uid: user id
+        :param token: bind token
+        :raise ValidationError: openai model is not valid
+        :return: new_driver
+        """
+        # assert model in MODEL.__args__, f"openai model is not valid,must be one of {MODEL.__args__}"
+        _user_data = await UserConfigClient().read_by_uid(uid=uid)
+        _user_data = _user_data or UserConfig(uid=uid)
+        _user_data.llm_driver.token = token
+        await UserConfigClient().update(uid=uid, data=_user_data)
+        return token

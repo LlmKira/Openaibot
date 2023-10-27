@@ -160,6 +160,95 @@ class DiscordBotRunner(Runner):
             return [("https://api.openai.com/v1/chat/completions", "https://api.openai.com/v1/chat/completions")]
 
         @client.include
+        @crescent.command(dm_enabled=True, name="token_clear", description="clear your service provider token")
+        async def listen_token_clear_command(ctx: crescent.Context):
+            try:
+                status = "🪄 Clear token success"
+                await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, ctx.user.id),
+                    token=None
+                )
+            except Exception as e:
+                status = "❌ Clear token failed"
+                logger.error(f"[102335]token_clear failed {e}")
+            return await ctx.respond(
+                content=status,
+                ephemeral=True
+            )
+
+        @client.include
+        @crescent.command(dm_enabled=True, name="token", description="set your service provider token")
+        async def listen_token_command(
+                ctx: crescent.Context,
+                token: str,
+        ):
+            try:
+                token = await UserControl.set_token(
+                    uid=UserControl.uid_make(__sender__, ctx.user.id),
+                    token=token
+                )
+            except Exception as e:
+                return await ctx.respond(
+                    content=f"❌ Set token failed\n`{e}`",
+                    ephemeral=True
+                )
+            else:
+                return await ctx.respond(
+                    content=formatting.format_text(
+                        f"🪄 Set token success\n",
+                        f"Set {token}"
+                    ),
+                    ephemeral=True
+                )
+
+        @client.include
+        @crescent.command(dm_enabled=True, name="func_unban", description="Unban some function")
+        async def listen_func_unban_command(
+                ctx: crescent.Context,
+                func_name: str
+        ):
+            try:
+
+                ban_list = await UserControl.unblock_plugin(
+                    uid=UserControl.uid_make(__sender__, ctx.user.id),
+                    plugin_name=func_name
+                )
+                status = "🪄 Unban success" + f"\nCurrent ban list:{ban_list}"
+            except Exception as e:
+                status = f"❌ Unban failed:{e}"
+                logger.error(f"[2185536]unban func failed {e}")
+            return await ctx.respond(
+                content=status,
+                ephemeral=True
+            )
+
+        @client.include
+        @crescent.command(dm_enabled=True, name="func_ban", description="set your service provider token")
+        async def listen_func_ban_command(
+                ctx: crescent.Context,
+                func_name: str,
+        ):
+            try:
+                func_list = await UserControl.block_plugin(
+                    uid=UserControl.uid_make(__sender__, ctx.user.id),
+                    plugin_name=func_name
+                )
+            except Exception as e:
+                return await ctx.respond(
+                    content=f"❌ Ban failed\n`{e}`",
+                    ephemeral=True
+                )
+            else:
+                return await ctx.respond(
+                    content=formatting.format_text(
+                        f"🪄 Ban success\n",
+                        f"Ban {func_name}\n",
+                        f"Current ban list:{func_list}"
+                    ),
+                    ephemeral=True
+                )
+
+        @client.include
         @crescent.command(dm_enabled=True, name="clear_endpoint", description="clear openai endpoint")
         async def listen_clear_endpoint_command(ctx: crescent.Context):
             try:
