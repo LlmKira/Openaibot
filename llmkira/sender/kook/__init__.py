@@ -30,7 +30,29 @@ from ...sdk.openapi.trigger import get_trigger_loop
 
 KookTask = Task(queue=__sender__)
 
-_file_cache_queue_ = []
+
+class CacheTemp(object):
+    def __init__(self):
+        self.__file_cache_queue_ = {}
+
+    def new(self, user_id):
+        if not self.__file_cache_queue_.get(user_id) or not isinstance(self.__file_cache_queue_[user_id], list):
+            self.__file_cache_queue_[user_id] = []
+        return self
+
+    def append(self, user_id, item):
+        self.new(user_id=user_id).__file_cache_queue_[user_id].append(item)
+        return self
+
+    def clear(self, user_id):
+        self.new(user_id=user_id).__file_cache_queue_[user_id].clear()
+        return self
+
+    def get(self, user_id):
+        return self.__file_cache_queue_.get(user_id, [])
+
+
+_file_cache_queue_ = CacheTemp()
 
 
 async def download_url(url):
@@ -76,10 +98,16 @@ class KookBotRunner(Runner):
             _file: list = []
             try:
                 if event.type == MessageTypes.FILE:
-                    _file_cache_queue_.append(await self.upload(event.extra.get("attachments")))
+                    _file_cache_queue_.append(
+                        user_id=event.author_id,
+                        item=await self.upload(event.extra.get("attachments"))
+                    )
                     return None
                 if event.type == MessageTypes.IMG:
-                    _file_cache_queue_.append(await self.upload(event.extra.get("attachments")))
+                    _file_cache_queue_.append(
+                        user_id=event.author_id,
+                        item=await self.upload(event.extra.get("attachments"))
+                    )
                     return None
             except Exception as e:
                 logger.exception(e)
@@ -92,8 +120,8 @@ class KookBotRunner(Runner):
 
             # Cache Run Point
             if event.type in [MessageTypes.KMD, MessageTypes.TEXT]:
-                _file: list = [item for item in _file_cache_queue_ if item]
-                _file_cache_queue_.clear()
+                _file: list = [item for item in _file_cache_queue_.get(user_id=event.author_id) if item]
+                _file_cache_queue_.clear(user_id=event.author_id)
             message: Message = event
             if message.content:
                 if message.content.startswith(("/chat", "/task")):
