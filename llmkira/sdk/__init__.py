@@ -8,3 +8,5 @@
 from .endpoint import openai
 from .func_calling import load_from_entrypoint, get_entrypoint_plugins
 from .openapi.transducer import resign_transfer
+from .openapi.trigger import resign_trigger
+from .openapi.fuse import resign_plugin_executor, recover_error_plugin, get_error_plugin

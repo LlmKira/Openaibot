@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 __plugin_name__ = "convert_to_sticker"
-__openapi_version__ = "20231017"
+__openapi_version__ = "20231027"
 
 import re
 
+from llmkira.sdk import resign_plugin_executor
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__plugin_name__, __openapi_version__)
@@ -49,6 +50,7 @@ class Sticker(BaseModel):
         return v
 
 
+@resign_plugin_executor(function=sticker)
 async def resize_image(photo):
     logger.debug(f"Plugin:resize_image")
     image = Image.open(photo)
@@ -85,7 +87,7 @@ class StickerTool(BaseTool):
     def pre_check(self):
         return True
 
-    def func_message(self, message_text):
+    def func_message(self, message_text, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
@@ -99,90 +101,84 @@ class StickerTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, task, receiver, reason):
-        try:
-            await Task(queue=platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,
-                    receiver=receiver,
-                    task_meta=task.task_meta.reply_message(
-                        plugin_name=__plugin_name__,
-                        callback=TaskHeader.Meta.Callback(
-                            role="function",
-                            name=__plugin_name__
-                        ),
-                        task=task
-                    ),
-                    message=[
-                        RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
-                            text="🍖 操作失败，原因：{}".format(reason)
-                        )
-                    ]
-                )
+    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+        _meta = task.task_meta.reply_notify(
+            plugin_name=__plugin_name__,
+            callback=TaskHeader.Meta.Callback(
+                role="function",
+                name=__plugin_name__
+            ),
+            write_back=False,
+            release_chain=True
+        )
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,
+                receiver=receiver,
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text=f"🍖{__plugin_name__} Run Failed：{exception}"
+                    )
+                ]
             )
-        except Exception as e:
-            logger.error(e)
+        )
 
-    async def callback(self, sign: str, task: TaskHeader):
+    async def callback(self, task, receiver, arg, result, **kwargs):
         return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
         """
-        try:
-            _file = []
-            for item in task.message:
-                assert isinstance(item, RawMessage), "item must be RawMessage"
-                if item.file:
-                    for i in item.file:
-                        _file.append(i)
-            _set = Sticker.parse_obj(arg)
-            _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
-            # 去掉None
-            _file_obj = [item for item in _file_obj if item]
-            _result = []
-            if not _file_obj:
-                return
-            for item in _file_obj:
-                image = await resize_image(BytesIO(item.file_data))
-                file = BytesIO()
-                file.name = "sticker.webp"
-                image.save(file, "WEBP")
-                file.seek(0)
-                file_obj = await RawMessage.upload_file(name="sticker.webp", data=file.getvalue())
-                _result.append(file_obj)
-            # META
-            _meta = task.task_meta.child(__plugin_name__)
-            _meta.callback_forward = True
-            _meta.callback_forward_reprocess = False
-            _meta.callback = TaskHeader.Meta.Callback(
+        _file = []
+        for item in task.message:
+            assert isinstance(item, RawMessage), "item must be RawMessage"
+            if item.file:
+                for i in item.file:
+                    _file.append(i)
+        _set = Sticker.parse_obj(arg)
+        _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
+        # 去掉None
+        _file_obj = [item for item in _file_obj if item]
+        _result = []
+        if not _file_obj:
+            return
+        for item in _file_obj:
+            image = await resize_image(BytesIO(item.file_data))
+            file = BytesIO()
+            file.name = "sticker.webp"
+            image.save(file, "WEBP")
+            file.seek(0)
+            file_obj = await RawMessage.upload_file(name="sticker.webp", data=file.getvalue())
+            _result.append(file_obj)
+        # META
+        _meta = task.task_meta.reply_message(
+            plugin_name=__plugin_name__,
+            callback=TaskHeader.Meta.Callback(
                 role="function",
                 name=__plugin_name__
             )
-
-            await Task(queue=receiver.platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,
-                    receiver=receiver,
-                    task_meta=_meta,
-                    message=[
-                        RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
-                            file=_result,
-                            text=_set.comment
-                        )
-                    ]
-                )
+        )
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,
+                receiver=receiver,
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        file=_result,
+                        text=_set.comment
+                    )
+                ]
             )
+        )
 
-            logger.debug("convert_to_sticker say: {}".format(_set.yes_no))
-        except Exception as e:
-            logger.exception(e)
-            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))
+        logger.debug("convert_to_sticker say: {}".format(_set.yes_no))
 
 
 __plugin_meta__ = PluginMetadata(

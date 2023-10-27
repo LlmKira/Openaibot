@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 __plugin_name__ = "set_alarm_reminder"
-__openapi_version__ = "20231017"
+__openapi_version__ = "20231027"
 
 from llmkira.sdk.func_calling import verify_openapi_version
 
@@ -64,7 +64,7 @@ class AlarmTool(BaseTool):
     def pre_check(self):
         return True
 
-    def func_message(self, message_text):
+    def func_message(self, message_text, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
@@ -78,81 +78,48 @@ class AlarmTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, task, receiver, reason):
-        try:
-
-            _meta = task.task_meta.child(__plugin_name__)
-            _meta.callback_forward = True
-            _meta.reprocess_needed = False
-            _meta.callback = TaskHeader.Meta.Callback(
+    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+        _meta = task.task_meta.reply_notify(
+            plugin_name=__plugin_name__,
+            callback=TaskHeader.Meta.Callback(
                 role="function",
                 name=__plugin_name__
+            ),
+            write_back=True,
+            release_chain=True
+        )
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,
+                receiver=receiver,
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text=f"{__plugin_name__} Run failed {exception}"
+                    )
+                ]
             )
+        )
 
-            await Task(queue=platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,
-                    receiver=receiver,
-                    task_meta=_meta,
-                    message=[
-                        RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
-                            text=f"🍖 {__plugin_name__}操作失败了！原因：{reason}"
-                        )
-                    ]
-                )
-            )
-        except Exception as e:
-            logger.error(e)
-
-    async def callback(self, sign: str, task: TaskHeader):
+    async def callback(self, task, receiver, arg, result, **kwargs):
         return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
         """
-        try:
-            _set = Alarm.parse_obj(arg)
-            #
-            _meta = task.task_meta.child(__plugin_name__)
-            _meta.callback_forward = True
-            _meta.callback_forward_reprocess = False
-            _meta.callback = TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            )
+        _set = Alarm.parse_obj(arg)
+        _meta = task.task_meta.child(__plugin_name__)
+        _meta.callback_forward = True
+        _meta.callback_forward_reprocess = False
+        _meta.callback = TaskHeader.Meta.Callback(
+            role="function",
+            name=__plugin_name__
+        )
 
-            async def _send(receiver, _set):
-                await Task(queue=receiver.platform).send_task(
-                    task=TaskHeader(
-                        sender=task.sender,  # 继承发送者
-                        receiver=receiver,  # 因为可能有转发，所以可以单配
-                        task_meta=_meta,
-                        message=[
-                            RawMessage(
-                                user_id=receiver.user_id,
-                                chat_id=receiver.chat_id,
-                                text=_set.content
-                            )
-                        ]
-                    )
-                )
-
-            logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
-            SCHEDULER.add_job(
-                func=_send,
-                id=str(time.time()),
-                trigger="date",
-                replace_existing=True,
-                run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
-                args=[receiver, _set]
-            )
-            try:
-                SCHEDULER.start()
-            except Exception as e:
-                pass
+        async def _send(receiver, _set):
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
@@ -162,14 +129,39 @@ class AlarmTool(BaseTool):
                         RawMessage(
                             user_id=receiver.user_id,
                             chat_id=receiver.chat_id,
-                            text=f"🍖 The alarm is now set,just wait for {_set.delay} min!"
+                            text=_set.content
                         )
                     ]
                 )
             )
+
+        logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
+        SCHEDULER.add_job(
+            func=_send,
+            id=str(time.time()),
+            trigger="date",
+            replace_existing=True,
+            run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
+            args=[receiver, _set]
+        )
+        try:
+            SCHEDULER.start()
         except Exception as e:
-            logger.exception(e)
-            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))
+            pass
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,  # 继承发送者
+                receiver=receiver,  # 因为可能有转发，所以可以单配
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text=f"🍖 The alarm is now set,just wait for {_set.delay} min!"
+                    )
+                ]
+            )
+        )
 
 
 __plugin_meta__ = PluginMetadata(

@@ -3,19 +3,16 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+from functools import wraps
 from enum import Enum
 from typing import Type, Union, Set, List, Callable, Any
 
 from loguru import logger
 
-from .default_factory import DefaultMessageBuilder, DefaultMessageParser
 from .schema import Builder, Parser, AbstractTransfer
 
 __builder__: Set[Type[Builder]] = set()
 __parser__: Set[Type[Parser]] = set()
-# 默认注册
-__builder__.add(DefaultMessageBuilder)
-__parser__.add(DefaultMessageParser)
 
 
 class Locate(Enum):
@@ -30,12 +27,15 @@ def resign_transfer():
 
     def decorator(func: Union[Builder, Parser, Type[Builder], Type[Parser]]):
         if issubclass(func, Builder):
+            logger.success(f"📦 Plugin:resign Builder transfer {func}")
             __builder__.add(func)
         elif issubclass(func, Parser):
+            logger.success(f"📦 Plugin:resign Parser transfer {func}")
             __parser__.add(func)
         else:
             raise ValueError(f"Resign Transfer Error for unknown func {type(func)} ")
 
+        @wraps(func)
         async def wrapper(*args, **kwargs):
             # 调用执行函数，中间人
             return func(**kwargs)
@@ -124,3 +124,6 @@ class LoopRunner(object):
                 logger.info(f"{loop} exec_loop success, for sign:{loop.sign}")
                 logger.debug(f"{loop} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}")
                 self.pipe_arg = new_pipe_arg
+
+
+from .default_factory import DefaultMessageBuilder, DefaultMessageParser

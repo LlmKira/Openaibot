@@ -132,3 +132,6 @@ dmypy.json
 /data/
 /mongodb/
 /redis/
+
+# Ignore dynaconf secret files
+.secrets.*

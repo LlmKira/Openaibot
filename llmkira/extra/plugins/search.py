@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 __plugin_name__ = "search_in_google"
-__openapi_version__ = "20231017"
+__openapi_version__ = "20231027"
 
+from llmkira.extra.user import CostControl, UserCost
+from llmkira.middleware.llm_provider import GetAuthDriver
+from llmkira.sdk import resign_plugin_executor
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__plugin_name__, __openapi_version__)
-import os
 from loguru import logger
 from pydantic import BaseModel
 
-from llmkira.middleware.user import SubManager, UserInfo
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.endpoint.openai import Function
@@ -27,6 +28,7 @@ search.add_property(
 )
 
 
+@resign_plugin_executor(function=search)
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
@@ -83,7 +85,7 @@ class SearchTool(BaseTool):
             logger.warning(f"plugin:package <duckduckgo_search> not found,please install it first:{e}")
             return False
 
-    def func_message(self, message_text):
+    def func_message(self, message_text, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
@@ -97,41 +99,40 @@ class SearchTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, task, receiver, reason):
-        try:
-            _meta = TaskHeader.Meta()
-            _meta.direct_reply = False
-            _meta.callback_forward = True
-            _meta.callback_forward_reprocess = False
-            _meta.callback = TaskHeader.Meta.Callback(
+    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+        _meta = task.task_meta.reply_notify(
+            plugin_name=__plugin_name__,
+            callback=TaskHeader.Meta.Callback(
                 role="function",
                 name=__plugin_name__
+            ),
+            write_back=True,
+            release_chain=True
+        )
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,
+                receiver=receiver,
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text=f"🍖{__plugin_name__} Run Failed：{exception}"
+                    )
+                ]
             )
-            await Task(queue=platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,
-                    receiver=receiver,
-                    task_meta=_meta,
-                    message=[
-                        RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
-                            text=f"🍖 {__plugin_name__}操作失败了！原因：{reason}"
-                        )
-                    ]
-                )
-            )
-        except Exception as e:
-            logger.error(e)
+        )
 
     @staticmethod
-    async def llm_task(task, task_desc, raw_data):
-        _submanager = SubManager(user_id=f"{task.sender.platform}:{task.sender.user_id}")
-        driver = _submanager.llm_driver  # 由发送人承担接受者的成本
-        model_name = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
+    async def llm_task(plugin_name, task: TaskHeader, task_desc: str, raw_data: str):
+        logger.info("llm_tool:{}".format(task_desc))
+        auth_client = GetAuthDriver(uid=task.sender.uid)
+        driver = await auth_client.get()
         endpoint = openai.Openai(
             config=driver,
-            model=model_name,
+            model=driver.model,
+            temperature=0.1,
             messages=Message.create_task_message_list(
                 task_desc=task_desc,
                 refer=raw_data
@@ -139,47 +140,52 @@ class SearchTool(BaseTool):
         )
         # 调用Openai
         result = await endpoint.create()
-        await _submanager.add_cost(
-            cost=UserInfo.Cost(token_usage=result.usage.total_tokens, token_uuid=driver.uuid, model_name=model_name)
+        # 记录消耗
+        await CostControl.add_cost(
+            cost=UserCost.create_from_function(
+                uid=task.sender.uid,
+                request_id=result.id,
+                cost_by=plugin_name,
+                token_usage=result.usage.total_tokens,
+                token_uuid=driver.uuid,
+                model_name=driver.model
+            )
         )
+        assert result.default_message.content, "llm_task.py:llm_task:content is None"
         return result.default_message.content
 
-    async def callback(self, sign: str, task: TaskHeader):
+    async def callback(self, task, receiver, arg, result, **kwargs):
         return None
 
     async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
         """
-        try:
-            _set = Search.parse_obj(arg)
-            _search_result = search_on_duckduckgo(_set.keywords)
 
-            # META
-            _meta = task.task_meta.child(__plugin_name__)
-            _meta.callback_forward = True
-            _meta.callback_forward_reprocess = True
-            _meta.callback = TaskHeader.Meta.Callback(
+        _set = Search.parse_obj(arg)
+        _search_result = search_on_duckduckgo(_set.keywords)
+        # META
+        _meta = task.task_meta.reply_message(
+            plugin_name=__plugin_name__,
+            callback=TaskHeader.Meta.Callback(
                 role="function",
                 name=__plugin_name__
             )
-            await Task(queue=receiver.platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,  # 继承发送者
-                    receiver=receiver,  # 因为可能有转发，所以可以单配
-                    task_meta=_meta,
-                    message=[
-                        RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
-                            text=_search_result
-                        )
-                    ]
-                )
+        )
+        await Task(queue=receiver.platform).send_task(
+            task=TaskHeader(
+                sender=task.sender,  # 继承发送者
+                receiver=receiver,  # 因为可能有转发，所以可以单配
+                task_meta=_meta,
+                message=[
+                    RawMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text=_search_result
+                    )
+                ]
             )
-        except Exception as e:
-            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason="搜索失败了！")
-            logger.exception(e)
+        )
 
 
 __plugin_meta__ = PluginMetadata(

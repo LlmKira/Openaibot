@@ -31,6 +31,13 @@ class Function(BaseModel):
     供外部模组定义并注册函数
     """
 
+    class FunctionExtra(BaseModel):
+        system_prompt: str = Field(None, description="系统提示")
+
+        @classmethod
+        def default(cls):
+            return cls(system_prompt=None)
+
     class Parameters(BaseModel):
         type: str = "object"
         properties: dict = {}
@@ -39,6 +46,16 @@ class Function(BaseModel):
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
     required: List[str] = []
+    # 附加信息
+    config: FunctionExtra = Field(default_factory=FunctionExtra.default, description="函数配置")
+
+    def format2parameters(self):
+        """
+        生成参数
+        """
+        return self.dict(
+            include={"name", "description", "parameters", "required"}
+        )
 
     def add_property(self, property_name: str,
                      property_type: Literal["string", "integer", "number", "boolean", "object"],

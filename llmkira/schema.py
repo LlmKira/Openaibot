@@ -52,7 +52,7 @@ class RawMessage(BaseModel):
     created_at: Union[int, float] = Field(default=int(time.time()), description="创建时间")
     just_file: bool = Field(default=False, description="Send file only")
 
-    loop_end: bool = Field(default=False, description="要求其他链条不处理此消息")
+    loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
     extra_kwargs: dict = Field(default={}, description="extra kwargs for loop")
 
     class Config:

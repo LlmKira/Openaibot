@@ -22,9 +22,9 @@ from ...schema import Message, Function
 load_dotenv()
 
 MODEL = Literal[
+    "gpt-3.5-turbo",
     "gpt-3.5-turbo-0301",
     "gpt-3.5-turbo-0613",
-    "gpt-3.5-turbo",
     "gpt-4-0314",
     "gpt-4-0613",
     "gpt-4"
@@ -88,27 +88,53 @@ class Openai(BaseModel):
         不允许部分更新
         """
         endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
-        api_key: Optional[str] = Field(None)
+        api_key: str = Field(default=None)
         org_id: Optional[str] = Field(None)
+        model: MODEL = Field(default="gpt-3.5-turbo-0613")
 
         # TODO:AZURE API VERSION
+        @property
+        def detail(self):
+            """
+            脱敏
+            """
+            api_key = "****" + str(self.api_key)[-4:]
+            return f"Endpoint: {self.endpoint}\nApi_key: {api_key}\nOrg_id: {self.org_id}\nModel: {self.model}"
+
+        @property
+        def available(self):
+            """
+            检查可用性
+            :return:
+            """
+            return all([self.endpoint, self.api_key, self.model])
 
         @classmethod
         def from_public_env(cls):
             openai_api_key = os.getenv("OPENAI_API_KEY", None)
-            openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", None)
+            openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions")
             openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
+            openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo")
             return cls(
                 endpoint=openai_endpoint,
                 api_key=openai_api_key,
                 org_id=openai_org_id,
+                model=openai_model
             )
+
+        @validator("model")
+        def check_model(cls, v):
+            if v not in MODEL.__args__:
+                raise ValidationError("model only support {}".format(MODEL.__args__))
+            return v
 
         @validator("api_key")
         def check_key(cls, v):
             if v:
                 if not str(v).startswith("sk-"):
                     logger.warning("Validator:api_key should start with `sk-`")
+                if len(str(v)) < 4:
+                    raise ValidationError("api_key is too short")
                 # 严格检查
                 # if not len(str(v)) == 51:
                 #    raise ValidationError("api_key must be 51 characters long")
@@ -118,8 +144,11 @@ class Openai(BaseModel):
 
         @property
         def uuid(self):
-            # 取 api key 最后两位
-            _flag = self.api_key[-2:]
+            """
+            取 api key 最后 3 位 和 sha1 加密后的前 8 位
+            :return: uuid for token
+            """
+            _flag = self.api_key[-3:]
             return f"{_flag}:{sha1_encrypt(self.api_key)}"
 
         class Config:
@@ -130,7 +159,6 @@ class Openai(BaseModel):
             extra = "allow"
 
     config: Driver
-    model: MODEL = Field("gpt-3.5-turbo-0613", env='OPENAI_API_MODEL')
     messages: List[Message]
     functions: Optional[List[Function]] = None
 
@@ -144,8 +172,10 @@ class Openai(BaseModel):
     temperature: Optional[float] = 1
     top_p: Optional[float] = None
     n: Optional[int] = 1
+
     # Bot于流式响应负载能力有限
     stream: Optional[bool] = False
+
     stop: Optional[Union[str, List[str]]] = None
     max_tokens: Optional[int] = None
     presence_penalty: Optional[float] = None
@@ -156,12 +186,19 @@ class Openai(BaseModel):
     # 用于调试
     echo: Optional[bool] = False
 
+    @property
+    def model(self):
+        return self.config.model
+
+    @property
+    def get_request_data(self):
+        _arg = self.dict(exclude_none=True, exclude={"config", "echo"})
+        _arg["model"] = self.model
+        return _arg
+
     def get_proxy_settings(self):
         proxy = self.Proxy()
         return proxy
-
-    def update_model(self, model: MODEL = "gpt-3.5-turbo"):
-        self.model = model
 
     @staticmethod
     def get_model_list():
@@ -200,9 +237,6 @@ class Openai(BaseModel):
 
     @root_validator
     def check_root(cls, values):
-        if values.get("functions"):
-            if values.get("model") not in MODEL.__args__:
-                raise ValidationError("function only support model: {}".format(MODEL.__args__))
         return values
 
     @staticmethod
@@ -239,15 +273,14 @@ class Openai(BaseModel):
         -d '{"model": "text-davinci-003", "prompt": "Say this is a test", "temperature": 0, "max_tokens": 7}'
         """
         # check
-        num_tokens_from_messages = TokenizerObj.num_tokens_from_messages(self.messages,
-                                                                         model=self.model,
-                                                                         )
+        num_tokens_from_messages = TokenizerObj.num_tokens_from_messages(
+            messages=self.messages,
+            model=self.model,
+        )
         if num_tokens_from_messages > self.get_token_limit(self.model):
             raise ValidationError("messages_box num_tokens > max_tokens")
-
         # Clear tokenizer encode cache
-        # TokenizerObj.clear_cache()
-        _data = self.dict(exclude_none=True, exclude={"config", "echo"})
+        TokenizerObj.clear_cache()
         # 返回请求
         headers = {
             "User-Agent": "Mozilla/5.0",
@@ -260,7 +293,7 @@ class Openai(BaseModel):
             _response = await request(
                 method="POST",
                 url=self.config.endpoint,
-                data=_data,
+                data=self.get_request_data,
                 headers=headers,
                 proxy=self.get_proxy_settings().proxy_address,
                 json_body=True

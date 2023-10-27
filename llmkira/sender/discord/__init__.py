@@ -16,9 +16,9 @@ from loguru import logger
 from telebot import formatting
 from typing_extensions import Annotated
 
+from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.middleware.user import SubManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
@@ -31,6 +31,7 @@ __sender__ = "discord_hikari"
 __default_function_enable__ = True
 
 from ..util_func import auth_reloader, is_command, is_empty_command
+from ...sdk.openapi.trigger import get_trigger_loop
 
 DiscordTask = Task(queue=__sender__)
 
@@ -119,7 +120,10 @@ class DiscordBotRunner(Runner):
                         mentions_reply=True
                     )
             if message.content:
-                message.content = message.content.lstrip("/chat").lstrip("/task")
+                if message.content.startswith(("/chat", "/task")):
+                    message.content = message.content[5:]
+                if message.content.startswith("/ask"):
+                    message.content = message.content[4:]
             message.content = message.content if message.content else ""
             _user_name = bot.get_me().username
             if _user_name:
@@ -130,7 +134,7 @@ class DiscordBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                deliver_back_message, _file = await self.loop_turn_only_message(
+                message, _file = await self.loop_turn_only_message(
                     platform_name=__sender__,
                     message=message,
                     file_list=_file
@@ -140,7 +144,7 @@ class DiscordBotRunner(Runner):
                     task=TaskHeader.from_discord_hikari(
                         message,
                         file=_file,
-                        deliver_back_message=[deliver_back_message],
+                        deliver_back_message=[],
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                         trace_back_message=[]
                     )
@@ -160,7 +164,7 @@ class DiscordBotRunner(Runner):
         async def listen_clear_endpoint_command(ctx: crescent.Context):
             try:
                 status = "🪄 Clear endpoint success"
-                await SubManager(user_id=f"{__sender__}:{ctx.user.id}").clear_endpoint()
+                await UserControl.clear_endpoint(uid=UserControl.uid_make(__sender__, ctx.user.id))
             except Exception as e:
                 status = "❌ Clear endpoint failed"
                 logger.error(f"[102335]clear_endpoint failed {e}")
@@ -170,16 +174,19 @@ class DiscordBotRunner(Runner):
             )
 
         @client.include
-        @crescent.command(dm_enabled=True, name="set_endpoint", description="set openai endpoint")
+        @crescent.command(dm_enabled=True, name="set_endpoint", description="set openai endpoint for yourself")
         async def listen_endpoint_command(
                 ctx: crescent.Context,
                 endpoint: Annotated[str, crescent.Autocomplete(endpoint_autocomplete)],
-                openai_key: str
+                openai_key: str,
+                model_name: str
         ):
             try:
-                await SubManager(user_id=f"{__sender__}:{ctx.user.id}").set_endpoint(
+                new_driver = await UserControl.set_endpoint(
+                    uid=UserControl.uid_make(__sender__, ctx.user.id),
+                    endpoint=endpoint,
                     api_key=openai_key,
-                    endpoint=endpoint
+                    model=model_name
                 )
             except Exception as e:
                 return await ctx.respond(
@@ -190,8 +197,7 @@ class DiscordBotRunner(Runner):
                 return await ctx.respond(
                     content=formatting.format_text(
                         f"🪄 Set endpoint success\n",
-                        f"endpoint: {endpoint}\n",
-                        f"openai_key: {openai_key}\n",
+                        new_driver.detail
                     ),
                     ephemeral=True
                 )
@@ -339,6 +345,14 @@ class DiscordBotRunner(Runner):
             if not event_.content:
                 logger.info(f"discord_hikari:ignore a empty message,do you turn on the MESSAGE_CONTENT setting?")
                 return
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=event_.content)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(event_.message, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await event_.message.respond(content=trigger.message)
+            # 命令
             # Bot may cant read message
             if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):
                 if is_empty_command(text=event_.content):
@@ -369,6 +383,14 @@ class DiscordBotRunner(Runner):
         async def on_dm_create(event_: hikari.DMMessageCreateEvent):
             if event_.message.author.is_bot:
                 return
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=event_.content)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(event_.message, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await event_.message.respond(content=trigger.message)
+            # 命令
             if is_command(text=event_.content, command=f"{BotSetting.prefix}task"):
                 return await create_task(event_.message, funtion_enable=True)
             if is_command(text=event_.content, command=f"{BotSetting.prefix}ask"):

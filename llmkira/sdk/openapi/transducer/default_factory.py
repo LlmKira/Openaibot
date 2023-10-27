@@ -6,9 +6,11 @@
 import re
 from typing import Any
 
+from . import resign_transfer
 from .schema import Builder, Parser, TransferMata
 
 
+@resign_transfer()
 class DefaultMessageBuilder(Builder):
     sign = TransferMata(
         platform=re.compile(r".*"),  # 匹配所有
@@ -21,6 +23,7 @@ class DefaultMessageBuilder(Builder):
         return arg
 
 
+@resign_transfer()
 class DefaultMessageParser(Parser):
     sign = TransferMata(
         platform=re.compile(r".*"),  # 匹配所有

@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/8/19 上午11:41
-# @Author  : sudoskys
-# @File    : start_receiver.py
-# @Software: PyCharm
 
 from llmkira.receiver import app
 

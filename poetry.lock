@@ -537,6 +537,27 @@ trio = ["trio (>=0.14,<0.23)"]
 wmi = ["wmi (>=1.5.1,<2.0.0)"]
 
 [[package]]
+name = "dynaconf"
+version = "3.2.3"
+description = "The dynamic configurator for your Python Project"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "dynaconf-3.2.3-py2.py3-none-any.whl", hash = "sha256:df4af8d0f3b068cc6419ceceaae572070a6b8fec38fa51a1f5eb8ea4883e53de"},
+    {file = "dynaconf-3.2.3.tar.gz", hash = "sha256:8a37ba3b16df64cb1db383eaad9c733aece218413be0fad5d785f7a907612106"},
+]
+
+[package.extras]
+all = ["configobj", "hvac", "redis", "ruamel.yaml"]
+configobj = ["configobj"]
+ini = ["configobj"]
+redis = ["redis"]
+test = ["configobj", "django", "flake8", "flake8-debugger", "flake8-print", "flake8-todo", "flask (>=0.12)", "hvac", "pep8-naming", "pytest", "pytest-cov", "pytest-mock", "pytest-xdist", "python-dotenv", "radon", "redis", "toml"]
+toml = ["toml"]
+vault = ["hvac"]
+yaml = ["ruamel.yaml"]
+
+[[package]]
 name = "emoji"
 version = "2.8.0"
 description = "Emoji for Python"
@@ -2464,4 +2485,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "0c27c83d82efbdd8ea9c80cd2859a47031736ba31a32dc805191db531f2d46c6"
+content-hash = "ce7e4899b358a5720469c5524cd34811df372a4ce5cda160a580007554cb1ebb"
