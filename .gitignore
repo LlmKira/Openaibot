@@ -130,3 +130,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /data/
+/mongodb/
+/redis/
+
+# Ignore dynaconf secret files
+.secrets.*

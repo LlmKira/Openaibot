@@ -11,15 +11,14 @@ from khl import Bot, Message, Cert, MessageTypes, PrivateMessage, PublicMessage
 from loguru import logger
 from telebot import formatting
 
+from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.middleware.user import SubManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.kook import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from .event import help_message, _upload_error_message_template, MappingDefault
 from ..schema import Runner
 
@@ -27,6 +26,7 @@ __sender__ = "kook"
 __default_function_enable__ = True
 
 from ..util_func import auth_reloader, is_command, is_empty_command
+from ...sdk.openapi.trigger import get_trigger_loop
 
 KookTask = Task(queue=__sender__)
 
@@ -96,7 +96,10 @@ class KookBotRunner(Runner):
                 _file_cache_queue_.clear()
             message: Message = event
             if message.content:
-                message.content = message.content.lstrip("/chat").lstrip("/task")
+                if message.content.startswith(("/chat", "/task")):
+                    message.content = message.content[5:]
+                if message.content.startswith("/ask"):
+                    message.content = message.content[4:]
             message.content = message.content if message.content else ""
             logger.info(
                 f"kook:create task from {message.ctx.channel.id} {message.content[:300]} funtion_enable:{funtion_enable}"
@@ -104,13 +107,16 @@ class KookBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                _transfer = TransferManager().sender_parser(agent_name=__sender__)
-                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                message, _file = await self.loop_turn_only_message(
+                    platform_name=__sender__,
+                    message=message,
+                    file_list=_file
+                )
                 # Reply
                 kook_task = TaskHeader.from_kook(
                     message,
                     file=_file,
-                    deliver_back_message=deliver_back_message,
+                    deliver_back_message=[],
                     task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                     trace_back_message=[]
                 )
@@ -126,7 +132,7 @@ class KookBotRunner(Runner):
         async def listen_clear_endpoint_command(msg: Message):
             try:
                 status = "🪄 Clear endpoint success"
-                await SubManager(user_id=f"{__sender__}:{msg.author_id}").clear_endpoint()
+                await UserControl.clear_endpoint(uid=UserControl.uid_make(__sender__, msg.author_id))
             except Exception as e:
                 status = "❌ Clear endpoint failed"
                 logger.error(f"[102335]clear_endpoint failed {e}")
@@ -144,12 +150,15 @@ class KookBotRunner(Runner):
         async def listen_endpoint_command(
                 msg: Message,
                 openai_endpoint: str,
-                openai_key: str
+                openai_key: str,
+                model: str
         ):
             try:
-                await SubManager(user_id=f"{__sender__}:{msg.author_id}").set_endpoint(
+                new_driver = await UserControl.set_endpoint(
+                    uid=UserControl.uid_make(__sender__, msg.author_id),
                     api_key=openai_key,
-                    endpoint=openai_endpoint
+                    endpoint=openai_endpoint,
+                    model=model
                 )
             except Exception as e:
                 return await msg.reply(
@@ -161,8 +170,7 @@ class KookBotRunner(Runner):
                 return await msg.reply(
                     content=formatting.format_text(
                         f"🪄 Set endpoint success\n",
-                        f"endpoint: {openai_endpoint}\n",
-                        f"openai_key: {openai_key}\n",
+                        new_driver.detail
                     ),
                     is_temp=True,
                     type=MessageTypes.KMD
@@ -305,6 +313,14 @@ class KookBotRunner(Runner):
             )
 
         async def on_guild_create(msg: PublicMessage):
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=msg.content)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(msg, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await msg.reply(content=trigger.message)
+            # 命令
             if is_command(text=msg.content, command=f"/chat"):
                 if is_empty_command(text=msg.content):
                     return await msg.reply(content="?")
@@ -320,6 +336,13 @@ class KookBotRunner(Runner):
             # 追溯回复
 
         async def on_dm_create(msg: PrivateMessage):
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=msg.content)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(msg, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await msg.reply(content=trigger.message)
             if is_command(text=msg.content, command="/task"):
                 return await create_task(msg, funtion_enable=True)
             if is_command(text=msg.content, command="/ask"):

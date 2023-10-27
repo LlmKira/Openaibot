@@ -23,9 +23,9 @@ class KookBot(BaseSettings):
     @validator('token')
     def token_validator(cls, v):
         if v is None:
-            logger.warning(f"KookBot token is empty")
+            logger.warning(f"\n🍀Check:KookBot token is empty")
         else:
-            logger.success(f"KookBot token ready")
+            logger.success(f"🍀Check:KookBot token ready")
         return v
 
     @root_validator

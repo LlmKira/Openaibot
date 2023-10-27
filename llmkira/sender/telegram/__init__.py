@@ -12,16 +12,16 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
+from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.middleware.user import SubManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
+from llmkira.sdk.openapi.trigger import get_trigger_loop
 from llmkira.sender.util_func import parse_command, is_command, is_empty_command, auth_reloader
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from ..schema import Runner
 
 StepCache = StateMemoryStorage()
@@ -72,7 +72,11 @@ class TelegramBotRunner(Runner):
             """
             _file = []
             if message.text:
-                message.text = message.text.lstrip("/chat").lstrip("/task")
+                if message.text.startswith(("/chat", "/task")):
+                    message.text = message.text[5:]
+                if message.text.startswith("/ask"):
+                    message.text = message.text[4:]
+                message.text = message.text
             if not message.text:
                 return None
             if message.photo:
@@ -93,14 +97,17 @@ class TelegramBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                _transfer = TransferManager().sender_parser(agent_name=__sender__)
-                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                message, _file = await self.loop_turn_only_message(
+                    platform_name=__sender__,
+                    message=message,
+                    file_list=_file
+                )
                 # Reply
                 success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_telegram(
                         message,
                         file=_file,
-                        deliver_back_message=deliver_back_message,
+                        deliver_back_message=[],
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__)),
                         trace_back_message=[message.reply_to_message]
                     )
@@ -114,7 +121,7 @@ class TelegramBotRunner(Runner):
         async def listen_clear_endpoint_command(message: types.Message):
             # _cmd, _arg = parse_command(command=message.text)
             _tips = "🪄 Done"
-            await SubManager(user_id=f"{__sender__}:{message.from_user.id}").clear_endpoint()
+            await UserControl.clear_endpoint(uid=UserControl.uid_make(__sender__, message.from_user.id))
             return await bot.reply_to(
                 message,
                 text=formatting.format_text(
@@ -130,22 +137,29 @@ class TelegramBotRunner(Runner):
             if not _arg:
                 return
             _arg = str(_arg)
-            _except = _arg.split("#", maxsplit=1)
-            if len(_except) == 2:
+            _except = _arg.split("#", maxsplit=2)
+            if len(_except) == 3:
+                openai_key, openai_endpoint, model = _except
+            elif len(_except) == 2:
                 openai_key, openai_endpoint = _except
+                model = None
             else:
                 openai_key, openai_endpoint = (_arg, None)
+                model = None
             try:
-                await SubManager(user_id=f"{__sender__}:{message.from_user.id}").set_endpoint(
+                new_driver = await UserControl.set_endpoint(
+                    uid=UserControl.uid_make(__sender__, message.from_user.id),
                     api_key=openai_key,
-                    endpoint=openai_endpoint
+                    endpoint=openai_endpoint,
+                    model=model
                 )
             except Exception as e:
                 return await bot.reply_to(
                     message,
                     text=formatting.format_text(
                         formatting.mbold(f"🪄 Failed: {e}"),
-                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>"),
+                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>#<model>"),
+                        formatting.mitalic(f"Model: {UserControl.get_model()}"),
                         separator="\n"
                     ),
                     parse_mode="MarkdownV2"
@@ -155,8 +169,7 @@ class TelegramBotRunner(Runner):
                     message,
                     text=formatting.format_text(
                         formatting.mbold("🪄 Done"),
-                        formatting.mbold(f"openai_key: {openai_key}"),
-                        formatting.mbold(f"openai_endpoint: {openai_endpoint}"),
+                        formatting.mbold(f"{new_driver.detail}"),
                         separator="\n"
                     ),
                     parse_mode="MarkdownV2"
@@ -320,6 +333,12 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
+            trigger = await get_trigger_loop(platform_name=__sender__, message=message.text)
+            if trigger:
+                if trigger == "allow":
+                    return await create_task(message, funtion_enable=__default_function_enable__)
+                if trigger == "deny":
+                    return None
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, funtion_enable=True)
             if is_command(text=message.text, command="/ask"):
@@ -334,6 +353,14 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=message.text)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(message, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await bot.reply_to(message, text=trigger.message)
+            # 响应
             if is_command(text=message.text, command="/chat", at_bot_username=BotSetting.bot_username):
                 if is_empty_command(text=message.text):
                     return await bot.reply_to(message, text="?")

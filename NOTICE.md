@@ -17,6 +17,7 @@ MIT License
 ==================================
 The MIT license applies to the files in:
 folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
+folder: "llmkira/sdk/memory/redis" from https://github.com/langchain-ai/langchain
 
 ==================================
 仅对部署者的安全指南

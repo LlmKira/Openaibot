@@ -39,7 +39,7 @@ class RabbitMQ(BaseSettings):
             ))
         except Exception as e:
             values['_verify_status'] = False
-            logger.warning(f'RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e}')
+            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e}')
         else:
             values['_verify_status'] = True
             logger.success(f"RabbitMQ connect success")
@@ -79,51 +79,102 @@ class TaskHeader(BaseModel):
             name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
 
         sign_as: Tuple[int, str, str] = Field((0, "root", "default"), description="签名")
-
+        # 状态
         function_enable: bool = Field(False, description="功能开关")
         function_list: List[openai.Function] = Field([], description="功能列表")
         function_salvation_list: List[openai.Function] = Field([], description="上回合的功能列表，用于容错")
-
+        # 路由
+        callback_forward: bool = Field(False, description="转发消息")
+        callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
+        callback: Callback = Field(default=Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
         direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
-        callback_forward: bool = Field(False, description="非 LLM 转发")
-        callback_forward_reprocess: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
+        write_back: bool = Field(True, description="写回消息")
+        release_chain: bool = Field(False, description="释放任务链")
+        # 限制
         continue_step: int = Field(0, description="继续执行的步骤,发送启用 function call 的 continue")
-        limit_child: int = Field(4, description="限制子节点数量")
-
-        verify_uuid: str = Field(None, description="用于验证重发")
+        limit_child: int = Field(4, description="剩余的限制子节点数量")
+        verify_uuid: str = Field(None, description="验证Token的槽位")
         parent_call: openai.OpenaiResult = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
-        callback: Callback = Field(default=Callback(),
-                                   description="用于回写，插件返回的消息头，标识 function 的名字")
         extra_args: dict = Field({}, description="用于提供额外参数")
 
         class Config:
             arbitrary_types_allowed = True
 
-        def child(self, name):
+        def child(self, name) -> "Meta":
             self.sign_as = (self.sign_as[0] + 1, "child", name)
             self.limit_child -= 1
             return self.copy(deep=True)
 
-        def reply_notify(self, plugin_name: str, callback: Callback, **kwargs):
+        def chain(self,
+                  name,
+                  write_back: bool,
+                  release_chain: bool
+                  ) -> "Meta":
+            self.sign_as = (self.sign_as[0] + 1, "chain", name)
+            self.limit_child -= 1
+            self.continue_step += 1
+            self.callback_forward = False
+            self.callback_forward_reprocess = False
+            self.direct_reply = False
+            self.write_back = write_back
+            self.release_chain = release_chain
+            return self.copy(deep=True)
+
+        def reply_notify(self,
+                         plugin_name: str,
+                         callback: Callback,
+                         write_back: bool,
+                         release_chain: bool,
+                         function_enable: bool = False,
+                         **kwargs):
+            """
+            回复消息，但是不会触发函数
+            :param plugin_name: 插件名称
+            :param callback: 元信息
+            :param write_back: 是否写回，写回此通知到消息历史,比如插件运行失败了，要不要写回消息历史让AI看到呢
+            :param release_chain: 是否释放任务链，是否释放任务链，比如插件运行失败，错误消息发送的同时需要释放任务链防止挖坟
+            :param function_enable: 是否开启功能
+            :param kwargs: 额外参数
+            :return: Meta
+            """
             _child = self.child(plugin_name)
             _child.callback = callback
-            _child.direct_reply = True
-            _child.callback_forward = False
+            _child.callback_forward = True
             _child.callback_forward_reprocess = False
+            _child.direct_reply = False
+            _child.write_back = write_back
+            _child.release_chain = release_chain
+            _child.function_enable = function_enable
             return _child
 
-        def reply_raw(self, plugin_name: str, callback: Callback, **kwargs):
+        def reply_raw(self,
+                      plugin_name: str,
+                      callback: Callback,
+                      function_enable: bool = True,
+                      **kwargs):
             _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
             _child.callback_forward_reprocess = True
+            _child.direct_reply = False
+            _child.write_back = True
+            _child.release_chain = True
+            _child.function_enable = function_enable
             return _child
 
-        def reply_message(self, plugin_name: str, callback: Callback, **kwargs):
+        def reply_message(self,
+                          plugin_name: str,
+                          callback: Callback,
+                          function_enable: bool = True,
+                          **kwargs):
             _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
             _child.callback_forward_reprocess = False
+            _child.direct_reply = False
+            _child.write_back = True
+            _child.release_chain = True
+            _child.function_enable = function_enable
             return _child
 
     class Location(BaseModel):

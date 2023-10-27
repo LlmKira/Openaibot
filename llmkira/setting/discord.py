@@ -24,9 +24,9 @@ class DiscordBot(BaseSettings):
     @validator('token')
     def bot_token_validator(cls, v):
         if v is None:
-            logger.warning(f"DiscordBot token is empty")
+            logger.warning(f"\n🍀Check:DiscordBot token is empty")
         else:
-            logger.success(f"DiscordBot token ready")
+            logger.success(f"🍀Check:DiscordBot token ready")
         return v
 
     @root_validator

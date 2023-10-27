@@ -80,6 +80,7 @@ def get_client(redis_url: str, **kwargs: Any) -> RedisType:
         # connect to redis server from url, reconnect with cluster client if needed
         redis_client = redis.from_url(redis_url, **kwargs)
         if _check_for_cluster(redis_client):
+            redis_client
             redis_client.close()
             redis_client = _redis_cluster_client(redis_url, **kwargs)
     return redis_client

@@ -14,6 +14,10 @@ from ...task import TaskHeader
 
 
 class AuthReloader(object):
+    """
+    任务链条认证
+    """
+
     def __init__(self, uid: str = None):
         self.uid = uid
 
@@ -29,11 +33,14 @@ class AuthReloader(object):
 
     async def get_auth(self, uuid: str) -> Optional[Chain]:
         _cache = await cache.read_data(key=f"auth:{uuid}")
+        logger.debug(f"[x] Auth \n--data {_cache}")
         if not _cache:
             logger.debug(f"[x] Auth \n--empty {uuid}")
             return None
-        logger.debug(f"[x] Auth \n--data {_cache}")
         chain = Chain().parse_obj(_cache)
+        if chain.is_expire:
+            logger.debug(f"[x] Auth \n--expire {uuid}")
+            return None
         chain = chain.format_arg(arg=TaskHeader)
         if chain.uid != self.uid:
             logger.debug(f"[x] Auth \n--not found user {uuid}")
@@ -55,5 +62,7 @@ class ChainReloader(object):
         if not _data:
             return None
         chain = Chain.parse_obj(json.loads(_data))
+        if chain.is_expire:
+            return None
         chain = chain.format_arg(arg=TaskHeader)
         return chain

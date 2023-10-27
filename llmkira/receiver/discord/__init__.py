@@ -26,7 +26,7 @@ from llmkira.utils import sync
 __receiver__ = "discord_hikari"
 
 from llmkira.middleware.router.schema import router_set
-from llmkira.transducer import TransferManager
+from llmkira.sdk.openapi.transducer import LoopRunner
 
 router_set(role="receiver", name=__receiver__)
 
@@ -136,15 +136,15 @@ class DiscordSender(BaseSender):
         模型直转发，Message是Openai的类型
         """
         for item in message:
-            _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
-            just_file, file_list = _transfer().build(message=item)
+            raw_message = await self.loop_turn_from_openai(platform_name=__receiver__, message=item, locate=receiver)
+
             await self.file_forward(
                 receiver=receiver,
-                file_list=file_list
+                file_list=raw_message.file
             )
-            if just_file:
+            if raw_message.just_file:
                 return None
-            assert item.content, f"message content is empty"
+            assert raw_message.text, f"message content is empty"
             async with self.bot as client:
                 client: hikari.impl.RESTClientImpl
                 _reply = None
@@ -155,7 +155,7 @@ class DiscordSender(BaseSender):
                     )
                 await client.create_message(
                     channel=receiver.thread_id,
-                    content=item.content,
+                    content=raw_message.text,
                     reply=_reply
                 )
 

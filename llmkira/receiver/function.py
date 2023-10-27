@@ -6,10 +6,8 @@
 
 __receiver__ = "llm_task"
 
-import copy
 import json
 import os
-import time
 
 import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
@@ -26,23 +24,26 @@ from llmkira.task import Task, TaskHeader
 class ChainFunc(object):
     @staticmethod
     async def auth_chain(task: TaskHeader, func_name: str = "Unknown"):
+        """
+        认证链重发注册
+        """
         _task_forward: TaskHeader = task.copy()
-        meta = _task_forward.task_meta.child(__receiver__)
-        meta.continue_step += 1
-        meta.callback_forward = False
-        meta.callback_forward_reprocess = False
+        # 重置路由元数据，添加递归指标
+        meta = _task_forward.task_meta.chain(
+            name=__receiver__,
+            write_back=False,  # 无所谓，因为本地人
+            release_chain=True
+        )
         meta.verify_uuid = str(shortuuid.uuid()[0:8]).upper()
         # 追加中断
         if meta.limit_child <= 1:
             return None
-        _task_forward.task_meta = meta
-        # 注册部署点
+        # 注册本地部署点
         task_id = await AuthReloader(uid=_task_forward.receiver.uid).add_auth(
             chain=Chain(
                 uuid=meta.verify_uuid,
                 uid=_task_forward.receiver.uid,
                 address=__receiver__,  # 重要：转发回来这里
-                time=int(time.time()),
                 arg=TaskHeader(
                     sender=_task_forward.sender,
                     receiver=_task_forward.receiver,
@@ -51,9 +52,12 @@ class ChainFunc(object):
                 )
             )
         )
-        # 追加任务
-        task_meta = copy.deepcopy(meta)
+        # 通知用户重发，不写回，不释放链条
+        task_meta = meta.copy(deep=True)
+        task_meta.write_back = False
+        task_meta.release_chain = False
         task_meta.direct_reply = True
+        # 上面路由的意思是：什么也不做
         await Task(queue=_task_forward.receiver.platform).send_task(
             task=TaskHeader(
                 sender=task.sender,  # 继承发送者
@@ -70,6 +74,7 @@ class ChainFunc(object):
             )
         )
         del task_meta
+        del meta
         return
 
     @staticmethod
@@ -80,24 +85,30 @@ class ChainFunc(object):
             deploy_child: int
     ):
         """
-        注册链
+        子链孩子函数，请注意，此处为高风险区域，预定一下函数部署点位
         :param task: 任务
         :param parent_func: 父函数
         :param repeatable: 是否可重复
         :param deploy_child: 是否部署子链
         """
         _task_forward: TaskHeader = task.copy()
-        meta = _task_forward.task_meta.child(__receiver__)
-        meta.continue_step += 1
-        meta.callback_forward = False
-        meta.callback_forward_reprocess = False
+
+        # 重置路由元数据，添加递归指标
+        meta = _task_forward.task_meta.chain(
+            name=__receiver__,
+            write_back=True,
+            release_chain=True
+        )
         # 追加中断
         if meta.limit_child <= 1:
             return None
-        _task_forward.task_meta = meta
 
+        # 放弃子链
+        if deploy_child == 0:
+            logger.debug(f"[112532] Function {parent_func} End its chain...")
+            return None
+        _task_forward.task_meta = meta
         # 禁用子链使用出现过的函数
-        # Repeatable
         try:
             if not repeatable:
                 _task_forward.task_meta.function_list = [
@@ -108,16 +119,12 @@ class ChainFunc(object):
         except Exception as e:
             logger.error(e)
             logger.warning(f"[362211]Remove function {parent_func} failed")
-        # 放弃子链
-        if deploy_child == 0:
-            logger.debug(f"[112532] Function {parent_func} End its chain...")
-            return None
         # 注册部署点
         await ChainReloader(uid=_task_forward.receiver.uid).add_task(
             chain=Chain(
                 uid=_task_forward.receiver.uid,
                 address=_task_forward.receiver.platform,
-                time=int(time.time()),
+                expire=60 * 60 * 2,
                 arg=TaskHeader(
                     sender=_task_forward.sender,
                     receiver=_task_forward.receiver,
@@ -171,8 +178,7 @@ class FunctionReceiver(object):
                 return None
             else:
                 _task.task_meta.verify_uuid = None
-
-        # 追加步骤
+        # 订购回复
         await ChainFunc.resign_chain(
             task=_task,
             parent_func=func_message.function_call.name,

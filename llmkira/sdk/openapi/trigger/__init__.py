@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+# @Time    : 2023/10/26 下午4:01
+# @Author  : sudoskys
+# @File    : __init__.py.py
+# @Software: PyCharm
+
+
+######
+# 管道前置触发管理器，注册触发词或禁止触发词
+######
+
+
+import inspect
+from functools import wraps
+from typing import Literal, List, Callable
+
+from loguru import logger
+from pydantic import BaseModel, Field
+
+
+class Trigger(BaseModel):
+    on_func: Callable = None
+    on_platform: str
+    action: Literal["allow", "deny"] = "allow"
+    priority: int = Field(default=0, ge=-100, le=100)
+    message: str = Field(default="Trigger deny your message")
+    function_enable: bool = Field(default=False)
+
+    def update_func(self, func: callable):
+        self.on_func = func
+        return self
+
+
+__trigger_phrases__: List[Trigger] = []
+
+
+async def get_trigger_loop(platform_name: str, message: str):
+    """
+    receiver builder
+    message: "RawMessage"
+    :return 如果有触发，则返回触发的action，否则返回None 代表没有操作
+    """
+    sorted(__trigger_phrases__, key=lambda x: x.priority)
+    if not message:
+        message = ""
+    for trigger in __trigger_phrases__:
+        if trigger.on_platform == platform_name:
+            try:
+                if await trigger.on_func(message):
+                    return trigger
+            except Exception as e:
+                logger.error(f"📦 Plugin:trigger error: {e}")
+                pass
+    return None
+
+
+def resign_trigger(trigger: Trigger):
+    """
+    装饰器
+    """
+
+    def decorator(func):
+        if inspect.iscoroutinefunction(func):
+            logger.success(f"📦 Plugin:resign sender trigger hook: {trigger}")
+            __trigger_phrases__.append(trigger.update_func(func))
+        else:
+            raise ValueError(f"Resign Trigger Error for func {func} is not async function")
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # 调用执行函数，中间人
+            return func(**kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+from .default_trigger import on_chat_message

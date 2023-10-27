@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from types import ModuleType
 from typing import Optional, Type, Dict, Any, List, Union, Set, final, Literal
 
+from loguru import logger
 from pydantic import BaseModel, Field, validator, root_validator
 
 from ..schema import Function
@@ -37,18 +38,9 @@ class BaseTool(ABC, BaseModel):
         """
         return self.function.name
 
-    def env_help_docs(self, empty_env: List[str]) -> str:
-        """
-        环境变量帮助文档
-        :param empty_env: 未被配置的环境变量列表
-        :return: 帮助文档/警告
-        """
-        assert isinstance(empty_env, list), "empty_env must be list"
-        return "You need to configure ENV to start use this tool"
-
     @final
     @root_validator
-    def check_conflict(cls, values):
+    def _check_conflict(cls, values):
         # env_required and silent
         if values["silent"] and values["env_required"]:
             raise ValueError("silent and env_required can not be True at the same time")
@@ -56,7 +48,7 @@ class BaseTool(ABC, BaseModel):
 
     @final
     @validator("keywords", pre=True)
-    def check_keywords(cls, v):
+    def _check_keywords(cls, v):
         for i in v:
             if not isinstance(i, str):
                 raise ValueError(f"keyword must be str, got {type(i)}")
@@ -65,6 +57,15 @@ class BaseTool(ABC, BaseModel):
             if len(i) < 2:
                 raise ValueError(f"keyword must be more than 2 characters, got {len(i)}")
         return v
+
+    def env_help_docs(self, empty_env: List[str]) -> str:
+        """
+        环境变量帮助文档
+        :param empty_env: 未被配置的环境变量列表
+        :return: 帮助文档/警告
+        """
+        assert isinstance(empty_env, list), "empty_env must be list"
+        return "You need to configure ENV to start use this tool"
 
     @abstractmethod
     def pre_check(self) -> Union[bool, str]:
@@ -90,9 +91,16 @@ class BaseTool(ABC, BaseModel):
         return None
 
     @abstractmethod
-    async def failed(self, platform, task, receiver, reason, **kwargs):
+    async def failed(self, task, receiver, arg, exception, **kwargs):
         """
         处理失败
+        """
+        return ...
+
+    @abstractmethod
+    async def callback(self, task, receiver, arg, result, **kwargs):
+        """
+        成功回调
         """
         return ...
 
@@ -104,23 +112,35 @@ class BaseTool(ABC, BaseModel):
         env = kwargs.get("env", {})
         return ...
 
-    @abstractmethod
-    async def callback(self, sign: str, task):
-        """
-        回调
-        """
-        return ...
-
     @final
     async def load(self, task, receiver, arg, env: dict = None, **kwargs):
         if not env:
             env = {}
-        await self.run(
-            task=task,
-            receiver=receiver,
-            arg=arg,
-            env=env
-        )
+        run_arg = {
+            "task": task,
+            "receiver": receiver,
+            "arg": arg,
+            "env": env
+        }
+        try:
+            run_result = await self.run(
+                **run_arg
+            )
+        except Exception as e:
+            logger.error(f"ToolExecutor:run error: {e}")
+            run_arg["exception"] = e
+            await self.failed(
+                **run_arg
+            )
+        else:
+            run_arg["result"] = run_result
+            try:
+                await self.callback(
+                    **run_arg
+                )
+            except Exception as e:
+                logger.error(f"ToolExecutor:callback error: {e}")
+        return run_arg
 
 
 @dataclass(eq=False)

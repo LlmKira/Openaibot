@@ -20,7 +20,6 @@ from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import Message, File
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from llmkira.utils import sync
 
 __receiver__ = "telegram"
@@ -115,13 +114,13 @@ class TelegramSender(BaseSender):
         模型直转发，Message是Openai的类型
         """
         for item in message:
-            _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
-            just_file, file_list = _transfer().build(message=item)
+            raw_message = await self.loop_turn_from_openai(platform_name=__receiver__, message=item, locate=receiver)
+
             await self.file_forward(
                 receiver=receiver,
-                file_list=file_list
+                file_list=raw_message.file
             )
-            if just_file:
+            if raw_message.just_file:
                 return None
             assert item.content, f"message content is empty"
             self.bot.send_message(

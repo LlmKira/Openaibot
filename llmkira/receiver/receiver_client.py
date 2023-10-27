@@ -13,16 +13,41 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional
 
 from aio_pika.abc import AbstractIncomingMessage
+from loguru import logger
+
 from llmkira.middleware.chain_box import Chain, ChainReloader
+from llmkira.middleware.func_reorganize import FunctionReorganize
 from llmkira.middleware.llm_task import OpenaiMiddleware
+from llmkira.middleware.service_provider.schema import ProviderException
 from llmkira.schema import RawMessage
 from llmkira.sdk.error import RateLimitError
-from llmkira.sdk.func_calling import ToolRegister
+from llmkira.sdk.openapi.transducer import LoopRunner
 from llmkira.task import Task, TaskHeader
-from loguru import logger
 
 
 class BaseSender(object, metaclass=ABCMeta):
+
+    async def loop_turn_from_openai(self, platform_name, message, locate):
+        """
+        将 Openai 消息传入 Loop 进行修饰
+        此过程将忽略掉其他属性。只留下 content
+        """
+        loop_runner = LoopRunner()
+        trans_loop = loop_runner.get_receiver_loop(platform_name=platform_name)
+        _raw_message = RawMessage.from_openai(message=message, locate=locate)
+        await loop_runner.exec_loop(
+            pipe=trans_loop,
+            pipe_arg={
+                "message": _raw_message,
+            }
+        )
+        arg: dict = loop_runner.result_pipe_arg
+        if not arg.get("message"):
+            logger.error("Message Loop Lose Message")
+        raw_message: RawMessage = arg.get("message", _raw_message)
+        assert isinstance(raw_message, RawMessage), f"message type error {type(raw_message)}"
+        return raw_message
+
     @abstractmethod
     async def file_forward(self, receiver, file_list, **kwargs):
         pass
@@ -60,12 +85,16 @@ class BaseReceiver(object):
         self.task = task
 
     @staticmethod
-    async def llm_request(llm_agent: OpenaiMiddleware, disable_function: bool = False):
+    async def llm_request(llm_agent: OpenaiMiddleware, auto_write_back: bool = True, disable_function: bool = False):
         """
+        Openai请求
+        :param llm_agent: Openai中间件
+        :param auto_write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
+        :param disable_function: 是否禁用函数，这个参数只是用于
         校验包装，没有其他作用
         """
         try:
-            _result = await llm_agent.request_openai(disable_function=disable_function)
+            _result = await llm_agent.request_openai(auto_write_back=auto_write_back, disable_function=disable_function)
             _message = _result.default_message
             logger.debug(f"[x] LLM Message Sent \n--message {_message}")
             assert _message, "message is empty"
@@ -76,6 +105,9 @@ class BaseReceiver(object):
         except RateLimitError as e:
             logger.error(f"ApiEndPoint:{e}")
             raise ValueError(f"Authentication expiration, overload or other issues with the Api Endpoint")
+        except ProviderException as e:
+            logger.error(f"Provider:{e}")
+            raise e
         except Exception as e:
             logger.exception(e)
             raise e
@@ -89,13 +121,11 @@ class BaseReceiver(object):
                      ):
         """
         函数池刷新
-        :param auto_write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
         :param intercept_function: 是否拦截函数调用转发到函数处理器
         """
         try:
-            llm.build(auto_write_back=auto_write_back)
             try:
-                result = await self.llm_request(llm, disable_function=disable_function)
+                result = await self.llm_request(llm, auto_write_back=auto_write_back, disable_function=disable_function)
             except Exception as e:
                 await self.sender.error(
                     receiver=task.receiver,
@@ -119,49 +149,35 @@ class BaseReceiver(object):
         except Exception as e:
             raise e
 
-    async def deal_message(self, message):
+    async def deal_message(self, message) -> tuple[
+        Optional[TaskHeader], Optional[OpenaiMiddleware], Optional[str], Optional[bool]
+    ]:
         """
         处理消息
         """
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
+        # 函数组建，自动过滤拉黑后的插件和错误过多的插件
+        functions = await FunctionReorganize(task=_task).build()
+        # 构建通信代理
+        _llm = OpenaiMiddleware(task=_task, function=functions)  # 传入函数表
+        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2, ensure_ascii=False)}")
+        # 回写
+        if _task.task_meta.write_back:
+            _llm.write_back(
+                role=_task.task_meta.callback.role,
+                name=_task.task_meta.callback.name,
+                message_list=_task.message
+            )
         # 没有任何参数
         if _task.task_meta.direct_reply:
             await self.sender.forward(
                 receiver=_task.receiver,
                 message=_task.message
             )
-            return None, None, None
-        # 函数重整策略
-        functions = []
-        if _task.task_meta.function_enable:
-            # 继承函数
-            functions = _task.task_meta.function_list
-            if _task.task_meta.sign_as[0] == 0:
-                # 复制救赎
-                _task.task_meta.function_salvation_list = _task.task_meta.function_list
-                functions = []
-                # 重整
-                for _index, _message in enumerate(_task.message):
-                    _message: RawMessage
-                    functions.extend(
-                        ToolRegister().filter_pair(key_phrases=_message.text, file_list=_message.file)
-                    )
-                _task.task_meta.function_list = functions
-        if _task.task_meta.sign_as[0] == 0:
-            # 容错一层旧节点
-            functions.extend(_task.task_meta.function_salvation_list)
-        # 构建通信代理
-        _llm = OpenaiMiddleware(task=_task, function=functions)
-        logger.debug(f"[x] Received Order \n--order {_task.json(indent=2)}")
+            return _task, None, "direct_reply", _task.task_meta.release_chain
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
-            # 手动追加插件产生的线索消息
-            _llm.write_back(
-                role=_task.task_meta.callback.role,
-                name=_task.task_meta.callback.name,
-                message_list=_task.message
-            )
             # 插件数据响应到前端
             if _task.task_meta.callback_forward_reprocess:
                 # 手动写回则禁用从 Task 数据体自动回写
@@ -174,16 +190,16 @@ class BaseReceiver(object):
                     auto_write_back=False
                 )
                 # 同时递交部署点
-                return _task, _llm, "callback_forward_reprocess"
+                return _task, _llm, "callback_forward_reprocess", _task.task_meta.release_chain
             # 转发函数
             await self.sender.forward(
                 receiver=_task.receiver,
                 message=_task.message
             )
             # 同时递交部署点
-            return _task, _llm, "callback_forward_reprocess"
+            return _task, _llm, "callback_forward", _task.task_meta.release_chain
         await self._flash(llm=_llm, task=_task, intercept_function=True)
-        return None, None, None
+        return _task, None, "default", _task.task_meta.release_chain
 
     async def on_message(self, message: AbstractIncomingMessage):
         if not self.task or not self.sender:
@@ -191,13 +207,16 @@ class BaseReceiver(object):
         try:
             if os.getenv("LLMBOT_STOP_REPLY") == "1":
                 return None
-            _task, _llm, _point = await self.deal_message(message)
+
+            # 处理消息
+            task, llm, point, release = await self.deal_message(message)
             # 启动链式函数应答循环
-            if _task:
-                chain: Chain = await ChainReloader(uid=_task.receiver.uid).get_task()
+            if release and task:
+                chain: Chain = await ChainReloader(uid=task.receiver.uid).get_task()
                 if chain:
-                    logger.info(f"Catch chain callback\n--callback_send_by {_point}")
                     await Task(queue=chain.address).send_task(task=chain.arg)
+                    logger.info(f"🧀 Chain point release\n--callback_send_by {point}")
+
         except Exception as e:
             logger.exception(e)
             await message.reject(requeue=False)

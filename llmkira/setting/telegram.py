@@ -40,9 +40,9 @@ class TelegramBot(BaseSettings):
                 values['bot_username'] = _bot.username
                 values['bot_link'] = f"https://t.me/{values['bot_username']}"
             except Exception as e:
-                logger.warning(f"Telegrambot token is empty:{e}")
+                logger.warning(f"\n🍀Check:Telegrambot token is empty:{e}")
             else:
-                logger.success(f"TelegramBot connect success: {values.get('bot_username')}")
+                logger.success(f"🍀Check:TelegramBot connect success: {values.get('bot_username')}")
         return values
 
     @property

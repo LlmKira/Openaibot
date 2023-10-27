@@ -17,20 +17,22 @@ from slack_sdk.web.async_client import AsyncWebClient
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
+from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.middleware.user import SubManager
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sender.util_func import is_command, auth_reloader, parse_command
 from llmkira.setting.slack import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.transducer import TransferManager
 from .event import SlashCommand, SlackChannelInfo, help_message
 from ..schema import Runner
 from ...schema import SlackMessageEvent, RawMessage
 
 __sender__ = "slack"
+
+from ...sdk.openapi.trigger import get_trigger_loop
+
 SlackTask = Task(queue=__sender__)
 __default_function_enable__ = True
 __join_cache__ = {}
@@ -102,7 +104,10 @@ class SlackBotRunner(Runner):
             message = event_
             _file = []
             if message.text:
-                message.text = message.text.lstrip("/chat").lstrip("/task")
+                if message.text.startswith(("/chat", "/task")):
+                    message.text = message.text[5:]
+                if message.text.startswith("/ask"):
+                    message.text = message.text[4:]
                 message.text = message.text.replace(f"<@{BotSetting.bot_id}>", f"@{BotSetting.bot_username}")
             if not message.text:
                 return None
@@ -125,14 +130,17 @@ class SlackBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                _transfer = TransferManager().sender_parser(agent_name=__sender__)
-                deliver_back_message, _file = _transfer().parse(message=message, file=_file)
+                message, _file = await self.loop_turn_only_message(
+                    platform_name=__sender__,
+                    message=message,
+                    file_list=_file
+                )
                 # Reply
                 success, logs = await SlackTask.send_task(
                     task=TaskHeader.from_slack(
-                        message=event_,
+                        message=message,
                         file=_file,
-                        deliver_back_message=deliver_back_message,
+                        deliver_back_message=[],
                         task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__))
                     )
                 )
@@ -154,7 +162,7 @@ class SlackBotRunner(Runner):
             await ack()
             # _cmd, _arg = parse_command(command=message.text)
             _tips = "🪄 Done"
-            await SubManager(user_id=f"{__sender__}:{command.user_id}").clear_endpoint()
+            await UserControl.clear_endpoint(uid=UserControl.uid_make(__sender__, command.user_id))
             return await respond(
                 text=_tips
             )
@@ -166,21 +174,28 @@ class SlackBotRunner(Runner):
             if not command.text:
                 return
             _arg = command.text
-            _except = _arg.split("#", maxsplit=1)
-            if len(_except) == 2:
+            _except = _arg.split("#", maxsplit=2)
+            if len(_except) == 3:
+                openai_key, openai_endpoint, model = _except
+            elif len(_except) == 2:
                 openai_key, openai_endpoint = _except
+                model = None
             else:
                 openai_key, openai_endpoint = (_arg, None)
+                model = None
             try:
-                await SubManager(user_id=f"{__sender__}:{command.user_id}").set_endpoint(
+                new_driver = await UserControl.set_endpoint(
+                    uid=UserControl.uid_make(__sender__, command.user_id),
                     api_key=openai_key,
-                    endpoint=openai_endpoint
+                    endpoint=openai_endpoint,
+                    model=model
                 )
             except Exception as e:
                 return await respond(
                     text=formatting.format_text(
                         formatting.mbold(f"🪄 Failed: {e}", escape=False),
-                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>"),
+                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>#<model_name>"),
+                        formatting.mitalic(f"Model Name: {UserControl.get_model()}"),
                         separator="\n"
                     )
                 )
@@ -188,8 +203,7 @@ class SlackBotRunner(Runner):
                 return await respond(
                     text=formatting.format_text(
                         formatting.mbold("🪄 Done", escape=False),
-                        formatting.mbold(f"openai_key: {openai_key}", escape=False),
-                        formatting.mbold(f"openai_endpoint: {openai_endpoint}", escape=False),
+                        new_driver.detail,
                         separator="\n"
                     )
                 )
@@ -383,6 +397,18 @@ class SlackBotRunner(Runner):
             if not await validate_join(event_=event_):
                 return None
             _text = event_.text
+            # 扳机
+            trigger = await get_trigger_loop(platform_name=__sender__, message=_text)
+            if trigger:
+                if trigger.action == "allow":
+                    return await create_task(event_, funtion_enable=trigger.function_enable)
+                if trigger.action == "deny":
+                    return await bot.client.chat_postMessage(
+                        channel=event_.channel,
+                        text=trigger.message,
+                        thread_ts=event_.thread_ts,
+                    )
+            # 默认指令
             if is_command(text=_text, command="!chat"):
                 return await create_task(event_, funtion_enable=__default_function_enable__)
             if is_command(text=_text, command="!task"):
