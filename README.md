@@ -95,31 +95,48 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 
 阅读 [🧀 部署文档](https://llmkira.github.io/Docs/) 获得更多信息。
 
-> 我经常忘记打包依赖，按照文档运行失败，请直接提交 Issue
-
-### 🥞 自动安装
-
 请提前用 `python3 start_sender.py`  `python3 start_receiver.py` 测试是否能正常运行。
 
+### 🥣 Docker
+
+Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
+
+#### 自动 Docker/Docker-compose安装
+
 如果你在使用一台崭新的服务器，你可以使用下面的Shell来尝试自动安装本项目。
+
+此脚本会自动使用 Docker 方法安装所需服务并映射端口，如果您已经部署了 `redis` ，`rabbitmq` ，`mongodb` 。
+
+请自行修改 `docker-compose.yml` 文件。
 
 ```shell
 
 curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
 ```
 
-### 🥣 Docker
-
-Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
+#### 手动 Docker-compose安装
 
 ```shell
-
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot
+docker-compose -f docker-compose.yml up -d
+
 ```
 
-注意，如果您使用 Docker 运行机器人，您可能会遇到依赖缺失问题，有时候我们会忘记打包新的依赖库。
+### 🍔 Shell
+
+人工使用Pm2启动，需要自行安装 `redis` ，`rabbitmq` ，`mongodb` 。
+
+```shell
+git clone https://github.com/LlmKira/Openaibot.git
+cd Openaibot
+pip install -r requirements.txt
+apt install npm -y && npm install pm2 && pm2 start pm2.json
+pm2 monit
+
+```
+
+重启程序使用 `pm2 restart pm2.json` 。
 
 ## 💻 如何开发插件？
 

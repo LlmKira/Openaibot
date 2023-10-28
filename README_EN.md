@@ -99,34 +99,53 @@ Both the authentication component and the backend need to be implemented by your
 | IRC      | ❌       |             |                            |
 | ...      |         |             | Create issue/pr            |
 
-## 📦 Deploy
+## 📦 Quick Start
 
-[🧀 Deploy](https://llmkira.github.io/Docs/en/) Docs for more information.
+Read the [🧀 Deployment Documentation](https://llmkira.github.io/Docs/) for more information.
 
-### 🥞 Automatic installation
+Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether it can run normally.
+
+### 🥣 Docker
+
+Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
+
+#### Automatic Docker/Docker-compose installation
 
 If you are using a brand new server, you can use the following shell to try to automatically install this project.
 
-Please test whether it can run normally with `python3 start_sender.py`  `python3 start_receiver.py` in advance.
+This script will automatically install the required services and map ports using Docker methods, if you have
+deployed `redis`, `rabbitmq`, `mongodb`.
+
+Please modify the `docker-compose.yml` file yourself.
 
 ```shell
 
 curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
 ```
 
-### 🥣 Docker
-
-Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
+#### Manual Docker-compose installation
 
 ```shell
-
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot
+pip install -r requirements.txt
+docker-compose -f docker-compose.yml up -d
+
 ```
 
-Tip:If you use Docker to run your robot, you may encounter missing dependencies. Sometimes we forget to package new
-dependencies.
+### 🍔 Shell
+
+To manually start using Pm2, you need to install `redis`, `rabbitmq`, `mongodb` by yourself.
+
+```shell
+git clone https://github.com/LlmKira/Openaibot.git
+cd Openaibot
+apt install npm -y && npm install pm2 && pm2 start pm2.json
+pm2 monit
+
+```
+
+Use `pm2 restart pm2.json` to restart the program.
 
 ## 💻 How to develop?
 

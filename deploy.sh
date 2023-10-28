@@ -14,7 +14,7 @@ else
 fi
 
 echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
-echo "$(tput setaf 6)This script will install Docker, Redis, RabbitMQ, Node.js, NPM, PM2, and the Openaibot project. THAT ACTION MAY BREAK YOUR SYSTEM. Do you want to proceed? (y/n):$(tput sgr0) "
+echo "$(tput setaf 6)This script will install Docker and the Openaibot project. Do you want to proceed? (y/n):$(tput sgr0) "
 read -r choice
 if [[ $choice =~ ^([yY][eE][sS]|[yY])$ ]]; then
   sleep 1s
@@ -41,108 +41,21 @@ else
   echo "$(tput setaf 2)Docker already installed.$(tput sgr0)"
 fi
 
-# Pull Redis image
-if [[ $(docker images -q redis:latest) == "" ]]; then
-  echo "$(tput setaf 6)Pulling Redis image...$(tput sgr0)"
-  docker pull redis:latest
-  echo "$(tput setaf 2)Redis image pull complete.$(tput sgr0)"
-fi
-# Run Redis container if not already running
-if ! docker inspect -f '{{.State.Running}}' redis &>/dev/null; then
-  echo "$(tput setaf 6)Starting Redis container...$(tput sgr0)"
-  docker run -d -p 6379:6379 \
-    --name redis \
-    redis:latest
-fi
-if ! docker inspect -f '{{.State.Running}}' redis &>/dev/null; then
-  echo "$(tput setaf 1)Redis container started failed.$(tput sgr0)"
+# Run Docker Compose
+echo "$(tput setaf 6)Running Docker Compose...$(tput sgr0)"
+# 检查是否安装docker-compose
+if ! [ -x "$(command -v docker-compose)" ]; then
+  # Install Docker
+  echo "$(tput setaf 6)Installing docker-compose...$(tput sgr0)"
+  curl -L https://github.com/docker/compose/releases/download/v2.14.0/docker-compose-linux-$(uname -m) >/usr/local/bin/docker-compose
+  chmod +x /usr/local/bin/docker-compose
 else
-  echo "$(tput setaf 2)Redis container started successfully.$(tput sgr0)"
+  echo "$(tput setaf 2)docker-compose already installed.$(tput sgr0)"
 fi
 
-# Pull RabbitMQ image
-if [[ $(docker images -q rabbitmq:3-management) == "" ]]; then
-  echo "$(tput setaf 6)Pulling RabbitMQ image...$(tput sgr0)"
-  docker pull rabbitmq:3-management
-  echo "$(tput setaf 2)RabbitMQ image pull complete.$(tput sgr0)"
-fi
-# Run RabbitMQ container if not already running
-if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
-  echo "$(tput setaf 6)Starting RabbitMQ container...$(tput sgr0)"
-  docker run -d -p 5672:5672 -p 15672:15672 \
-    -e RABBITMQ_DEFAULT_USER=admin \
-    -e RABBITMQ_DEFAULT_PASS=admin \
-    --hostname myRabbit \
-    --name rabbitmq \
-    rabbitmq:3-management
-fi
-if ! docker inspect -f '{{.State.Running}}' rabbitmq &>/dev/null; then
-  echo "$(tput setaf 1)RabbitMQ container started failed.$(tput sgr0)"
-else
-  echo "$(tput setaf 2)RabbitMQ container started successfully.$(tput sgr0)"
-fi
+docker-compose -f docker-compose.yml up -d
 
-# Pull MongoDB image
-if [[ $(docker images -q mongo:latest) == "" ]]; then
-  echo "$(tput setaf 6)Pulling MongoDB image...$(tput sgr0)"
-  docker pull mongo:latest
-  echo "$(tput setaf 2)MongoDB image pull complete.$(tput sgr0)"
-fi
-# Run MongoDB container if not already running
-if ! docker inspect -f '{{.State.Running}}' mongo &>/dev/null; then
-  echo "$(tput setaf 6)Starting MongoDB container...$(tput sgr0)"
-  docker run -d -p 27017:27017 \
-    --name mongo \
-    -e MONGO_INITDB_ROOT_USERNAME="admin" \
-    -e MONGO_INITDB_ROOT_PASSWORD="8a8a8a" \
-    mongo:latest
-fi
-
-# Check if Node.js and NPM are installed, otherwise exit
-echo "$(tput setaf 6)Checking Node.js and NPM...$(tput sgr0)"
-if ! [ -x "$(command -v node)" ] || ! [ -x "$(command -v npm)" ]; then
-  echo "$(tput setaf 1)Node.js and/or NPM are not installed. Please install them and run the script again.$(tput sgr0)"
-  exit 1
-fi
-echo "$(tput setaf 2)Node.js and NPM installation check complete.$(tput sgr0)"
-
-# Install PM2 globally if not already installed
-if ! [ -x "$(command -v pm2)" ]; then
-  echo "$(tput setaf 6)Installing PM2...$(tput sgr0)"
-  npm install pm2 -g
-else
-  echo "$(tput setaf 2)PM2 already installed.$(tput sgr0)"
-fi
-
-# Change directory to the project
-cd Openaibot || echo "DO NOT" && exit
-
-# Install project dependencies
-echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
-pip install -r requirements.txt
-echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
-
-# Copy .env.exp to .env if .env doesn't exist
-if [ ! -f ".env" ]; then
-  echo "$(tput setaf 6)Copying .env.example to .env...$(tput sgr0)"
-  cp .env.exp .env
-  nano .env
-  echo "$(tput setaf 2).env file copy complete.$(tput sgr0)"
-fi
-
-# Start the project using PM2
-echo "$(tput setaf 6)Starting project using PM2...$(tput sgr0)"
-pm2 start pm2.json
-echo "$(tput setaf 2)Project started using PM2.$(tput sgr0)"
-
-sleep 3s
-
-# Check if the project is already running
-if pm2 status | grep -E "^(llm_receiver|llm_sender).*(\b|^)online(\b|$)" >/dev/null; then
-  echo "$(tput setaf 2)Project is already running.$(tput sgr0)"
-else
-  echo "$(tput setaf 1)Project failed to start.$(tput sgr0)"
-fi
+echo "$(tput setaf 2)Docker Compose completed with:docker-compose -f docker-compose.yml up -d$(tput sgr0)"
 
 # Remove the error trap
 trap - ERR
