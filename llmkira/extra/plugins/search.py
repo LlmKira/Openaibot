@@ -114,7 +114,7 @@ class SearchTool(BaseTool):
         return None
 
     async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
-        _meta = task.task_meta.reply_raw(
+        _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
             callback=TaskHeader.Meta.Callback(
                 role="function",
@@ -179,7 +179,7 @@ class SearchTool(BaseTool):
         _set = Search.parse_obj(arg)
         _search_result = search_on_duckduckgo(_set.keywords)
         # META
-        _meta = task.task_meta.reply_message(
+        _meta = task.task_meta.reply_raw(
             plugin_name=__plugin_name__,
             callback=TaskHeader.Meta.Callback(
                 role="function",
