@@ -10,7 +10,7 @@
 import os
 import ssl
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
 
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
@@ -149,7 +149,7 @@ class BaseReceiver(object):
         except Exception as e:
             raise e
 
-    async def deal_message(self, message) -> tuple[
+    async def deal_message(self, message) -> Tuple[
         Optional[TaskHeader], Optional[OpenaiMiddleware], Optional[str], Optional[bool]
     ]:
         """
