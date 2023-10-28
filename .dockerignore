@@ -5,3 +5,10 @@ docs
 .git
 /data/
 /dist/
+/mongodb/
+/rabbitmq
+/redis/
+/llmkira/redis/
+/llmkira/mongodb/
+/test/
+.secrets.toml

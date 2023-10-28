@@ -1,23 +1,25 @@
 FROM python:3.10-slim AS builder
-RUN apt update && apt install build-essential -y
+
+RUN apt update &&  \
+    apt install build-essential -y
+RUN apt-get update &&  \
+    apt install -y npm &&  \
+    npm install pm2 -g
 
 COPY ./requirements.txt .
+COPY pm2.json .
+COPY settings.toml .
+COPY start.sh .
+
+VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log"]
 
 RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir -r requirements.txt
 
-#RUN apt-get install -y npm
-#RUN npm install pm2 -g
 
-COPY wait-for-it.sh /wait-for-it.sh
-COPY ./start.sh .
-
-RUN chmod +x /wait-for-it.sh
-
-ENV WORKDIR /app
-WORKDIR $WORKDIR
 
 FROM python:3.10-slim
+ENV WORKDIR /app
+WORKDIR $WORKDIR
 ADD . $WORKDIR
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-
 ENTRYPOINT [ "sh", "./start.sh" ]

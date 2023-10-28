@@ -4,6 +4,9 @@ services:
   llmbot:
     image: sudoskys/llmbot:latest
     container_name: llmbot
+    volumes:
+      # 挂载配置文件 settings.toml
+      - ./settings.toml:/app/settings.toml
     deploy:
       resources:
         limits:
