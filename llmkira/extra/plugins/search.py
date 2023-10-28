@@ -22,11 +22,7 @@ from llmkira.task import Task, TaskHeader
 
 search = Function(
     name=__plugin_name__,
-    description="Search/validate uncertain/unknownEvents/Meme fact on google.com",
-    config=Function.FunctionExtra(
-        system_prompt="When Have [🔍SearchPage],considera all search results for the best answer, reply with a refer link.\n"
-                      "Use `[$index]($link)` to mark links."
-    )
+    description="Search/validate uncertain/unknownEvents/Meme fact on google.com."
 )
 search.add_property(
     property_name="keywords",
@@ -59,10 +55,12 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     for key, item in enumerate(valuable_result):
         clues.append(
             f"\nPage #{key}\n🔍Contents:{item}\n"
-            f"🔗Link:{link_refer.get(item, 'https://google.com/')}\n"
+            f"🔗Source:{link_refer.get(item, 'https://google.com/')}\n"
         )
     content = "\n".join(clues)
-    return "[🔍SearchPage]\n" + content + "\n[Page End]"
+    return "[🔍SearchPage]\n" + content + ("\n[Page End]"
+                                          "\n[ReplyFormat:mark up the source,Use `[$page_num]($source_link)` to mark links]"
+                                          )
 
 
 class Search(BaseModel):
