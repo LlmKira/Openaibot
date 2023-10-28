@@ -80,7 +80,13 @@ _ping = loop.run_until_complete(ping())
 if not _ping:
     logger.error('\n⚠️ Mongodb DISCONNECT:Please configure the MONGODB_DSN variable in .env')
     # raise ValueError('MONGO DISCONNECT')
-logger.success(f'MongoClientWrapper loaded successfully in {mongo_dsn}')
+else:
+    logger.success(f'MongoClientWrapper loaded successfully in {mongo_dsn}')
+    if mongo_dsn == "mongodb://localhost:27017":
+        logger.error(
+            "\n⚠️ Security Warning: You want to using a non-password-protected local MONGODB database."
+            "\nIf you open port 27017, it may be attacked by hackers."
+        )
 
 # TEST
 if __name__ == '__main__':

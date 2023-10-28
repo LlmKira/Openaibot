@@ -43,6 +43,8 @@ class RabbitMQ(BaseSettings):
         else:
             values['_verify_status'] = True
             logger.success(f"RabbitMQ connect success")
+            if values['amqp_dsn'] == "amqp://admin:admin@localhost:5672":
+                logger.warning(f"\n⚠️ Security Warning: You are using the default RabbitMQ password, that not safe")
         return values
 
     def check_connection(self, values):
