@@ -60,7 +60,7 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     for key, item in enumerate(valuable_result):
         clues.append(
             f"\nPage #{key}\n🔍Contents:{item}\n"
-            f"🔗Link:{link_refer.get(item, 'None')}\n"
+            f"🔗Link:{link_refer.get(item, 'https://google.com/')}\n"
         )
     content = "\n".join(clues)
     return "[🔍SearchPage]\n" + content + "\n[Page End]"
