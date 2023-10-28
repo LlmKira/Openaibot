@@ -107,6 +107,8 @@ Both the authentication component and the backend need to be implemented by your
 
 If you are using a brand new server, you can use the following shell to try to automatically install this project.
 
+Please test whether it can run normally with `python3 start_sender.py`  `python3 start_receiver.py` in advance.
+
 ```shell
 
 curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash

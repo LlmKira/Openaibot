@@ -99,6 +99,8 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 
 ### 🥞 自动安装
 
+请提前用 `python3 start_sender.py`  `python3 start_receiver.py` 测试是否能正常运行。
+
 如果你在使用一台崭新的服务器，你可以使用下面的Shell来尝试自动安装本项目。
 
 ```shell
