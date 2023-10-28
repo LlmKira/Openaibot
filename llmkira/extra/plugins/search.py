@@ -58,9 +58,10 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
             f"🔗Source:{link_refer.get(item, 'https://google.com/')}\n"
         )
     content = "\n".join(clues)
-    return "[🔍SearchPage]\n" + content + ("\n[Page End]"
-                                          "\n[ReplyFormat:`$summary_answer \n [$index]($source_link) * num` to mark links]"
-                                          )
+    return "[🔍SearchPage]\n" + content + (
+        "\n[Page End]"
+        "\n[ReplyFormat:`$summary_answer \n [$index]($source_link) * num` to mark links]"
+    )
 
 
 class Search(BaseModel):
