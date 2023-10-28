@@ -14,8 +14,12 @@ from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
 
-QUOTA = settings.get("public_quota", default=15)
-WHITE_LIST = settings.get("public_white_list", default=[])
+QUOTA = 30
+WHITE_LIST = []
+if settings.get("public", default=None) is not None:
+    QUOTA = settings.public.get("public_quota", default=30)
+    WHITE_LIST = settings.public.get("public_white_list", default=[])
+    logger.debug(f"🍦 Public Provider Config Loaded, QUOTA({QUOTA}) WHITE_LIST({WHITE_LIST})")
 
 
 class UserToday(BaseModel):

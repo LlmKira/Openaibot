@@ -56,8 +56,27 @@ implementing some or more features.
 - 📦 Non-question-and-answer binding, unlimited time and unlimited sender triggered response.
 - 📬 Customizable ApiKey and Endpoint, traceability of sender authentication info.
 - 🍾 Easy Interactive Experience.
-- 🎵 Fine-grained consumption data storage, statistics on plugin credit consumption.
-- 🍖 Continuous session design for function plugins
+- 🍖 Continuous session design for function plug-ins, blacklist design
+- 🍟 Support for plug-in human-in-the-loop authentication, support for plug-in atomic singleton configuration, support
+  for development of pre-message text validation Hooks, support for development of text<->media converters, support for
+  error disabling Hooks
+
+### 🧀 Introduction to authentication system
+
+The authentication system we use is called `Service Provider`, which is the service provider. Its role is to assign
+Endpoint/Key/Model to each sender for authentication.
+Has a `token` as a bound OpenKey. The program will call the set `Service Provider` to read the private Key/configuration
+Token to obtain the authentication information.
+
+- Private authentication: Configure Endpoint/Key/Model by yourself. Such as personal use.
+- Public authentication: configure Endpoint/Key/Model globally, and authorize users to use it by issuing `Token` by
+  themselves. For example, a company intranet.
+- Agent authentication: Build your own authentication service and define your own rules. For example, forward proxy
+  server control.
+- Default authentication: Public robots can use the default Endpoint/Key/Model even if nothing is configured. For
+  example, public bots.
+
+Both the authentication component and the backend need to be implemented by yourself.
 
 ### 🧀 Preview of some plugins
 
@@ -117,8 +136,8 @@ Plugin development please refer to [🧀 Plugin Dev Docs](https://llmkira.github
 
 We can't do it on our own at the moment:
 
-- [ ] User Auth System
-- [ ] Security checks on procedures
+- [ ] We need help with the documentation
+- [ ] Web UI
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 

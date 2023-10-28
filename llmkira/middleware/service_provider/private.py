@@ -5,6 +5,7 @@
 # @Software: PyCharm
 import time
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from config import settings
@@ -12,7 +13,10 @@ from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
 
-WHITE_LIST = settings.get("private_white_list", default=[])
+WHITE_LIST = []
+if settings.get("private", default=None) is not None:
+    WHITE_LIST = settings.private.get("private_white_list", default=[])
+    logger.debug(f"🍦 Private Provider Config Loaded, WHITE_LIST({WHITE_LIST})")
 
 
 class UserToday(BaseModel):

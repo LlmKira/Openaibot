@@ -33,9 +33,8 @@
   <a href="README_EN.md">📝 English Readme</a>
 </p>
 
-LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。由 Openai 的新
-Feature `gpt-function-call`
-支持实现。
+LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。
+由 Openai 的新 Feature `gpt-function-call` 支持实现。
 
 | Demo                              |
 |-----------------------------------| 
@@ -52,18 +51,30 @@ Feature `gpt-function-call`
 - 📎 订阅系统，可以订阅除了结对发送者外的多个发送者，兼具推送功能
 - 📦 非问答绑定，不限时间不限发送端触发回复
 - 📬 自定义 ApiKey 和 后端，追溯发送者的鉴权信息
-- 🍾 简洁交互设计
+- 🍾 交互体验细则
 - 🎵 细化的消费数据存储，统计插件的额度消耗情况，全场景追溯消费记录产生
-- 🍰 自带联网插件实现
+- 🍰 插件的多种注册点
 - 📦 文件交互支持
-- 🍖 对函数插件的连续会话设计
-- 🍟 插件系统的密钥组件，中间件组件，插件版本兼容管理
+- 🍖 对函数插件的连续会话设计，黑名单设计
+- 🍟 支持插件人在回路认证，支持插件原子单人配置，支持开发前置消息文本验证Hook，支持开发文本<->媒体转换器，支持错误禁用 Hook
 
 ### 🧀 部分插件预览
 
 | Sticker Converter                   | Timer Func                      | Translate Func                               |
 |-------------------------------------|---------------------------------|----------------------------------------------|
 | ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
+
+### 🧀 认证系统介绍
+
+我们采用的认证系统称为 `Service Provider`，即服务提供商，它的作用是为每个发送者分配 Endpoint/Key/Model ，用于鉴权。
+拥有一个 `token` 作为绑定的 OpenKey。程序会调用设定的 `Service Provider` 读取私有 Key/配置 Token 来获取鉴权信息。
+
+- 私有认证：自行配置 Endpoint/Key/Model。例如个人使用。
+- 公共认证：全局配置 Endpoint/Key/Model，通过自行发行 `Token` 授权使用者使用。例如公司内网。
+- 代理认证：自行搭建认证服务，自行定义规则。例如转发代理服务器控制。
+- 默认认证：公开机器人，即使什么都不配置，也可以使用默认的 Endpoint/Key/Model。例如公开机器人。
+
+认证组件和后端均需要自行实现。
 
 ### 🎬 平台支持
 
@@ -116,8 +127,8 @@ docker-compose -f docker-compose.yml -p llmbot up -d llmbot
 
 We can't do it on our own at the moment:
 
-- [ ] User Auth System
-- [ ] Security checks on procedures
+- [ ] We need help with the documentation
+- [ ] Web UI
 
 Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
 

@@ -1,4 +1,9 @@
-public_quota = 10
+[public]
+public_quota = 30
 # 10 TIMES PER DAY
 public_white_list = ["telegram:-1"]
+# WHO CAN IGONORE THE QUOTA,Use `platform:uid` format
+
+[private]
+private_white_list = ["telegram:-1"]
 # WHO CAN IGONORE THE QUOTA,Use `platform:uid` format
