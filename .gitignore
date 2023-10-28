@@ -137,3 +137,4 @@ dmypy.json
 .secrets.*
 /rabbitmq/
 /llmkira/elara.db
+settings.toml
