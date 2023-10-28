@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+__package__name__ = "llmkira.extra.plugins.sticker"
 __plugin_name__ = "convert_to_sticker"
 __openapi_version__ = "20231027"
 
@@ -7,7 +8,7 @@ import re
 from llmkira.sdk import resign_plugin_executor
 from llmkira.sdk.func_calling import verify_openapi_version
 
-verify_openapi_version(__plugin_name__, __openapi_version__)
+verify_openapi_version(__package__name__, __openapi_version__)
 from io import BytesIO
 from math import floor
 

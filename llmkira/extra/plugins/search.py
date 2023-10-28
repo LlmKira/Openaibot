@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+__package__name__ = "llmkira.extra.plugins.search"
 __plugin_name__ = "search_in_google"
 __openapi_version__ = "20231027"
 
@@ -7,7 +8,7 @@ from llmkira.middleware.llm_provider import GetAuthDriver
 from llmkira.sdk import resign_plugin_executor
 from llmkira.sdk.func_calling import verify_openapi_version
 
-verify_openapi_version(__plugin_name__, __openapi_version__)
+verify_openapi_version(__package__name__, __openapi_version__)
 from loguru import logger
 from pydantic import BaseModel
 

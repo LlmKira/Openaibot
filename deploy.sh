@@ -93,9 +93,10 @@ if ! docker inspect -f '{{.State.Running}}' mongo &>/dev/null; then
   echo "$(tput setaf 6)Starting MongoDB container...$(tput sgr0)"
   docker run -d -p 27017:27017 \
     --name mongo \
+    -e MONGO_INITDB_ROOT_USERNAME="admin" \
+    -e MONGO_INITDB_ROOT_PASSWORD="8a8a8a" \
     mongo:latest
 fi
-
 
 # Check if Node.js and NPM are installed, otherwise exit
 echo "$(tput setaf 6)Checking Node.js and NPM...$(tput sgr0)"

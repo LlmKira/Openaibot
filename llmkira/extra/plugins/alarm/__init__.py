@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+__package__name__ = "llmkira.extra.plugins.alarm"
 __plugin_name__ = "set_alarm_reminder"
 __openapi_version__ = "20231027"
 
 from llmkira.sdk.func_calling import verify_openapi_version
 
-verify_openapi_version(__plugin_name__, __openapi_version__)
+verify_openapi_version(__package__name__, __openapi_version__)
 
 import datetime
 import re
