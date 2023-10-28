@@ -33,11 +33,10 @@ search.add_property(
     property_description="question entered in the search website",
     property_type="string",
     required=True
-) \
- \
-@ resign_plugin_executor(function=search)
+)
 
 
+@resign_plugin_executor(function=search)
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
