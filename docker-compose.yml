@@ -4,14 +4,17 @@ services:
   llmbot:
     image: sudoskys/llmbot:latest
     container_name: llmbot
+    volumes:
+      # 挂载配置文件 settings.toml
+      - ./settings.toml:/app/settings.toml
     deploy:
       resources:
         limits:
-          cpus: '0.80'
-          memory: 1500M
+          # 保证至多有 0.90 个 CPU 和 4000MB 内存
+          cpus: '0.90'
+          memory: 4000M
         reservations:
-          cpus: '0.25'
-          memory: 500M
+          memory: 1000M
     depends_on:
       - redis
       - rabbitmq
