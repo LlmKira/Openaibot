@@ -10,7 +10,32 @@ import elara
 from ..cache.base import AbstractDataClass, PREFIX
 
 
-class ElaraClientWrapper(AbstractDataClass):
+class ElaraClientSyncWrapper(AbstractDataClass):
+    """
+    Elara 数据基类
+    """
+
+    def __init__(self, backend, prefix=PREFIX):
+        self.prefix = prefix
+        self.elara = elara.exe(path=backend)
+
+    def ping(self):
+        return True
+
+    def update_backend(self, backend):
+        self.elara = elara.exe(path=backend)
+        return True
+
+    def read_data(self, key):
+        _res = self.elara.get(self.prefix + str(key))
+        return _res
+
+    def set_data(self, key, value, timeout=None):
+        self.elara.set(self.prefix + str(key), value)
+        self.elara.commit()
+
+
+class ElaraClientAsyncWrapper(AbstractDataClass):
     """
     Elara 数据基类
     """
@@ -36,5 +61,3 @@ class ElaraClientWrapper(AbstractDataClass):
         async with self.lock:
             self.elara.set(self.prefix + str(key), value)
             self.elara.commit()
-
-

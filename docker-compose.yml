@@ -17,8 +17,9 @@ services:
       - rabbitmq
       - mongodb
     environment:
-      AMQP_DSN: amqp://admin:admin@rabbitmq:5672
+      AMQP_DSN: amqp://admin:8a8a8a@rabbitmq:5672
       REDIS_DSN: redis://redis:6379/0
+      MONGODB_DSN: mongodb://admin:8a8a8a@mongodb:27017/?authSource=admin
     env_file:
       - .env
     networks:
@@ -35,9 +36,9 @@ services:
     environment:
       TZ: Asia/Shanghai
       RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_PASS: 8a8a8a
     volumes:
-      - ./data:/var/lib/rabbitmq
+      - ./rabbitmq:/var/lib/rabbitmq
     networks:
       - app-tier
   redis:
@@ -59,6 +60,8 @@ services:
     restart: on-failure
     environment:
       - TZ=Asia/Shanghai
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=8a8a8a
     volumes:
       - ./mongodb:/data/db
     ports:

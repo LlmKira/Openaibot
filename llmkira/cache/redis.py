@@ -89,7 +89,4 @@ else:
     logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')
     cache = RedisClientWrapper(redis_url)
     if redis_url == 'redis://localhost:6379/0':
-        logger.warning(
-            "\n⚠️ Security Warning: You are using a non-password-protected local REDIS database."
-            "\nIf you open port 6379, it may be attacked by hackers."
-        )
+        logger.warning("\n⚠️ You are using a non-password-protected local REDIS database.")

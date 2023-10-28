@@ -44,6 +44,7 @@ websocket = "^0.2.1"
 wrapt = "^1.15.0"
 motor = "^3.3.1"
 dynaconf = "^3.2.3"
+rich = "^13.6.0"
 
 
 [build-system]

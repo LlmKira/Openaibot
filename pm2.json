@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "llm_sender",
-      "script": "python3 start_sender.py",
+      "script": "python3 start_sender.py --no_tutorial",
       "instances": 1,
       "error_file": "sender.log",
       "out_file": "sender.log",
@@ -10,7 +10,7 @@
     },
     {
       "name": "llm_receiver",
-      "script": "python3 start_receiver.py",
+      "script": "python3 start_receiver.py --no_tutorial",
       "instances": 1,
       "error_file": "receiver.log",
       "out_file": "receiver.log",

@@ -12,14 +12,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class MongoClientWrapper:
-    def __init__(self, uri, db_name=None, collection_name=None):
-        self.client = AsyncIOMotorClient(uri)
+    def __init__(self, url, db_name=None, collection_name=None):
+        self.client = AsyncIOMotorClient(url)
         if db_name and collection_name:
             self._set_db_and_collection(db_name, collection_name)
 
     async def ping(self):
         try:
-            await self.client.admin.command('ping')
+            await self.client.server_info()  # test connection
+            await self.client.list_database_names()  # test authentication
         except Exception as e:
             return False
         return True
@@ -67,7 +68,7 @@ class MongoClientWrapper:
 
 # 加载 .env 文件
 load_dotenv()
-mongo_dsn = os.getenv('MONGODB_DSN', "mongodb://localhost:27017")
+mongo_dsn = os.getenv('MONGODB_DSN', "mongodb://admin:8a8a8a@localhost:27017/?authSource=admin")
 mongo_client: MongoClientWrapper = MongoClientWrapper(mongo_dsn)
 
 
@@ -78,17 +79,14 @@ async def ping():
 loop = asyncio.get_event_loop()
 _ping = loop.run_until_complete(ping())
 if not _ping:
-    logger.error('\n⚠️ Mongodb DISCONNECT:Please configure the MONGODB_DSN variable in .env')
-    # raise ValueError('MONGO DISCONNECT')
+    logger.error(f'\n⚠️ Mongodb DISCONNECT:Cant connect to mongodb, please check MONGODB_DSN in .env \n {mongo_dsn}')
+    raise ValueError('MONGO DISCONNECT')
 else:
     logger.success(f'MongoClientWrapper loaded successfully in {mongo_dsn}')
-    if mongo_dsn == "mongodb://localhost:27017":
-        logger.error(
-            "\n⚠️ Security Warning: You want to using a non-password-protected local MONGODB database."
-            "\nIf you open port 27017, it may be attacked by hackers."
-        )
+    if mongo_dsn.strip('/') == "mongodb://localhost:27017":
+        logger.warning("\n⚠️ You are using a non-password local MONGODB database.")
 
-# TEST
+# Test
 if __name__ == '__main__':
     async def main():
         # create a new instance of the MongoClientWrapper class
