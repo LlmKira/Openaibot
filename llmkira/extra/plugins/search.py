@@ -59,7 +59,7 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
         )
     content = "\n".join(clues)
     return "[🔍SearchPage]\n" + content + ("\n[Page End]"
-                                          "\n[ReplyFormat:mark up the source,Use `[$page_num]($source_link)` to mark links]"
+                                          "\n[ReplyFormat:`$summary_answer \n [$index]($source_link) * num` to mark links]"
                                           )
 
 
