@@ -20,37 +20,50 @@ from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.sdk.schema import Message
 from llmkira.task import Task, TaskHeader
 
-search = Function(name=__plugin_name__, description="Search/validate uncertain/unknownEvents/Meme fact on google.com")
+search = Function(
+    name=__plugin_name__,
+    description="Search/validate uncertain/unknownEvents/Meme fact on google.com",
+    config=Function.FunctionExtra(
+        system_prompt="When Have [🔍SearchPage],considera all search results for the best answer, reply with a refer link.\n"
+                      "Use `[$index]($link)` to mark links."
+    )
+)
 search.add_property(
     property_name="keywords",
     property_description="question entered in the search website",
     property_type="string",
     required=True
-)
+) \
+ \
+@ resign_plugin_executor(function=search)
 
 
-@resign_plugin_executor(function=search)
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
     from llmkira.sdk.filter import Sublimate
+    sort_text = []
+    link_refer = {}
     with DDGS(timeout=20) as ddgs:
-        _text = []
-        for r in ddgs.text(search_sentence):
+        search_result = ddgs.text(search_sentence)
+        for r in search_result:
             _title = r.get("title")
             _href = r.get("href")
             _body = r.get("body")
-            _text.append(_body)
-    if key_words:
-        must_key = [key_words]
-    else:
-        must_key = None
-    _test_result = Sublimate(_text).valuation(match_sentence=search_sentence, match_keywords=must_key)
-    _result = []
-    for key in _test_result[:4]:
-        _result.append(key[0])
-        # hidden clues
-    return "\nHint Clues:".join(_result)
+            link_refer[_body] = _href
+            sort_text.append(_body)
+    must_key = [key_words] if key_words else None
+    sorted_result = Sublimate(sort_text).valuation(match_sentence=search_sentence, match_keywords=must_key)
+    valuable_result = [item[0] for item in sorted_result[:4]]
+    # 构建单条内容
+    clues = []
+    for key, item in enumerate(valuable_result):
+        clues.append(
+            f"\nPage #{key}\n🔍Contents:{item}\n"
+            f"🔗Link:{link_refer.get(item, 'None')}\n"
+        )
+    content = "\n".join(clues)
+    return "[🔍SearchPage]\n" + content + "\n[Page End]"
 
 
 class Search(BaseModel):
