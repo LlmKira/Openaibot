@@ -3,7 +3,11 @@ name: Docker Image CI
 on:
   release:
     types: [ published ]
-
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Test tags'
+        required: true
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest

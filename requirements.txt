@@ -54,3 +54,4 @@ websocket
 aiohttp
 wrapt
 rich
+importlib_metadata
