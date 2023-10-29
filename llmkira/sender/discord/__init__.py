@@ -435,7 +435,11 @@ class DiscordBotRunner(Runner):
                 logger.info(f"discord_hikari:ignore a empty message,do you turn on the MESSAGE_CONTENT setting?")
                 return
             # 扳机
-            trigger = await get_trigger_loop(platform_name=__sender__, message=event_.content)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=event_.content,
+                uid=UserControl.uid_make(__sender__, event_.message.author.id)
+            )
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(event_.message, funtion_enable=trigger.function_enable)

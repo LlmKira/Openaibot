@@ -443,7 +443,11 @@ class KookBotRunner(Runner):
 
         async def on_guild_create(msg: PublicMessage):
             # 扳机
-            trigger = await get_trigger_loop(platform_name=__sender__, message=msg.content)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=msg.content,
+                uid=UserControl.uid_make(__sender__, msg.author_id)
+            )
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(msg, funtion_enable=trigger.function_enable)
@@ -466,7 +470,11 @@ class KookBotRunner(Runner):
 
         async def on_dm_create(msg: PrivateMessage):
             # 扳机
-            trigger = await get_trigger_loop(platform_name=__sender__, message=msg.content)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=msg.content,
+                uid=UserControl.uid_make(__sender__, msg.author_id)
+            )
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(msg, funtion_enable=trigger.function_enable)

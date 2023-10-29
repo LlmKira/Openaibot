@@ -509,7 +509,11 @@ class SlackBotRunner(Runner):
                 return None
             _text = event_.text
             # 扳机
-            trigger = await get_trigger_loop(platform_name=__sender__, message=_text)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=_text,
+                uid=UserControl.uid_make(__sender__, event_.user)
+            )
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(event_, funtion_enable=trigger.function_enable)

@@ -34,7 +34,7 @@ class Trigger(BaseModel):
 __trigger_phrases__: List[Trigger] = []
 
 
-async def get_trigger_loop(platform_name: str, message: str):
+async def get_trigger_loop(platform_name: str, message: str, uid: str = None):
     """
     receiver builder
     message: "RawMessage"
@@ -46,7 +46,7 @@ async def get_trigger_loop(platform_name: str, message: str):
     for trigger in __trigger_phrases__:
         if trigger.on_platform == platform_name:
             try:
-                if await trigger.on_func(message):
+                if await trigger.on_func(message, uid):
                     return trigger
             except Exception as e:
                 logger.error(f"📦 Plugin:trigger error: {e}")

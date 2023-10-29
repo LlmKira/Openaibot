@@ -27,6 +27,11 @@ services:
       - .env
     networks:
       - app-tier
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -44,6 +49,11 @@ services:
       - ./rabbitmq:/var/lib/rabbitmq
     networks:
       - app-tier
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   redis:
     container_name: redis-server
     image: redis:latest
@@ -56,6 +66,11 @@ services:
       - "6379:6379"
     networks:
       - app-tier
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mongodb:
     container_name: mongodb
@@ -71,6 +86,11 @@ services:
       - "27017:27017"
     networks:
       - app-tier
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   app-tier:

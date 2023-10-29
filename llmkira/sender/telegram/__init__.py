@@ -434,7 +434,11 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            trigger = await get_trigger_loop(platform_name=__sender__, message=message.text)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=message.text,
+                uid=UserControl.uid_make(__sender__, message.from_user.id)
+            )
             if trigger:
                 if trigger == "allow":
                     return await create_task(message, funtion_enable=__default_function_enable__)
@@ -455,7 +459,11 @@ class TelegramBotRunner(Runner):
             if not message.text:
                 return None
             # 扳机
-            trigger = await get_trigger_loop(platform_name=__sender__, message=message.text)
+            trigger = await get_trigger_loop(
+                platform_name=__sender__,
+                message=message.text,
+                uid=UserControl.uid_make(__sender__, message.from_user.id)
+            )
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(message, funtion_enable=trigger.function_enable)
