@@ -137,6 +137,27 @@ pm2 monit
 
 重启程序使用 `pm2 restart pm2.json` 。
 
+## 🍪 Slash Command
+
+```shell
+help - help
+chat - chat
+task - task
+ask - question and answer
+tool - list of tools
+bind - Bind optional platforms
+unbind - Unbind optional platforms
+clear - delete own records
+set_endpoint - Custom backend
+clear_endpoint - Erase custom settings
+auth - authentication
+env - virtual environment settings
+token - bind token
+token_clear - clear token
+func_ban - disable function
+func_unban - unban function
+```
+
 ## 💻 如何开发插件？
 
 插件开发文档请参考 `plugins` 目录下的示例插件和 [🧀 插件开发文档](https://llmkira.github.io/Docs/dev/basic)

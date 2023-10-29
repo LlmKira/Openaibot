@@ -141,6 +141,27 @@ pm2 monit
 
 Use `pm2 restart pm2.json` to restart the program.
 
+## 🍪 Slash Command
+
+```shell
+help - help
+chat - chat
+task - task
+ask - question and answer
+tool - list of tools
+bind - Bind optional platforms
+unbind - Unbind optional platforms
+clear - delete own records
+set_endpoint - Custom backend
+clear_endpoint - Erase custom settings
+auth - authentication
+env - virtual environment settings
+token - bind token
+token_clear - clear token
+func_ban - disable function
+func_unban - unban function
+```
+
 ## 💻 How to develop?
 
 For plugin development, please refer to the sample plugins in the `plugins` directory.
