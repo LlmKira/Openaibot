@@ -68,13 +68,7 @@ Endpoint/Key/Model to each sender for authentication.
 Has a `token` as a bound OpenKey. The program will call the set `Service Provider` to read the private Key/configuration
 Token to obtain the authentication information.
 
-- Private authentication: Configure Endpoint/Key/Model by yourself. Such as personal use.
-- Public authentication: configure Endpoint/Key/Model globally, and authorize users to use it by issuing `Token` by
-  themselves. For example, a company intranet.
-- Agent authentication: Build your own authentication service and define your own rules. For example, forward proxy
-  server control.
-- Default authentication: Public robots can use the default Endpoint/Key/Model even if nothing is configured. For
-  example, public bots.
+![auth](./docs/SeriveProvider.svg)
 
 Both the authentication component and the backend need to be implemented by yourself.
 

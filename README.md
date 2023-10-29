@@ -69,10 +69,7 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 我们采用的认证系统称为 `Service Provider`，即服务提供商，它的作用是为每个发送者分配 Endpoint/Key/Model ，用于鉴权。
 拥有一个 `token` 作为绑定的 OpenKey。程序会调用设定的 `Service Provider` 读取私有 Key/配置 Token 来获取鉴权信息。
 
-- 私有认证：自行配置 Endpoint/Key/Model。例如个人使用。
-- 公共认证：全局配置 Endpoint/Key/Model，通过自行发行 `Token` 授权使用者使用。例如公司内网。
-- 代理认证：自行搭建认证服务，自行定义规则。例如转发代理服务器控制。
-- 默认认证：公开机器人，即使什么都不配置，也可以使用默认的 Endpoint/Key/Model。例如公开机器人。
+![auth](./docs/SeriveProvider.svg)
 
 认证组件和后端均需要自行实现。
 
