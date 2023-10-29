@@ -52,6 +52,21 @@ if ! [ -x "$(command -v docker-compose)" ]; then
 else
   echo "$(tput setaf 2)docker-compose already installed.$(tput sgr0)"
 fi
+# Change directory to the project
+cd Openaibot || echo "DO NOT" && exit
+
+# Install project dependencies
+echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
+pip install -r requirements.txt
+echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
+
+# Copy .env.exp to .env if .env doesn't exist
+if [ ! -f ".env" ]; then
+  echo "$(tput setaf 6)Copying .env.example to .env...$(tput sgr0)"
+  cp .env.exp .env
+  nano .env
+  echo "$(tput setaf 2).env file copy complete.$(tput sgr0)"
+fi
 
 docker-compose -f docker-compose.yml up -d
 

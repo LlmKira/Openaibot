@@ -119,6 +119,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
+cp .env.exp .env&&nano .env
 docker-compose -f docker-compose.yml up -d
 
 ```
@@ -131,6 +132,7 @@ docker-compose -f docker-compose.yml up -d
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
 pip install -r requirements.txt
+cp .env.exp .env&&nano .env
 apt install npm -y && npm install pm2 && pm2 start pm2.json
 pm2 monit
 
