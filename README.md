@@ -146,9 +146,9 @@ pm2 monit
 ```shell
 clear - 删除聊天记录
 help - 显示文档
-chat - 聊天
-task - 启用函数的聊天
-ask - 禁止函数的聊天
+chat - 对话
+task - 启用函数以对话
+ask - 禁止函数以对话
 tool - 列出所有函数
 set_endpoint - 设置私有 key 和 endpoint
 clear_endpoint - 清除私有 key 和 endpoint
