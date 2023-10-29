@@ -144,23 +144,22 @@ pm2 monit
 ## 🍪 Slash Command
 
 ```shell
-clear - erase chat history
-help - show docs
-chat - chat
-task - chat with function_enable
-ask - chat with function_disable
-tool - list all functions
-set_endpoint - set private key and endpoint
-clear_endpoint - erase private key and endpoint
-auth - auth a function
-env - env for function
-token - bind token
-token_clear - clear token binding
-func_ban - ban a function
-func_unban - unban a function
-bind - Bind rss platforms
-unbind - Unbind rss platforms
-
+clear - 删除聊天记录
+help - 显示文档
+chat - 聊天
+task - 启用函数的聊天
+ask - 禁止函数的聊天
+tool - 列出所有函数
+set_endpoint - 设置私有 key 和 endpoint
+clear_endpoint - 清除私有 key 和 endpoint
+auth - 授权一个函数
+env - 函数环境变量
+token - 绑定令牌
+token_clear - 清除令牌绑定
+func_ban - 禁用一个函数
+func_unban - 解禁一个函数
+bind - 绑定消息源
+unbind - 解绑消息源
 ```
 
 ## 💻 如何开发插件？
