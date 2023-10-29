@@ -6,6 +6,7 @@ if [ -d "Openaibot" ]; then
   # shellcheck disable=SC2164
   pip uninstall llmkira
   cd Openaibot && git pull && echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
+  docker-compose -f docker-compose.yml up -d
   # Update the Openaibot project
   exit 0
 else
@@ -14,7 +15,7 @@ else
 fi
 
 echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
-echo "$(tput setaf 6)This script will install Docker and the Openaibot project. Do you want to proceed? (y/n):$(tput sgr0) "
+echo "$(tput setaf 6)Type yes will install Docker and the Openaibot project. Do you want to proceed? (y/n):$(tput sgr0) "
 read -r choice
 if [[ $choice =~ ^([yY][eE][sS]|[yY])$ ]]; then
   sleep 1s
@@ -53,11 +54,12 @@ else
   echo "$(tput setaf 2)docker-compose already installed.$(tput sgr0)"
 fi
 # Change directory to the project
-cd Openaibot || echo "DO NOT" && exit
+cd Openaibot || echo "DO NOT Exist Openaibot Dir" && exit
 
 # Install project dependencies
 echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+python3 -m pip install rich loguru && python3 start_tutorial.py
 echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
 
 # Copy .env.exp to .env if .env doesn't exist
@@ -68,7 +70,10 @@ if [ ! -f ".env" ]; then
   echo "$(tput setaf 2).env file copy complete.$(tput sgr0)"
 fi
 
-docker-compose -f docker-compose.yml up -d
+if [ ! -f "docker-compose.yml" ]; then
+  echo "$(tput setaf 6)Run docker-compose.yml...$(tput sgr0)"
+  docker-compose -f docker-compose.yml up -d
+fi
 
 echo "$(tput setaf 2)Docker Compose completed with:docker-compose -f docker-compose.yml up -d$(tput sgr0)"
 
