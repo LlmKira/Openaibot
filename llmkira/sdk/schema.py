@@ -93,6 +93,7 @@ class File(BaseModel):
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
     caption: str = Field(default='', description="文件注释")
+    uploader_uid: str = Field(default=None, description="上传者")
 
     # hash able
     def __eq__(self, other):
@@ -106,6 +107,9 @@ class File(BaseModel):
 
     def __hash__(self):
         return hash(self.file_id) + hash(self.file_name)
+
+    def is_user_upload(self, uid: str):
+        return self.uploader_uid == uid
 
     @property
     def file_prompt(self):

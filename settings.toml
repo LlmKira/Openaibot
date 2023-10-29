@@ -5,5 +5,5 @@ public_white_list = ["telegram:-1"]
 # WHO CAN IGONORE THE QUOTA,Use `platform:uid` format
 
 [private]
-private_white_list = ["telegram:-1"]
+private_white_list = ["telegram:-1", "telegram:123456789"]
 # WHO CAN IGONORE THE QUOTA,Use `platform:uid` format

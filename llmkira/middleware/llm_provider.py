@@ -6,7 +6,7 @@
 from loguru import logger
 
 from llmkira.extra.user import UserControl, UserConfig, UserDriverMode
-from llmkira.middleware.service_provider.schema import ProviderException, ProviderSettingObj
+from llmkira.middleware.service_provider.schema import ProviderSettingObj
 from .service_provider import loaded_provider, PublicProvider
 
 if not loaded_provider:
@@ -38,7 +38,7 @@ class GetAuthDriver(object):
         # 配置了自己的私有例
         if self.user.mode == UserDriverMode.private:
             return self.user.driver
-        # 配置了公共例，且用户没有配置自己的私有例
+        # Public Provider
         if ProviderSettingObj.is_open_everyone:
             provider = PublicProvider()
             logger.debug(f"🍦 Public Provider({provider.name})&Mode({self.user.mode})&UID({self.uid})")
@@ -46,18 +46,19 @@ class GetAuthDriver(object):
                     uid=self.uid,
                     token=self.user.token, status=self.user.mode):
                 return await provider.request_driver(uid=self.uid, token=self.user.token)
-        # 配置了代理例
-        if self.user.provider == loaded_provider.name.upper():
+        else:
             # 用户需要特别配置 Token
             provider = loaded_provider()
             if await provider.authenticate(
                     uid=self.uid,
-                    token=self.user.token, status=self.user.mode):
+                    token=self.user.token,
+                    status=self.user.mode
+            ):
                 return await provider.request_driver(uid=self.uid, token=self.user.token)
-        else:
-            # 配置了不被支持的 provider 代理例
-            raise ProviderException(
-                f"AuthChanged {self.user.provider} >>change>> {loaded_provider.name.upper()}"
-                f"\n🥕 Provider({loaded_provider.name})&Mode({self.user.mode})&UID({self.uid})"
-                f"\n🍦 Auth Docs: {loaded_provider().config_docs()}"
-            )
+        """
+        raise ProviderException(
+            f"AuthChanged {self.user.provider} >>change>> {loaded_provider.name.upper()}"
+            f"\n🥕 Provider({loaded_provider.name})&Mode({self.user.mode})&UID({self.uid})"
+            f"\n🍦 Auth Docs: {loaded_provider().config_docs()}"
+        )
+        """

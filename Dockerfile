@@ -8,7 +8,7 @@ COPY pm2.json .
 COPY settings.toml .
 COPY start.sh .
 
-VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log"]
+VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "settings.toml"]
 
 RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir -r requirements.txt
 
