@@ -150,8 +150,8 @@ chat - chat
 task - chat with function_enable
 ask - chat with function_disable
 tool - list all functions
-set_endpoint - set key and endpoint
-clear_endpoint - erase key and endpoint
+set_endpoint - set private key and endpoint
+clear_endpoint - erase private key and endpoint
 auth - auth a function
 env - env for function
 token - bind token
