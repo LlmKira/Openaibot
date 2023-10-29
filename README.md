@@ -34,8 +34,8 @@
 </p>
 
 
-Look for English README? Click [here](README_EN.md). We also have English
-documentation [here](https://llmkira.github.io/Docs/en).
+>**Look for English README? Click [here](README_EN.md). We also have English
+documentation [here](https://llmkira.github.io/Docs/en).**
 
 LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot，可以装载插件完成许多功能。
 由 Openai 的新 Feature `gpt-function-call` 支持实现。
