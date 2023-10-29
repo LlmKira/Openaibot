@@ -61,8 +61,8 @@ def resign_trigger(trigger: Trigger):
 
     def decorator(func):
         if inspect.iscoroutinefunction(func):
-            logger.success(f"📦 Plugin:resign sender trigger hook: {trigger}")
             __trigger_phrases__.append(trigger.update_func(func))
+            logger.success(f"📦 Plugin:resign sender trigger hook: {trigger}")
         else:
             raise ValueError(f"Resign Trigger Error for func {func} is not async function")
 
