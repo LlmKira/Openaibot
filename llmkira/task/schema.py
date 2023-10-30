@@ -112,9 +112,9 @@ class TaskHeader(BaseModel):
             return values
 
         @classmethod
-        def from_root(cls, release_chain, function_enable, **kwargs):
+        def from_root(cls, release_chain, function_enable, platform: str = "default", **kwargs):
             return cls(
-                sign_as=(0, "root", "default"),
+                sign_as=(0, "root", platform),
                 release_chain=release_chain,
                 function_enable=function_enable,
                 **kwargs
