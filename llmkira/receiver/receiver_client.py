@@ -15,12 +15,13 @@ from typing import Optional, Tuple
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 
+from llmkira.error import get_request_error_message
 from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.func_reorganize import FunctionReorganize
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.middleware.service_provider.schema import ProviderException
 from llmkira.schema import RawMessage
-from llmkira.sdk.error import RateLimitError
+from llmkira.sdk.error import RateLimitError, ServiceUnavailableError
 from llmkira.sdk.openapi.transducer import LoopRunner
 from llmkira.task import Task, TaskHeader
 
@@ -100,13 +101,16 @@ class BaseReceiver(object):
             assert _message, "message is empty"
             return _result
         except ssl.SSLSyscallError as e:
-            logger.error(f"Network ssl error: {e},that maybe caused by bad proxy")
+            logger.error(f"[Network ssl error] {e},that maybe caused by bad proxy")
+            raise e
+        except ServiceUnavailableError as e:
+            logger.error(f"[Service Unavailable Error] {e}")
             raise e
         except RateLimitError as e:
             logger.error(f"ApiEndPoint:{e}")
             raise ValueError(f"Authentication expiration, overload or other issues with the Api Endpoint")
         except ProviderException as e:
-            logger.error(f"Provider:{e}")
+            logger.error(f"[Service Provider]{e}")
             raise e
         except Exception as e:
             logger.exception(e)
@@ -129,7 +133,7 @@ class BaseReceiver(object):
             except Exception as e:
                 await self.sender.error(
                     receiver=task.receiver,
-                    text=f"🦴 Sorry, your request failed because: {e}"
+                    text=get_request_error_message(str(e))
                 )
                 return
             if intercept_function:

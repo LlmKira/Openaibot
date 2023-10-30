@@ -42,7 +42,9 @@ class UserControl(object):
         return MODEL.__args__
 
     @staticmethod
-    async def get_driver_config(uid: str) -> UserConfig.LlmConfig:
+    async def get_driver_config(
+            uid: str
+    ) -> UserConfig.LlmConfig:
         """
         :param uid: user id
         :return: UserConfig.LlmConfig(Token/Driver)
@@ -53,7 +55,10 @@ class UserControl(object):
         return _user_data.llm_driver
 
     @staticmethod
-    def uid_make(platform: str, user_id: Union[str, int]):
+    def uid_make(
+            platform: str,
+            user_id: Union[str, int]
+    ):
         """
         :param platform: platform.
         :param user_id: user id.
@@ -67,7 +72,9 @@ class UserControl(object):
         return f"{platform}:{user_id}"
 
     @staticmethod
-    async def clear_endpoint(uid: str):
+    async def clear_endpoint(
+            uid: str
+    ):
         """
         :param uid: user id
         :return: bool
@@ -80,12 +87,19 @@ class UserControl(object):
         return True
 
     @staticmethod
-    async def set_endpoint(uid: str, api_key: str, endpoint: str = None, model: str = None) -> Openai.Driver:
+    async def set_endpoint(
+            uid: str,
+            api_key: str,
+            endpoint: str = None,
+            model: str = None,
+            org_id: str = None
+    ) -> Openai.Driver:
         """
         :param uid: user id
         :param api_key: openai api key
         :param endpoint: openai endpoint
         :param model: openai model
+        :param org_id: openai org_id id:
         :raise ValidationError: openai model is not valid
         :return: new_driver
         """
@@ -94,13 +108,16 @@ class UserControl(object):
             model = MODEL.__args__[0]
         _user_data = await UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)
-        new_driver = Openai.Driver(endpoint=endpoint, api_key=api_key, model=model)
+        new_driver = Openai.Driver(endpoint=endpoint, api_key=api_key, model=model, org_id=org_id)
         _user_data.llm_driver.driver = new_driver
         await UserConfigClient().update(uid=uid, data=_user_data)
         return new_driver
 
     @staticmethod
-    async def block_plugin(uid: str, plugin_name: str) -> list:
+    async def block_plugin(
+            uid: str,
+            plugin_name: str
+    ) -> list:
         """
         :param uid: user id
         :param plugin_name: plugin name
@@ -115,7 +132,10 @@ class UserControl(object):
         return _user_data.plugin_subs.block_list
 
     @staticmethod
-    async def unblock_plugin(uid: str, plugin_name: str) -> list:
+    async def unblock_plugin(
+            uid: str,
+            plugin_name: str
+    ) -> list:
         """
         :param uid: user id
         :param plugin_name: plugin name
@@ -128,7 +148,10 @@ class UserControl(object):
         return _user_data.plugin_subs.block_list
 
     @staticmethod
-    async def set_token(uid: str, token: Optional[str] = None):
+    async def set_token(
+            uid: str,
+            token: Optional[str] = None
+    ) -> Optional[str]:
         """
         :param uid: user id
         :param token: bind token

@@ -28,3 +28,10 @@ class ServiceUnavailableError(Exception):
     Raised when the API is unavailable.
     """
     pass
+
+
+class CheckError(Exception):
+    """
+    Raised when the API is unavailable.
+    """
+    pass

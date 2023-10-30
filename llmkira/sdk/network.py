@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 from loguru import logger
 
-from .error import RateLimitError, ServiceUnavailableError, AuthenticationError
+from .error import RateLimitError, ServiceUnavailableError, AuthenticationError, CheckError
 
 __session_pool = {}
 
@@ -14,23 +14,37 @@ __session_pool = {}
 def llm_error_handler(code, message: str):
     if code == 429:
         raise RateLimitError(message)
+    elif code == 404 and not message:
+        raise ServiceUnavailableError(f"invalid endpoint, {message}")
     elif code == 500 or code != 401:
         raise ServiceUnavailableError(message)
     else:
         raise AuthenticationError(message)
 
 
-def check_json_response(status_code, req_data: dict):
+def check_json_response(status_code: int, req_data: dict):
     """
     检查json响应
     """
     # 错误消息
     if req_data.get("error", None):
-        _error = req_data.get("error", None)
-        raise Exception(f"{status_code}:{_error.get('type')}:{_error.get('message')}")
+        _error = req_data.get("error", "your endpoint is not a valid endpoint, please check it")
+        if status_code == 404:
+            raise CheckError(
+                f"[Invalid endpoint] {_error}, do you forget to add something like v1/chat/completions?"
+            )
+        raise CheckError(
+            f"{status_code}:{_error.get('type')}:{_error.get('message')}"
+        )
     # 错误消息
     if isinstance(req_data.get("message"), str):
-        raise Exception(f"{status_code}:{req_data.get('message')}")
+        raise CheckError(
+            f"{status_code}:{req_data.get('message')}"
+        )
+    if status_code == 404:
+        raise CheckError(
+            f"[Invalid endpoint] no error message return...  do you forget to add something like v1/chat/completions?"
+        )
 
 
 async def request(
@@ -88,19 +102,20 @@ async def request(
     # 检查响应头 Content-Type
     content_type = resp.headers.get("content-type")
     if content_type.lower().find("application/json") == -1:
-        logger.error(f"[78652]Server send a invalid response {resp.text}")
+        logger.error(f"[105232]Server send a invalid response {resp.text}")
         raise Exception("Server send a invalid response with content-type:{}".format(content_type))
 
     try:
         req_data: dict = json.loads(resp.text)
     except json.JSONDecodeError:
         if resp.status_code != 200:
-            raise Exception(f"Request {resp.status_code}:Request failed without any error message")
+            raise Exception(f"[Request {resp.status_code}] Request failed without any error message")
         raise Exception("Server send a invalid json response")
+
     try:
         check_json_response(resp.status_code, req_data)
-    except Exception as e:
-        # Dict Message 格式校验失败
+    except CheckError as e:
+        # Message 格式校验失败
         if call_func:
             call_func(req_data, headers)
         _status = req_data.get("status", None)
@@ -108,6 +123,8 @@ async def request(
             code=_status,
             message=f"{resp.status_code}:{req_data.get('message')}"
         )
+    except Exception as e:
+        raise e
     return req_data
 
 
