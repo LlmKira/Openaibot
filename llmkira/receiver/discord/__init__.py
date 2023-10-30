@@ -26,7 +26,6 @@ from llmkira.utils import sync
 __receiver__ = "discord_hikari"
 
 from llmkira.middleware.router.schema import router_set
-from llmkira.sdk.openapi.transducer import LoopRunner
 
 router_set(role="receiver", name=__receiver__)
 
@@ -278,6 +277,7 @@ class DiscordReceiver(BaseReceiver):
         await discord_rest.start()
         __sender__.acquire()
         try:
+            logger.success("Receiver Runtime:Discord start")
             await self.task.consuming_task(self.on_message)
         except KeyboardInterrupt:
             logger.warning("Discord Receiver shutdown")

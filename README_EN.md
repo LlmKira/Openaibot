@@ -100,6 +100,13 @@ Read the [🧀 Deployment Documentation](https://llmkira.github.io/Docs/) for mo
 
 Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether it can run normally.
 
+#### Performance indicator test (Until 2023/10/31)
+
+| Process | Memory Max Head Size | Tester |
+|----------|-----------|-------------------------- -----------------------|
+| `receiver` | 286.847MB | `python3 -m memray run --live start_receiver.py` |
+| `sender` | 260.669MB | `python3 -m memray run --live start_sender.py` |
+
 ### 🥣 Docker
 
 Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)

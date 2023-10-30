@@ -231,4 +231,5 @@ class TelegramReceiver(BaseReceiver):
         if not BotSetting.available:
             logger.warning("Receiver Runtime:TelegramBot Setting empty")
             return None
+        logger.success("Receiver Runtime:TelegramBot start")
         await self.task.consuming_task(self.on_message)

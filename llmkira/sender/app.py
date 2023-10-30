@@ -16,11 +16,20 @@ def run():
 
     from llmkira import load_plugins
     from llmkira.sdk import load_from_entrypoint, get_entrypoint_plugins
-    from .discord import DiscordBotRunner
-    from .kook import KookBotRunner
+    from llmkira.setting import StartSetting
     from .rss import RssAppRunner
-    from .slack import SlackBotRunner
-    from .telegram import TelegramBotRunner
+
+    start_setting = StartSetting.from_subdir()
+    wait_list = [RssAppRunner().run(interval=60 * 60 * 1)]
+    if start_setting.telegram:
+        from .telegram import TelegramBotRunner
+        wait_list.append(TelegramBotRunner().run())
+    if start_setting.discord:
+        from .discord import DiscordBotRunner
+        wait_list.append(DiscordBotRunner().run())
+    if start_setting.kook:
+        from .kook import KookBotRunner
+        wait_list.append(KookBotRunner().run())
 
     # 初始化插件系统
     load_plugins("llmkira/extra/plugins")
@@ -29,15 +38,10 @@ def run():
     loaded_message = "\n >>".join(get_entrypoint_plugins())
     logger.success(f"\n===========Third Party Plugins Loaded==========\n >>{loaded_message}")
 
-    async def _main():
+    async def _main(wait_list_):
         await asyncio.gather(
-            # 异步事件
-            TelegramBotRunner().run(),
-            RssAppRunner().run(interval=60 * 60 * 1),
-            DiscordBotRunner().run(),
-            KookBotRunner().run(),
-            SlackBotRunner().run(),
+            *wait_list_
         )
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(_main())
+    loop.run_until_complete(_main(wait_list_=wait_list))

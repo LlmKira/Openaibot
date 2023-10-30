@@ -254,6 +254,7 @@ class KookReceiver(BaseReceiver):
             logger.warning("Receiver Runtime:Kook Setting empty")
             return None
         try:
+            logger.success("Receiver Runtime:Kook start")
             await self.task.consuming_task(self.on_message)
         except KeyboardInterrupt:
             logger.warning("Kook Receiver shutdown")
