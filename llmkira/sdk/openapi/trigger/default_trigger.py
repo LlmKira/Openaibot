@@ -7,7 +7,7 @@ from . import resign_trigger, Trigger
 
 
 @resign_trigger(Trigger(on_platform="telegram", action="deny", priority=0))
-async def on_chat_message(message: str, **kwargs):
+async def on_chat_message(message: str, uid: str, **kwargs):
     """
     :param message: RawMessage
     :return:
