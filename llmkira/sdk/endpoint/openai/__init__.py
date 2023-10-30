@@ -214,7 +214,7 @@ class Openai(BaseModel):
         if "-16k" in model:
             v = v * 4
         elif "-32k" in model:
-            v = v * 4
+            v = v * 8
         return v
 
     @validator("presence_penalty")
