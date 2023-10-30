@@ -29,7 +29,6 @@ head = """
 ╚══════╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
 """
 logger.opt(record=False, exception=False, capture=False, colors=True).info(f"<cyan>{head}</cyan>")
-from llmkira.tutorial import show_tutorial
 
 SKIP_TUTORIAL = False
 SKIP_EXISTING = True
@@ -44,6 +43,8 @@ for op, value in opts:
     if op == "--tutorial":
         SKIP_EXISTING = False
 if not SKIP_TUTORIAL:
+    from llmkira.tutorial import show_tutorial
+
     show_tutorial(skip_existing=SKIP_EXISTING, pre_step_stop=4, database_key="01")
 
 # 运行主程序
