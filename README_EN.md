@@ -102,6 +102,8 @@ Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether
 
 #### Performance indicator test (Until 2023/10/31)
 
+Attention, does not include the memory usage of services such as pm2, redis, rabbitmq, mongodb, docker, etc.
+
 | Process | Memory Max Head Size | Tester |
 |----------|-----------|-------------------------- -----------------------|
 | `receiver` | 286.847MB | `python3 -m memray run --live start_receiver.py` |
