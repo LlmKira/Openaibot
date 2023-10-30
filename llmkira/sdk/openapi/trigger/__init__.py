@@ -69,7 +69,7 @@ def resign_trigger(trigger: Trigger):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # 调用执行函数，中间人
-            return func(**kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
