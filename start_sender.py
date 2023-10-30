@@ -3,8 +3,10 @@ import getopt
 import os
 import sys
 
+from dotenv import load_dotenv
 from loguru import logger
 
+load_dotenv()
 logger.remove()
 logger.add(sys.stderr,
            level="INFO" if os.getenv("LLMBOT_LOG_OUTPUT") != "DEBUG" else "DEBUG",

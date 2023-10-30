@@ -141,7 +141,7 @@ class SlackBotRunner(Runner):
                         message=message,
                         file=_file,
                         deliver_back_message=[],
-                        task_meta=TaskHeader.Meta(function_enable=funtion_enable, sign_as=(0, "root", __sender__))
+                        task_meta=TaskHeader.Meta.from_root(function_enable=funtion_enable, release_chain=True)
                     )
                 )
                 if not success:

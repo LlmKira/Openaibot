@@ -12,7 +12,7 @@ from rich.console import Console
 
 elara_client = elara.exe(path=pathlib.Path(__file__).parent / "elara.db", commitdb=True)
 
-tutorial = [
+tutorial = (
     {
         "cn": "接下来进行一些说明，如果您不想看到这些说明，请使用 --no-tutorial 参数运行入口文件。",
         "en": "Next, some instructions will be given. If you don’t want to see these instructions, please run the entry file with the --no-tutorial flag."
@@ -39,7 +39,7 @@ tutorial = [
         "cn": "如果您在使用过程中遇到了问题，可以在 GitHub 上提出 issue 来完善测试。",
         "en": "If you encounter any problems during use, you can raise an issue on GitHub to improve the test."
     },
-]
+)
 tutorial_len = len(tutorial)
 
 

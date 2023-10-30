@@ -85,12 +85,13 @@ class TaskHeader(BaseModel):
         function_enable: bool = Field(False, description="功能开关")
         function_list: List[openai.Function] = Field([], description="功能列表")
         function_salvation_list: List[openai.Function] = Field([], description="上回合的功能列表，用于容错")
+        # at_entrance: bool = Field(False, description="是否刚刚发送过来")
         # 路由
         callback_forward: bool = Field(False, description="转发消息")
         callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
         callback: Callback = Field(default=Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
         direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
-        write_back: bool = Field(True, description="写回消息")
+        write_back: bool = Field(False, description="写回消息")
         release_chain: bool = Field(False, description="释放任务链")
         # 限制
         continue_step: int = Field(0, description="继续执行的步骤,发送启用 function call 的 continue")
@@ -99,7 +100,28 @@ class TaskHeader(BaseModel):
         parent_call: openai.OpenaiResult = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
         extra_args: dict = Field({}, description="用于提供额外参数")
 
+        @root_validator()
+        def check(cls, values):
+            if not any([values["callback_forward"], values["callback_forward_reprocess"], values["direct_reply"]]):
+                if values["write_back"]:
+                    logger.warning("you shouldn*t write back without callback_forward or direct_reply")
+                    values["write_back"] = False
+            if values["sign_as"][0] == 0 and values["write_back"]:
+                logger.warning("root node shouldn*t write back")
+                values["write_back"] = False
+            return values
+
+        @classmethod
+        def from_root(cls, release_chain, function_enable, **kwargs):
+            return cls(
+                sign_as=(0, "root", "default"),
+                release_chain=release_chain,
+                function_enable=function_enable,
+                **kwargs
+            )
+
         class Config:
+            extra = "ignore"
             arbitrary_types_allowed = True
 
         def child(self, name) -> "Meta":
@@ -306,6 +328,7 @@ class TaskHeader(BaseModel):
         从 Openai LLM Task中构建任务
         'function_call': {'name': 'set_alarm_reminder', 'arguments': '{\n  "delay": "5",\n  "content": "该吃饭了"\n}'}}
         """
+        # task_meta = task_meta.child("function") 发送到 function 的消息不需加点，因为此时 接收器算发送者
         task_meta.parent_call = parent_call
         return cls(
             task_meta=task_meta,
@@ -323,11 +346,12 @@ class TaskHeader(BaseModel):
             _meta_arg["callback_forward"] = True
         elif method == "chat":
             _meta_arg["function_enable"] = False
-        meta = cls.Meta(
+        task_meta = cls.Meta(
             **_meta_arg
         )
+
         return cls(
-            task_meta=meta,
+            task_meta=task_meta,
             sender=cls.Location(
                 platform=from_,
                 chat_id=user_id,
@@ -496,6 +520,7 @@ class TaskHeader(BaseModel):
 
         # 去掉 None
         message_list = [item for item in message_list if item]
+
         return cls(
             task_meta=task_meta,
             sender=cls.Location(
@@ -571,6 +596,7 @@ class TaskHeader(BaseModel):
         message_list.append(now_message)
         # 去掉 None
         message_list = [item for item in message_list if item]
+
         return cls(
             task_meta=task_meta,
             sender=cls.Location(

@@ -3,8 +3,6 @@
 # @Author  : sudoskys
 # @File    : app.py
 # @Software: PyCharm
-import os
-import sys
 
 from dotenv import load_dotenv
 from loguru import logger

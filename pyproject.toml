@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llmkira"
-version = "0.26.2"
+version = "0.26.3"
 description = "A chain message bot based on OpenAI"
 authors = ["llmkira <me@dianas.cyou>"]
 license = "Apache-2.0"
@@ -41,7 +41,7 @@ hikari-crescent = "^0.6.4"
 khl-py = "^0.3.16"
 emoji = "^2.8.0"
 websocket = "^0.2.1"
-wrapt = "^1.15.0"
+wrapt = "^1.11.0"
 motor = "^3.3.1"
 dynaconf = "^3.2.3"
 rich = "^13.6.0"
