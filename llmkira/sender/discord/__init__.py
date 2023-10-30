@@ -31,7 +31,7 @@ __sender__ = "discord_hikari"
 __default_function_enable__ = True
 
 from ..util_func import auth_reloader, is_command, is_empty_command
-from ...error import UPLOAD_ERROR_MESSAGE_TEMPLATE, MappingDefault
+from ...error import get_upload_error_message
 from ...sdk.openapi.trigger import get_trigger_loop
 
 DiscordTask = Task(queue=__sender__)
@@ -115,9 +115,8 @@ class DiscordBotRunner(Runner):
                     _file.append(await self.upload(attachment=attachment))
                 except Exception as e:
                     logger.exception(e)
-                    _template: str = random.choice(UPLOAD_ERROR_MESSAGE_TEMPLATE)
                     await message.respond(
-                        content=_template.format_map(map=MappingDefault(filename=attachment.filename, error=str(e))),
+                        content=get_upload_error_message(filename=attachment.filename, error=str(e)),
                         mentions_reply=True
                     )
             if message.content:

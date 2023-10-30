@@ -49,8 +49,9 @@ REQUEST_ERROR_MESSAGE_TEMPLATE = [
 
 
 def get_request_error_message(error: str):
-    return random.choice(REQUEST_ERROR_MESSAGE_TEMPLATE).format_map(
-        map=MappingDefault(error=error)
+    _txt: str = random.choice(REQUEST_ERROR_MESSAGE_TEMPLATE)
+    return _txt.format_map(
+        MappingDefault(error=error)
     )
 
 
@@ -68,3 +69,10 @@ UPLOAD_ERROR_MESSAGE_TEMPLATE = [
     "MY PHONE IS BROKEN, I CANT UPLOAD {filename} BECAUSE `{error}`",
     "As a human, I can't upload {filename} for you :( \n `{error}`"
 ]
+
+
+def get_upload_error_message(filename: str, error: str):
+    _txt: str = random.choice(REQUEST_ERROR_MESSAGE_TEMPLATE)
+    return _txt.format_map(
+        MappingDefault(filename=filename, error=error)
+    )
