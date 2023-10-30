@@ -12,5 +12,5 @@ async def on_chat_message(message: str, uid: str, **kwargs):
     :param message: RawMessage
     :return:
     """
-    if "<hello>" in message:
+    if "<deny>" in message:
         return True
