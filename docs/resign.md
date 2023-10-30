@@ -1,3 +1,7 @@
+> 此设计已经被完成，并过时。
+>
+>
+
 ## 函数注册管理器
 
 组件注册关键词：`@register(keywords, **kwargs)`,检测到关键词后，注册函数和对应的message。
@@ -27,8 +31,6 @@ class Exp:
         else:                           # 如果不可调用，说明额外说明了注册的可调用对象的名字
             return lambda x : add_register_item(target, x)
 
-
-
 ```python
 @resigner.register("search")
 class Search(BaseModel):
@@ -49,3 +51,4 @@ class Search(BaseModel):
         """
         return ...
 ```
+

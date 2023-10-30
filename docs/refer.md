@@ -1,3 +1,5 @@
+讲的不错的文章。
+
 pydantic
 https://qiita.com/koralle/items/93b094ddb6d3af917702
 https://github.com/openai/openai-python/blob/main/chatml.md

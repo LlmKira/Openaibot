@@ -1,6 +1,8 @@
 # 链消息系统
 
-我采用创新图式对话启动代理，通过消息链条的方式进行消息的传递。
+> 虽然是异步响应，但是通过链式启动(父子节点)，可以实现同步顺序。
+
+我采用图式对话启动代理，通过消息链条的方式进行消息的传递。
 
 用户需求初始对话作为根节点，可以滚动衍生对话，连续完成操作。同时根据动态策略调整任务元信息。
 
@@ -228,12 +230,6 @@ https://github.com/LlmKira/Openaibot/issues/284
 
 # 问题
 
-## 多后端必要性的论证
-
-在非 Function Call 场景下，可以使用其他的 LLM 回应消息。
-
-但是目前本项目已经和 Openai 深度绑定，所以这是一个低优先级事项。
-
 ### 产品定位
 
 针对个人还是多人？
@@ -258,6 +254,10 @@ https://github.com/LlmKira/Openaibot/issues/268
 LLM作为由语料生成的代码，会很多问题。可用性和覆盖度随时间下降。只能寄希望于重新训练。
 
 而且这个想法需要一个 sandbox,总不能让用户在服务器随便执行代码吧。
+
+有个项目全程使用 沙盒，某种意义上很像。
+
+https://github.com/OpenBMB/XAgent
 
 ### 服务提供者
 
@@ -291,29 +291,39 @@ provider 不为空时，则启用此模式。
 
 **将用户的token转换为一个 Driver 对象，网络认证**
 
-### 请求流程
+![ex](SeriveProvider.svg)
 
-先请求公共实例，
+## 多后端必要性的论证
 
-#### 代理认证
+在非 Function Call 场景下，可以使用其他的 LLM 回应消息。
 
-此组件由资源商添加。定义Key变量，然后只管请求，但是额度扣除于对应的资源商。 资源商提前检查配置。
+但是目前本项目已经和 Openai 深度绑定，所以这是一个低优先级事项。
 
-服务商自己部署的情况下
+### RAG
 
-- env 变成了服务商的 public key
-- 请求仍然是 public key ，但是 public key 加了鉴权罢了
+Langchain 的 RAG 模型是一个很好的参考。
 
-也就是 公共端 + [二级key认证（被代理授权使用了公共的key）] / 私有端 + 私有key
+https://python.langchain.com/docs/use_cases/chatbots/
 
-公共端的设计是：
+https://github.com/langchain-ai/langchain/issues/12375
 
-class PublicAccess():
-配额
-/////////
-// 读
-request_driver_access()
-// 申请二级 key 的文档
-request_key()
+https://python.langchain.com/docs/modules/agents/agent_types/react
 
-后来一想，这不就是发卡吗？
+## 关于 Langchain
+
+这个稍微有点复杂的框架我还是很喜欢的，因为它的设计思想很好。 就是我不太喜欢它的语法。
+
+如果要使用这个框架，作为一个非API端的框架，它连带着函数运行都做完了。 我很好奇我的人在回路鉴权在哪里放。
+
+我更需要的是一个能回复消息+回复调用需求的框架。Langchain 做的太多了太杂了，甚至自己独立就能成为Shell程序，我只是在取下它最后的结果而已。
+
+## 关于 XAgent
+
+https://github.com/OpenBMB/XAgent
+
+很合我心意的一个项目，果然大家都是有相同的需求的。
+
+也有所谓人在回路，而且还有 沙盒可以用。
+
+如果用本地模型的话，不需要担心费用问题。很看好。
+
