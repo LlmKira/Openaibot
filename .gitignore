@@ -138,3 +138,5 @@ dmypy.json
 /rabbitmq/
 /llmkira/elara.db
 settings.toml
+/memray-*.bin
+/memray-*.html
