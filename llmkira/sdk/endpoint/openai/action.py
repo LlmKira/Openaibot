@@ -10,7 +10,7 @@ from typing import List
 import tiktoken
 from pydantic import BaseModel
 
-from llmkira.sdk.filter.evaluate import Sim
+# from llmkira.sdk.filter.evaluate import Sim
 from llmkira.sdk.schema import Message, standardise
 
 
@@ -135,11 +135,15 @@ class Scraper(BaseModel):
         _check_list = _message[:-3]
         _match_sentence = _message[-1:][0].content
         for item_obj in _check_list:
+            _build.append(item_obj)
+            # NOTICE 此处被内存优化，不再使用
+            """
             if Sim.cosion_similarity(pre=_match_sentence, aft=item_obj.content) < 0.9:
                 _build.append(item_obj)
             else:
                 pass
                 # logger.warning(f"ignore sim item {item_obj}")
+            """
         _build.extend(_must)
         return _build
 

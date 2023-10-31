@@ -41,7 +41,7 @@ def resign_plugin_executor(function: Function):
     """
     装饰器
     """
-    logger.success(f"📦 Plugin:resign plugin error hook: {function.name}")
+    logger.success(f"📦 Plugin:resign executor_exception hook successful: {function.name}")
 
     @wrapt.decorator  # 保留被装饰函数的元信息
     def wrapper(wrapped, instance, args, kwargs):

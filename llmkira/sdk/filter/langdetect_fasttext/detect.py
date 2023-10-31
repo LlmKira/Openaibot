@@ -62,7 +62,7 @@ def get_or_load_model(low_memory=False):
         return model
 
 
-def detect(text: str, low_memory=False) -> Dict[str, Union[str, float]]:
+def detect(text: str, low_memory=True) -> Dict[str, Union[str, float]]:
     model = get_or_load_model(low_memory)
     labels, scores = model.predict(text)
     label = labels[0].replace("__label__", '')
