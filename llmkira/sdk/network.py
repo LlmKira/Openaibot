@@ -56,6 +56,7 @@ async def request(
         json_body: bool = False,
         proxy: str = "",
         call_func=None,
+        timeout: int = 300,
         **kwargs,
 ):
     """
@@ -89,6 +90,9 @@ async def request(
         config["data"] = json.dumps(config["data"]).encode()
     # SSL
     # config["ssl"] = False
+
+    # timeout
+    config["timeout"] = timeout
 
     # 请求
     session = get_session(proxy=proxy)

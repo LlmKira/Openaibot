@@ -146,10 +146,10 @@ class KookBotRunner(Runner):
                     file=_file,
                     deliver_back_message=[],
                     task_meta=TaskHeader.Meta.from_root(
-                            function_enable=funtion_enable,
-                            release_chain=True,
-                            platform=__sender__
-                        ),
+                        function_enable=funtion_enable,
+                        release_chain=True,
+                        platform=__sender__
+                    ),
                     trace_back_message=[]
                 )
                 success, logs = await KookTask.send_task(

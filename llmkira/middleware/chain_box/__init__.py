@@ -37,7 +37,7 @@ class AuthReloader(object):
         if not _cache:
             logger.debug(f"[x] Auth \n--empty {uuid}")
             return None
-        chain = Chain().parse_obj(_cache)
+        chain = Chain().from_redis(_cache)
         if chain.is_expire:
             logger.debug(f"[x] Auth \n--expire {uuid}")
             return None
@@ -61,7 +61,7 @@ class ChainReloader(object):
         _data = await cache.lpop_data(key=f"chain:{self.uid}")
         if not _data:
             return None
-        chain = Chain.parse_obj(json.loads(_data))
+        chain = Chain.from_redis(_data)
         if chain.is_expire:
             return None
         chain = chain.format_arg(arg=TaskHeader)

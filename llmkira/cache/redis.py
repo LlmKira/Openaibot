@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import json
 import os
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 import redis
 from dotenv import load_dotenv
@@ -39,7 +39,7 @@ class RedisClientWrapper(AbstractDataClass):
             value = json.dumps(value)
         return await self._redis.set(name=f"{self.prefix}{key}", value=value, ex=timeout)
 
-    async def read_data(self, key):
+    async def read_data(self, key) -> Optional[Union[str, dict, int]]:
         data = await self._redis.get(self.prefix + str(key))
         if data is not None:
             try:
@@ -55,12 +55,19 @@ class RedisClientWrapper(AbstractDataClass):
         :param value: json
         """
         # 验证是否可以被json序列化
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
         return await self._redis.lpush(self.prefix + str(key), value)
 
-    async def lpop_data(self, key) -> Optional[str]:
+    async def lpop_data(self, key) -> Optional[dict]:
         _data = await self._redis.lpop(self.prefix + str(key))
         if _data:
-            return _data.decode("utf-8")
+            _data = _data.decode("utf-8")
+            try:
+                _data = json.loads(_data)
+            except Exception as e:
+                pass
+            return _data
         return None
 
     async def lrange_data(self, key, start_end: Tuple[int, int] = (0, -1)) -> List[str]:
