@@ -106,8 +106,8 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 
 | 进程         | 内存均值      | 测算命令                                             |
 |------------|-----------|--------------------------------------------------|
-| `receiver` | 286.847MB | `python3 -m memray run --live start_receiver.py` |
-| `sender`   | 260.669MB | `python3 -m memray run --live start_sender.py`   |
+| `receiver` | 120.202MB | `python3 -m memray run --live start_receiver.py` |
+| `sender`   | 83.375MB  | `python3 -m memray run --live start_sender.py`   |
 
 ### 🥣 Docker
 
