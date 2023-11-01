@@ -100,14 +100,14 @@ Read the [🧀 Deployment Documentation](https://llmkira.github.io/Docs/) for mo
 
 Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether it can run normally.
 
-#### Performance indicator test (Until 2023/10/31)
+#### Performance indicator test (Until 2023/11/1)
 
 Attention, does not include the memory usage of services such as pm2, redis, rabbitmq, mongodb, docker, etc.
 
-| Process | Memory Max Head Size | Tester |
+| Process | Memory Max Head Size | Tester | Client |
 |----------|-----------|-------------------------- -----------------------|
-| `receiver` | 286.847MB | `python3 -m memray run --live start_receiver.py` |
-| `sender` | 260.669MB | `python3 -m memray run --live start_sender.py` |
+| `receiver` | 120.847MB | `python3 -m memray run --live start_receiver.py` | telegram |
+| `sender` | 83.669MB | `python3 -m memray run --live start_sender.py` | telegram |
 
 ### 🥣 Docker
 
