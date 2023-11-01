@@ -100,7 +100,7 @@ LLMBot 是基于消息队列，围绕智能机器人助理概念开发的 IM Bot
 
 请提前用 `python3 start_sender.py`  `python3 start_receiver.py` 测试是否能正常运行。
 
-#### 性能指标测试(Until 2023/10/31)
+#### 性能指标测试(Until 2023/11/1)
 
 注意，不包括pm2，redis，rabbitmq，mongodb，docker等服务的内存占用。
 
