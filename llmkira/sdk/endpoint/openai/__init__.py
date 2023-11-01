@@ -97,7 +97,7 @@ class Openai(BaseModel):
         endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
         api_key: str = Field(default=None)
         org_id: Optional[str] = Field(None)
-        model: MODEL = Field(default="gpt-3.5-turbo-16k")
+        model: MODEL = Field(default="gpt-3.5-turbo-0613")
 
         # TODO:AZURE API VERSION
         @property
@@ -121,7 +121,7 @@ class Openai(BaseModel):
             openai_api_key = os.getenv("OPENAI_API_KEY", None)
             openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions")
             openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
-            openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-16k")
+            openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
             return cls(
                 endpoint=openai_endpoint,
                 api_key=openai_api_key,
