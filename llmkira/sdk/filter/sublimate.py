@@ -9,8 +9,9 @@ from typing import List
 import numpy as np
 from pydantic import BaseModel
 
-from .evaluate import Cut, Extraction, Sim
-
+from .evaluate import Cut
+from .evaluate import Extraction
+from .evaluate import Sim
 # 六边形评测，按照排名分配初始分数。
 # 采用切分分裂条目，过滤无意义语句。
 # 采用关键词筛选清洗 ，挑选。

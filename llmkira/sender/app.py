@@ -30,6 +30,9 @@ def run():
     if start_setting.kook:
         from .kook import KookBotRunner
         wait_list.append(KookBotRunner().run())
+    if start_setting.slack:
+        from .slack import SlackBotRunner
+        wait_list.append(SlackBotRunner().run())
 
     # 初始化插件系统
     load_plugins("llmkira/extra/plugins")

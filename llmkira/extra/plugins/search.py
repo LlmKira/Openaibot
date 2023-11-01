@@ -36,7 +36,8 @@ search.add_property(
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
-    from llmkira.sdk.filter import Sublimate
+    # 内存优化抛弃 NLP
+    # from llmkira.sdk.filter import Sublimate
     sort_text = []
     link_refer = {}
     with DDGS(timeout=20) as ddgs:
@@ -46,9 +47,10 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
             _href = r.get("href")
             _body = r.get("body")
             link_refer[_body] = _href
-            sort_text.append(_body)
-    must_key = [key_words] if key_words else None
-    sorted_result = Sublimate(sort_text).valuation(match_sentence=search_sentence, match_keywords=must_key)
+            sort_text.append((_body, _title, _href))
+    # must_key = [key_words] if key_words else None
+    sorted_result = sort_text
+    # sorted_result = Sublimate(sort_text).valuation(match_sentence=search_sentence, match_keywords=must_key)
     valuable_result = [item[0] for item in sorted_result[:4]]
     # 构建单条内容
     clues = []
@@ -91,7 +93,7 @@ class SearchTool(BaseTool):
     def pre_check(self):
         try:
             from duckduckgo_search import DDGS
-            from llmkira.sdk.filter import Sublimate
+            # from llmkira.sdk.filter import Sublimate
             return True
         except ImportError as e:
             logger.warning(f"plugin:package <duckduckgo_search> not found,please install it first:{e}")
