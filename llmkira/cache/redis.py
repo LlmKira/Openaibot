@@ -90,7 +90,7 @@ cache: Optional[RedisClientWrapper]
 try:
     check_redis_dsn(redis_url)
 except Exception as e:
-    logger.error(f'\n⚠️ Redis DISCONNECT,pls check REDIS_DSN in env\n--error: {e}')
+    logger.error(f'\n⚠️ Redis DISCONNECT,pls check REDIS_DSN in env\n--error: {e} --dsn {redis_url}')
     cache = None
 else:
     logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')

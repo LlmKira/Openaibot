@@ -39,7 +39,7 @@ class RabbitMQ(BaseSettings):
             ))
         except Exception as e:
             values['_verify_status'] = False
-            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e}')
+            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e} --dsn {values["amqp_dsn"]}')
         else:
             values['_verify_status'] = True
             logger.success(f"RabbitMQ connect success")
