@@ -55,3 +55,4 @@ aiohttp
 wrapt
 rich
 importlib_metadata
+sentry_sdk

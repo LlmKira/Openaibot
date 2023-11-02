@@ -30,12 +30,28 @@ head = """
 """
 logger.opt(record=False, exception=False, capture=False, colors=True).info(f"<cyan>{head}</cyan>")
 
+# 日志系统
+if os.getenv("SENTRY_DSN", None):
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=os.getenv("SENTRY_DSN"),
+            traces_sample_rate=1.0,
+            profiles_sample_rate=1.0,
+            enable_tracing=True
+        )
+    except Exception as e:
+        logger.error(f"SENTRY ERROR: {e}")
+    else:
+        logger.success("🌟 Create Sentry Client Successfully!")
+
+# 教程
 SKIP_TUTORIAL = False
 SKIP_EXISTING = True
-# 获取命令行参数的 --no_tutorial
 opts, args = getopt.getopt(sys.argv[1:], "h", ["no_tutorial", "tutorial"])
 for op, value in opts:
-    if op == "--no_tutorial":
+    if op == "--no_tutorial":  # 获取命令行参数的 --no_tutorial
         SKIP_TUTORIAL = True
     if op == "-h":
         print("Usage: python start_receiver.py [--no_tutorial] [--tutorial]")
