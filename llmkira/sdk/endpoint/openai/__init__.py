@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : base.py
 # @Software: PyCharm
+# 表示 schema 为 openai 而已，不是真正的 openai
 __version__ = "0.0.1"
 
 import hashlib
@@ -60,7 +61,7 @@ class OpenaiResult(BaseModel):
         finish_reason: str
         delta: dict = None
 
-    id: str
+    id: Optional[str] = Field(default=None, alias="request_id")
     object: str
     created: int
     model: str
