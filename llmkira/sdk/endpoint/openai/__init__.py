@@ -60,7 +60,7 @@ class OpenaiResult(BaseModel):
         finish_reason: str
         delta: dict = None
 
-    id: str
+    id: Optional[str] = Field(default=None, alias="request_id")
     object: str
     created: int
     model: str
