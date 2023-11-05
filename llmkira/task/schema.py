@@ -89,8 +89,8 @@ class TaskHeader(BaseModel):
         # 路由
         callback_forward: bool = Field(False, description="转发消息")
         callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
-        callback: Callback = Field(default=Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
         direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
+        callback: Callback = Field(default=Callback(), description="用于回写，插件返回的消息头，标识 function 的名字")
         write_back: bool = Field(False, description="写回消息")
         release_chain: bool = Field(False, description="释放任务链")
         # 限制
