@@ -18,8 +18,13 @@ class Base2(Base):
         return 1
 
 
+def test():
+    return 1
+
+
 if __name__ == '__main__':
     print(isinstance(Base2(), Base))
     print(isinstance(Base(), Base2))
     print(hasattr(Base(), 'att'))
     print([Base2()])
+    assert isinstance(Base2(), Base)
