@@ -86,16 +86,27 @@ class BaseReceiver(object):
         self.task = task
 
     @staticmethod
-    async def llm_request(llm_agent: OpenaiMiddleware, auto_write_back: bool = True, disable_function: bool = False):
+    async def llm_request(
+            llm_agent: OpenaiMiddleware,
+            auto_write_back: bool = True,
+            retrieve_message: bool = False,
+            disable_function: bool = False
+    ):
         """
         Openai请求
         :param llm_agent: Openai中间件
         :param auto_write_back: 是否将task携带的消息回写进消息池中，如果为False则丢弃task携带消息
-        :param disable_function: 是否禁用函数，这个参数只是用于
+        :param disable_function: 是否禁用函数
+        :param retrieve_message: 是否检索消息
+        :return: OpenaiResult
         校验包装，没有其他作用
         """
         try:
-            _result = await llm_agent.request_openai(auto_write_back=auto_write_back, disable_function=disable_function)
+            _result = await llm_agent.request_openai(
+                auto_write_back=auto_write_back,
+                disable_function=disable_function,
+                retrieve_mode=retrieve_message
+            )
             _message = _result.default_message
             logger.debug(f"[x] LLM Message Sent \n--message {_message}")
             assert _message, "message is empty"
@@ -121,15 +132,27 @@ class BaseReceiver(object):
                      llm: OpenaiMiddleware,
                      auto_write_back: bool = True,
                      intercept_function: bool = False,
+                     retrieve_message: bool = False,
                      disable_function: bool = False
                      ):
         """
         函数池刷新
         :param intercept_function: 是否拦截函数调用转发到函数处理器
+        :param retrieve_message: 是否检索消息
+        :param task: 任务
+        :param llm: Openai中间件
+        :param auto_write_back: 是否自动写回
+        :param disable_function: 是否禁用函数
+        :return:
         """
         try:
             try:
-                result = await self.llm_request(llm, auto_write_back=auto_write_back, disable_function=disable_function)
+                result = await self.llm_request(
+                    llm,
+                    auto_write_back=auto_write_back,
+                    disable_function=disable_function,
+                    retrieve_message=retrieve_message
+                )
             except Exception as e:
                 await self.sender.error(
                     receiver=task.receiver,
