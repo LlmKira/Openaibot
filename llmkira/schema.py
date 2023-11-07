@@ -53,7 +53,7 @@ class RawMessage(BaseModel):
     only_send_file: bool = Field(default=False, description="Send file only")
 
     sign_loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
-    sign_long_metadata: bool = Field(default=False, description="是否获取元数据")
+    sign_long_docs: bool = Field(default=False, description="是否获取元数据")
     extra_kwargs: dict = Field(default={}, description="extra kwargs for loop")
 
     class Config:
@@ -67,6 +67,24 @@ class RawMessage(BaseModel):
         if len(v) > 4096:
             v = v[:4090]
         return v
+
+    def openai_format(
+            self,
+            role: str = "user",
+            name: str = None
+    ) -> OpenAIMessage:
+        """
+        OpenAI 格式化
+        """
+        return OpenAIMessage(
+            role=role,
+            name=name,
+            content=self.text,
+            function_call=None,
+            meta=OpenAIMessage.Meta(
+                docs=self.sign_long_docs
+            )
+        )
 
     @staticmethod
     async def download_file(file_id) -> Optional[File.Data]:
