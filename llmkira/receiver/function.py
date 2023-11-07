@@ -137,7 +137,7 @@ class ChainFunc(object):
 
 class FunctionReceiver(object):
     """
-    receive message from telegram
+    receive message from any platform
     """
 
     def __init__(self):
@@ -146,8 +146,8 @@ class FunctionReceiver(object):
     async def deal_message(self, message: AbstractIncomingMessage):
         """
         处理message
-        :param message:
-        :return:
+        :param message: message from queue
+        :return: None
         """
         if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
@@ -192,14 +192,16 @@ class FunctionReceiver(object):
             task=_task,
             receiver=_task.receiver,
             arg=_arg,
-            env=_env_dict
+            env=_env_dict,
+            refer_llm_result=_task.task_meta.parent_call
+            # 传递模型的信息，以及上一条的结果的raw信息。
         )
 
     async def on_message(self, message: AbstractIncomingMessage):
         """
         处理message
-        :param message:
-        :return:
+        :param message: message from queue
+        :return: None
         """
         try:
             await self.deal_message(message=message)

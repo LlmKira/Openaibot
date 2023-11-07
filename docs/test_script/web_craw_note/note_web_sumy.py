@@ -15,13 +15,11 @@ from sumy.summarizers.lsa import LsaSummarizer as Summarizer
 from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
 
-
 LANGUAGE = "english"
 SENTENCES_COUNT = 10
 
-
 if __name__ == "__main__":
-    url = "https://hugo-c1e.pages.dev/dev/guide-to-setup-blog-with-zero-cost-1/"
+    url = "https://react.dev/learn/tutorial-tic-tac-toe"
     parser = HtmlParser.from_url(url, Tokenizer(LANGUAGE))
     # or for plain text files
     # parser = PlaintextParser.from_file("document.txt", Tokenizer(LANGUAGE))

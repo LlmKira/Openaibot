@@ -140,3 +140,4 @@ dmypy.json
 settings.toml
 /memray-*.bin
 /memray-*.html
+/docs/test_script/sticker/
