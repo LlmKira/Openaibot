@@ -107,11 +107,15 @@ class OpenaiMiddleware(object):
             _dict[function.name] = function
         self.functions = list(_dict.values())
 
-    def scraper_create_message(self, write_back=True, system_prompt=True):
+    def scraper_create_message(self,
+                               write_back=True,
+                               system_prompt=True
+                               ):
         """
         从人类消息和历史消息中构建请求所用消息
         :param write_back: 是否写回,如果是 False,那么就不会写回到 Redis 数据库中，也就是重新请求
         :param system_prompt: 是否添加系统提示
+        :return: None
         """
         if system_prompt:
             # 此前和连带的消息都添加
@@ -120,8 +124,8 @@ class OpenaiMiddleware(object):
             if _plugin_system_prompt is not None:
                 assert isinstance(_plugin_system_prompt, Message), "llm_task.py:system prompt type error"
                 self.scraper.add_message(_plugin_system_prompt, score=500)
-        # 处理历史消息
         _history = []
+        # database:read redis
         history_messages = self.message_history.messages
         for i, message in enumerate(history_messages):
             _history.append(message)
@@ -134,25 +138,33 @@ class OpenaiMiddleware(object):
             raw_message = self.task.message
             raw_message: List[RawMessage]
             for i, message in enumerate(raw_message):
-                _buffer.append(Message(role="user", name=None, content=message.text))
-            # 装样子添加评分
-            # TODO 评分
+                # message covert
+                _buffer.append(
+                    message.openai_format(
+                        role="user",
+                    )
+                )
+
+            # 装样子添加评分 TODO 评分
             for i, _msg in enumerate(_buffer):
                 self.scraper.add_message(_msg, score=len(str(_msg)) + 50)
-            # 处理缓存后默认写回 Redis 数据库
+
+            # database:save redis
             for _msg in _buffer:
                 self.message_history.add_message(message=_msg)
 
     async def request_openai(
             self,
             auto_write_back: bool,
+            retrieve_mode: bool = False,
             disable_function: bool = False
     ) -> openai.OpenaiResult:
         """
         处理消息转换和调用工具
         :param auto_write_back: 是否自动写回
         :param disable_function: 禁用函数
-        :return:
+        :param retrieve_mode: 是否为检索模式，当我们需要重新处理超长消息时候，需要设定为 True
+        :return: OpenaiResult
         """
 
         # 去重
@@ -174,19 +186,27 @@ class OpenaiMiddleware(object):
         assert isinstance(driver, openai.Openai.Driver), "llm_task.py:GetAuthDriver s return not a driver!"
 
         # 构建请求的消息列表
-        self.scraper_create_message(write_back=auto_write_back)
+        self.scraper_create_message(
+            write_back=auto_write_back
+        )
         # 校验消息列表
-        self.scraper.reduce_messages(limit=openai.Openai.get_token_limit(model=driver.model))
+        self.scraper.reduce_messages(
+            limit=openai.Openai.get_token_limit(model=driver.model),
+            ignore_docs=not retrieve_mode
+        )
+
+        # 获取消息
         message = self.scraper.get_messages()
         assert message, "llm_task.py:message is None"
-
+        run_driver_model = driver.model if not retrieve_mode else driver.model_retrieve
         # 日志
         logger.info(f"[x] Openai request "
                     f"\n--message {message} "
                     f"\n--url {driver.endpoint} "
                     f"\n--org {driver.org_id} "
-                    f"\n--model {driver.model} "
+                    f"\n--model {run_driver_model} "
                     f"\n--function {functions}"
+                    f"\n--retrieve_mode {retrieve_mode}"
                     )
         if disable_function or not functions:
             logger.debug(f"[x] Openai function empty warn \n--disable function:{disable_function}")
@@ -197,7 +217,7 @@ class OpenaiMiddleware(object):
         # Create endpoint
         endpoint = openai.Openai(
             config=driver,
-            model=driver.model,
+            model=run_driver_model,
             messages=message,
             functions=functions,
             echo=False
