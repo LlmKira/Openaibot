@@ -50,9 +50,10 @@ class RawMessage(BaseModel):
     file: List[File] = Field([], description="文件")
 
     created_at: Union[int, float] = Field(default=int(time.time()), description="创建时间")
-    just_file: bool = Field(default=False, description="Send file only")
+    only_send_file: bool = Field(default=False, description="Send file only")
 
-    loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
+    sign_loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
+    sign_long_metadata: bool = Field(default=False, description="是否获取元数据")
     extra_kwargs: dict = Field(default={}, description="extra kwargs for loop")
 
     class Config:

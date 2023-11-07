@@ -25,7 +25,7 @@ class Builder(Builder):
 
 """
             _transfer = TransferManager().receiver_builder(agent_name=__receiver__)
-            just_file, file_list = _transfer().build(message=item)
+            only_send_file, file_list = _transfer().build(message=item)
 """
 
 

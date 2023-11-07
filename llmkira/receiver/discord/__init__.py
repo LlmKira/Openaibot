@@ -114,7 +114,7 @@ class DiscordSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
-            if item.just_file:
+            if item.only_send_file:
                 return None
             async with self.bot as client:
                 client: hikari.impl.RESTClientImpl
@@ -141,7 +141,7 @@ class DiscordSender(BaseSender):
                 receiver=receiver,
                 file_list=raw_message.file
             )
-            if raw_message.just_file:
+            if raw_message.only_send_file:
                 return None
             assert raw_message.text, f"message content is empty"
             async with self.bot as client:

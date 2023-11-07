@@ -93,7 +93,7 @@ class SlackSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
-            if item.just_file:
+            if item.only_send_file:
                 return None
             _message = ChatMessageCreator(
                 channel=receiver.chat_id,
@@ -114,7 +114,7 @@ class SlackSender(BaseSender):
                 receiver=receiver,
                 file_list=raw_message.file
             )
-            if raw_message.just_file:
+            if raw_message.only_send_file:
                 return None
             assert item.content, f"message content is empty"
             _message = ChatMessageCreator(
