@@ -112,11 +112,11 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
+# Spyder project provider_settings
 .spyderproject
 .spyproject
 
-# Rope project settings
+# Rope project provider_settings
 .ropeproject
 
 # mkdocs documentation
@@ -137,7 +137,7 @@ dmypy.json
 .secrets.*
 /rabbitmq/
 /llmkira/elara.db
-settings.toml
+config_dir/*.toml
 /memray-*.bin
 /memray-*.html
 /docs/test_script/sticker/

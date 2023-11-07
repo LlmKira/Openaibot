@@ -17,8 +17,8 @@ tutorial = [
         "en": "Next, some instructions will be given. If you don’t want to see these instructions, please run the entry file with the --no-tutorial flag."
     },
     {
-        "cn": "请您在 .env 文件中填写您的配置信息。如果您需要配置 provider，请使用 settings.toml 文件。您可以通过 `docker-compose up -f docker-compose.yml` 来测试服务。",
-        "en": "Please fill in your configuration information in the .env file. If you need to configure the provider, please use the settings.toml file. You can test the service by `docker-compose up -f docker-compose.yml`."
+        "cn": "请您在 .env 文件中填写您的配置信息。如果您需要配置 provider，请使用 config_dir/provider_settings.toml 文件。您可以通过 `docker-compose up -f docker-compose.yml` 来测试服务。",
+        "en": "Please fill in your configuration information in the .env file. If you need to configure the provider, please use the config_dir/provider_settings.toml file. You can test the service by `docker-compose up -f docker-compose.yml`."
     },
     {
         "cn": "数据库 RabbitMQ 的默认端口为 5672，Redis 的默认端口为 6379，MongoDB 的默认端口为 27017。"

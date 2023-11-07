@@ -5,10 +5,11 @@ RUN apt update &&  \
 
 COPY ./requirements.txt .
 COPY pm2.json .
-COPY settings.toml .
 COPY start.sh .
+# 将 config_dir 的设置文件映射到宿主机
+COPY ./config_dir /config_dir
 
-VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "settings.toml"]
+VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "/config_dir"]
 
 RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir -r requirements.txt
 

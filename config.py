@@ -1,6 +1,11 @@
 from dynaconf import Dynaconf
 
-settings = Dynaconf(
+provider_settings = Dynaconf(
     envvar_prefix="LLMKIRA",
-    settings_files=['settings.toml', '.secrets.toml'],
+    settings_files=['config_dir/provider.toml'],
+)
+
+llm_settings = Dynaconf(
+    envvar_prefix="LLMKIRA",
+    settings_files=['config_dir/llm.toml'],
 )

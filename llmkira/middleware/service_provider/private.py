@@ -8,14 +8,14 @@ import time
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from config import settings
+from config import provider_settings
 from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
 
 WHITE_LIST = []
-if settings.get("private", default=None) is not None:
-    WHITE_LIST = settings.private.get("private_white_list", default=[])
+if provider_settings.get("private", default=None) is not None:
+    WHITE_LIST = provider_settings.private.get("private_white_list", default=[])
     logger.debug(f"🍦 Private Provider Config Loaded, WHITE_LIST({WHITE_LIST})")
 
 

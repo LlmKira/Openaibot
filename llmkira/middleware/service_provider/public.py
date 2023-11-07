@@ -8,7 +8,7 @@ import time
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from config import settings
+from config import provider_settings
 from llmkira.cache.redis import cache
 from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
@@ -16,9 +16,9 @@ from .schema import BaseProvider, ProviderException
 
 QUOTA = 24
 WHITE_LIST = []
-if settings.get("public", default=None) is not None:
-    QUOTA = settings.public.get("public_quota", default=24)
-    WHITE_LIST = settings.public.get("public_white_list", default=[])
+if provider_settings.get("public", default=None) is not None:
+    QUOTA = provider_settings.public.get("public_quota", default=24)
+    WHITE_LIST = provider_settings.public.get("public_white_list", default=[])
     logger.debug(f"🍦 Public Provider Config Loaded, QUOTA({QUOTA}) WHITE_LIST({WHITE_LIST})")
 
 
