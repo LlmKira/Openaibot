@@ -1,5 +1,6 @@
 [llm_schema]
-model_type = "openai"
+schema_type = "openai"
+model_from = "openai"
 model_default = "gpt-3.5-turbo"
 model_available = [
     "gpt-3.5-turbo",
