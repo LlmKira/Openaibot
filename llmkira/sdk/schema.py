@@ -55,11 +55,11 @@ class Function(BaseModel):
     # 附加信息
     config: FunctionExtra = Field(default_factory=FunctionExtra.default, description="函数配置")
 
-    def format2parameters(self):
+    def request_final(self):
         """
         生成参数
         """
-        return self.dict(
+        return self.copy(
             include={"name", "description", "parameters", "required"}
         )
 

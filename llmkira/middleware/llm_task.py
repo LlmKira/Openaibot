@@ -176,7 +176,7 @@ class OpenaiMiddleware(object):
                 self.system_prompt.append(function_item.config.system_prompt)
         # 构建标准函数列表
         functions = [
-            function_item.format2parameters()
+            function_item.request_final()
             for function_item in self.functions
         ] if self.functions else None
 
