@@ -1,3 +1,5 @@
+# 此文件指导插件的模型使用策略，禁止出现任何 secret
+
 [default]
 group = "openai"
 schema = "openai"
