@@ -4,13 +4,19 @@
 # @File    : components.py
 # @Software: PyCharm
 import asyncio
+import time
 # ATTENTION:禁止调用上层任何schema包，否则会导致循环引用
 from typing import Literal, Optional, Coroutine, List
 
+import shortuuid
 from loguru import logger
-from pydantic import BaseModel, root_validator, Field
+from pydantic import BaseModel, root_validator, Field, validator
 
 from .error import ValidationError
+
+
+def generate_uid():
+    return shortuuid.uuid()[0:8].upper()
 
 
 def _sync(coroutine: Coroutine):
@@ -129,11 +135,20 @@ class Message(BaseModel):
     """
 
     class Meta(BaseModel):
-        docs: bool = Field(default=False, description="是否为文档")
+        index_id: str = Field(default_factory=generate_uid, description="消息ID")
+        datatime: float = Field(default=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), description="消息时间")
+        msg_type: str = Field(default="message", description="文档类型")
+        extra: dict = Field(default_factory=dict, description="额外信息")
 
         @classmethod
         def default(cls):
             return cls(docs=False)
+
+        @validator("msg_type")
+        def check_msg_type(cls, v):
+            if v not in ["message", "docs"]:
+                raise ValueError("msg_type must be message/docs")
+            return v
 
     meta: Optional[Meta] = Field(default_factory=Meta.default, description="元数据")
 
@@ -158,14 +173,30 @@ class Message(BaseModel):
         return {k: v for k, v in values.items() if v is not None}
 
     @property
-    def message(self):
+    def message(self) -> dict:
         return self.dict(
             include={"role", "content", "name", "function_call"}
         )
 
     @property
-    def request_final(self):
+    def request_final(self) -> "Message":
         return self.copy(
+            include={"role", "content", "name", "function_call"}
+        )
+
+    @property
+    def fold(self) -> "Message":
+        """
+        用于折叠消息
+        """
+        metadata_str = (f"""[FoldDocs](query_id={self.meta.index_id}"""
+                        f"""\ntimestamp={self.meta.datatime}"""
+                        f"""\ndescription={self.content[:20] + "..."})"""
+                        )
+        return self.copy(
+            update={
+                "content": metadata_str
+            },
             include={"role", "content", "name", "function_call"}
         )
 

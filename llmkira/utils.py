@@ -10,6 +10,7 @@ import hashlib
 from typing import Coroutine, Dict, List
 
 import nest_asyncio
+import shortuuid
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
@@ -53,3 +54,7 @@ def sha1_encrypt(string):
     sha = hashlib.sha1(string.encode('utf-8'))
     encrypts = sha.hexdigest()
     return encrypts[:8]
+
+
+def generate_uid():
+    return shortuuid.uuid()[0:8].upper()

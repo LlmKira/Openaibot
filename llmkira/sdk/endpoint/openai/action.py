@@ -178,7 +178,7 @@ class Scraper(BaseModel):
                 else:
                     self.messages_box[0].message.content = self.messages_box[0].message.content[:limit]
         for sorter in self.messages_box:
-            if sorter.message.meta.docs and ignore_docs:
-                self.messages_box.remove(sorter)
+            if sorter.message.meta.msg_type != 'message' and ignore_docs:
+                sorter.message = sorter.message.fold
         # 按照顺序排序
         self.messages_box.sort(key=lambda x: x.order)
