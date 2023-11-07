@@ -128,16 +128,25 @@ class Message(BaseModel):
     标准 API 件
     """
 
+    class Meta(BaseModel):
+        docs: bool = Field(default=False, description="是否为文档")
+
+        @classmethod
+        def default(cls):
+            return cls(docs=False)
+
+    meta: Optional[Meta] = Field(default_factory=Meta.default, description="元数据")
+
     class FunctionCall(BaseModel):
         name: str
         arguments: str
 
+    function_call: Optional[FunctionCall] = Field(None, description="ai generated function_call")
+
+    """args"""
     role: Literal["system", "assistant", "user", "function"] = "user"
     content: Optional[str] = None
-    # speaker
     name: Optional[str] = Field(None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
-    # AI generated function call
-    function_call: Optional[FunctionCall] = None
 
     @root_validator
     def check(cls, values):
@@ -150,7 +159,15 @@ class Message(BaseModel):
 
     @property
     def message(self):
-        return self
+        return self.dict(
+            include={"role", "content", "name", "function_call"}
+        )
+
+    @property
+    def request_final(self):
+        return self.copy(
+            include={"role", "content", "name", "function_call"}
+        )
 
     @classmethod
     def create_short_task(cls, task_desc, refer, role: str = None):
@@ -276,11 +293,13 @@ class FileMessage(Message):
         )
 
 
-def standardise(message: Message):
+def standardise_for_request(message: Message):
+    if isinstance(message, dict):
+        message = Message.parse_obj(message)
     if not isinstance(message, Message):
         raise TypeError(f"message must be Message, not {type(message)}")
     if hasattr(message, "message"):
-        return message.message
+        return message.request_final
     else:
         return message
 

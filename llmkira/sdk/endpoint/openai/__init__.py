@@ -98,6 +98,7 @@ class Openai(BaseModel):
         api_key: str = Field(default=None)
         org_id: Optional[str] = Field(None)
         model: MODEL = Field(default="gpt-3.5-turbo-0613")
+        model_retrieve: MODEL = Field(default="gpt-3.5-turbo-16k")
 
         # TODO:AZURE API VERSION
         @property
@@ -106,7 +107,10 @@ class Openai(BaseModel):
             脱敏
             """
             api_key = "****" + str(self.api_key)[-4:]
-            return f"Endpoint: {self.endpoint}\nApi_key: {api_key}\nOrg_id: {self.org_id}\nModel: {self.model}"
+            return (
+                f"Endpoint: {self.endpoint}\nApi_key: {api_key}\n"
+                f"Org_id: {self.org_id}\nModel: {self.model}\nRetrieve_model: {self.model_retrieve}"
+            )
 
         @property
         def available(self):
@@ -122,17 +126,27 @@ class Openai(BaseModel):
             openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions")
             openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
             openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
+            openai_model_retrieve = os.getenv("OPENAI_API_RETRIEVE_MODEL", "gpt-3.5-turbo-16k")
             return cls(
                 endpoint=openai_endpoint,
                 api_key=openai_api_key,
                 org_id=openai_org_id,
-                model=openai_model
+                model=openai_model,
+                model_retrieve=openai_model_retrieve
             )
 
         @validator("model")
         def check_model(cls, v):
             if v not in MODEL.__args__:
-                raise ValidationError("model only support {}".format(MODEL.__args__))
+                logger.warning("Validator:model only support {}".format(MODEL.__args__))
+                # raise ValidationError("model only support {}".format(MODEL.__args__))
+            return v
+
+        @validator("model_retrieve")
+        def check_retrieve_model(cls, v):
+            if v not in MODEL.__args__:
+                logger.warning("Validator:model_retrieve only support {}".format(MODEL.__args__))
+                # raise ValidationError("model_retrieve only support {}".format(MODEL.__args__))
             return v
 
         @validator("api_key")

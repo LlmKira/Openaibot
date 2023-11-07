@@ -11,7 +11,7 @@ import tiktoken
 from pydantic import BaseModel
 
 # from llmkira.sdk.filter.evaluate import Sim
-from llmkira.sdk.schema import Message, standardise
+from llmkira.sdk.schema import Message, standardise_for_request
 
 
 # 生成MD5
@@ -59,7 +59,7 @@ class Tokenizer(object):
             )
         num_tokens = 0
         for message in messages:
-            message = standardise(message)
+            message = standardise_for_request(message)
             num_tokens += tokens_per_message
             for key, value in message.dict().items():
                 if isinstance(value, dict):
@@ -118,7 +118,7 @@ class Scraper(BaseModel):
     def get_messages(self) -> List[Message]:
         # 按照顺序排序
         # self.messages_box.sort(key=lambda x: x.order)
-        _message = [standardise(sorter.message) for sorter in self.messages_box]
+        _message = [standardise_for_request(sorter.message) for sorter in self.messages_box]
         # 去重
         # [*dict.fromkeys(_message)]
         # -> unhashable type: 'Message'
@@ -152,7 +152,16 @@ class Scraper(BaseModel):
         return len(self.messages_box)
 
     # 方法：清除消息到负载
-    def reduce_messages(self, limit: int = 2048):
+    def reduce_messages(self,
+                        limit: int = 2048,
+                        ignore_docs: bool = True,
+                        ):
+        """
+        从最旧开始删除，直到满足条件
+        :param limit: 最大字数
+        :param ignore_docs: 是否忽略文档
+        :return: None
+        """
         # 预留位
         if limit > 1000:
             limit = limit - 250
@@ -168,5 +177,8 @@ class Scraper(BaseModel):
                     self.messages_box.pop(0)
                 else:
                     self.messages_box[0].message.content = self.messages_box[0].message.content[:limit]
+        for sorter in self.messages_box:
+            if sorter.message.meta.docs and ignore_docs:
+                self.messages_box.remove(sorter)
         # 按照顺序排序
         self.messages_box.sort(key=lambda x: x.order)
