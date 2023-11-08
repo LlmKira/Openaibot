@@ -30,7 +30,7 @@ class Driver(BaseSettings):
     """
     不允许部分更新
     """
-    schema: str = Field(default="openai")
+    schema_type: str = Field(default="openai")
     endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
     api_key: str = Field(default=None)
     org_id: Optional[str] = Field(None)
