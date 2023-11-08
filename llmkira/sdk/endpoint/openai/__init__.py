@@ -33,7 +33,7 @@ MODEL = Literal[
     # "gpt-4-0314",
     # "gpt-3.5-turbo-0301",
     # "gpt-4-32k-0314"
-    # do not use 0314. check: https://platform.openai.com/docs/guides/gpt/function-calling
+    # Do not use 0314. See: https://platform.openai.com/docs/guides/gpt/function-calling
 ]
 
 
@@ -47,7 +47,20 @@ class OpenaiResult(BaseModel):
         index: int
         message: Message = None
         finish_reason: str
+        """The reason the model stopped generating tokens. This will be stop if the model hit a natural stop point or 
+        a provided stop sequence, length if the maximum number of tokens specified in the request was reached, 
+        content_filter if content was omitted due to a flag from our content filters, tool_calls if the model called 
+        a tool, or function_call (deprecated) if the model called a function."""
+
         delta: dict = None
+
+        @property
+        def sign_function(self):
+            return bool(
+                "function_call" in self.finish_reason
+                or
+                "tool_calls" in self.finish_reason
+            )
 
     id: Optional[str] = Field(default=None, alias="request_id")
     object: str
