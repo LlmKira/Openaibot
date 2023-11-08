@@ -64,6 +64,7 @@ class OpenaiResult(BaseModel):
     object: str
     created: int
     model: str
+    system_fingerprint: str = Field(default=None, alias="system_prompt_fingerprint")
     choices: List[Choices]
     usage: Usage
 
@@ -179,30 +180,30 @@ class Openai(BaseModel):
             arbitrary_types_allowed = True
             extra = "allow"
 
-    config: Driver
     messages: List[Message]
-    functions: Optional[List[Function]] = None
-
-    function_call: Optional[str] = None
-    """
-    # If you want to force the model to call a specific function you can do so by setting function_call: {"name": "<insert-function-name>"}. 
-    # You can also force the model to generate a user-facing messages_box by setting function_call: "none". 
-    # Note that the default behavior (function_call: "auto") is for the model to decide on its own whether to call a function and if so which function to call.
-    """
-
+    config: Driver
+    """模型信息和配置"""
     temperature: Optional[float] = 1
+    """温度"""
     top_p: Optional[float] = None
     n: Optional[int] = 1
-
-    # Bot于流式响应负载能力有限
     stream: Optional[bool] = False
-
+    """暂时不打算用的流式"""
     stop: Optional[Union[str, List[str]]] = None
     max_tokens: Optional[int] = None
     presence_penalty: Optional[float] = None
     frequency_penalty: Optional[float] = None
     logit_bias: Optional[dict] = None
     user: Optional[str] = None
+
+    response_format: Optional[dict] = Field(default=None, alias="response_format")
+    seed: Optional[int] = Field(default=None, alias="seed")
+
+    # 函数
+    # functions: Optional[List[Function]] = Field(default=None, alias="functions")
+    # function_call: Optional[str] = None
+    tools: Optional[List[Function]] = Field(default=None, alias="tools")
+    tool_choice: Optional[Union[dict, Literal["auto", "none"]]] = None
 
     # 用于调试
     echo: Optional[bool] = False
