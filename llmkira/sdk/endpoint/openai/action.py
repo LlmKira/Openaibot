@@ -56,6 +56,9 @@ class Tokenizer(object):
         else:
             raise NotImplementedError(
                 f"""num_tokens_from_messages() is not implemented for model {model}."""
+                """:) If you use a no-openai model, """
+                """you can [one-api](https://github.com/songquanpeng/one-api) project handle token usage."""
+                """or issue https://github.com/LlmKira/Openaibot/issues to request support."""
             )
         num_tokens = 0
         for message in messages:
@@ -178,7 +181,7 @@ class Scraper(BaseModel):
                 else:
                     self.messages_box[0].message.content = self.messages_box[0].message.content[:limit]
         for sorter in self.messages_box:
-            if sorter.message.meta.msg_type != 'message' and ignore_docs:
+            if sorter.message.meta.retrieval and ignore_docs:
                 sorter.message = sorter.message.fold
         # 按照顺序排序
         self.messages_box.sort(key=lambda x: x.order)
