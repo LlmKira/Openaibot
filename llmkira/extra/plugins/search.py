@@ -147,7 +147,7 @@ class SearchTool(BaseTool):
             config=driver,
             model=driver.model,
             temperature=0.1,
-            messages=Message.create_task(
+            messages=Message.create_short_task(
                 task_desc=task_desc,
                 refer=raw_data
             ),
