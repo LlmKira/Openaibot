@@ -5,6 +5,7 @@
 # @Software: PyCharm
 
 from llmkira.sdk.endpoint import openai
+from llmkira.sdk.endpoint.tee import Driver
 
 example_messages = [
     {
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     for i in _list:
         message.append(sdk.schema.Message(**i))
     logger.debug(message)
-    driver = openai.Openai.Driver()
+    driver = Driver()
     logger.debug(driver)
     search = sdk.schema.Function(name="get_current_weather", description="Get the current weather")
     search.add_property(

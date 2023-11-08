@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseSettings, Field, validator
 
-from llmkira.sdk.endpoint.openai import Openai
+from llmkira.sdk.endpoint import Driver
 
 
 class ProviderSetting(BaseSettings):
@@ -59,7 +59,7 @@ class BaseProvider(ABC):
         raise ProviderException("Base Provider auth your token,refer docs", provider=self.name)
 
     @abstractmethod
-    async def request_driver(self, uid, token) -> Openai.Driver:
+    async def request_driver(self, uid, token) -> Driver:
         """
         根据 Token 申请使用 Public Driver
         """

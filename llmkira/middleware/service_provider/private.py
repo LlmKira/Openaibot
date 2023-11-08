@@ -9,9 +9,9 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from config import provider_settings
-from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
+from ...sdk.endpoint import Driver
 
 WHITE_LIST = []
 if provider_settings.get("private", default=None) is not None:
@@ -37,7 +37,7 @@ class PrivateProvider(BaseProvider):
     async def authenticate(self, uid, token, status) -> bool:
         if uid in WHITE_LIST:
             return True
-        if not Openai.Driver.from_public_env().available:
+        if not Driver.from_public_env().available:
             raise ProviderException(
                 "\nYou are using a public and free instance.\nThe current instance key is not configured.",
                 provider=self.name
@@ -49,5 +49,5 @@ class PrivateProvider(BaseProvider):
             provider=self.name
         )
 
-    async def request_driver(self, uid, token) -> Openai.Driver:
-        return Openai.Driver.from_public_env()
+    async def request_driver(self, uid, token) -> Driver:
+        return Driver.from_public_env()

@@ -10,9 +10,9 @@ from pydantic import BaseModel, Field
 
 from config import provider_settings
 from llmkira.cache.redis import cache
-from llmkira.sdk.endpoint.openai import Openai
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
+from ...sdk.endpoint import Driver
 
 QUOTA = 24
 WHITE_LIST = []
@@ -44,7 +44,7 @@ class PublicProvider(BaseProvider):
                 "You are using a public instance. You triggered data flood protection today",
                 provider=self.name
             )
-        if not Openai.Driver.from_public_env().available:
+        if not Driver.from_public_env().available:
             raise ProviderException(
                 "You are using a public instance\nBut current instance apikey unavailable",
                 provider=self.name
@@ -75,5 +75,5 @@ class PublicProvider(BaseProvider):
             return True
         return False
 
-    async def request_driver(self, uid, token) -> Openai.Driver:
-        return Openai.Driver.from_public_env()
+    async def request_driver(self, uid, token) -> Driver:
+        return Driver.from_public_env()

@@ -12,7 +12,7 @@ from pydantic import Field, BaseModel
 from .llm_provider import GetAuthDriver
 from ..extra.user import UserCost, CostControl
 from ..schema import RawMessage
-from ..sdk.endpoint import openai
+from ..sdk.endpoint import openai, Driver
 from ..sdk.endpoint.openai import Message
 from ..sdk.endpoint.openai.action import Scraper
 from ..sdk.memory.redis import RedisChatMessageHistory
@@ -183,7 +183,7 @@ class OpenaiMiddleware(object):
         # 构建请求的驱动信息
         auth_client = GetAuthDriver(uid=self.session_user_uid)
         driver = await auth_client.get()
-        assert isinstance(driver, openai.Openai.Driver), "llm_task.py:GetAuthDriver s return not a driver!"
+        assert isinstance(driver, Driver), "llm_task.py:GetAuthDriver s return not a driver!"
 
         # 构建请求的消息列表
         self.scraper_create_message(

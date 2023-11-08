@@ -31,7 +31,7 @@ class GetAuthDriver(object):
     async def get(self):
         """
         :raise ProviderException: No Any LLM Config Available
-        :return: Openai.Driver
+        :return: Driver
         """
         self.user = await UserControl.get_driver_config(uid=self.uid)
         assert isinstance(self.user, UserConfig.LlmConfig), "UserConfig.LlmConfig is empty"
