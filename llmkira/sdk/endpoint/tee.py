@@ -30,12 +30,12 @@ class Driver(BaseSettings):
     """
     不允许部分更新
     """
-    schema_type: str = Field(default="openai")
-    endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
-    api_key: str = Field(default=None)
-    org_id: Optional[str] = Field(None)
-    model: str = Field(default="gpt-3.5-turbo-0613")
-    model_retrieve: str = Field(default="gpt-3.5-turbo-16k")
+    schema_type: str = Field(default="openai", alias="schema_type")
+    endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions", alias="endpoint")
+    api_key: str = Field(default=None, alias="api_key")
+    org_id: Optional[str] = Field(default=None, alias="org_id")
+    model: str = Field(default="gpt-3.5-turbo-0613", alias="model")
+    model_retrieve: str = Field(default="gpt-3.5-turbo-16k", alias="model_retrieve")
 
     # TODO:AZURE API VERSION
     @property
@@ -65,6 +65,7 @@ class Driver(BaseSettings):
         openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         openai_model_retrieve = os.getenv("OPENAI_API_RETRIEVE_MODEL", "gpt-3.5-turbo-16k")
         return cls(
+            schema_type="openai",
             endpoint=openai_endpoint,
             api_key=openai_api_key,
             org_id=openai_org_id,
