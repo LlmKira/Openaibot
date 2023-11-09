@@ -26,7 +26,9 @@ class TelegramBot(BaseSettings):
     def bot_validator(cls, values):
         if values['proxy_address']:
             logger.success(f"TelegramBot proxy was set to {values['proxy_address']}")
-        if values.get('bot_id') is None:
+        if values.get('token') is None:
+            logger.warning(f"\n🍀Check:Telegrambot token is empty")
+        if values.get('bot_id') is None and values.get('token', None):
             try:
                 from telebot import TeleBot
                 # 创建 Bot
@@ -40,7 +42,7 @@ class TelegramBot(BaseSettings):
                 values['bot_username'] = _bot.username
                 values['bot_link'] = f"https://t.me/{values['bot_username']}"
             except Exception as e:
-                logger.warning(f"\n🍀Check:Telegrambot token is empty:{e}")
+                logger.error(f"\n🍀Check:Telegrambot token is empty:{e}")
             else:
                 logger.success(f"🍀Check:TelegramBot connect success: {values.get('bot_username')}")
         return values
