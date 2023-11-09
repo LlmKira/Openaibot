@@ -116,10 +116,14 @@ class SearchTool(BaseTool):
     async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
         _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            ),
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    role="function",
+                    function_response="Run Failed",
+                    tool_call_id=None
+                )
+            ],
             write_back=True,
             release_chain=True
         )
@@ -145,7 +149,6 @@ class SearchTool(BaseTool):
         driver = await auth_client.get()
         endpoint = openai.Openai(
             config=driver,
-            model=driver.model,
             temperature=0.1,
             messages=Message.create_short_task(
                 task_desc=task_desc,
@@ -181,10 +184,14 @@ class SearchTool(BaseTool):
         # META
         _meta = task.task_meta.reply_raw(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            )
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    role="function",
+                    function_response=_search_result,
+                    tool_call_id=None
+                )
+            ],
         )
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
@@ -195,7 +202,7 @@ class SearchTool(BaseTool):
                     RawMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=_search_result
+                        text="🔍 Searching Done"
                     )
                 ]
             )

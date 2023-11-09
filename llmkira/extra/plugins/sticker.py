@@ -158,10 +158,14 @@ class StickerTool(BaseTool):
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            )
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    role="function",
+                    function_response="Run Success",
+                    tool_call_id=None
+                )
+            ],
         )
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
@@ -173,7 +177,7 @@ class StickerTool(BaseTool):
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
                         file=_result,
-                        text=_set.comment
+                        text="Here is your sticker!"
                     )
                 ]
             )

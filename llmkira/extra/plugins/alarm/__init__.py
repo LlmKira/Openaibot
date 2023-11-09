@@ -107,29 +107,33 @@ class AlarmTool(BaseTool):
     async def callback(self, task, receiver, arg, result, **kwargs):
         return None
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, env, refer_llm_result, **kwargs):
         """
         处理message，返回message
         """
         _set = Alarm.parse_obj(arg)
-        _meta = task.task_meta.child(__plugin_name__)
-        _meta.callback_forward = True
-        _meta.callback_forward_reprocess = False
-        _meta.callback = TaskHeader.Meta.Callback(
-            role="function",
-            name=__plugin_name__
+        _meta = task.task_meta.reply_message(
+            plugin_name=__plugin_name__,
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    role="function",
+                    function_response="Timer Run Success",
+                    tool_call_id=None  # TODO
+                )
+            ]
         )
 
-        async def _send(receiver, _set):
-            await Task(queue=receiver.platform).send_task(
+        async def _send(_receiver, _set):
+            await Task(queue=_receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
-                    receiver=receiver,  # 因为可能有转发，所以可以单配
+                    receiver=_receiver,  # 因为可能有转发，所以可以单配
                     task_meta=_meta,
                     message=[
                         RawMessage(
-                            user_id=receiver.user_id,
-                            chat_id=receiver.chat_id,
+                            user_id=_receiver.user_id,
+                            chat_id=_receiver.chat_id,
                             text=_set.content
                         )
                     ]
@@ -148,7 +152,7 @@ class AlarmTool(BaseTool):
         try:
             SCHEDULER.start()
         except Exception as e:
-            pass
+            print(f"[155035]{e}")
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
                 sender=task.sender,  # 继承发送者

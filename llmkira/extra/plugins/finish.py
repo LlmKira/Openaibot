@@ -39,7 +39,8 @@ class FinishTool(BaseTool):
     """
     silent: bool = True
     function: Function = finish
-    deploy_child: int = 0  # 可部署子任务 0，终结任务链
+    deploy_child: int = 0
+    """可部署子任务 0，终结任务链"""
 
     def pre_check(self):
         return True
@@ -84,10 +85,14 @@ class FinishTool(BaseTool):
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            ),
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    role="function",
+                    function_response="Run Success",
+                    tool_call_id=None
+                )
+            ],
             function_enable=False
         )
         await Task(queue=receiver.platform).send_task(
