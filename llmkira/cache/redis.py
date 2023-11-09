@@ -44,7 +44,7 @@ class RedisClientWrapper(AbstractDataClass):
         if data is not None:
             try:
                 data = json.loads(data)
-            except Exception as e:
+            except json.JSONDecodeError:
                 pass
         return data
 
@@ -65,7 +65,7 @@ class RedisClientWrapper(AbstractDataClass):
             _data = _data.decode("utf-8")
             try:
                 _data = json.loads(_data)
-            except Exception as e:
+            except json.JSONDecodeError:
                 pass
             return _data
         return None
