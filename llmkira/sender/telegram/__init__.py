@@ -23,6 +23,7 @@ from llmkira.sender.util_func import parse_command, is_command, is_empty_command
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
 from ..schema import Runner
+from ...sdk.schema import File
 
 StepCache = StateMemoryStorage()
 __sender__ = "telegram"
@@ -49,7 +50,7 @@ class TelegramBotRunner(Runner):
             name = f"{_file_info.file_unique_id}.jpg"
         if isinstance(file, types.Document):
             name = file.file_name
-        return await RawMessage.upload_file(name=name, data=downloaded_file)
+        return await File.upload_file(name=name, data=downloaded_file)
 
     async def run(self):
         if not BotSetting.available:

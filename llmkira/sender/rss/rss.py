@@ -20,8 +20,8 @@ from pydantic import BaseModel
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
+from ...sdk.cache.redis import cache
 from ..schema import Runner
-from ...cache.redis import cache
 from ...task import Task, TaskHeader
 
 __sender__ = "rss"

@@ -26,12 +26,13 @@ from llmkira.sender.util_func import is_command, auth_reloader, parse_command
 from llmkira.setting.slack import BotSetting
 from llmkira.task import Task, TaskHeader
 from .event import SlashCommand, SlackChannelInfo, help_message
+from .schema import SlackMessageEvent
 from ..schema import Runner
-from ...schema import SlackMessageEvent, RawMessage
 
 __sender__ = "slack"
 
 from ...sdk.openapi.trigger import get_trigger_loop
+from ...sdk.schema import File
 
 SlackTask = Task(queue=__sender__)
 __default_function_enable__ = True
@@ -69,7 +70,7 @@ class SlackBotRunner(Runner):
         except Exception as e:
             logger.exception(f"[7652151]slack:download file failed :(\n {e} ,be sure you have the scope `files.read`")
             return Exception(f"Download file failed {e},be sure bot have the scope `files.read`")
-        return await RawMessage.upload_file(name=name, data=data)
+        return await File.upload_file(name=name, data=data)
 
     async def run(self):
 

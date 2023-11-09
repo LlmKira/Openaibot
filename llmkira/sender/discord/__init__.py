@@ -33,6 +33,7 @@ __default_function_enable__ = True
 from ..util_func import auth_reloader, is_command, is_empty_command
 from ...error import get_upload_error_message
 from ...sdk.openapi.trigger import get_trigger_loop
+from ...sdk.schema import File
 
 DiscordTask = Task(queue=__sender__)
 
@@ -68,7 +69,7 @@ class DiscordBotRunner(Runner):
             raise Exception("File size too large")
         file_name = f"{attachment.filename}"
         file_data = await attachment.read()
-        return await RawMessage.upload_file(name=file_name, data=file_data)
+        return await File.upload_file(name=file_name, data=file_data)
 
     async def run(self):
         if not BotSetting.available:

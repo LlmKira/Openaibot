@@ -27,6 +27,7 @@ __default_function_enable__ = True
 
 from ..util_func import auth_reloader, is_command, is_empty_command
 from ...sdk.openapi.trigger import get_trigger_loop
+from ...sdk.schema import File
 
 KookTask = Task(queue=__sender__)
 
@@ -82,7 +83,7 @@ class KookBotRunner(Runner):
         except Exception as e:
             logger.exception(f"[602253]kook:download file failed {e}")
             return Exception(f"Download file failed {e}")
-        return await RawMessage.upload_file(name=name, data=data)
+        return await File.upload_file(name=name, data=data)
 
     async def run(self):
         if not BotSetting.available:
