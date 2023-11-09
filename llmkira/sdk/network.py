@@ -26,6 +26,10 @@ def check_json_response(status_code: int, req_data: dict):
     """
     检查json响应
     """
+    if req_data.get("object", None) == "error":
+        raise CheckError(
+            f"[CODE]{status_code}:{req_data.get('code', 404)}"
+        )
     # 错误消息
     if req_data.get("error", None):
         _error = req_data.get("error", "your endpoint is not a valid endpoint, please check it")
@@ -69,6 +73,7 @@ async def request(
     :param headers:
     :param json_body:
     :param proxy:
+    :param timeout:
     :param kwargs: 参数
     :return:
     """
