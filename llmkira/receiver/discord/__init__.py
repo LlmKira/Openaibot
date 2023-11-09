@@ -18,10 +18,10 @@ from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint import openai
 from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.schema import File, Message
+from llmkira.sdk.schema import File, Message, FunctionCall
 from llmkira.setting.discord import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.utils import sync
+from llmkira.sdk.utils import sync
 
 __receiver__ = "discord_hikari"
 
@@ -69,7 +69,7 @@ class DiscordSender(BaseSender):
                     )
                 break
             # DATA
-            _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
+            _data: File.Data = sync(File.download_file(file_obj.file_id))
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
@@ -173,92 +173,91 @@ class DiscordSender(BaseSender):
                 reply=_reply
             )
 
-    async def function(self, receiver: TaskHeader.Location,
+    async def function(self,
+                       receiver: TaskHeader.Location,
                        task: TaskHeader,
                        llm: OpenaiMiddleware,
-                       result: openai.OpenaiResult,
-                       message: Message,
-                       **kwargs
+                       llm_result: openai.OpenaiResult,  # TODO Change to base result
+                       function_class: str,
+                       function_call_list: List[FunctionCall] = None,
                        ):
-        if not message.function_call:
-            raise ValueError("message not have function_call,forward type error")
-
-        # 获取设置查看是否静音
-        _tool = ToolRegister().get_tool(message.function_call.name)
-        if not _tool:
-            logger.warning(f"not found function {message.function_call.name}")
-            return None
-
-        tool = _tool()
-
-        _func_tips = [
-            formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
-            f"""```json\n{message.function_call.arguments}```""",
-        ]
-
-        if tool.env_required:
-            __secret__ = await EnvManager.from_uid(
-                uid=task.receiver.uid
-            ).get_env_list(name_list=tool.env_required)
-            # 查找是否有空
-            _required_env = [
-                name
-                for name in tool.env_required
-                if not __secret__.get(name, None)
+        async def loop_function_call(_function_call: FunctionCall = None):
+            """
+            单个处理函数
+            """
+            if not isinstance(_function_call, FunctionCall):
+                logger.exception(f"function_call type error {type(_function_call)}")
+                return None
+            # assert isinstance(_function_call, FunctionCall), "input is not a function_call"
+            if not _function_call:
+                raise ValueError("message not have function_call,forward type error")
+            # 获取设置查看是否静音
+            _tool = ToolRegister().get_tool(_function_call.name)
+            if not _tool:
+                logger.warning(f"not found function {_function_call.name}")
+                return None
+            tool = _tool()
+            _func_tips = [
+                formatting.mbold("🦴 Task be created:") + f" `{function_call.name}` ",
+                f"""```\n{function_call.arguments}```""",
             ]
-            _need_env_list = [
-                f"`{formatting.escape_markdown(name)}`"
-                for name in _required_env
-            ]
-            _need_env_str = ",".join(_need_env_list)
-            _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
-            help_docs = tool.env_help_docs(_required_env)
-            _func_tips.append(formatting.mitalic(help_docs))
 
-        task_message = formatting.format_text(
-            *_func_tips,
-            separator="\n"
-        )
+            if tool.env_required:
+                __secret__ = await EnvManager.from_uid(
+                    uid=task.receiver.uid
+                ).get_env_list(name_list=tool.env_required)
+                # 查找是否有空
+                _required_env = [
+                    name
+                    for name in tool.env_required
+                    if not __secret__.get(name, None)
+                ]
+                _need_env_list = [
+                    f"`{formatting.escape_markdown(name)}`"
+                    for name in _required_env
+                ]
+                _need_env_str = ",".join(_need_env_list)
+                _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
+                help_docs = tool.env_help_docs(_required_env)
+                _func_tips.append(formatting.mitalic(help_docs))
 
-        if not tool.silent:
-            async with self.bot as client:
-                client: hikari.impl.RESTClientImpl
-                _reply = None
-                if receiver.thread_id != receiver.chat_id:
-                    _reply = await client.fetch_message(
-                        channel=receiver.thread_id,
-                        message=receiver.message_id
-                    )
-                await client.create_message(
-                    channel=receiver.thread_id,
-                    content=task_message,
-                    reply=_reply
+            task_message = formatting.format_text(
+                *_func_tips,
+                separator="\n"
+            )
+
+            if not tool.silent:
+                await self.forward(
+                    receiver=receiver,
+                    message=[
+                        RawMessage(
+                            text=task_message,
+                            only_send_file=False
+                        )
+                    ]
                 )
 
-        # 回写创建消息
-        # sign = f"<{task.task_meta.sign_as[0] + 1}>"
-        # 二周目消息不回写，因为写过了
-        llm.write_back(
-            role="assistant",
-            name=message.function_call.name,
-            message_list=[
-                RawMessage(
-                    text=f"Okay,Task be created:{message.function_call.arguments}.")]
-        )
-
-        # 构建对应的消息
-        receiver = task.receiver.copy()
-        receiver.platform = __receiver__
-
-        # 运行函数
-        await Task(queue=function.__receiver__).send_task(
-            task=TaskHeader.from_function(
-                parent_call=result,
-                task_meta=task.task_meta,
-                receiver=receiver,
-                message=task.message
+        new_receiver = task.receiver.copy()
+        new_receiver.platform = __receiver__
+        """更新接收者为当前平台"""
+        for index, function_call in enumerate(function_call_list):
+            await loop_function_call(function_call)
+            """处理批次函数"""
+            new_meta = task.task_meta.pack_loop(
+                loop_class=function_class,
+                loop_index=int(index + 1),
+                loop_length=len(function_call_list)
             )
-        )
+            """克隆元数据为当前平台"""
+            await Task(queue=function.__receiver__).send_task(
+                task=TaskHeader.from_function(
+                    parent_call=llm_result,
+                    task_meta=new_meta,
+                    receiver=new_receiver,
+                    message=task.message
+                )
+            )
+            """发送打包后的任务数据"""
 
 
 __sender__ = DiscordSender()
