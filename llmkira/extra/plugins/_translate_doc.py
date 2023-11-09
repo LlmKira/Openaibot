@@ -164,7 +164,7 @@ class TranslateTool(BaseTool):
             translate_arg = Translate.parse_obj(arg)
         except Exception:
             raise ValueError("Please specify the following parameters clearly\n file_id=xxx,language=xxx")
-        _file_obj = [await RawMessage.download_file(file_id=i.file_id)
+        _file_obj = [await File.download_file(file_id=i.file_id)
                      for i in sorted(set(_translate_file), key=_translate_file.index)]
         _file_obj: List[File.Data] = [item for item in _file_obj if item]
 
@@ -174,7 +174,7 @@ class TranslateTool(BaseTool):
             return None
         for item in _file_obj:
             translated_file = await self.translate_docs(task=task, file=item, target_lang=translate_arg.language)
-            file_obj = await RawMessage.upload_file(name=translated_file.name, data=translated_file.getvalue())
+            file_obj = await File.upload_file(name=translated_file.name, data=translated_file.getvalue())
             _result.append(file_obj)
         # META
         _meta = task.task_meta.reply_message(
