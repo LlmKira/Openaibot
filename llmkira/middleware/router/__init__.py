@@ -5,9 +5,9 @@
 # @Software: PyCharm
 from typing import List, Union
 
-from llmkira.cache.redis import cache
-from llmkira.schema import singleton
-from llmkira.utils import sync
+from ...schema import singleton
+from ...sdk.cache.redis import cache
+from ...sdk.utils import sync
 from .schema import RouterCache, Router
 
 

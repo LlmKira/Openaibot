@@ -13,7 +13,7 @@ from loguru import logger
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import ConnectionPool
 
-from llmkira.cache.base import AbstractDataClass, PREFIX
+from llmkira.sdk.cache.base import AbstractDataClass, PREFIX
 
 
 class RedisClientWrapper(AbstractDataClass):
@@ -92,6 +92,7 @@ try:
 except Exception as e:
     logger.error(f'\n⚠️ Redis DISCONNECT,pls check REDIS_DSN in env\n--error: {e} --dsn {redis_url}')
     cache = None
+    raise e
 else:
     logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')
     cache = RedisClientWrapper(redis_url)

@@ -8,7 +8,7 @@ import re
 from copy import deepcopy
 from typing import Optional, Dict, Union, List
 
-from ...cache.redis import cache
+from ...sdk.cache.redis import cache
 
 
 class EnvManager(object):

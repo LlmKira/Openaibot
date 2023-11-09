@@ -9,7 +9,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from config import provider_settings
-from llmkira.cache.redis import cache
+from llmkira.sdk.cache import cache
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
 from ...sdk.endpoint import Driver

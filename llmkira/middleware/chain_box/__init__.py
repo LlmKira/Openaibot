@@ -3,13 +3,12 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 from typing import Optional
 
 from loguru import logger
 
+from ...sdk.cache.redis import cache
 from .schema import Chain
-from ...cache.redis import cache
 from ...task import TaskHeader
 
 
