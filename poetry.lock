@@ -289,6 +289,17 @@ files = [
 ]
 
 [[package]]
+name = "boltons"
+version = "23.1.1"
+description = "When they're not builtins, they're boltons."
+optional = false
+python-versions = "*"
+files = [
+    {file = "boltons-23.1.1-py2.py3-none-any.whl", hash = "sha256:80a8cd930ff21fbf03545b9863e5799d0c3e7e0e3b2546bdaf2efccd7b3708cc"},
+    {file = "boltons-23.1.1.tar.gz", hash = "sha256:d2cb2fa83cf2ebe791be1e284183e8a43a1031355156a968f8e0a333ad2448fc"},
+]
+
+[[package]]
 name = "certifi"
 version = "2023.7.22"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -2593,4 +2604,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "09cf38a26c4d5941c1b9757e795f94daa37a458f89e35de1dac7635e66cde797"
+content-hash = "27451f1c6afcf542e359e9fdbc8b5bc52b8db38ce6e83bc748f01435e84977fd"

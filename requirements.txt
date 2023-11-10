@@ -7,6 +7,7 @@ khl.py
 
 slack_bolt
 
+boltons
 nest-asyncio
 pathlib>=1.0.1
 loguru>=0.5.3
