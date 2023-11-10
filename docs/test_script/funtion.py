@@ -14,6 +14,10 @@ class Function(BaseModel):
         type: str = "object"
         properties: dict = {}
 
+    class Meta(BaseModel):
+        tips: str = "This is a function"
+
+    _meta: Meta = Meta()
     name: str
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
@@ -43,4 +47,5 @@ if __name__ == '__main__':
         enum=("Li", "Susi"),
         required=True
     )
+    # print(Function.schema_json(indent=4))
     print(json.dumps(f.dict(), indent=4))
