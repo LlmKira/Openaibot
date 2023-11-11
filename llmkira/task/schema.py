@@ -4,23 +4,29 @@
 # @File    : schema.py
 # @Software: PyCharm
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Any
 from typing import Tuple, List, Union, Optional
 
 import hikari
 import khl
+import orjson
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseSettings, Field, BaseModel, root_validator
+from pydantic import BaseSettings, Field, BaseModel, root_validator, validator
 from telebot import types
 
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
-from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, FunctionCall
+from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
 from llmkira.sdk.utils import sync
 
 if TYPE_CHECKING:
     from llmkira.sender.slack.schema import SlackMessageEvent
+
+
+def orjson_dumps(v, *, default):
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    return orjson.dumps(v, default=default).decode()
 
 
 class RabbitMQ(BaseSettings):
@@ -79,9 +85,13 @@ class TaskHeader(BaseModel):
     任务链节点
     """
 
+    class Config:
+        json_loads = orjson.loads
+        json_dumps = orjson_dumps
+
     class Meta(BaseModel):
         class Callback(BaseModel):
-            function_response: str = Field(None, description="工具响应内容")
+            function_response: str = Field("empty response", description="工具响应内容")
             name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
             tool_call_id: Optional[str] = Field(None, description="工具调用ID")
 
@@ -96,9 +106,10 @@ class TaskHeader(BaseModel):
 
             @classmethod
             def create(cls,
+                       *,
                        function_response: str,
                        name: str,
-                       tool_call_id: Optional[str] = None,
+                       tool_call_id: Union[str, None] = None
                        ):
                 return cls(
                     function_response=function_response,
@@ -106,24 +117,31 @@ class TaskHeader(BaseModel):
                     tool_call_id=tool_call_id,
                 )
 
-            def get_message(self) -> Union[ToolMessage, FunctionMessage]:
+            def get_tool_message(self) -> Union[ToolMessage]:
                 if self.tool_call_id:
                     return ToolMessage(
                         tool_call_id=self.tool_call_id,
                         content=self.function_response
                     )
-                else:
+                raise ValueError("tool_call_id is empty")
+
+            def get_function_message(self) -> Union[FunctionMessage]:
+                if self.name:
                     return FunctionMessage(
                         name=self.name,
                         content=self.function_response
                     )
+                raise ValueError("name is empty")
 
         """当前链条的层级"""
         sign_as: Tuple[int, str, str] = Field((0, "root", "default"), description="签名")
 
         """函数并行的信息"""
-        plan_chain_archive: List[Tuple[FunctionCall, dict]] = Field(default=[], description="完成的节点")
-        plan_chain_pending: List[FunctionCall] = Field(default=[], description="待完成的节点")
+        plan_chain_archive: List[Tuple[TaskBatch, Union[Exception, dict, str]]] = Field(
+            default=[],
+            description="完成的节点"
+        )
+        plan_chain_pending: List[TaskBatch] = Field(default=[], description="待完成的节点")
         plan_chain_length: int = Field(default=0, description="节点长度")
         plan_chain_complete: bool = Field(False, description="是否完成此集群")
 
@@ -132,12 +150,6 @@ class TaskHeader(BaseModel):
         function_list: List[Function] = Field([], description="功能列表")
         function_salvation_list: List[Function] = Field([], description="上回合的功能列表，用于容错")
 
-        """接收器的路由规则"""
-        callback_forward: bool = Field(False, description="转发消息")
-        callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
-        direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
-        release_chain: bool = Field(False, description="释放任务链")
-
         """携带插件的写回结果"""
         write_back: bool = Field(False, description="写回消息")
         callback: List[Callback] = Field(
@@ -145,15 +157,31 @@ class TaskHeader(BaseModel):
             description="用于回写，插件返回的消息头，标识 function 的名字"
         )
 
+        """接收器的路由规则"""
+        callback_forward: bool = Field(False, description="转发消息")
+        callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
+        direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
+
+        release_chain: bool = Field(False, description="是否响应队列中的函数集群拉起请求")
         """部署点的生长规则"""
         resign_next_step: bool = Field(True, description="函数集群是否可以继续拉起其他函数集群")
         run_step_already: int = Field(0, description="函数集群计数器")
         run_step_limit: int = Field(4, description="函数集群计数器上限")
 
         """函数中枢的依赖变量"""
-        verify_map: dict = Field(None, description="函数节点的认证信息，经携带认证重发后可通过")
-        llm_result: LlmResult = Field(None, description="存储任务的衍生信息源")
+        verify_uuid: str = Field(None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行")
+        verify_map: Dict[str, TaskBatch] = Field({},
+                                                 description="函数节点的认证信息，经携带认证重发后可通过")
+        llm_result: Any = Field(None, description="存储任务的衍生信息源")
+        llm_type: str = Field(None, description="存储任务的衍生信息源类型")
         extra_args: dict = Field({}, description="提供额外参数")
+
+        @validator("llm_result")
+        def validate_llm_result(cls, val):
+            if isinstance(val, dict):
+                if not val.get("model"):
+                    raise TypeError("Invalid llm_result")
+            return val
 
         @root_validator()
         def check(cls, values):
@@ -182,18 +210,70 @@ class TaskHeader(BaseModel):
         def pack_loop(
                 self,
                 *,
-                plan_chain_pending: List[FunctionCall],
+                plan_chain_pending: List[TaskBatch],
+                verify_map: dict,
         ) -> "TaskHeader.Meta":
             """
             打包循环信息
             :return: Meta
             """
+            if not verify_map:
+                verify_map = self.verify_map
             if not plan_chain_pending:
                 raise ValueError("plan_chain_pending can't be empty")
             _new = self.copy(deep=True)
             _new.plan_chain_pending = plan_chain_pending
             _new.plan_chain_length = len(plan_chain_pending)
+            _new.verify_map = verify_map
             return _new
+
+        async def work_pending_task(self,
+                                    verify_uuid: str
+                                    ) -> Optional[TaskBatch]:
+            """
+            获取待完成的节点
+            如果有 uuid 则优先在 map 里面获取对应的节点名称，根据名称查找pending.
+            执行完成后，将节点移动到 archive
+            """
+            if not self.plan_chain_pending:
+                self.plan_chain_complete = True
+                return logger.trace("no pending task")
+            if verify_uuid:
+                _task_batch = self.verify_map.get(verify_uuid, None)
+                if _task_batch:
+                    return _task_batch
+            return self.plan_chain_pending[0]
+
+        async def complete_task(self,
+                                task_batch: TaskBatch,
+                                run_result: Union[Exception, dict, str]
+                                ) -> "TaskHeader.Meta":
+            """
+            完成此集群
+            :return: Meta
+            """
+            self.plan_chain_archive.append((task_batch, run_result))
+            self.plan_chain_pending.remove(task_batch)
+            if not self.plan_chain_pending:
+                self.plan_chain_complete = True
+            return self
+
+        def get_verify_uuid(self, task_batch: TaskBatch) -> Optional[str]:
+            """
+            从 Map 获取验证UUID
+            """
+            for key, item in self.verify_map.items():
+                if item == task_batch:
+                    return key
+            return None
+
+        @property
+        def is_complete(self) -> bool:
+            """
+            完成状态
+            :return: Meta
+            """
+            return self.plan_chain_complete
 
         class Config:
             extra = "ignore"
@@ -224,6 +304,24 @@ class TaskHeader(BaseModel):
             self.release_chain = release_chain
             return self.copy(deep=True)
 
+        def reply_direct(self,
+                         *,
+                         chain_name: str,
+                         ):
+            """
+            决定路由规则。只通知，不重组函数和初始化任何东西。
+            最稳定的回复方式，不会出现任何问题，但是不会有任何功能。
+            回复消息,其他什么都不做！
+            """
+            _child = self.child(chain_name)
+            _child.callback_forward = False
+            _child.callback_forward_reprocess = False
+            _child.direct_reply = True
+            _child.write_back = False
+            _child.release_chain = False
+            _child.function_enable = False
+            return _child
+
         def reply_notify(self,
                          *,
                          plugin_name: str,
@@ -233,7 +331,8 @@ class TaskHeader(BaseModel):
                          write_back: bool = None
                          ):
             """
-            回复消息，但是不会触发函数
+            决定路由规则
+            默认回复消息，其他参数自由
             :param plugin_name: 插件名称
             :param callback: 元信息
             :param write_back: 是否写回，写回此通知到消息历史,比如插件运行失败了，要不要写回消息历史让AI看到呢
@@ -241,6 +340,7 @@ class TaskHeader(BaseModel):
             :param function_enable: 是否开启功能
             :return: Meta
             """
+            assert isinstance(callback, list), "callback must be list"
             _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
@@ -257,6 +357,14 @@ class TaskHeader(BaseModel):
                       callback: List[Callback],
                       function_enable: bool = True
                       ):
+            """
+            决定路由规则
+            回写消息，释放任务链，要求再次处理，回复消息
+            :param plugin_name: 插件名称
+            :param callback: 元信息
+            :param function_enable: 是否允许机器人用函数再次处理
+            """
+            assert isinstance(callback, list), "callback must be list"
             _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
@@ -273,6 +381,14 @@ class TaskHeader(BaseModel):
                           callback: List[Callback],
                           function_enable: bool = True
                           ):
+            """
+            决定路由规则
+            回写消息，释放任务链，回复消息
+            :param plugin_name: 插件名称
+            :param callback: 元信息
+            :param function_enable: 是否允许机器人用函数再次处理
+            """
+            assert isinstance(callback, list), "callback must be list"
             _child = self.child(plugin_name)
             _child.callback = callback
             _child.callback_forward = True
@@ -411,6 +527,7 @@ class TaskHeader(BaseModel):
         """
         # task_meta = task_meta.child("function") 发送到 function 的消息不需加点，因为此时 接收器算发送者
         task_meta.llm_result = llm_result
+        task_meta.llm_type = llm_result.__repr_name__()
         return cls(
             task_meta=task_meta,
             sender=receiver,
