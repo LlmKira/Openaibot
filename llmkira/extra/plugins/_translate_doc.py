@@ -17,11 +17,15 @@ from loguru import logger
 from pydantic import BaseModel
 
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.openai import Function
+
 from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
-from llmkira.sdk.schema import File
+from llmkira.sdk.schema import File, Function
 from llmkira.task import Task, TaskHeader
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 
 translate = Function(name=__plugin_name__, description="Help user translate [ReadableFile],only support txt/md")
 translate.add_property(
@@ -79,13 +83,20 @@ class TranslateTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, task, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception,
+                     env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         try:
             _meta = task.task_meta.reply_notify(
                 plugin_name=__plugin_name__,
-                callback=TaskHeader.Meta.Callback(
-                    role="function",
-                    name=__plugin_name__
+                callback=TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response=f"Run Failed {exception}",
+                    tool_call_id=pending_task.get_batch_id()
                 ),
                 write_back=True,
                 release_chain=True
@@ -147,10 +158,18 @@ class TranslateTool(BaseTool):
         write_out_file.seek(0)
         return write_out_file
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
         return None
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None
+                  ):
         """
         处理message，返回message
         """
@@ -179,8 +198,9 @@ class TranslateTool(BaseTool):
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
+            callback=TaskHeader.Meta.Callback.create(
+                function_response="Translate Success",
+                tool_call_id=pending_task.get_batch_id(),
                 name=__plugin_name__
             )
         )

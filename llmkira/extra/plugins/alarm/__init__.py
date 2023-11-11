@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 __package__name__ = "llmkira.extra.plugins.alarm"
 __plugin_name__ = "set_alarm_reminder"
-__openapi_version__ = "20231027"
+__openapi_version__ = "20231111"
 
 from llmkira.sdk.func_calling import verify_openapi_version
+from llmkira.sdk.schema import Function
 
 verify_openapi_version(__package__name__, __openapi_version__)
 
@@ -16,10 +17,14 @@ from pydantic import validator, BaseModel
 
 from llmkira.receiver.aps import SCHEDULER
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import PluginMetadata, BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.task import Task, TaskHeader
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 
 alarm = Function(name=__plugin_name__, description="Set a timed reminder (only for minutes)")
 alarm.add_property(
@@ -48,6 +53,23 @@ class Alarm(BaseModel):
         if v < 0:
             raise ValueError("delay must be greater than 0")
         return v
+
+
+async def send_notify(_platform, _meta, _sender: dict, _receiver: dict, _user, _chat, _content: str):
+    await Task(queue=_platform).send_task(
+        task=TaskHeader(
+            sender=TaskHeader.Location.parse_obj(_sender),  # 继承发送者
+            receiver=TaskHeader.Location.parse_obj(_receiver),  # 因为可能有转发，所以可以单配
+            task_meta=TaskHeader.Meta.parse_obj(_meta),
+            message=[
+                RawMessage(
+                    user_id=_user,
+                    chat_id=_chat,
+                    text=_content
+                )
+            ]
+        )
+    )
 
 
 class AlarmTool(BaseTool):
@@ -79,13 +101,20 @@ class AlarmTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception,
+                     env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            ),
+            callback=[TaskHeader.Meta.Callback.create(
+                name=__plugin_name__,
+                function_response=f"Timer Run Failed: {exception}",
+                tool_call_id=pending_task.get_batch_id()
+            )],
             write_back=True,
             release_chain=True
         )
@@ -104,10 +133,18 @@ class AlarmTool(BaseTool):
             )
         )
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
         return None
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, env, refer_llm_result, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                  ):
         """
         处理message，返回message
         """
@@ -117,37 +154,26 @@ class AlarmTool(BaseTool):
             callback=[
                 TaskHeader.Meta.Callback.create(
                     name=__plugin_name__,
-                    role="function",
                     function_response="Timer Run Success",
-                    tool_call_id=None  # TODO
+                    tool_call_id=pending_task.get_batch_id()
                 )
             ]
         )
 
-        async def _send(_receiver, _set):
-            await Task(queue=_receiver.platform).send_task(
-                task=TaskHeader(
-                    sender=task.sender,  # 继承发送者
-                    receiver=_receiver,  # 因为可能有转发，所以可以单配
-                    task_meta=_meta,
-                    message=[
-                        RawMessage(
-                            user_id=_receiver.user_id,
-                            chat_id=_receiver.chat_id,
-                            text=_set.content
-                        )
-                    ]
-                )
-            )
-
         logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
         SCHEDULER.add_job(
-            func=_send,
+            func=send_notify,
             id=str(time.time()),
             trigger="date",
             replace_existing=True,
             run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
-            args=[receiver, _set]
+            args=[
+                task.receiver.platform,
+                _meta.dict(),
+                task.sender.dict(), receiver.dict(),
+                receiver.user_id, receiver.chat_id,
+                _set.content
+            ]
         )
         try:
             SCHEDULER.start()
@@ -162,7 +188,7 @@ class AlarmTool(BaseTool):
                     RawMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=f"🍖 The alarm is now set,just wait for {_set.delay} min!"
+                        text=f"🍖 The alarm is now set,just wait for {_set.delay} min"
                     )
                 ]
             )
