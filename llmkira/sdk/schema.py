@@ -365,7 +365,7 @@ class Message(BaseModel, ABC):
     _meta: Meta = PrivateAttr(default=None)
     """元数据"""
     role: str
-    content: Union[str, List[ContentParts], list[dict]]
+    content: Union[str, List[ContentParts], List[dict]]
 
     def get_meta(self) -> Meta:
         return self._meta
