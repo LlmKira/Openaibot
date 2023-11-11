@@ -62,13 +62,16 @@ class DiscordBotRunner(Runner):
         self.bot = None
         self.proxy = None
 
-    async def upload(self, attachment: hikari.Attachment):
+    async def upload(self, attachment: hikari.Attachment, uid: str):
         # Limit 7MB
         if attachment.size > 1024 * 1024 * 7:
             raise Exception("File size too large")
         file_name = f"{attachment.filename}"
         file_data = await attachment.read()
-        return await File.upload_file(name=file_name, data=file_data)
+        return await File.upload_file(file_name=file_name,
+                                      file_data=file_data,
+                                      created_by=uid
+                                      )
 
     async def run(self):
         if not BotSetting.available:
@@ -112,7 +115,12 @@ class DiscordBotRunner(Runner):
             _file = []
             for attachment in message.attachments:
                 try:
-                    _file.append(await self.upload(attachment=attachment))
+                    _file.append(
+                        await self.upload(
+                            attachment=attachment,
+                            uid=UserControl.uid_make(__sender__, message.author.id)
+                        )
+                    )
                 except Exception as e:
                     logger.exception(e)
                     await message.respond(

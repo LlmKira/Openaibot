@@ -66,7 +66,7 @@ class DiscordSender(BaseSender):
                     )
                 break
             # DATA
-            _data: File.Data = sync(File.download_file(file_obj.file_id))
+            _data: File.Data = sync(file_obj.raw_file())
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue

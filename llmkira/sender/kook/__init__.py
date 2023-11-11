@@ -68,7 +68,7 @@ class KookBotRunner(Runner):
         self.bot = None
         self.proxy = None
 
-    async def upload(self, file_info: dict):
+    async def upload(self, file_info: dict, uid: str):
         if not file_info.get("url"):
             return Exception("File url not found")
         if file_info.get("type") == "file":
@@ -82,7 +82,10 @@ class KookBotRunner(Runner):
         except Exception as e:
             logger.exception(f"[602253]kook:download file failed {e}")
             return Exception(f"Download file failed {e}")
-        return await File.upload_file(name=name, data=data)
+        return await File.upload_file(file_name=name,
+                                      file_data=data,
+                                      created_by=uid
+                                      )
 
     async def run(self):
         if not BotSetting.available:
@@ -100,13 +103,15 @@ class KookBotRunner(Runner):
                 if _event.type == MessageTypes.FILE:
                     _file_cache_queue_.append(
                         user_id=_event.author_id,
-                        item=await self.upload(_event.extra.get("attachments"))
+                        item=await self.upload(_event.extra.get("attachments"),
+                                               uid=UserControl.uid_make(__sender__, _event.author_id))
                     )
                     return None
                 if _event.type == MessageTypes.IMG:
                     _file_cache_queue_.append(
                         user_id=_event.author_id,
-                        item=await self.upload(_event.extra.get("attachments"))
+                        item=await self.upload(_event.extra.get("attachments"),
+                                               uid=UserControl.uid_make(__sender__, _event.author_id))
                     )
                     return None
             except Exception as e:

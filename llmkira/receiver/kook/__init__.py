@@ -14,7 +14,6 @@ from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Message
-from llmkira.sdk.utils import sync
 from llmkira.setting.kook import BotSetting
 from llmkira.task import Task, TaskHeader
 
@@ -85,7 +84,7 @@ class KookSender(BaseSender):
                     content=file_obj.file_url
                 )
             # DATA
-            _data: File.Data = sync(File.download_file(file_obj.file_id))
+            _data: File.Data = await file_obj.raw_file()
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue

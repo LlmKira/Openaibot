@@ -48,7 +48,7 @@ class TelegramSender(BaseSender):
                 self.bot.send_document(chat_id=receiver.chat_id, document=file_obj.file_url,
                                        reply_to_message_id=receiver.message_id, caption=file_obj.file_name)
                 continue
-            _data: File.Data = sync(File.download_file(file_obj.file_id))
+            _data: File.Data = await file_obj.raw_file()
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue

@@ -59,7 +59,7 @@ class SlackBotRunner(Runner):
         self.client = None
         self.bot = None
 
-    async def upload(self, file: SlackMessageEvent.SlackFile):
+    async def upload(self, file: SlackMessageEvent.SlackFile, uid: str):
         if file.size > 1024 * 1024 * 20:
             return Exception(f"Chat File size too large:{file.size}")
         name = file.name
@@ -70,7 +70,10 @@ class SlackBotRunner(Runner):
         except Exception as e:
             logger.exception(f"[7652151]slack:download file failed :(\n {e} ,be sure you have the scope `files.read`")
             return Exception(f"Download file failed {e},be sure bot have the scope `files.read`")
-        return await File.upload_file(name=name, data=data)
+        return await File.upload_file(file_name=name,
+                                      file_data=data,
+                                      created_by=uid
+                                      )
 
     async def run(self):
 
@@ -114,7 +117,7 @@ class SlackBotRunner(Runner):
                 return None
             for file in message.files:
                 try:
-                    _file.append(await self.upload(file=file))
+                    _file.append(await self.upload(file=file, uid=UserControl.uid_make(__sender__, message.user)))
                 except Exception as e:
                     await bot.client.chat_postMessage(
                         channel=message.channel,

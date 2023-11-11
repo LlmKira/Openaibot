@@ -159,7 +159,7 @@ class StickerTool(BaseTool):
                 for i in item.file:
                     _file.append(i)
         _set = Sticker.parse_obj(arg)
-        _file_obj = [await File.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
+        _file_obj = [await i.raw_file() for i in sorted(set(_file), key=_file.index)]
         # 去掉None
         _file_obj = [item for item in _file_obj if item]
         _result = []
@@ -171,7 +171,10 @@ class StickerTool(BaseTool):
             file.name = "sticker.webp"
             image.save(file, "WEBP")
             file.seek(0)
-            file_obj = await File.upload_file(name="sticker.webp", data=file.getvalue())
+            file_obj = await File.upload_file(file_name="sticker.webp",
+                                              file_data=file.getvalue(),
+                                              created_by=__plugin_name__
+                                              )
             _result.append(file_obj)
         # META
         _meta = task.task_meta.reply_message(

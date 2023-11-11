@@ -44,7 +44,7 @@ class File(BaseModel):
         def pair(self):
             return self.file_name, self.file_data
 
-    file_id: str = Field(None, description="文件ID")
+    file_id: Optional[str] = Field(None, description="文件ID")
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
     caption: str = Field(default='', description="文件注释")
@@ -82,7 +82,9 @@ class File(BaseModel):
         return f"[Attachment{_comment[:-1]})]"
 
     @staticmethod
-    async def download_file(file_id) -> Optional[Data]:
+    async def download_file_by_id(
+            file_id: str,
+    ) -> Optional[Data]:
         from .cache.redis import cache
         file = await cache.read_data(file_id)
         if not file:
@@ -90,13 +92,53 @@ class File(BaseModel):
         file_obj: File.Data = pickle.loads(file)
         return file_obj
 
-    @staticmethod
-    async def upload_file(name, data):
+    async def raw_file(
+            self,
+    ) -> Optional[Data]:
         from .cache.redis import cache
-        _key = str(generate_md5_short_id(data))
-        await cache.set_data(key=_key, value=pickle.dumps(File.Data(file_name=name, file_data=data)),
-                             timeout=60 * 60 * 24 * 7)
-        return File(file_id=_key, file_name=name)
+        if not self.file_id:
+            return None
+        file = await cache.read_data(self.file_id)
+        if not file:
+            return None
+        file_obj: File.Data = pickle.loads(file)
+        return file_obj
+
+    @classmethod
+    async def upload_file(cls,
+                          file_name,
+                          file_data,
+                          created_by: str,
+                          caption: str = None,
+                          ):
+        from .cache.redis import cache
+        _byte_length = len(file_data)
+        _key = str(generate_md5_short_id(file_data))
+        await cache.set_data(
+            key=_key,
+            value=pickle.dumps(File.Data(file_name=file_name, file_data=file_data)),
+            timeout=60 * 60 * 24 * 7
+        )
+        return cls(file_id=_key,
+                   file_name=file_name,
+                   bytes=_byte_length,
+                   created_by=created_by,
+                   caption=caption,
+                   )
+
+    @classmethod
+    async def upload_file_by_url(cls,
+                                 file_name,
+                                 file_url,
+                                 created_by: str,
+                                 caption: str = None,
+                                 ):
+        return cls(file_id=None,
+                   file_url=file_url,
+                   file_name=file_name,
+                   created_by=created_by,
+                   caption=caption,
+                   )
 
 
 class BaseFunction(BaseModel):
@@ -412,7 +454,7 @@ class UserMessage(Message):
                         elif file.file_id:
                             if file.file_name.endswith(("jpg", "png", "jpeg", "gif", "webp", "svg")):
                                 base64_image = base64.b64encode(
-                                    sync(File.download_file(file_id=file.file_id))
+                                    sync(file.raw_file())
                                 ).decode('utf-8')
                                 _new_content.append(
                                     ContentParts(
