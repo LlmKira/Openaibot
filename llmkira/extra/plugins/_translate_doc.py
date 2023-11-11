@@ -5,7 +5,6 @@ __openapi_version__ = "20231027"
 
 import re
 
-from llmkira.middleware.llm_tool import llm_task
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__package__name__, __openapi_version__)
