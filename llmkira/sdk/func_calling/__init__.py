@@ -24,23 +24,15 @@ class FrameworkInfo(BaseModel):
     exception: Optional[str] = None
 
 
-_current_openapi_version_: str = "20231027"
+_current_openapi_version_: str = "20231111"
 _openapi_version_: Dict[str, "FrameworkInfo"] = {
     _current_openapi_version_: FrameworkInfo(
         support=True,
         exception=None
     ),
-    "20231024": FrameworkInfo(
+    "20231027": FrameworkInfo(
         support=False,
-        exception="BaseTool Schema Changed in ver.20231027,pls refer docs"
-    ),
-    "20231017": FrameworkInfo(
-        support=False,
-        exception="LoopRunner changed in ver.20231017"
-    ),
-    "20231013": FrameworkInfo(
-        support=False,
-        exception="Chain Manager changed in ver.20231017"
+        exception="Broken Changes in ver.20231111,pls refer docs"
     )
 }
 

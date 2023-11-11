@@ -10,7 +10,7 @@ from typing import List, Union, Optional
 
 from pydantic import BaseModel, Field, BaseSettings, validator
 
-from ...sdk.endpoint.openai import Openai
+from ...sdk.endpoint import Driver
 
 
 class UserDriverMode(Enum):
@@ -96,9 +96,6 @@ class UserCost(BaseModel):
         validate_assignment = True
         validate_all = True
         validate_on_assignment = True
-        json_encoders = {
-            Openai.Driver: lambda v: v.dict(),
-        }
 
 
 class UserConfig(BaseSettings):
@@ -111,7 +108,7 @@ class UserConfig(BaseSettings):
         driver 作为一个单例模式
         其他 `公共授权` 组件！
         """
-        driver: Optional[Openai.Driver] = Field(None, description="私有端点配置")
+        driver: Optional[Driver] = Field(None, description="私有端点配置")
         token: Optional[str] = Field(None, description="代理认证系统的token")
         provider: Optional[str] = Field(None, description="认证平台")
 
@@ -178,6 +175,3 @@ class UserConfig(BaseSettings):
         validate_assignment = True
         validate_all = True
         validate_on_assignment = True
-        json_encoders = {
-            Openai.Driver: lambda v: v.dict(),
-        }

@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from pymongo.errors import DuplicateKeyError
 
-from llmkira.cache.mongo import mongo_client
+from llmkira.sdk.cache.mongo import mongo_client
 from .schema import UserCost, UserConfig
 
 __DB_NAME__ = "llm_bot"

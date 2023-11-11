@@ -19,7 +19,6 @@ from typing_extensions import Annotated
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.discord import BotSetting
@@ -33,6 +32,7 @@ __default_function_enable__ = True
 from ..util_func import auth_reloader, is_command, is_empty_command
 from ...error import get_upload_error_message
 from ...sdk.openapi.trigger import get_trigger_loop
+from ...sdk.schema import File
 
 DiscordTask = Task(queue=__sender__)
 
@@ -62,13 +62,16 @@ class DiscordBotRunner(Runner):
         self.bot = None
         self.proxy = None
 
-    async def upload(self, attachment: hikari.Attachment):
+    async def upload(self, attachment: hikari.Attachment, uid: str):
         # Limit 7MB
         if attachment.size > 1024 * 1024 * 7:
             raise Exception("File size too large")
         file_name = f"{attachment.filename}"
         file_data = await attachment.read()
-        return await RawMessage.upload_file(name=file_name, data=file_data)
+        return await File.upload_file(file_name=file_name,
+                                      file_data=file_data,
+                                      created_by=uid
+                                      )
 
     async def run(self):
         if not BotSetting.available:
@@ -98,11 +101,11 @@ class DiscordBotRunner(Runner):
             _based = BotSetting.token.split(".", maxsplit=1)[0] + "=="
             _bot_id = base64.b64decode(_based).decode("utf-8")
         except UnicodeDecodeError as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         except binascii.Error as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         except Exception as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         else:
             BotSetting.bot_id = _bot_id
 
@@ -112,7 +115,12 @@ class DiscordBotRunner(Runner):
             _file = []
             for attachment in message.attachments:
                 try:
-                    _file.append(await self.upload(attachment=attachment))
+                    _file.append(
+                        await self.upload(
+                            attachment=attachment,
+                            uid=UserControl.uid_make(__sender__, message.author.id)
+                        )
+                    )
                 except Exception as e:
                     logger.exception(e)
                     await message.respond(
@@ -129,7 +137,8 @@ class DiscordBotRunner(Runner):
             if _user_name:
                 message.content = message.content.replace(f"<@{BotSetting.bot_id}>", f" @{_user_name} ")
             logger.info(
-                f"discord_hikari:create task from {message.channel_id} {message.content[:300]} funtion_enable:{funtion_enable}"
+                f"discord_hikari:create task from {message.channel_id} "
+                f"{message.content[:300]} funtion_enable:{funtion_enable}"
             )
             # 任务构建
             try:
@@ -270,7 +279,7 @@ class DiscordBotRunner(Runner):
         @crescent.command(dm_enabled=True, name="set_endpoint", description="set openai endpoint for yourself")
         async def listen_endpoint_command(
                 ctx: crescent.Context,
-                endpoint: Annotated[str, crescent.Autocomplete(endpoint_autocomplete)],
+                endpoint: Annotated[str, crescent.Autocomplete[endpoint_autocomplete]],
                 openai_key: str,
                 model_name: str
         ):

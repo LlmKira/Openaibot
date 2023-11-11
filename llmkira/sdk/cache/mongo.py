@@ -22,6 +22,7 @@ class MongoClientWrapper:
             await self.client.server_info()  # test connection
             await self.client.list_database_names()  # test authentication
         except Exception as e:
+            logger.debug(f'⚠️ Mongodb {e}')
             return False
         return True
 

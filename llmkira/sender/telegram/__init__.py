@@ -15,7 +15,6 @@ from telebot.formatting import escape_markdown
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sdk.openapi.trigger import get_trigger_loop
@@ -23,6 +22,7 @@ from llmkira.sender.util_func import parse_command, is_command, is_empty_command
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
 from ..schema import Runner
+from ...sdk.schema import File
 
 StepCache = StateMemoryStorage()
 __sender__ = "telegram"
@@ -40,7 +40,7 @@ class TelegramBotRunner(Runner):
         _got = await self.bot.get_chat_member(message.chat.id, message.from_user.id)
         return _got.status in ['administrator', 'sender']
 
-    async def upload(self, file):
+    async def upload(self, file, uid: str):
         assert hasattr(file, "file_id"), "file_id not found"
         name = file.file_id
         _file_info = await self.bot.get_file(file.file_id)
@@ -49,7 +49,10 @@ class TelegramBotRunner(Runner):
             name = f"{_file_info.file_unique_id}.jpg"
         if isinstance(file, types.Document):
             name = file.file_name
-        return await RawMessage.upload_file(name=name, data=downloaded_file)
+        return await File.upload_file(file_name=name,
+                                      file_data=downloaded_file,
+                                      created_by=uid
+                                      )
 
     async def run(self):
         if not BotSetting.available:
@@ -80,16 +83,36 @@ class TelegramBotRunner(Runner):
             if not message.text:
                 return None
             if message.photo:
-                _file.append(await self.upload(message.photo[-1]))
+                _file.append(
+                    await self.upload(
+                        file=message.photo[-1],
+                        uid=UserControl.uid_make(__sender__, message.from_user.id)
+                    )
+                )
             if message.document:
                 if message.document.file_size < 1024 * 1024 * 10:
-                    _file.append(await self.upload(message.document))
+                    _file.append(
+                        await self.upload(
+                            file=message.document,
+                            uid=UserControl.uid_make(__sender__, message.from_user.id)
+                        )
+                    )
             if message.reply_to_message:
                 if message.reply_to_message.photo:
-                    _file.append(await self.upload(message.reply_to_message.photo[-1]))
+                    _file.append(
+                        await self.upload(
+                            message.reply_to_message.photo[-1],
+                            uid=UserControl.uid_make(__sender__, message.from_user.id)
+                        )
+                    )
                 if message.reply_to_message.document:
                     if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
-                        _file.append(await self.upload(message.reply_to_message.document))
+                        _file.append(
+                            await self.upload(
+                                file=message.reply_to_message.document,
+                                uid=UserControl.uid_make(__sender__, message.from_user.id)
+                            )
+                        )
             message.text = message.text if message.text else ""
             logger.info(
                 f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}"

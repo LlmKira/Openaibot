@@ -5,11 +5,15 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 from types import ModuleType
 from typing import Optional, Type, Dict, Any, List, Union, Set, final, Literal
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel, Field, validator, root_validator
 
-from ..schema import Function
+if TYPE_CHECKING:
+    from ...task import TaskHeader
+    from ..schema import Function, TaskBatch
+    from .model import PluginManager
 
 
 class BaseTool(ABC, BaseModel):
@@ -18,7 +22,7 @@ class BaseTool(ABC, BaseModel):
     """
     __slots__ = ()
     silent: bool = Field(False, description="是否静默")
-    function: Function = Field(..., description="功能")
+    function: "Function" = Field(..., description="功能")
     keywords: List[str] = Field([], description="关键词")
     pattern: Optional[re.Pattern] = Field(None, description="正则匹配")
     require_auth: bool = Field(False, description="是否需要授权")
@@ -91,42 +95,90 @@ class BaseTool(ABC, BaseModel):
         return None
 
     @abstractmethod
-    async def failed(self, task, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception, env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     ):
         """
-        处理失败
+        通常为 回写消息+通知消息
+        :param task: 任务
+        :param receiver: 接收者
+        :param exception: 异常
+        :param env: 环境变量
+        :param arg: 参数
+        :param pending_task: 任务批次
+        :param refer_llm_result: 上一次的结果
         """
         return ...
 
     @abstractmethod
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None
+                       ):
         """
-        成功回调
+        运行成功会调用此函数
+        :param task: 任务
+        :param receiver: 接收者
+        :param arg: 参数
+        :param env: 环境变量
+        :param pending_task: 任务批次
+        :param refer_llm_result: 上一次的结果
         """
         return ...
 
     @abstractmethod
-    async def run(self, task, receiver, arg, **kwargs):
+    async def run(self, *,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                  ):
         """
-        处理message，返回message
+        处理函数并返回回写结果
+        :param task: 任务
+        :param receiver: 接收者
+        :param arg: 参数
+        :param env: 环境变量
+        :param pending_task: 任务批次
+        :param refer_llm_result: 上一次的结果
         """
-        env = kwargs.get("env", {})
         return ...
 
     @final
-    async def load(self, task, receiver, arg, env: dict = None, **kwargs):
+    async def load(self, *,
+                   task: "TaskHeader", receiver: "TaskHeader.Location",
+                   arg: dict, env: dict = None, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                   **kwargs
+                   ) -> dict:
+        """
+        加载工具，执行前的准备工作
+        :param task: 任务
+        :param receiver: 接收者
+        :param arg: 参数
+        :param env: 环境变量
+        :param pending_task: 任务批次
+        :param refer_llm_result: 上一次的结果
+        :param kwargs: 额外参数
+        :return: 运行结果
+        """
         if not env:
             env = {}
         run_arg = {
             "task": task,
             "receiver": receiver,
             "arg": arg,
-            "env": env
+            "env": env,
+            "pending_task": pending_task,
+            "refer_llm_result": refer_llm_result
         }
+        run_arg.update(kwargs)
         try:
             run_result = await self.run(
                 **run_arg
             )
         except Exception as e:
+            logger.exception(e)
             logger.error(f"ToolExecutor:run error: {e}")
             run_arg["exception"] = e
             await self.failed(
@@ -145,7 +197,7 @@ class BaseTool(ABC, BaseModel):
 
 @dataclass(eq=False)
 class FuncPair:
-    function: Function
+    function: "Function"
     tool: Type[BaseTool]
     extra_arg: Dict[Any, Any] = field(default_factory=dict)
 

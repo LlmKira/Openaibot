@@ -36,8 +36,7 @@
 > Any issues with deployment? Submit an Issue to help us fix SLA
 
 LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
-with plugins to perform many functions. Implemented with Openai's new Feature `gpt-function-call`
-support.
+with plugins to perform many functions.
 
 | Demo                              | 
 |-----------------------------------|

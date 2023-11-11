@@ -35,7 +35,7 @@ class Builder(AbstractTransfer):
     @abstractmethod
     async def pipe(self, arg: dict) -> Any:
         """
-        change just_file to `True` for send file only
+        change only_send_file to `True` for send file only
         :return 是否要回复文本,文件列表
         """
         return arg

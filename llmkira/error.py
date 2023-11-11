@@ -4,6 +4,13 @@
 # @File    : error.py
 # @Software: PyCharm
 
+class ReplyNeededError(Exception):
+    """
+    Raised a error that need reply
+    """
+    pass
+
+
 # 更安全的 format
 import random
 

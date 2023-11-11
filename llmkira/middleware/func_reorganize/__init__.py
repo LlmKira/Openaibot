@@ -56,7 +56,7 @@ class FunctionReorganize(object):
             functions.extend(self.task.task_meta.function_salvation_list)
         self._functions = await self.unique(functions)
 
-    async def build(self) -> List[Function]:
+    async def build_arg(self) -> List[Function]:
         await self._build()
         self._functions = await self.unique(self._functions)
         # 过滤

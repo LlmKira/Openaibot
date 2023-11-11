@@ -167,6 +167,10 @@ class PluginManager:
             filter(None, (self.load_plugin(name) for name in self.available_plugins))
         )
 
+    @property
+    def searched_plugin_names(self):
+        return self._searched_plugin_names
+
 
 class PluginFinder(MetaPathFinder):
     def find_spec(
@@ -188,7 +192,7 @@ class PluginFinder(MetaPathFinder):
                 # use path instead of name in case of submodule name conflict
                 if (
                         fullname in manager.plugins
-                        or module_path in manager._searched_plugin_names.values()
+                        or module_path in manager.searched_plugin_names.values()
                 ):
                     # print("find_spec",manager, fullname, module_origin)
                     # print(f"module_origin:{module_origin}")

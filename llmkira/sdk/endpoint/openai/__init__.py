@@ -5,19 +5,21 @@
 # @Software: PyCharm
 __version__ = "0.0.1"
 
-import hashlib
-import os
-from typing import Union, List, Optional, Literal
+from typing import Union, List, Optional, Literal, Type
 
 import httpx
+import pydantic
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseModel, root_validator, validator, Field, HttpUrl, BaseSettings
+from pydantic import BaseModel, root_validator, validator, Field, PrivateAttr
 
-from .action import Tokenizer, TokenizerObj
+from ..schema import LlmResult, LlmRequest
+from ..tee import Driver
+from ..tokenizer import get_tokenizer
+from ...adapter import SCHEMA_GROUP, SingleModel
 from ...error import ValidationError
 from ...network import request
-from ...schema import Message, Function
+from ...schema import Message, Function, ToolChoice, AssistantMessage, Tool, BaseFunction, ToolMessage
 
 load_dotenv()
 
@@ -34,21 +36,12 @@ MODEL = Literal[
     # "gpt-4-0314",
     # "gpt-3.5-turbo-0301",
     # "gpt-4-32k-0314"
-    # do not use 0314. check: https://platform.openai.com/docs/guides/gpt/function-calling
+    # Do not use 0314. See:
+    #  https://platform.openai.com/docs/guides/gpt/function-calling
 ]
 
 
-def sha1_encrypt(string):
-    """
-    sha1加密算法
-    """
-
-    sha = hashlib.sha1(string.encode('utf-8'))
-    encrypts = sha.hexdigest()
-    return encrypts[:8]
-
-
-class OpenaiResult(BaseModel):
+class OpenaiResult(LlmResult):
     class Usage(BaseModel):
         prompt_tokens: int
         completion_tokens: int
@@ -56,14 +49,29 @@ class OpenaiResult(BaseModel):
 
     class Choices(BaseModel):
         index: int
-        message: Message = None
+        message: AssistantMessage
         finish_reason: str
+        """
+        The reason the model stopped generating tokens. This will be stop if the model hit a natural stop point or 
+        a provided stop sequence, length if the maximum number of tokens specified in the request was reached, 
+        content_filter if content was omitted due to a flag from our content filters, tool_calls if the model called 
+        a tool, or function_call (deprecated) if the model called a function.
+        """
         delta: dict = None
+
+        @property
+        def sign_function(self):
+            return bool(
+                "function_call" == self.finish_reason
+                or
+                "tool_calls" == self.finish_reason
+            )
 
     id: Optional[str] = Field(default=None, alias="request_id")
     object: str
     created: int
     model: str
+    system_fingerprint: str = Field(default=None, alias="system_prompt_fingerprint")
     choices: List[Choices]
     usage: Usage
 
@@ -80,149 +88,129 @@ class OpenaiResult(BaseModel):
         return self.choices[0].message
 
 
-class Openai(BaseModel):
-    class Proxy(BaseSettings):
-        proxy_address: str = Field(None, env="OPENAI_API_PROXY")  # "all://127.0.0.1:7890"
+class Openai(LlmRequest):
+    class Config:
+        arbitrary_types_allowed = True
+        extra = "allow"
 
-        class Config:
-            env_file = '.env'
-            env_file_encoding = 'utf-8'
-            case_sensitive = True
-            arbitrary_types_allowed = True
-
-    class Driver(BaseSettings):
-        """
-        不允许部分更新
-        """
-        endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions")
-        api_key: str = Field(default=None)
-        org_id: Optional[str] = Field(None)
-        model: MODEL = Field(default="gpt-3.5-turbo-0613")
-
-        # TODO:AZURE API VERSION
-        @property
-        def detail(self):
-            """
-            脱敏
-            """
-            api_key = "****" + str(self.api_key)[-4:]
-            return f"Endpoint: {self.endpoint}\nApi_key: {api_key}\nOrg_id: {self.org_id}\nModel: {self.model}"
-
-        @property
-        def available(self):
-            """
-            检查可用性
-            :return:
-            """
-            return all([self.endpoint, self.api_key, self.model])
-
-        @classmethod
-        def from_public_env(cls):
-            openai_api_key = os.getenv("OPENAI_API_KEY", None)
-            openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions")
-            openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
-            openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
-            return cls(
-                endpoint=openai_endpoint,
-                api_key=openai_api_key,
-                org_id=openai_org_id,
-                model=openai_model
-            )
-
-        @validator("model")
-        def check_model(cls, v):
-            if v not in MODEL.__args__:
-                raise ValidationError("model only support {}".format(MODEL.__args__))
-            return v
-
-        @validator("api_key")
-        def check_key(cls, v):
-            if v:
-                if not str(v).startswith("sk-"):
-                    logger.warning("Validator:api_key should start with `sk-`")
-                if len(str(v)) < 4:
-                    raise ValidationError("api_key is too short")
-                # 严格检查
-                # if not len(str(v)) == 51:
-                #    raise ValidationError("api_key must be 51 characters long")
-            else:
-                raise ValidationError("api_key is required,pls set OPENAI_API_KEY in .env")
-            return v
-
-        @property
-        def uuid(self):
-            """
-            取 api key 最后 3 位 和 sha1 加密后的前 8 位
-            :return: uuid for token
-            """
-            _flag = self.api_key[-3:]
-            return f"{_flag}:{sha1_encrypt(self.api_key)}"
-
-        class Config:
-            env_file = '.env'
-            env_file_encoding = 'utf-8'
-            case_sensitive = True
-            arbitrary_types_allowed = True
-            extra = "allow"
-
-    config: Driver
-    messages: List[Message]
-    functions: Optional[List[Function]] = None
-
-    function_call: Optional[str] = None
-    """
-    # If you want to force the model to call a specific function you can do so by setting function_call: {"name": "<insert-function-name>"}. 
-    # You can also force the model to generate a user-facing messages_box by setting function_call: "none". 
-    # Note that the default behavior (function_call: "auto") is for the model to decide on its own whether to call a function and if so which function to call.
-    """
-
+    _config: Driver = PrivateAttr(default=None)
+    """模型信息和配置"""
+    messages: List[Union[Message, Type[Message]]]
     temperature: Optional[float] = 1
-    top_p: Optional[float] = None
     n: Optional[int] = 1
-
-    # Bot于流式响应负载能力有限
+    top_p: Optional[float]
+    stop: Optional[Union[str, List[str]]]
+    max_tokens: Optional[int]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    seed: Optional[int]
+    """基础设置"""
     stream: Optional[bool] = False
+    """暂时不打算用的流式"""
+    logit_bias: Optional[dict]
+    """暂时不打算用的logit_bias"""
+    user: Optional[str]
+    """追踪 User"""
+    response_format: Optional[dict]
+    """回复指定的格式，See: https://platform.openai.com/docs/api-reference/chat/create"""
+    # 函数
+    functions: Optional[List[Function]]
+    """deprecated"""
+    function_call: Optional[Union[BaseFunction, Literal["auto", "none"]]] = None
+    """deprecated"""
+    # 工具
+    tools: Optional[List[Tool]]
+    tool_choice: Optional[Union[ToolChoice, Literal["auto", "none"]]] = None
+    """工具调用"""
 
-    stop: Optional[Union[str, List[str]]] = None
-    max_tokens: Optional[int] = None
-    presence_penalty: Optional[float] = None
-    frequency_penalty: Optional[float] = None
-    logit_bias: Optional[dict] = None
-    user: Optional[str] = None
+    # 注意，我们
+    """
+    如果是 vison ，需要转换消息。
+    注意验证 tool choice 的字段。
+    """
 
-    # 用于调试
-    echo: Optional[bool] = False
+    @root_validator
+    def fix_tool(cls, values):
+        if not values.get("tools"):
+            values["tools"] = None
+        else:
+            assert isinstance(values.get("tools"), list)
+
+        if not values.get("functions"):
+            values["functions"] = None
+        else:
+            assert isinstance(values.get("functions"), list)
+        if values.get("tools") and values.get("functions"):
+            logger.warning("sdk param validator:'functions' and 'tools' cannot both be provided. ignoring 'functions'")
+            values["functions"] = None
+            values["function_call"] = None
+        """Deprecated by openai"""
+        return values
 
     @property
-    def model(self):
-        return self.config.model
+    def schema_map(self) -> dict:
+        return {
+            "model": True,
+            "messages": True,
+            "temperature": True,
+            "top_p": True,
+            "n": True,
+            "stop": True,
+            "max_tokens": True,
+            "seed": True,
+            "presence_penalty": True,
+            "frequency_penalty": True,
+            "stream": True,
+            "logit_bias": True,
+            "user": True,
+            "response_format": True,
+            "functions": True,
+            "function_call": True,
+            "tools": True,
+            "tool_choice": True,
+        }
 
-    @property
-    def get_request_data(self):
-        _arg = self.dict(exclude_none=True, exclude={"config", "echo"})
+    def create_params(self):
+        # 获取已经传递的工具模型
+        _done = []
+        _need = []
+        for message in self.messages:
+            if isinstance(message, ToolMessage):
+                _done.append(message.tool_call_id)
+        for message in self.messages:
+            if isinstance(message, AssistantMessage):
+                if message.tool_calls:
+                    for tool in message.tool_calls:
+                        _need.append(tool.id)
+        # 修补
+        _need_fix = list(set(_need) - set(_done))
+        _new_messages = []
+        for message in self.messages:
+            _new_messages.append(message)
+            if isinstance(message, AssistantMessage):
+                if message.tool_calls:
+                    for tool in message.tool_calls:
+                        if tool.id in _need_fix:
+                            _new_messages.append(
+                                ToolMessage(
+                                    tool_call_id=tool.id,
+                                    content="[On Queue]"
+                                )
+                            )
+        self.messages = _new_messages
+        #
+        _arg = self.dict(
+            exclude_none=True,
+            include=self.schema_map
+        )
+        assert "messages" in _arg, "messages is required"
         _arg["model"] = self.model
+        _arg = {
+            k: v
+            for k, v in _arg.items()
+            if v is not None
+        }
         return _arg
-
-    def get_proxy_settings(self):
-        proxy = self.Proxy()
-        return proxy
-
-    @staticmethod
-    def get_model_list():
-        return MODEL.__args__
-
-    @staticmethod
-    def get_token_limit(model: str):
-        v = 2048
-        if "gpt-3.5" in model:
-            v = 4096
-        elif "gpt-4" in model:
-            v = 8192
-        if "-16k" in model:
-            v = v * 4
-        elif "-32k" in model:
-            v = v * 8
-        return v
 
     @validator("presence_penalty")
     def check_presence_penalty(cls, v):
@@ -242,30 +230,6 @@ class Openai(BaseModel):
             raise ValidationError("temperature must be between 0 and 2")
         return v
 
-    @root_validator
-    def check_root(cls, values):
-        return values
-
-    @staticmethod
-    def parse_single_reply(response: dict) -> Message:
-        """
-        解析响应
-        :param response:
-        :return:
-        """
-        # check
-        if not response.get("choices"):
-            raise ValidationError("Message is empty")
-
-        _message = Message.parse_obj(response.get("choices")[0].get("message"))
-        return _message
-
-    @staticmethod
-    def parse_usage(response: dict):
-        if not response.get("usage"):
-            raise ValidationError("usage is empty")
-        return response.get("usage").get("total_tokens")
-
     async def create(self,
                      **kwargs
                      ) -> OpenaiResult:
@@ -274,41 +238,138 @@ class Openai(BaseModel):
         :return:
         """
         """
-        curl https://api.openai.com/v1/completions \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer YOUR_API_KEY" \
-        -d '{"model": "text-davinci-003", "prompt": "Say this is a test", "temperature": 0, "max_tokens": 7}'
+        Docs:https://platform.openai.com/docs/api-reference/chat/create
         """
-        # check
-        num_tokens_from_messages = TokenizerObj.num_tokens_from_messages(
+        # Check Token Limit
+        num_tokens_from_messages = get_tokenizer(model_name=self.model).num_tokens_from_messages(
             messages=self.messages,
             model=self.model,
         )
-        if num_tokens_from_messages > self.get_token_limit(self.model):
+        if num_tokens_from_messages > SCHEMA_GROUP.get_token_limit(model_name=self.model):
             raise ValidationError("messages_box num_tokens > max_tokens")
-        # Clear tokenizer encode cache
-        TokenizerObj.clear_cache()
         # 返回请求
         headers = {
             "User-Agent": "Mozilla/5.0",
-            "Authorization": f"Bearer {self.config.api_key}",
-            "api-key": f"{self.config.api_key}",
+            "Authorization": f"Bearer {self._config.api_key}",
+            "api-key": f"{self._config.api_key}",
         }
-        if self.config.org_id:
-            headers["Openai-Organization"] = self.config.org_id
+        if self._config.org_id:
+            headers["Openai-Organization"] = self._config.org_id
         try:
+            logger.debug(f"[Openai request] {self.create_params()}")
             _response = await request(
                 method="POST",
-                url=self.config.endpoint,
-                data=self.get_request_data,
+                url=self._config.endpoint,
+                data=self.create_params(),
                 headers=headers,
-                proxy=self.get_proxy_settings().proxy_address,
+                proxy=self.proxy_address(),
                 json_body=True
             )
-            return_result = OpenaiResult.parse_obj(_response)
+            assert _response, ValidationError("response is empty")
+            logger.debug(f"[Openai response] {_response}")
+            return_result = OpenaiResult.parse_obj(_response).ack()
         except httpx.ConnectError as e:
-            logger.error(f"Openai connect error: {e}")
+            logger.error(f"[Openai connect error] {e}")
             raise e
-        if self.echo:
-            logger.info(f"Openai response: {return_result}")
+        except pydantic.ValidationError as e:
+            logger.error(f"[Api format error] {e}")
+            raise e
+        if self._echo:
+            logger.info(f"[Openai Raw response] {return_result}")
         return return_result
+
+
+SCHEMA_GROUP.add_model(
+    models=[
+        SingleModel(
+            model_name="gpt-3.5-turbo-1106",
+            token_limit=16384,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-3.5-turbo",
+            token_limit=4096,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-3.5-turbo-16k",
+            token_limit=16384,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-3.5-turbo-0613",
+            token_limit=4096,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-3.5-turbo-16k-0613",
+            token_limit=16384,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-4",
+            token_limit=8192,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-4-32k",
+            token_limit=32768,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-4-0613",
+            token_limit=8192,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-4-vision-preview",
+            token_limit=128000,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="gpt-4-1106-preview",
+            token_limit=128000,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="tool_call",
+            exception=None
+        )
+    ]
+)

@@ -6,10 +6,11 @@
 from typing import List, Union, Optional
 from urllib.parse import urlparse
 
-from llmkira.sdk.endpoint.openai import Openai, MODEL
+from llmkira.sdk.endpoint.openai import MODEL
 from llmkira.sdk.func_calling import ToolRegister
 from .client import UserCostClient, UserConfigClient, UserCost, UserConfig
 from .schema import UserDriverMode
+from ...sdk.endpoint import Driver
 
 
 def is_valid_url(url):
@@ -93,7 +94,7 @@ class UserControl(object):
             endpoint: str = None,
             model: str = None,
             org_id: str = None
-    ) -> Openai.Driver:
+    ) -> Driver:
         """
         :param uid: user id
         :param api_key: openai api key
@@ -108,7 +109,7 @@ class UserControl(object):
             model = MODEL.__args__[0]
         _user_data = await UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)
-        new_driver = Openai.Driver(endpoint=endpoint, api_key=api_key, model=model, org_id=org_id)
+        new_driver = Driver(endpoint=endpoint, api_key=api_key, model=model, org_id=org_id)
         _user_data.llm_driver.driver = new_driver
         await UserConfigClient().update(uid=uid, data=_user_data)
         return new_driver

@@ -25,7 +25,7 @@ QUEUE_ARGUMENTS = {
 
 
 class Task(object):
-    def __init__(self, queue: str):
+    def __init__(self, *, queue: str):
         """
         :param queue: 队列名字
         """
@@ -42,7 +42,7 @@ class Task(object):
             # await channel.initialize(timeout=2000)
             # Creating a message
             message = Message(
-                task.json().encode("utf-8"),
+                body=task.json().encode("utf-8"),
                 delivery_mode=DeliveryMode.PERSISTENT,
                 expiration=EXPIRATION_SECOND
             )
@@ -55,7 +55,8 @@ class Task(object):
                 )
             except Exception as e:
                 logger.error(
-                    f"[5941163]Rabbitmq Queue param validation error, try deleting the abnormal queue manually and retrying. "
+                    f"[5941163]Rabbitmq Queue param validation error, try deleting the abnormal "
+                    f"queue manually and retrying. "
                     f"\n--error {e}"
                     f"\n--help |web: <database_ip>:15672/#/ |shell: `rabbitmqctl delete_queue {self.queue_name}`"
                 )
@@ -107,3 +108,13 @@ class Task(object):
                 raise e
             await queue.consume(func)
             await asyncio.Future()  # run forever
+
+    @classmethod
+    async def create_and_send(cls,
+                              *,
+                              queue_name: str,
+                              task: TaskHeader
+                              ):
+        sender = cls(queue=queue_name)
+        await sender.send_task(task=task)
+        return sender

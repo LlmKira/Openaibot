@@ -7,19 +7,15 @@ from typing import List
 
 from khl import HTTPRequester, Cert, api, MessageTypes
 from loguru import logger
-from telebot import formatting
 
-from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint import openai
-from llmkira.sdk.func_calling.register import ToolRegister
+from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Message
 from llmkira.setting.kook import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.utils import sync
 
 __receiver__ = "kook"
 
@@ -76,7 +72,7 @@ class KookSender(BaseSender):
             raise ValueError(f"Kook msg send failed,{e}")
         return _msg
 
-    async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File], **kwargs):
+    async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File]):
         for file_obj in file_list:
             # URL FIRST
             if file_obj.file_url:
@@ -88,7 +84,7 @@ class KookSender(BaseSender):
                     content=file_obj.file_url
                 )
             # DATA
-            _data: File.Data = sync(RawMessage.download_file(file_obj.file_id))
+            _data: File.Data = await file_obj.raw_file()
             if not _data:
                 logger.error(f"file download failed {file_obj.file_id}")
                 continue
@@ -109,7 +105,7 @@ class KookSender(BaseSender):
                     content=await self.create_asset(file=_data)
                 )
 
-    async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage], **kwargs):
+    async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage]):
         """
         插件专用转发，是Task通用类型
         """
@@ -118,8 +114,8 @@ class KookSender(BaseSender):
                 receiver=receiver,
                 file_list=item.file
             )
-            if item.just_file:
-                return None
+            if item.only_send_file:
+                continue
             await self.send_message(
                 channel_id=receiver.thread_id,
                 user_id=receiver.user_id,
@@ -128,7 +124,7 @@ class KookSender(BaseSender):
                 content=item.text
             )
 
-    async def reply(self, receiver: TaskHeader.Location, message: List[Message], **kwargs):
+    async def reply(self, receiver: TaskHeader.Location, message: List[Message], reply_to_message: bool = True):
         """
         模型直转发，Message是Openai的类型
         """
@@ -138,18 +134,21 @@ class KookSender(BaseSender):
                 receiver=receiver,
                 file_list=raw_message.file
             )
-            if raw_message.just_file:
-                return None
-            assert item.content, f"message content is empty"
+            if raw_message.only_send_file:
+                continue
+            if not raw_message.text:
+                continue
+            assert raw_message.text, f"message content is empty"
             await self.send_message(
                 channel_id=receiver.thread_id,
                 user_id=receiver.user_id,
                 dm=receiver.thread_id == receiver.chat_id,
                 message_type=MessageTypes.KMD,
-                content=item.content
+                content=raw_message.text
             )
+        return logger.trace(f"reply message")
 
-    async def error(self, receiver: TaskHeader.Location, text, **kwargs):
+    async def error(self, receiver: TaskHeader.Location, text):
         await self.send_message(
             channel_id=receiver.thread_id,
             user_id=receiver.user_id,
@@ -158,86 +157,40 @@ class KookSender(BaseSender):
             content=text
         )
 
-    async def function(self, receiver: TaskHeader.Location,
+    async def function(self,
+                       receiver: TaskHeader.Location,
                        task: TaskHeader,
                        llm: OpenaiMiddleware,
-                       result: openai.OpenaiResult,
-                       message: Message,
-                       **kwargs
+                       llm_result: LlmResult
                        ):
-        if not message.function_call:
-            raise ValueError("message not have function_call,forward type error")
-
-        # 获取设置查看是否静音
-        _tool = ToolRegister().get_tool(message.function_call.name)
-        if not _tool:
-            logger.warning(f"not found function {message.function_call.name}")
-            return None
-
-        tool = _tool()
-
-        _func_tips = [
-            formatting.mbold("🦴 Task be created:") + f" `{message.function_call.name}` ",
-            f"""```json\n{message.function_call.arguments}```""",
-        ]
-
-        if tool.env_required:
-            __secret__ = await EnvManager.from_uid(
-                uid=task.receiver.uid
-            ).get_env_list(name_list=tool.env_required)
-            # 查找是否有空
-            _required_env = [
-                name
-                for name in tool.env_required
-                if not __secret__.get(name, None)
-            ]
-            _need_env_list = [
-                f"`{formatting.escape_markdown(name)}`"
-                for name in _required_env
-            ]
-            _need_env_str = ",".join(_need_env_list)
-            _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
-            help_docs = tool.env_help_docs(_required_env)
-            _func_tips.append(formatting.mitalic(help_docs))
-
-        task_message = formatting.format_text(
-            *_func_tips,
-            separator="\n"
+        task_batch = llm_result.default_message.get_executor_batch()
+        verify_map = await self.push_task_create_message(
+            task=task,
+            task_batch=task_batch,
+            llm_result=llm_result,
+            receiver=receiver
         )
-
-        if not tool.silent:
-            await self.send_message(
-                channel_id=receiver.thread_id,
-                user_id=receiver.user_id,
-                dm=receiver.thread_id == receiver.chat_id,
-                message_type=MessageTypes.KMD,
-                content=task_message
-            )
-
-        # 回写创建消息
-        # sign = f"<{task.task_meta.sign_as[0] + 1}>"
-        # 二周目消息不回写，因为写过了
-        llm.write_back(
-            role="assistant",
-            name=message.function_call.name,
-            message_list=[
-                RawMessage(
-                    text=f"Okay,Task be created:{message.function_call.arguments}.")]
+        new_receiver = task.receiver.copy()
+        new_receiver.platform = __receiver__
+        """更新接收者为当前平台，便于创建的函数消息能返回到正确的客户端"""
+        new_meta = task.task_meta.pack_loop(
+            plan_chain_pending=task_batch,
+            verify_map=verify_map
         )
+        """克隆元数据为当前平台"""
 
-        # 构建对应的消息
-        receiver = task.receiver.copy()
-        receiver.platform = __receiver__
-
-        # 运行函数
         await Task(queue=function.__receiver__).send_task(
             task=TaskHeader.from_function(
-                parent_call=result,
-                task_meta=task.task_meta,
-                receiver=receiver,
+                llm_result=llm_result,
+                task_meta=new_meta,
+                receiver=new_receiver,
                 message=task.message
             )
         )
+        """发送打包后的任务数据"""
+        del new_meta
+        del task
+        """清理内存"""
 
 
 __sender__ = KookSender()

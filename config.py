@@ -1,6 +1,13 @@
 from dynaconf import Dynaconf
 
-settings = Dynaconf(
+# 禁止机密从此文件中泄露
+
+provider_settings = Dynaconf(
     envvar_prefix="LLMKIRA",
-    settings_files=['settings.toml', '.secrets.toml'],
+    settings_files=['config_dir/provider.toml'],
+)
+
+llm_settings = Dynaconf(
+    envvar_prefix="LLMKIRA",
+    settings_files=['config_dir/llm.toml'],
 )

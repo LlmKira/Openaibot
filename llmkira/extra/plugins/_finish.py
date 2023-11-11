@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 __package__name__ = "llmkira.extra.plugins.finish"
 __plugin_name__ = "finish_conversation"
-__openapi_version__ = "20231027"
+__openapi_version__ = "20231111"
 
 from llmkira.sdk.func_calling import verify_openapi_version
+from llmkira.sdk.schema import Function
 
 verify_openapi_version(__package__name__, __openapi_version__)
 
 from pydantic import BaseModel, Field
 
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.task import Task, TaskHeader
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 finish = Function(
     name=__plugin_name__,
     description="The user's question has been fully answered and there is nothing more to add"
@@ -39,7 +42,8 @@ class FinishTool(BaseTool):
     """
     silent: bool = True
     function: Function = finish
-    deploy_child: int = 0  # 可部署子任务 0，终结任务链
+    deploy_child: int = 0
+    """可部署子任务 0，终结任务链"""
 
     def pre_check(self):
         return True
@@ -48,12 +52,19 @@ class FinishTool(BaseTool):
         # 一直返回，永远处理
         return self.function
 
-    async def failed(self, task, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     env: dict,
+                     exception,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
+            callback=TaskHeader.Meta.Callback.create(
+                function_response=f"Run Failed {exception}",
+                name=__plugin_name__,
+                tool_call_id=pending_task.get_batch_id()
             ),
             write_back=True,
             release_chain=True
@@ -73,10 +84,18 @@ class FinishTool(BaseTool):
             )
         )
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
         return True
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                  ):
         """
         处理message，返回message
         """
@@ -84,10 +103,13 @@ class FinishTool(BaseTool):
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            ),
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response="Finished the conversation",
+                    tool_call_id=pending_task.get_batch_id()
+                )
+            ],
             function_enable=False
         )
         await Task(queue=receiver.platform).send_task(

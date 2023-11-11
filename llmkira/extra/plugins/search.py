@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 __package__name__ = "llmkira.extra.plugins.search"
 __plugin_name__ = "search_in_google"
-__openapi_version__ = "20231027"
+__openapi_version__ = "20231111"
 
 from llmkira.extra.user import CostControl, UserCost
 from llmkira.middleware.llm_provider import GetAuthDriver
 from llmkira.sdk import resign_plugin_executor
+from llmkira.sdk.endpoint import openai
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__package__name__, __openapi_version__)
@@ -13,13 +14,14 @@ from loguru import logger
 from pydantic import BaseModel
 
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint import openai
-from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
-from llmkira.sdk.schema import Message
+from llmkira.sdk.schema import create_short_task, Function
 from llmkira.task import Task, TaskHeader
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 search = Function(
     name=__plugin_name__,
     description="Search/validate uncertain/unknownEvents/Meme fact on google.com."
@@ -113,13 +115,22 @@ class SearchTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception,
+                     env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            ),
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response=f"Run Failed {exception}",
+                    tool_call_id=pending_task.get_batch_id()
+                )
+            ],
             write_back=True,
             release_chain=True
         )
@@ -140,14 +151,15 @@ class SearchTool(BaseTool):
 
     @staticmethod
     async def llm_task(plugin_name, task: TaskHeader, task_desc: str, raw_data: str):
+        assert task_desc == raw_data, "STOP USE THE FUNCTION"
+        # TODO: 转换为通用
         logger.info("llm_tool:{}".format(task_desc))
         auth_client = GetAuthDriver(uid=task.sender.uid)
         driver = await auth_client.get()
-        endpoint = openai.Openai(
-            config=driver,
-            model=driver.model,
+        endpoint = openai.Openai.init(
+            driver=driver,
             temperature=0.1,
-            messages=Message.create_task_message_list(
+            messages=create_short_task(
                 task_desc=task_desc,
                 refer=raw_data
             ),
@@ -168,10 +180,18 @@ class SearchTool(BaseTool):
         assert result.default_message.content, "llm_task.py:llm_task:content is None"
         return result.default_message.content
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
-        return None
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
+        return True
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                  ):
         """
         处理message，返回message
         """
@@ -181,10 +201,13 @@ class SearchTool(BaseTool):
         # META
         _meta = task.task_meta.reply_raw(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            )
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response=_search_result,
+                    tool_call_id=pending_task.get_batch_id()
+                )
+            ],
         )
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
@@ -195,7 +218,7 @@ class SearchTool(BaseTool):
                     RawMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=_search_result
+                        text="🔍 Searching Done"
                     )
                 ]
             )

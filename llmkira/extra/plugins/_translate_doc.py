@@ -5,7 +5,6 @@ __openapi_version__ = "20231027"
 
 import re
 
-from llmkira.middleware.llm_tool import llm_task
 from llmkira.sdk.func_calling import verify_openapi_version
 
 verify_openapi_version(__package__name__, __openapi_version__)
@@ -17,11 +16,15 @@ from loguru import logger
 from pydantic import BaseModel
 
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.openai import Function
+
 from llmkira.sdk.func_calling import BaseTool, PluginMetadata
 from llmkira.sdk.func_calling.schema import FuncPair
-from llmkira.sdk.schema import File
+from llmkira.sdk.schema import File, Function
 from llmkira.task import Task, TaskHeader
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 
 translate = Function(name=__plugin_name__, description="Help user translate [ReadableFile],only support txt/md")
 translate.add_property(
@@ -79,13 +82,20 @@ class TranslateTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, task, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception,
+                     env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         try:
             _meta = task.task_meta.reply_notify(
                 plugin_name=__plugin_name__,
-                callback=TaskHeader.Meta.Callback(
-                    role="function",
-                    name=__plugin_name__
+                callback=TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response=f"Run Failed {exception}",
+                    tool_call_id=pending_task.get_batch_id()
                 ),
                 write_back=True,
                 release_chain=True
@@ -147,10 +157,18 @@ class TranslateTool(BaseTool):
         write_out_file.seek(0)
         return write_out_file
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
         return None
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None
+                  ):
         """
         处理message，返回message
         """
@@ -164,7 +182,7 @@ class TranslateTool(BaseTool):
             translate_arg = Translate.parse_obj(arg)
         except Exception:
             raise ValueError("Please specify the following parameters clearly\n file_id=xxx,language=xxx")
-        _file_obj = [await RawMessage.download_file(file_id=i.file_id)
+        _file_obj = [await i.raw_file()
                      for i in sorted(set(_translate_file), key=_translate_file.index)]
         _file_obj: List[File.Data] = [item for item in _file_obj if item]
 
@@ -174,13 +192,17 @@ class TranslateTool(BaseTool):
             return None
         for item in _file_obj:
             translated_file = await self.translate_docs(task=task, file=item, target_lang=translate_arg.language)
-            file_obj = await RawMessage.upload_file(name=translated_file.name, data=translated_file.getvalue())
+            file_obj = await File.upload_file(file_name=translated_file.name,
+                                              file_data=translated_file.getvalue(),
+                                              created_by=__plugin_name__
+                                              )
             _result.append(file_obj)
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
+            callback=TaskHeader.Meta.Callback.create(
+                function_response="Translate Success",
+                tool_call_id=pending_task.get_batch_id(),
                 name=__plugin_name__
             )
         )

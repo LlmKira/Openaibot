@@ -9,7 +9,9 @@ import asyncio
 import hashlib
 from typing import Coroutine, Dict, List
 
+import aiohttp
 import nest_asyncio
+import shortuuid
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
@@ -19,7 +21,7 @@ nest_asyncio.apply()
 def __ensure_event_loop():
     try:
         asyncio.get_event_loop()
-    except Exception as e:
+    except Exception:
         asyncio.set_event_loop(asyncio.new_event_loop())
 
 
@@ -53,3 +55,21 @@ def sha1_encrypt(string):
     sha = hashlib.sha1(string.encode('utf-8'))
     encrypts = sha.hexdigest()
     return encrypts[:8]
+
+
+def generate_uid():
+    return shortuuid.uuid()[0:8].upper()
+
+
+async def download_file(url, timeout=None, size_limit=None, headers=None):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=timeout, headers=headers) as response:
+            if response.status != 200:
+                raise Exception("无法下载文件")
+
+            content_length = response.content_length
+            if size_limit and content_length and content_length > size_limit:
+                raise Exception("文件大小超过限制")
+
+            contents = await response.read()
+            return contents

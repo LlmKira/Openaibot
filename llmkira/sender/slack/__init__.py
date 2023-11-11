@@ -26,12 +26,13 @@ from llmkira.sender.util_func import is_command, auth_reloader, parse_command
 from llmkira.setting.slack import BotSetting
 from llmkira.task import Task, TaskHeader
 from .event import SlashCommand, SlackChannelInfo, help_message
+from .schema import SlackMessageEvent
 from ..schema import Runner
-from ...schema import SlackMessageEvent, RawMessage
 
 __sender__ = "slack"
 
 from ...sdk.openapi.trigger import get_trigger_loop
+from ...sdk.schema import File
 
 SlackTask = Task(queue=__sender__)
 __default_function_enable__ = True
@@ -58,7 +59,7 @@ class SlackBotRunner(Runner):
         self.client = None
         self.bot = None
 
-    async def upload(self, file: SlackMessageEvent.SlackFile):
+    async def upload(self, file: SlackMessageEvent.SlackFile, uid: str):
         if file.size > 1024 * 1024 * 20:
             return Exception(f"Chat File size too large:{file.size}")
         name = file.name
@@ -69,7 +70,10 @@ class SlackBotRunner(Runner):
         except Exception as e:
             logger.exception(f"[7652151]slack:download file failed :(\n {e} ,be sure you have the scope `files.read`")
             return Exception(f"Download file failed {e},be sure bot have the scope `files.read`")
-        return await RawMessage.upload_file(name=name, data=data)
+        return await File.upload_file(file_name=name,
+                                      file_data=data,
+                                      created_by=uid
+                                      )
 
     async def run(self):
 
@@ -113,7 +117,7 @@ class SlackBotRunner(Runner):
                 return None
             for file in message.files:
                 try:
-                    _file.append(await self.upload(file=file))
+                    _file.append(await self.upload(file=file, uid=UserControl.uid_make(__sender__, message.user)))
                 except Exception as e:
                     await bot.client.chat_postMessage(
                         channel=message.channel,

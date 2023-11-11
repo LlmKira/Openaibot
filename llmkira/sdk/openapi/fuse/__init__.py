@@ -41,7 +41,7 @@ def resign_plugin_executor(function: Function):
     """
     装饰器
     """
-    logger.success(f"📦 Plugin:resign executor_exception hook successful: {function.name}")
+    logger.success(f"📦 [Plugin exception hook] {function.name}")
 
     @wrapt.decorator  # 保留被装饰函数的元信息
     def wrapper(wrapped, instance, args, kwargs):
@@ -54,8 +54,9 @@ def resign_plugin_executor(function: Function):
         """
         try:
             res = wrapped(*args, **kwargs)
-        except Exception:
+        except Exception as e:
             __error_table__[function.name] = __error_table__.get(function.name, 0) + 1
+            logger.exception(e)
         else:
             return res
         return {}

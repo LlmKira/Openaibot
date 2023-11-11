@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 __package__name__ = "llmkira.extra.plugins.sticker"
 __plugin_name__ = "convert_to_sticker"
-__openapi_version__ = "20231027"
+__openapi_version__ = "20231111"
 
 import re
 
 from llmkira.sdk import resign_plugin_executor
 from llmkira.sdk.func_calling import verify_openapi_version
+from llmkira.sdk.schema import File, Function
 
 verify_openapi_version(__package__name__, __openapi_version__)
 from io import BytesIO
@@ -17,11 +18,13 @@ from loguru import logger
 from pydantic import validator, BaseModel
 
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.openai import Function
 from llmkira.sdk.func_calling import BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair, PluginMetadata
 from llmkira.task import Task, TaskHeader
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from llmkira.sdk.schema import TaskBatch
 sticker = Function(name=__plugin_name__, description="Help user convert pictures to stickers")
 sticker.add_property(
     property_name="yes_no",
@@ -83,7 +86,7 @@ class StickerTool(BaseTool):
     """
     function: Function = sticker
     keywords: list = ["转换", "贴纸", ".jpg", "图像", '图片']
-    file_match_required = re.compile(r".jpg|.png|.jpeg|.gif|.webp|.svg")
+    file_match_required = re.compile(r"(.+).jpg|(.+).png|(.+).jpeg|(.+).gif|(.+).webp|(.+).svg")
 
     def pre_check(self):
         return True
@@ -102,13 +105,20 @@ class StickerTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, task: TaskHeader, receiver, arg, exception, **kwargs):
+    async def failed(self,
+                     task: "TaskHeader", receiver: "TaskHeader.Location",
+                     exception,
+                     env: dict,
+                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                     **kwargs
+                     ):
         _meta = task.task_meta.reply_notify(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
+            callback=[TaskHeader.Meta.Callback.create(
+                tool_call_id=pending_task.get_batch_id(),
+                function_response=f"Run Failed {exception}",
                 name=__plugin_name__
-            ),
+            )],
             write_back=False,
             release_chain=True
         )
@@ -127,10 +137,18 @@ class StickerTool(BaseTool):
             )
         )
 
-    async def callback(self, task, receiver, arg, result, **kwargs):
+    async def callback(self,
+                       task: "TaskHeader", receiver: "TaskHeader.Location",
+                       env: dict,
+                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                       **kwargs
+                       ):
         return None
 
-    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self,
+                  task: "TaskHeader", receiver: "TaskHeader.Location",
+                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
+                  ):
         """
         处理message，返回message
         """
@@ -141,7 +159,7 @@ class StickerTool(BaseTool):
                 for i in item.file:
                     _file.append(i)
         _set = Sticker.parse_obj(arg)
-        _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
+        _file_obj = [await i.raw_file() for i in sorted(set(_file), key=_file.index)]
         # 去掉None
         _file_obj = [item for item in _file_obj if item]
         _result = []
@@ -153,15 +171,21 @@ class StickerTool(BaseTool):
             file.name = "sticker.webp"
             image.save(file, "WEBP")
             file.seek(0)
-            file_obj = await RawMessage.upload_file(name="sticker.webp", data=file.getvalue())
+            file_obj = await File.upload_file(file_name="sticker.webp",
+                                              file_data=file.getvalue(),
+                                              created_by=__plugin_name__
+                                              )
             _result.append(file_obj)
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
-            callback=TaskHeader.Meta.Callback(
-                role="function",
-                name=__plugin_name__
-            )
+            callback=[
+                TaskHeader.Meta.Callback.create(
+                    name=__plugin_name__,
+                    function_response="Run Success",
+                    tool_call_id=pending_task.get_batch_id()
+                )
+            ],
         )
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
@@ -173,7 +197,7 @@ class StickerTool(BaseTool):
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
                         file=_result,
-                        text=_set.comment
+                        text="Here is your sticker!"
                     )
                 ]
             )
