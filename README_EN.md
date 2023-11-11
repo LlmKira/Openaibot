@@ -35,8 +35,14 @@
 
 > Any issues with deployment? Submit an Issue to help us fix SLA
 
-LLMBot is a message queue based IM Bot developed around the concept of an intelligent robot assistant that can be loaded
-with plugins to perform many functions.
+The project is Open source reproduction attempt for [ChatGpt](https://chatgpt.com) like, with `FunctionCall`
+and `ToolCall` as the core,
+supporting multiple messaging platforms.
+
+Using message queue, it can easily handle function requests and support complex plug-in and functional design. Well
+supported access to file.
+
+Supports multiple model sources and cross-platform message forwarding.
 
 | Demo                              | 
 |-----------------------------------|
@@ -50,16 +56,21 @@ implementing some or more features.
 
 ## 📦 Feature
 
-- 🍪 Call a number of pre-defined functions in natural language, use `pip` install every plugin you need.
-- 📝 Messaging system, define send receivers and data can be delivered to the llm chain.
-- 📎 Subscription system, which can subscribe to multiple senders in addition to paired senders, with push functionality.
-- 📦 Non-question-and-answer binding, unlimited time and unlimited sender triggered response.
-- 📬 Customizable ApiKey and Endpoint, traceability of sender authentication info.
-- 🍾 Easy Interactive Experience.
-- 🍖 Continuous session design for function plug-ins, blacklist design
-- 🍟 Support for plug-in human-in-the-loop authentication, support for plug-in atomic singleton configuration, support
-  for development of pre-message text validation Hooks, support for development of text<->media converters, support for
-  error disabling Hooks
+- 🍪 Complete plug-in development ecosystem, using classic design, can be used after installation through `pip`
+- 📝 Messaging system, no limit on time, no limit on sender, define sender and receiver, completely decoupled logic
+- 📎 Route messages, customize message routing, and use routing to determine how to operate.
+- 📬 Public open quota/private self-configured backend/proxy token authentication, providing flexible and scalable
+  authentication development solutions
+- 🍾 Support middleware interception development, and develop extensions to operate data before and after the process
+- 🎵 Refined statistics system, easy to count usage
+- 🍰 Support plug-in human-in-the-loop verification, authentication, and plug-in blacklist can be set
+- 📦 Improve standard file interaction support, upload/download files
+- 🍖 Supports individual configuration of environment keys and provides personal private environment variables for
+  plug-ins
+- 🍟 Supports incremental support for large language models, supports multi-platform expansion, and can be adapted by
+  inheriting standard classes
+- 🍔 Supports both `FunctionCall` and `ToolCall` features to dynamically build the required function classes based on the
+  model
 
 ### 🧀 Introduction to authentication system
 
@@ -103,10 +114,10 @@ Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether
 
 Attention, does not include the memory usage of services such as pm2, redis, rabbitmq, mongodb, docker, etc.
 
-| Process | Memory Max Head Size | Tester | Client |
-|----------|-----------|-------------------------- -----------------------|
-| `receiver` | 120.847MB | `python3 -m memray run --live start_receiver.py` | telegram |
-| `sender` | 83.669MB | `python3 -m memray run --live start_sender.py` | telegram |
+| Process    | Memory Max Head Size | Tester                                           | Client   |
+|------------|----------------------|--------------------------------------------------|----------|
+| `receiver` | 120.847MB            | `python3 -m memray run --live start_receiver.py` | telegram |
+| `sender`   | 83.669MB             | `python3 -m memray run --live start_sender.py`   | telegram |
 
 ### 🥣 Docker
 
