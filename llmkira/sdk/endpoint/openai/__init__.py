@@ -282,6 +282,29 @@ class Openai(LlmRequest):
 SCHEMA_GROUP.add_model(
     models=[
         SingleModel(
+            model_name="chatglm3",
+            token_limit=4096,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="function_call",
+            exception=None
+        ),
+        SingleModel(
+            model_name="chatglm3-16k",
+            token_limit=16384,
+            request=Openai,
+            response=OpenaiResult,
+            schema_type="openai",
+            func_executor="function_call",
+            exception=None
+        ),
+    ]
+)
+
+SCHEMA_GROUP.add_model(
+    models=[
+        SingleModel(
             model_name="gpt-3.5-turbo-1106",
             token_limit=16384,
             request=Openai,
