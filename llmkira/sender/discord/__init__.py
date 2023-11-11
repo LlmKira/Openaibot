@@ -7,6 +7,7 @@ import base64
 import binascii
 import json
 import random
+from typing import List, Tuple
 
 import crescent
 import hikari
@@ -169,7 +170,7 @@ class DiscordBotRunner(Runner):
 
         async def endpoint_autocomplete(
                 ctx: crescent.AutocompleteContext, option: hikari.AutocompleteInteractionOption
-        ) -> list[tuple[str, str]]:
+        ) -> List[Tuple[str, str]]:
             return [("https://api.openai.com/v1/chat/completions", "https://api.openai.com/v1/chat/completions")]
 
         @client.include

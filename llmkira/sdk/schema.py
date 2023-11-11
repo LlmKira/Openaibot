@@ -407,7 +407,7 @@ class SystemMessage(Message):
 
 class UserMessage(Message):
     role: str = Field(default="user")
-    content: Union[str, List[ContentParts], list[dict]]
+    content: Union[str, List[ContentParts], List[dict]]
     name: Optional[str] = Field(default=None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
 
     @property
