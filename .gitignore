@@ -138,6 +138,8 @@ dmypy.json
 /rabbitmq/
 /llmkira/elara.db
 config_dir/*.toml
+config_dir/*.db
 /memray-*.bin
 /memray-*.html
 /docs/test_script/sticker/
+/jobs.sqlite
