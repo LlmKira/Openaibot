@@ -124,6 +124,7 @@ async def request(
     try:
         check_json_response(resp.status_code, req_data)
     except CheckError as e:
+        logger.error(e)
         # Message 格式校验失败
         if call_func:
             call_func(req_data, headers)
