@@ -48,7 +48,7 @@ class EnvManager(object):
             raise Exception("Redis not connected")
         _cache = await cache.read_data(key=f"env:{self.uid}")
         if not isinstance(_cache, dict):
-            return dict()
+            return {}
         return _cache
 
     async def get_env(self, name: str) -> Optional[dict]:
@@ -58,8 +58,6 @@ class EnvManager(object):
         :return: 环境变量
         """
         _cache = await self.__get_env()
-        if not _cache:
-            return None
         return _cache.get(name.upper(), None)
 
     async def get_env_list(self, name_list: List[str]) -> dict:

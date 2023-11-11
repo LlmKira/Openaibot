@@ -39,7 +39,7 @@ def resign_provider():
 
     def decorator(func: Type[BaseProvider]):
         if issubclass(func, BaseProvider):
-            logger.success(f"📦 Plugin:resign Provider {func}")
+            logger.success(f"📦 [Plugin Provider Add] {func}")
             __provider__[func.name.__str__().upper()] = func
 
         @wraps(func)
