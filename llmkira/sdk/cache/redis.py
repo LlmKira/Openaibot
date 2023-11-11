@@ -44,7 +44,8 @@ class RedisClientWrapper(AbstractDataClass):
         if data is not None:
             try:
                 data = json.loads(data)
-            except json.JSONDecodeError:
+            except Exception as ex:
+                logger.trace(ex)
                 pass
         return data
 
