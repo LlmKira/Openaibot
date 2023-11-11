@@ -20,7 +20,7 @@ nest_asyncio.apply()
 def __ensure_event_loop():
     try:
         asyncio.get_event_loop()
-    except Exception as e:
+    except Exception:
         asyncio.set_event_loop(asyncio.new_event_loop())
 
 
