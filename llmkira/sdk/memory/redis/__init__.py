@@ -67,6 +67,7 @@ class RedisChatMessageHistory(object):
         _items = self.redis_client.lrange(self.key, 0, -1)
         items = [json.loads(m.decode("utf-8")) for m in _items[::-1]]
         messages = [parse_message_dict(m) for m in items]
+        messages = [m for m in messages if m is not None]
         return messages
 
     def add_message(self, message: Message) -> None:
