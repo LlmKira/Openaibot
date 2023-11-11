@@ -10,10 +10,14 @@
 import hashlib
 import os
 from typing import Optional
+from typing import TYPE_CHECKING
 
-from pydantic import BaseSettings, HttpUrl, Field, validator
+from pydantic import BaseSettings, Field, validator
 
 from ..error import ValidationError
+
+if TYPE_CHECKING:
+    pass
 
 
 def sha1_encrypt(string):
@@ -28,16 +32,17 @@ def sha1_encrypt(string):
 
 class Driver(BaseSettings):
     """
-    不允许部分更新
+    通用配置
     """
-    schema_type: str = Field(default="openai", alias="schema_type")
-    endpoint: HttpUrl = Field(default="https://api.openai.com/v1/chat/completions", alias="endpoint")
-    api_key: str = Field(default=None, alias="api_key")
-    org_id: Optional[str] = Field(default=None, alias="org_id")
-    model: str = Field(default="gpt-3.5-turbo-0613", alias="model")
-    model_retrieve: str = Field(default="gpt-3.5-turbo-16k", alias="model_retrieve")
+    endpoint: str = Field(default="https://api.openai.com/v1/chat/completions")
+    api_key: str = Field(default=None)
+    org_id: Optional[str] = Field(default=None)
+    model: str = Field(default="gpt-3.5-turbo-0613")
+    model_retrieve: str = Field(default="gpt-3.5-turbo-16k")
+    proxy_address: str = Field(None)
 
     # TODO:AZURE API VERSION
+
     @property
     def detail(self):
         """
@@ -64,13 +69,14 @@ class Driver(BaseSettings):
         openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
         openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
         openai_model_retrieve = os.getenv("OPENAI_API_RETRIEVE_MODEL", "gpt-3.5-turbo-16k")
+        openai_proxy = os.getenv("OPENAI_API_PROXY", None)
         return cls(
-            schema_type="openai",
             endpoint=openai_endpoint,
             api_key=openai_api_key,
             org_id=openai_org_id,
             model=openai_model,
-            model_retrieve=openai_model_retrieve
+            model_retrieve=openai_model_retrieve,
+            proxy_address=openai_proxy
         )
 
     @validator("api_key")
