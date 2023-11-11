@@ -96,9 +96,6 @@ class UserCost(BaseModel):
         validate_assignment = True
         validate_all = True
         validate_on_assignment = True
-        json_encoders = {
-            Driver: lambda v: v.dict(),
-        }
 
 
 class UserConfig(BaseSettings):
@@ -178,6 +175,3 @@ class UserConfig(BaseSettings):
         validate_assignment = True
         validate_all = True
         validate_on_assignment = True
-        json_encoders = {
-            Driver: lambda v: v.dict(),
-        }
