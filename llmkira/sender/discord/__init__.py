@@ -19,7 +19,6 @@ from typing_extensions import Annotated
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.discord import BotSetting
@@ -99,11 +98,11 @@ class DiscordBotRunner(Runner):
             _based = BotSetting.token.split(".", maxsplit=1)[0] + "=="
             _bot_id = base64.b64decode(_based).decode("utf-8")
         except UnicodeDecodeError as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         except binascii.Error as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         except Exception as e:
-            logger.exception("Sender Runtime:DiscordBot token maybe invalid")
+            logger.exception(f"Sender Runtime:DiscordBot token maybe invalid {e}")
         else:
             BotSetting.bot_id = _bot_id
 
@@ -130,7 +129,8 @@ class DiscordBotRunner(Runner):
             if _user_name:
                 message.content = message.content.replace(f"<@{BotSetting.bot_id}>", f" @{_user_name} ")
             logger.info(
-                f"discord_hikari:create task from {message.channel_id} {message.content[:300]} funtion_enable:{funtion_enable}"
+                f"discord_hikari:create task from {message.channel_id} "
+                f"{message.content[:300]} funtion_enable:{funtion_enable}"
             )
             # 任务构建
             try:
@@ -271,7 +271,7 @@ class DiscordBotRunner(Runner):
         @crescent.command(dm_enabled=True, name="set_endpoint", description="set openai endpoint for yourself")
         async def listen_endpoint_command(
                 ctx: crescent.Context,
-                endpoint: Annotated[str, crescent.Autocomplete(endpoint_autocomplete)],
+                endpoint: Annotated[str, crescent.Autocomplete[endpoint_autocomplete]],
                 openai_key: str,
                 model_name: str
         ):

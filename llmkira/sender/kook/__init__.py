@@ -14,7 +14,6 @@ from telebot import formatting
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.kook import BotSetting
@@ -94,36 +93,36 @@ class KookBotRunner(Runner):
         bot = self.bot
 
         # Task Creator
-        async def create_task(event: Message, funtion_enable: bool = False):
+        async def create_task(_event: Message, funtion_enable: bool = False):
             # event.message.embeds
             _file: list = []
             try:
-                if event.type == MessageTypes.FILE:
+                if _event.type == MessageTypes.FILE:
                     _file_cache_queue_.append(
-                        user_id=event.author_id,
-                        item=await self.upload(event.extra.get("attachments"))
+                        user_id=_event.author_id,
+                        item=await self.upload(_event.extra.get("attachments"))
                     )
                     return None
-                if event.type == MessageTypes.IMG:
+                if _event.type == MessageTypes.IMG:
                     _file_cache_queue_.append(
-                        user_id=event.author_id,
-                        item=await self.upload(event.extra.get("attachments"))
+                        user_id=_event.author_id,
+                        item=await self.upload(_event.extra.get("attachments"))
                     )
                     return None
             except Exception as e:
                 logger.exception(e)
                 _template: str = random.choice(_upload_error_message_template)
-                await event.reply(
+                await _event.reply(
                     content=_template.format_map(map=MappingDefault(filename="File", error=str(e))),
                     type=MessageTypes.KMD,
                 )
                 return None
 
             # Cache Run Point
-            if event.type in [MessageTypes.KMD, MessageTypes.TEXT]:
-                _file: list = [item for item in _file_cache_queue_.get(user_id=event.author_id) if item]
-                _file_cache_queue_.clear(user_id=event.author_id)
-            message: Message = event
+            if _event.type in [MessageTypes.KMD, MessageTypes.TEXT]:
+                _file: list = [item for item in _file_cache_queue_.get(user_id=_event.author_id) if item]
+                _file_cache_queue_.clear(user_id=_event.author_id)
+            message: Message = _event
             if message.content:
                 if message.content.startswith(("/chat", "/task")):
                     message.content = message.content[5:]
@@ -131,7 +130,8 @@ class KookBotRunner(Runner):
                     message.content = message.content[4:]
             message.content = message.content if message.content else ""
             logger.info(
-                f"kook:create task from {message.ctx.channel.id} {message.content[:300]} funtion_enable:{funtion_enable}"
+                f"kook:create task from {message.ctx.channel.id} "
+                f"{message.content[:300]} funtion_enable:{funtion_enable}"
             )
             # 任务构建
             try:

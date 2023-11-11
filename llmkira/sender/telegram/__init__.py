@@ -15,7 +15,6 @@ from telebot.formatting import escape_markdown
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
-from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.sdk.openapi.trigger import get_trigger_loop
