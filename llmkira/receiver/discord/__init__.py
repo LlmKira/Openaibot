@@ -9,19 +9,16 @@ from typing import List
 import hikari
 from hikari.impl import ProxySettings
 from loguru import logger
-from telebot import formatting
 
-from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint import openai
-from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.schema import File, Message, FunctionCall
+from llmkira.sdk.endpoint.schema import LlmResult
+from llmkira.sdk.schema import File, Message
+from llmkira.sdk.utils import sync
 from llmkira.setting.discord import BotSetting
 from llmkira.task import Task, TaskHeader
-from llmkira.sdk.utils import sync
 
 __receiver__ = "discord_hikari"
 
@@ -50,7 +47,7 @@ class DiscordSender(BaseSender):
             token_type=hikari.TokenType.BOT
         )
 
-    async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File], **kwargs):
+    async def file_forward(self, receiver: TaskHeader.Location, file_list: List[File]):
         for file_obj in file_list:
             # URL FIRST
             if file_obj.file_url:
@@ -105,7 +102,7 @@ class DiscordSender(BaseSender):
                         reply=_reply
                     )
 
-    async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage], **kwargs):
+    async def forward(self, receiver: TaskHeader.Location, message: List[RawMessage]):
         """
         插件专用转发，是Task通用类型
         """
@@ -115,7 +112,7 @@ class DiscordSender(BaseSender):
                 file_list=item.file
             )
             if item.only_send_file:
-                return None
+                continue
             async with self.bot as client:
                 client: hikari.impl.RESTClientImpl
                 _reply = None
@@ -130,7 +127,7 @@ class DiscordSender(BaseSender):
                     reply=_reply
                 )
 
-    async def reply(self, receiver: TaskHeader.Location, message: List[Message], **kwargs):
+    async def reply(self, receiver: TaskHeader.Location, message: List[Message], reply_to_message: bool = True):
         """
         模型直转发，Message是Openai的类型
         """
@@ -142,7 +139,9 @@ class DiscordSender(BaseSender):
                 file_list=raw_message.file
             )
             if raw_message.only_send_file:
-                return None
+                continue
+            if not raw_message.text:
+                continue
             assert raw_message.text, f"message content is empty"
             async with self.bot as client:
                 client: hikari.impl.RESTClientImpl
@@ -157,8 +156,9 @@ class DiscordSender(BaseSender):
                     content=raw_message.text,
                     reply=_reply
                 )
+        return logger.trace(f"reply message")
 
-    async def error(self, receiver: TaskHeader.Location, text, **kwargs):
+    async def error(self, receiver: TaskHeader.Location, text):
         async with self.bot as client:
             client: hikari.impl.RESTClientImpl
             _reply = None
@@ -177,87 +177,36 @@ class DiscordSender(BaseSender):
                        receiver: TaskHeader.Location,
                        task: TaskHeader,
                        llm: OpenaiMiddleware,
-                       llm_result: openai.OpenaiResult,  # TODO Change to base result
-                       function_class: str,
-                       function_call_list: List[FunctionCall] = None,
+                       llm_result: LlmResult
                        ):
-        async def loop_function_call(_function_call: FunctionCall = None):
-            """
-            单个处理函数
-            """
-            if not isinstance(_function_call, FunctionCall):
-                logger.exception(f"function_call type error {type(_function_call)}")
-                return None
-            # assert isinstance(_function_call, FunctionCall), "input is not a function_call"
-            if not _function_call:
-                raise ValueError("message not have function_call,forward type error")
-            # 获取设置查看是否静音
-            _tool = ToolRegister().get_tool(_function_call.name)
-            if not _tool:
-                logger.warning(f"not found function {_function_call.name}")
-                return None
-            tool = _tool()
-            _func_tips = [
-                formatting.mbold("🦴 Task be created:") + f" `{function_call.name}` ",
-                f"""```\n{function_call.arguments}```""",
-            ]
-
-            if tool.env_required:
-                __secret__ = await EnvManager.from_uid(
-                    uid=task.receiver.uid
-                ).get_env_list(name_list=tool.env_required)
-                # 查找是否有空
-                _required_env = [
-                    name
-                    for name in tool.env_required
-                    if not __secret__.get(name, None)
-                ]
-                _need_env_list = [
-                    f"`{formatting.escape_markdown(name)}`"
-                    for name in _required_env
-                ]
-                _need_env_str = ",".join(_need_env_list)
-                _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
-                help_docs = tool.env_help_docs(_required_env)
-                _func_tips.append(formatting.mitalic(help_docs))
-
-            task_message = formatting.format_text(
-                *_func_tips,
-                separator="\n"
-            )
-
-            if not tool.silent:
-                await self.forward(
-                    receiver=receiver,
-                    message=[
-                        RawMessage(
-                            text=task_message,
-                            only_send_file=False
-                        )
-                    ]
-                )
-
+        task_batch = llm_result.default_message.get_executor_batch()
+        verify_map = await self.push_task_create_message(
+            task=task,
+            task_batch=task_batch,
+            llm_result=llm_result,
+            receiver=receiver
+        )
         new_receiver = task.receiver.copy()
         new_receiver.platform = __receiver__
-        """更新接收者为当前平台"""
-        for index, function_call in enumerate(function_call_list):
-            await loop_function_call(function_call)
-            """处理批次函数"""
-            new_meta = task.task_meta.pack_loop(
-                loop_class=function_class,
-                loop_index=int(index + 1),
-                loop_length=len(function_call_list)
+        """更新接收者为当前平台，便于创建的函数消息能返回到正确的客户端"""
+        new_meta = task.task_meta.pack_loop(
+            plan_chain_pending=task_batch,
+            verify_map=verify_map
+        )
+        """克隆元数据为当前平台"""
+
+        await Task(queue=function.__receiver__).send_task(
+            task=TaskHeader.from_function(
+                llm_result=llm_result,
+                task_meta=new_meta,
+                receiver=new_receiver,
+                message=task.message
             )
-            """克隆元数据为当前平台"""
-            await Task(queue=function.__receiver__).send_task(
-                task=TaskHeader.from_function(
-                    parent_call=llm_result,
-                    task_meta=new_meta,
-                    receiver=new_receiver,
-                    message=task.message
-                )
-            )
-            """发送打包后的任务数据"""
+        )
+        """发送打包后的任务数据"""
+        del new_meta
+        del task
+        """清理内存"""
 
 
 __sender__ = DiscordSender()

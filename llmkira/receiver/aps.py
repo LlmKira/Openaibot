@@ -3,6 +3,8 @@
 # @Author  : sudoskys
 # @File    : aps.py
 # @Software: PyCharm
+from pathlib import Path
+
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -17,9 +19,9 @@ job_store = RedisJobStore(
     connection_pool=ConnectionPool().from_url(redis_url)
 )
 """
-
+Path("config_dir").mkdir(exist_ok=True)
 jobstores = {
-    'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite'),
+    'default': SQLAlchemyJobStore(url='sqlite:///config_dir/aps.db')
 }
 executors = {
     'default': ThreadPoolExecutor(20)
