@@ -3,8 +3,8 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-from functools import wraps
 from enum import Enum
+from functools import wraps
 from typing import Type, Union, Set, List, Callable, Any
 
 from loguru import logger
@@ -27,10 +27,10 @@ def resign_transfer():
 
     def decorator(func: Union[Builder, Parser, Type[Builder], Type[Parser]]):
         if issubclass(func, Builder):
-            logger.success(f"📦 Plugin:resign Builder transfer {func}")
+            logger.success(f"📦 [Plugin Builder transfer] {func.__name__}")
             __builder__.add(func)
         elif issubclass(func, Parser):
-            logger.success(f"📦 Plugin:resign Parser transfer {func}")
+            logger.success(f"📦 [Plugin Parser transfer] {func.__name__}")
             __parser__.add(func)
         else:
             raise ValueError(f"Resign Transfer Error for unknown func {type(func)} ")
@@ -117,12 +117,12 @@ class LoopRunner(object):
                     validator(**self.pipe_arg)
                 new_pipe_arg = await loop().pipe(self.pipe_arg)
             except Exception as e:
-                logger.info(f"{loop} exec_loop error {e}, for sign:{loop.sign}")
-                logger.debug(f"{loop} exec_loop error {e}, for sign:{loop.sign}, pipe_arg:{pipe_arg}")
+                logger.info(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}")
+                logger.debug(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}, pipe_arg:{pipe_arg}")
                 # 不更新 pipe_arg
             else:
-                logger.info(f"{loop} exec_loop success, for sign:{loop.sign}")
-                logger.debug(f"{loop} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}")
+                logger.info(f"{loop.__name__} exec_loop success, for sign:{loop.sign}")
+                logger.debug(f"{loop.__name__} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}")
                 self.pipe_arg = new_pipe_arg
 
 
