@@ -12,16 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-==================================
-MIT License
-==================================
-The MIT license applies to the files in:
-folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
-folder: "llmkira/sdk/memory/redis" from https://github.com/langchain-ai/langchain
+## MIT License
 
-==================================
-仅对部署者的安全指南
-==================================
+The MIT license applies to the files in:
+
+- folder: "llmkira/sdk/func_calling" from https://github.com/nonebot/nonebot2
+- folder: "llmkira/sdk/memory/redis" from https://github.com/langchain-ai/langchain
+
+## 仅对部署者的安全指南(For Deployer Only)
+
 如果您部署本项目的代码，即表示您同意遵守 Apache-2.0 协议。
 
 如其所在地法律特殊，不认为 Apache-2.0 协议所有条款均具有法律效力的，**且造成恶性法律后果的**，视为违约。
