@@ -15,7 +15,7 @@ COPY poetry.lock pyproject.toml ./
 VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "/config_dir"]
 
 RUN poetry config virtualenvs.in-project true && \
-    poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
+    poetry install --no-root && rm -rf $POETRY_CACHE_DIR
 
 # 第二个阶段
 FROM python:3.11-slim-buster as runtime
