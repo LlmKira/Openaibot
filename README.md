@@ -156,6 +156,8 @@ pm2 monit
 
 重启程序使用 `pm2 restart pm2.json` 。
 
+> 推荐使用 `poetry` 进行依赖管理，因为我们使用了 `pydantic^1.9.0`，为了防止出现版本冲突，我们使用了 `poetry` 进行依赖管理。
+
 ## 🍪 Slash Command
 
 ```shell

@@ -142,8 +142,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install poetry
-poetry install
+pip install poetry && poetry install
 docker-compose -f docker-compose.yml up -d
 
 ```
@@ -155,12 +154,15 @@ To manually start using Pm2, you need to install `redis`, `rabbitmq`, `mongodb` 
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
+pip install poetry && poetry install
 apt install npm -y && npm install pm2 && pm2 start pm2.json
 pm2 monit
 
 ```
 
 Use `pm2 restart pm2.json` to restart the program.
+
+>Recommend using `poetry` for dependency management, because we use `pydantic^1.9.0`, in order to prevent version conflicts, we use `poetry` for dependency management.
 
 ## 🍪 Slash Command
 
