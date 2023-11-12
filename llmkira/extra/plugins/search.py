@@ -25,6 +25,10 @@ if TYPE_CHECKING:
 search = Function(
     name=__plugin_name__,
     description="Search/validate on google.com.[ONLY IF NECESSARY]",
+).update_config(
+    config=Function.FunctionExtra(
+        system_prompt='Search only if necessary',
+    )
 )
 search.add_property(
     property_name="keywords",
