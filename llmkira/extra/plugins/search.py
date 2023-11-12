@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from llmkira.sdk.schema import TaskBatch
 search = Function(
     name=__plugin_name__,
-    description="Search/validate uncertain/unknownEvents/Meme fact on google.com."
+    description="Search/validate on google.com.[ONLY IF NECESSARY]",
 )
 search.add_property(
     property_name="keywords",
