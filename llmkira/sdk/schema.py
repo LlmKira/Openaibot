@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import shortuuid
 from docstring_parser import parse
 from loguru import logger
-from pydantic import model_validator, BaseModel, Field, PrivateAttr
+from pydantic import model_validator, BaseModel, Field, PrivateAttr, ConfigDict
 
 from .error import ValidationError, CheckError
 from .utils import sync
@@ -187,10 +187,12 @@ class Function(BaseFunction):
         type: str = "object"
         properties: dict = {}
         required: List[str] = Field(default=[], description="必填参数")
+        model_config = ConfigDict(extra="ignore")
 
     name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
+    model_config = ConfigDict(extra="ignore")
 
     def request_final(self,
                       *,
@@ -227,7 +229,10 @@ class Function(BaseFunction):
             self.parameters.required.append(property_name)
 
     @classmethod
-    def parse_pydantic_schema(cls, schema_model: Type[BaseModel]):
+    def parse_from_pydantic(cls,
+                            schema_model: Type[BaseModel],
+                            plugin_name: str = None,
+                            ):
         """
         解析 pydantic 的 schema
         """
@@ -255,12 +260,12 @@ class Function(BaseFunction):
                     f"Correctly extracted `{cls.__name__}` with all "
                     f"the required parameters with correct types"
                 )
-
-        return {
-            "name": schema["title"],
-            "description": schema["description"],
-            "parameters": parameters,
-        }
+        plugin_name = plugin_name or schema["title"]
+        return cls(
+            name=plugin_name,
+            description=schema["description"],
+            parameters=parameters,
+        )
 
 
 class FunctionCallCompletion(BaseModel):
