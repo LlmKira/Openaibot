@@ -36,9 +36,6 @@ fasttext-wheel = "^0.9.2"
 tenacity = "^8.2.3"
 pysocks = "^1.7.1"
 flask-sqlalchemy = "^3.1.1"
-hikari = "^2.0.0.dev121"
-hikari-crescent = "^0.6.4"
-khl-py = "^0.3.16"
 emoji = "^2.8.0"
 websocket = "^0.2.1"
 wrapt = "^1.11.0"
@@ -51,6 +48,29 @@ boltons = "^23.1.1"
 orjson = "^3.9.10"
 pydantic-settings = "^2.0.3"
 docstring-parser = "^0.15"
+polling = "^0.3.2"
+elara = "^0.5.5"
+apscheduler = "^3.10.4"
+tzlocal = "^5.2"
+nltk = "^3.8.1"
+jieba = "^0.42.1"
+scikit-learn = "^1.3.2"
+cjieba = "^0.4.4"
+unstructured = { extras = ["docx", "pptx"], version = "^0.10.30" }
+requests = { extras = ["socks"], version = "^2.31.0" }
+feedparser = "^6.0.10"
+pillow = "^10.1.0"
+inscriptis = "^2.3.2"
+aiohttp = "^3.8.6"
+pytelegrambotapi = { version = "^4.14.0", optional = true }
+hikari = { version = "^2.0.0.dev121", optional = true }
+hikari-crescent = { version = "^0.6.4", optional = true }
+khl-py = { version = "^0.3.17", optional = true }
+slack-bolt = { version = "^1.18.0", optional = true }
+
+[tool.poetry.extras]
+bot = ["pytelegrambotapi", "hikari", "hikari-crescent", "khl-py", "slack-bolt"]
+all = ["pytelegrambotapi", "hikari", "hikari-crescent", "khl-py", "slack-bolt"]
 
 
 [build-system]
