@@ -10,7 +10,7 @@ try:
     import loguru
     import rich
 except ImportError:
-    print("Please run `poetry install`")
+    print("Please run `poetry install --all-extras`")
     sys.exit(1)
 from loguru import logger
 

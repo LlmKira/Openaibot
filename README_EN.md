@@ -142,7 +142,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install poetry && poetry install
+pip install poetry && poetry install --all-extras
 docker-compose -f docker-compose.yml up -d
 
 ```
@@ -158,7 +158,7 @@ To manually start using Pm2, you need to install `redis`, `rabbitmq`, `mongodb` 
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install poetry && poetry install
+pip install poetry && poetry install --all-extras
 apt install npm -y && npm install pm2 && pm2 start pm2.json
 pm2 monit
 
