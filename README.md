@@ -184,6 +184,12 @@ unbind - 解绑消息源
 
 ## 🤝 We need your help!
 
+This is a long term project and we started the development of the LLM APP very early!
+
+We applied a plugin-like system and search online before GPT3 OpenaiApi was released(davinci-003)
+
+After many iterations, we have worked hard to make this project more standardized, generic, and open.
+
 We can't do it on our own at the moment:
 
 - [ ] We need help with the documentation
