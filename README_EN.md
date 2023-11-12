@@ -147,6 +147,10 @@ docker-compose -f docker-compose.yml up -d
 
 ```
 
+Update the image with `docker-compose pull`.
+
+View Shell in docker, use `docker exec -it llmbot /bin/bash`, type `exit` to exit.
+
 ### 🍔 Shell
 
 To manually start using Pm2, you need to install `redis`, `rabbitmq`, `mongodb` by yourself.
@@ -162,7 +166,8 @@ pm2 monit
 
 Use `pm2 restart pm2.json` to restart the program.
 
->Recommend using `poetry` for dependency management, because we use `pydantic^1.9.0`, in order to prevent version conflicts, we use `poetry` for dependency management.
+> Recommend using `poetry` for dependency management, because we use `pydantic^1.9.0`, in order to prevent version
+> conflicts, we use `poetry` for dependency management.
 
 ## 🍪 Slash Command
 

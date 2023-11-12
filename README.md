@@ -139,6 +139,12 @@ docker-compose -f docker-compose.yml up -d
 
 ```
 
+
+更新镜像使用 `docker-compose pull`。
+
+在 docker 中查看 Shell，使用 `docker exec -it llmbot /bin/bash`，输入 `exit` 退出。
+
+
 ### 🍔 Shell
 
 人工使用Pm2启动，需要自行安装 `redis` ，`rabbitmq` ，`mongodb` 。
