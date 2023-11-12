@@ -6,8 +6,9 @@
 from typing import List, Union, Optional
 from urllib.parse import urlparse
 
-from llmkira.sdk.endpoint.openai import MODEL
+from llmkira.sdk.adapter import SCHEMA_GROUP
 from llmkira.sdk.func_calling import ToolRegister
+
 from .client import UserCostClient, UserConfigClient, UserCost, UserConfig
 from .schema import UserDriverMode
 from ...sdk.endpoint import Driver
@@ -40,7 +41,7 @@ class CostControl(object):
 class UserControl(object):
     @staticmethod
     def get_model():
-        return MODEL.__args__
+        return SCHEMA_GROUP.get_model_list()
 
     @staticmethod
     async def get_driver_config(
@@ -105,8 +106,8 @@ class UserControl(object):
         :return: new_driver
         """
         # assert model in MODEL.__args__, f"openai model is not valid,must be one of {MODEL.__args__}"
-        if model not in MODEL.__args__:
-            model = MODEL.__args__[0]
+        if model not in UserControl.get_model():
+            model = UserControl.get_model()[0]
         _user_data = await UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)
         new_driver = Driver(endpoint=endpoint, api_key=api_key, model=model, org_id=org_id)

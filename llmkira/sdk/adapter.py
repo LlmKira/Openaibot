@@ -53,6 +53,9 @@ class ModelMeta(object):
             f"please check your model name"
         )
 
+    def get_model_list(self):
+        return [model.model_name for model in self.model_list]
+
     def get_token_limit(self,
                         *,
                         model_name: str
