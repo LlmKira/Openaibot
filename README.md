@@ -147,6 +147,7 @@ docker-compose -f docker-compose.yml up -d
 git clone https://github.com/LlmKira/Openaibot.git
 pip install poetry
 cd Openaibot
+# poetry config virtualenvs.in-project true
 poetry install
 cp .env.exp .env&&nano .env
 apt install npm -y && npm install pm2 && pm2 start pm2.json
