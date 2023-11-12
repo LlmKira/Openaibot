@@ -11,7 +11,8 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-COPY poetry.lock pyproject.toml ./
+COPY ["pyproject.toml", "poetry.lock", "/app/"]
+
 VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "/config_dir"]
 
 RUN poetry config virtualenvs.in-project true && \
@@ -34,5 +35,6 @@ COPY --from=builder /app/.venv /app/.venv
 
 COPY pm2.json ./
 COPY config_dir ./config_dir
+COPY . /app
 
 CMD [ "pm2-runtime", "pm2.json" ]
