@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pydantic import field_validator, ConfigDict
+
 __package__name__ = "llmkira.extra.plugins.alarm"
 __plugin_name__ = "set_alarm_reminder"
 __openapi_version__ = "20231111"
@@ -10,10 +12,9 @@ verify_openapi_version(__package__name__, __openapi_version__)
 
 import datetime
 import re
-import time
 
 from loguru import logger
-from pydantic import validator, BaseModel
+from pydantic import BaseModel
 
 from llmkira.receiver.aps import SCHEDULER
 from llmkira.schema import RawMessage
@@ -21,7 +22,7 @@ from llmkira.sdk.func_calling import PluginMetadata, BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair
 from llmkira.task import Task, TaskHeader
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from llmkira.sdk.schema import TaskBatch
@@ -44,11 +45,9 @@ alarm.add_property(
 class Alarm(BaseModel):
     delay: int
     content: str
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
-
-    @validator("delay")
+    @field_validator("delay")
     def delay_validator(cls, v):
         if v < 0:
             raise ValueError("delay must be greater than 0")
@@ -58,9 +57,9 @@ class Alarm(BaseModel):
 async def send_notify(_platform, _meta, _sender: dict, _receiver: dict, _user, _chat, _content: str):
     await Task(queue=_platform).send_task(
         task=TaskHeader(
-            sender=TaskHeader.Location.parse_obj(_sender),  # 继承发送者
-            receiver=TaskHeader.Location.parse_obj(_receiver),  # 因为可能有转发，所以可以单配
-            task_meta=TaskHeader.Meta.parse_obj(_meta),
+            sender=TaskHeader.Location.model_validate(_sender),  # 继承发送者
+            receiver=TaskHeader.Location.model_validate(_receiver),  # 因为可能有转发，所以可以单配
+            task_meta=TaskHeader.Meta.model_validate(_meta),
             message=[
                 RawMessage(
                     user_id=_user,
@@ -79,7 +78,7 @@ class AlarmTool(BaseTool):
     silent: bool = False
     function: Function = alarm
     keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
-    pattern = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
+    pattern: Optional[re.Pattern] = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
     require_auth: bool = True
 
     # env_required: list = ["SCHEDULER", "TIMEZONE"]
@@ -148,7 +147,7 @@ class AlarmTool(BaseTool):
         """
         处理message，返回message
         """
-        _set = Alarm.parse_obj(arg)
+        _set = Alarm.model_validate(arg)
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,
             callback=[
@@ -163,22 +162,19 @@ class AlarmTool(BaseTool):
         logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
         SCHEDULER.add_job(
             func=send_notify,
-            id=str(time.time()),
+            id=str(receiver.user_id),
             trigger="date",
             replace_existing=True,
+            misfire_grace_time=1000,
             run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
             args=[
                 task.receiver.platform,
-                _meta.dict(),
-                task.sender.dict(), receiver.dict(),
+                _meta.model_dump(),
+                task.sender.model_dump(), receiver.model_dump(),
                 receiver.user_id, receiver.chat_id,
                 _set.content
             ]
         )
-        try:
-            SCHEDULER.start()
-        except Exception as e:
-            print(f"[155035]{e}")
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
                 sender=task.sender,  # 继承发送者

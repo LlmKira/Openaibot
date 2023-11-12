@@ -4,7 +4,7 @@
 # @File    : event.py
 # @Software: PyCharm
 
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 
 
 def help_message():
@@ -73,9 +73,7 @@ class SlashCommand(BaseModel):
     response_url: str = None
     trigger_id: str = None
     api_app_id: str = None
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class SlackChannelInfo(BaseModel):
@@ -107,6 +105,4 @@ class SlackChannelInfo(BaseModel):
     topic: dict = None
     purpose: dict = None
     previous_names: list = None
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")

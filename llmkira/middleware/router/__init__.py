@@ -19,15 +19,15 @@ class RouterManager(object):
 
     async def _upload(self):
         assert isinstance(self.router, RouterCache), "router info error"
-        self.router = RouterCache.parse_obj(self.router.dict())
-        return await cache.set_data(key=self.__redis_key__, value=self.router.json())
+        # self.router = RouterCache.model_validate(self.router.dict())
+        return await cache.set_data(key=self.__redis_key__, value=self.router.model_dump_json())
 
     async def _sync(self) -> RouterCache:
         _cache = await cache.read_data(key=self.__redis_key__)
         if not _cache:
             return RouterCache()
         try:
-            sub_info = RouterCache().parse_obj(_cache)
+            sub_info = RouterCache().model_validate(_cache)
         except Exception:
             raise Exception(f"not found router info")
         return sub_info

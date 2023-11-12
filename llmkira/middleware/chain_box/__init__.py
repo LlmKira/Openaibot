@@ -7,8 +7,8 @@ from typing import Optional
 
 from loguru import logger
 
-from ...sdk.cache.redis import cache
 from .schema import Chain
+from ...sdk.cache.redis import cache
 from ...task import TaskHeader
 
 
@@ -27,7 +27,7 @@ class AuthReloader(object):
         return _c
 
     async def add_auth(self, chain: Chain):
-        _cache = await cache.set_data(key=f"auth:{chain.uuid}", value=chain.json(), timeout=60 * 60 * 24 * 7)
+        _cache = await cache.set_data(key=f"auth:{chain.uuid}", value=chain.model_dump_json(), timeout=60 * 60 * 24 * 7)
         return chain.uuid
 
     async def get_auth(self, uuid: str) -> Optional[Chain]:
@@ -53,7 +53,7 @@ class ChainReloader(object):
         self.uid = uid
 
     async def add_task(self, chain: Chain):
-        _cache = await cache.lpush_data(key=f"chain:{self.uid}", value=chain.json())
+        _cache = await cache.lpush_data(key=f"chain:{self.uid}", value=chain.model_dump_json())
         return chain.uuid
 
     async def get_task(self) -> Optional[Chain]:

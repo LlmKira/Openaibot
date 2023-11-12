@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 
 
 class SingleModel(BaseModel):
-    model_name: str
+    llm_model: str
     token_limit: int
-    func_executor: Literal["function_call", "tool_call"]
+    func_executor: Literal["function_call", "tool_call", "unsupported"]
     request: Type["LlmRequest"]
     response: Type["LlmResult"]
     schema_type: str
@@ -33,7 +33,7 @@ class ModelMeta(object):
     def add_model(self, models: List[SingleModel]):
         for model in models:
             if not model.exception:
-                logger.debug(f"🥐 [Model Available] {model.model_name}")
+                logger.debug(f"🥐 [Model Available] {model.llm_model}")
             self.model_list.append(model)
 
     def get_by_model_name(self,
@@ -41,7 +41,7 @@ class ModelMeta(object):
                           model_name: str
                           ) -> SingleModel:
         for model in self.model_list:
-            if model.model_name == model_name:
+            if model.llm_model == model_name:
                 if model.exception:
                     raise NotImplementedError(
                         f"model {model_name} not implemented"
@@ -49,12 +49,12 @@ class ModelMeta(object):
                     )
                 return model
         raise LookupError(
-            f"model {model_name} not found"
+            f"model {model_name} not found! "
             f"please check your model name"
         )
 
     def get_model_list(self):
-        return [model.model_name for model in self.model_list]
+        return [model.llm_model for model in self.model_list]
 
     def get_token_limit(self,
                         *,

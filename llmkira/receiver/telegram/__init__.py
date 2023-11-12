@@ -16,7 +16,6 @@ from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import Message, File
-from llmkira.sdk.utils import sync
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
 
@@ -98,8 +97,9 @@ class TelegramSender(BaseSender):
                     reply_to_message_id=receiver.message_id,
                     parse_mode="MarkdownV2"
                 )
+                # TODO Telegram format
             except telebot.apihelper.ApiTelegramException as e:
-                time.sleep(3)
+                time.sleep(1)
                 logger.error(f"telegram send message error, retry\n{e}")
                 self.bot.send_message(
                     chat_id=receiver.chat_id,
@@ -150,7 +150,7 @@ class TelegramSender(BaseSender):
             llm_result=llm_result,
             receiver=receiver
         )
-        new_receiver = task.receiver.copy()
+        new_receiver = task.receiver.model_copy()
         new_receiver.platform = __receiver__
         """更新接收者为当前平台，便于创建的函数消息能返回到正确的客户端"""
         new_meta = task.task_meta.pack_loop(

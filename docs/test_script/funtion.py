@@ -48,4 +48,4 @@ if __name__ == '__main__':
         required=True
     )
     # print(Function.schema_json(indent=4))
-    print(json.dumps(f.dict(), indent=4))
+    print(json.dumps(f.model_dump(), indent=4))

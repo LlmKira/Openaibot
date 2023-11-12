@@ -4,11 +4,15 @@
 # @File    : error.py
 # @Software: PyCharm
 
+
 class ReplyNeededError(Exception):
     """
     Raised a error that need reply
     """
-    pass
+
+    def __init__(self, message: str = None, *args):
+        # 拦截 url 信息
+        super().__init__(message, *args)
 
 
 # 更安全的 format

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 def _pydantic_type(_message):
     if isinstance(_message, BaseModel):
-        return _message.dict()
+        return _message.model_dump()
     return _message
 
 
@@ -30,7 +30,10 @@ class BaseTokenizer(object):
 
 
 class OpenaiTokenizer(BaseTokenizer):
-    def num_tokens_from_messages(self, messages: List[Union[dict, BaseModel, Type[BaseModel]]], model: str) -> int:
+    def num_tokens_from_messages(self,
+                                 messages: List[Union[dict, BaseModel, Type[BaseModel]]],
+                                 model: str
+                                 ) -> int:
         """Return the number of tokens used by a list of messages_box."""
         if hasattr(messages, "request_final"):
             messages: "Message"
@@ -61,7 +64,9 @@ class OpenaiTokenizer(BaseTokenizer):
             print("Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613.")
             return self.num_tokens_from_messages(messages, model="gpt-4-0613")
         else:
-            raise NotImplementedError(
+            tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+            tokens_per_name = 1  # if there's a name, the role is omitted
+            logger.warning(
                 f"""num_tokens_from_messages() is not implemented for model {model}."""
                 """:) If you use a no-openai model, """
                 """you can [one-api](https://github.com/songquanpeng/one-api) project handle token usage."""

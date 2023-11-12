@@ -12,7 +12,8 @@ import khl
 import orjson
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseSettings, Field, BaseModel, root_validator, validator
+from pydantic import model_validator, ConfigDict, Field, BaseModel, PrivateAttr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from telebot import types
 
 from llmkira.schema import RawMessage
@@ -33,46 +34,33 @@ class RabbitMQ(BaseSettings):
     """
     代理设置
     """
-    amqp_dsn: str = Field("amqp://admin:8a8a8a@localhost:5672", env='AMQP_DSN')
-    _verify_status: bool = Field(False, env='VERIFY_STATUS')
+    amqp_dsn: str = Field("amqp://admin:8a8a8a@localhost:5672", validation_alias='AMQP_DSN')
+    _verify_status: bool = PrivateAttr(default=False)
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
 
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-
-    @root_validator()
-    def is_connect(cls, values):
-        import aio_pika
-        try:
-            sync(aio_pika.connect_robust(
-                values['amqp_dsn']
-            ))
-        except Exception as e:
-            values['_verify_status'] = False
-            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e} --dsn {values["amqp_dsn"]}')
-        else:
-            values['_verify_status'] = True
-            logger.success(f"RabbitMQ connect success")
-            if values['amqp_dsn'] == "amqp://admin:8a8a8a@localhost:5672":
-                logger.warning(f"\n⚠️ You are using the default RabbitMQ password")
-        return values
-
-    def check_connection(self, values):
+    @model_validator(mode='after')
+    def is_connect(self):
         import aio_pika
         try:
             sync(aio_pika.connect_robust(
                 self.amqp_dsn
             ))
         except Exception as e:
-            logger.warning('RabbitMQ DISCONNECT, pls set AMQP_DSN in ENV')
-            raise ValueError(f'RabbitMQ connect failed {e}')
+            self._verify_status = False
+            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e} --dsn {self.amqp_dsn}')
         else:
+            self._verify_status = True
             logger.success(f"RabbitMQ connect success")
-        return values
+            if self.amqp_dsn == "amqp://admin:8a8a8a@localhost:5672":
+                logger.warning(f"\n⚠️ You are using the default RabbitMQ password")
+        return self
+
+    @property
+    def available(self):
+        return self._verify_status
 
     @property
     def task_server(self):
-
         return self.amqp_dsn
 
 
@@ -84,25 +72,22 @@ class TaskHeader(BaseModel):
     """
     任务链节点
     """
-
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+    model_config = ConfigDict()
 
     class Meta(BaseModel):
         class Callback(BaseModel):
             function_response: str = Field("empty response", description="工具响应内容")
-            name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
+            name: str = Field(None, description="功能名称", pattern=r"^[a-zA-Z0-9_]+$")
             tool_call_id: Optional[str] = Field(None, description="工具调用ID")
 
-            @root_validator()
-            def check(cls, values):
+            @model_validator(mode="after")
+            def check(self):
                 """
                 检查回写消息
                 """
-                if not values.get("tool_call_id") and not values.get("name"):
+                if not self.tool_call_id and not self.name:
                     raise ValueError("tool_call_id or name must be set")
-                return values
+                return self
 
             @classmethod
             def create(cls,
@@ -143,7 +128,7 @@ class TaskHeader(BaseModel):
         )
         plan_chain_pending: List[TaskBatch] = Field(default=[], description="待完成的节点")
         plan_chain_length: int = Field(default=0, description="节点长度")
-        plan_chain_complete: bool = Field(False, description="是否完成此集群")
+        plan_chain_complete: Optional[bool] = Field(False, description="是否完成此集群")
 
         """功能状态与缓存"""
         function_enable: bool = Field(False, description="功能开关")
@@ -153,7 +138,7 @@ class TaskHeader(BaseModel):
         """携带插件的写回结果"""
         write_back: bool = Field(False, description="写回消息")
         callback: List[Callback] = Field(
-            default=None,
+            default=[],
             description="用于回写，插件返回的消息头，标识 function 的名字"
         )
 
@@ -169,34 +154,31 @@ class TaskHeader(BaseModel):
         run_step_limit: int = Field(4, description="函数集群计数器上限")
 
         """函数中枢的依赖变量"""
-        verify_uuid: str = Field(None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行")
+        verify_uuid: Optional[str] = Field(None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行")
         verify_map: Dict[str, TaskBatch] = Field({},
                                                  description="函数节点的认证信息，经携带认证重发后可通过")
         llm_result: Any = Field(None, description="存储任务的衍生信息源")
-        llm_type: str = Field(None, description="存储任务的衍生信息源类型")
+        llm_type: Optional[str] = Field(None, description="存储任务的衍生信息源类型")
         extra_args: dict = Field({}, description="提供额外参数")
 
-        @validator("llm_result")
-        def validate_llm_result(cls, val):
-            if isinstance(val, dict):
-                if not val.get("model"):
+        @model_validator(mode="after")
+        def check(self):
+            if isinstance(self.llm_result, dict):
+                if not self.llm_result.get("model"):
                     raise TypeError("Invalid llm_result")
-            return val
 
-        @root_validator()
-        def check(cls, values):
-            if not any([values["callback_forward"], values["callback_forward_reprocess"], values["direct_reply"]]):
-                if values["write_back"]:
+            if not any([self.callback_forward, self.callback_forward_reprocess, self.direct_reply]):
+                if self.write_back:
                     logger.warning("you shouldn*t write back without callback_forward or direct_reply")
-                    values["write_back"] = False
+                    self.write_back = False
             # If it is the root node, it cannot be written back.
             # Because the message posted by the user is always the root node.
             # Writing back will cause duplicate messages.
             # Because the middleware will write the message back
-            if values["sign_as"][0] == 0 and values["write_back"]:
+            if self.sign_as[0] == 0 and self.write_back:
                 logger.warning("root node shouldn*t write back")
-                values["write_back"] = False
-            return values
+                self.write_back = False
+            return self
 
         @classmethod
         def from_root(cls, release_chain, function_enable, platform: str = "default", **kwargs):
@@ -221,7 +203,7 @@ class TaskHeader(BaseModel):
                 verify_map = self.verify_map
             if not plan_chain_pending:
                 raise ValueError("plan_chain_pending can't be empty")
-            _new = self.copy(deep=True)
+            _new = self.model_copy(deep=True)
             _new.plan_chain_pending = plan_chain_pending
             _new.plan_chain_length = len(plan_chain_pending)
             _new.verify_map = verify_map
@@ -275,9 +257,9 @@ class TaskHeader(BaseModel):
             """
             return self.plan_chain_complete
 
-        class Config:
-            extra = "ignore"
-            arbitrary_types_allowed = True
+        model_config = ConfigDict(extra="ignore",
+                                  arbitrary_types_allowed=True
+                                  )
 
         def child(self, name) -> "TaskHeader.Meta":
             """
@@ -285,7 +267,7 @@ class TaskHeader(BaseModel):
             """
             self.sign_as = (self.sign_as[0] + 1, "child", name)
             self.run_step_already += 1
-            return self.copy(deep=True)
+            return self.model_copy(deep=True)
 
         def chain(self,
                   name,
@@ -302,7 +284,7 @@ class TaskHeader(BaseModel):
             self.direct_reply = False
             self.write_back = write_back
             self.release_chain = release_chain
-            return self.copy(deep=True)
+            return self.model_copy(deep=True)
 
         def reply_direct(self,
                          *,
@@ -410,12 +392,12 @@ class TaskHeader(BaseModel):
         thread_id: Optional[Union[str, int]] = Field(None, description="channel id/Telegram thread")
         message_id: Optional[Union[str, int]] = Field(None, description="message id")
 
-        @root_validator()
-        def to_string(cls, values):
-            for key in values:
-                if isinstance(values[key], int):
-                    values[key] = str(values[key])
-            return values
+        @model_validator(mode="after")
+        def to_string(self):
+            for key in ["user_id", "chat_id", "thread_id", "message_id"]:
+                if isinstance(getattr(self, key), int):
+                    setattr(self, key, str(getattr(self, key)))
+            return self
 
         @property
         def uid(self):
@@ -772,7 +754,7 @@ class TaskHeader(BaseModel):
                 chat_id=chat_id,
                 thread_id=thread_id,
                 text=text if text else f"(empty message)",
-                created_at=created_at
+                created_at=str(created_at)
             )
 
         deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pydantic import field_validator, ConfigDict
+
 __package__name__ = "llmkira.extra.plugins.sticker"
 __plugin_name__ = "convert_to_sticker"
 __openapi_version__ = "20231111"
@@ -15,13 +17,13 @@ from math import floor
 
 from PIL import Image
 from loguru import logger
-from pydantic import validator, BaseModel
+from pydantic import BaseModel
 
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling import BaseTool
 from llmkira.sdk.func_calling.schema import FuncPair, PluginMetadata
 from llmkira.task import Task, TaskHeader
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from llmkira.sdk.schema import TaskBatch
@@ -43,11 +45,9 @@ sticker.add_property(
 class Sticker(BaseModel):
     yes_no: str
     comment: str = "done"
+    model_config = ConfigDict(extra="allow")
 
-    class Config:
-        extra = "allow"
-
-    @validator("yes_no")
+    @field_validator("yes_no")
     def delay_validator(cls, v):
         if v != "yes":
             v = "no"
@@ -86,7 +86,7 @@ class StickerTool(BaseTool):
     """
     function: Function = sticker
     keywords: list = ["转换", "贴纸", ".jpg", "图像", '图片']
-    file_match_required = re.compile(r"(.+).jpg|(.+).png|(.+).jpeg|(.+).gif|(.+).webp|(.+).svg")
+    file_match_required: Optional[re.Pattern] = re.compile(r"(.+).jpg|(.+).png|(.+).jpeg|(.+).gif|(.+).webp|(.+).svg")
 
     def pre_check(self):
         return True
@@ -158,7 +158,7 @@ class StickerTool(BaseTool):
             if item.file:
                 for i in item.file:
                     _file.append(i)
-        _set = Sticker.parse_obj(arg)
+        _set = Sticker.model_validate(arg)
         _file_obj = [await i.raw_file() for i in sorted(set(_file), key=_file.index)]
         # 去掉None
         _file_obj = [item for item in _file_obj if item]

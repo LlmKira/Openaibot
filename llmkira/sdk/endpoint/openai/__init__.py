@@ -3,6 +3,8 @@
 # @Author  : sudoskys
 # @File    : base.py
 # @Software: PyCharm
+from pydantic import field_validator, ConfigDict, model_validator
+
 __version__ = "0.0.1"
 
 from typing import Union, List, Optional, Literal, Type
@@ -11,7 +13,7 @@ import httpx
 import pydantic
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseModel, root_validator, validator, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ..schema import LlmResult, LlmRequest
 from ..tee import Driver
@@ -50,17 +52,14 @@ class OpenaiResult(LlmResult):
                 "tool_calls" == self.finish_reason
             )
 
-    id: Optional[str] = Field(default=None, alias="request_id")
+    id: str
     object: str
     created: int
     model: str
     system_fingerprint: str = Field(default=None, alias="system_prompt_fingerprint")
     choices: List[Choices]
     usage: Usage
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     @property
     def result_type(self):
@@ -72,37 +71,35 @@ class OpenaiResult(LlmResult):
 
 
 class Openai(LlmRequest):
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     _config: Driver = PrivateAttr(default=None)
     """模型信息和配置"""
     messages: List[Union[Message, Type[Message]]]
     temperature: Optional[float] = 1
     n: Optional[int] = 1
-    top_p: Optional[float]
-    stop: Optional[Union[str, List[str]]]
-    max_tokens: Optional[int]
-    presence_penalty: Optional[float]
-    frequency_penalty: Optional[float]
-    seed: Optional[int]
+    top_p: Optional[float] = None
+    stop: Optional[Union[str, List[str]]] = None
+    max_tokens: Optional[int] = None
+    presence_penalty: Optional[float] = None
+    frequency_penalty: Optional[float] = None
+    seed: Optional[int] = None
     """基础设置"""
     stream: Optional[bool] = False
     """暂时不打算用的流式"""
-    logit_bias: Optional[dict]
+    logit_bias: Optional[dict] = None
     """暂时不打算用的logit_bias"""
-    user: Optional[str]
+    user: Optional[str] = None
     """追踪 User"""
-    response_format: Optional[dict]
+    response_format: Optional[dict] = None
     """回复指定的格式，See: https://platform.openai.com/docs/api-reference/chat/create"""
     # 函数
-    functions: Optional[List[Function]]
+    functions: Optional[List[Function]] = None
     """deprecated"""
     function_call: Optional[Union[BaseFunction, Literal["auto", "none"]]] = None
     """deprecated"""
     # 工具
-    tools: Optional[List[Tool]]
+    tools: Optional[List[Tool]] = None
     tool_choice: Optional[Union[ToolChoice, Literal["auto", "none"]]] = None
     """工具调用"""
 
@@ -112,7 +109,8 @@ class Openai(LlmRequest):
     注意验证 tool choice 的字段。
     """
 
-    @root_validator
+    @model_validator(mode="before")
+    @classmethod
     def fix_tool(cls, values):
         if not values.get("tools"):
             values["tools"] = None
@@ -182,7 +180,7 @@ class Openai(LlmRequest):
                             )
         self.messages = _new_messages
         #
-        _arg = self.dict(
+        _arg = self.model_dump(
             exclude_none=True,
             include=self.schema_map
         )
@@ -195,19 +193,19 @@ class Openai(LlmRequest):
         }
         return _arg
 
-    @validator("presence_penalty")
+    @field_validator("presence_penalty")
     def check_presence_penalty(cls, v):
         if not (2 > v > -2):
             raise ValidationError("presence_penalty must be between -2 and 2")
         return v
 
-    @validator("stop")
+    @field_validator("stop")
     def check_stop(cls, v):
         if isinstance(v, list) and len(v) > 4:
             raise ValidationError("stop list length must be less than 4")
         return v
 
-    @validator("temperature")
+    @field_validator("temperature")
     def check_temperature(cls, v):
         if not (2 > v > 0):
             raise ValidationError("temperature must be between 0 and 2")
@@ -250,14 +248,14 @@ class Openai(LlmRequest):
             )
             assert _response, ValidationError("response is empty")
             logger.debug(f"[Openai response] {_response}")
-            return_result = OpenaiResult.parse_obj(_response).ack()
+            return_result = OpenaiResult.model_validate(_response).ack()
         except httpx.ConnectError as e:
             logger.error(f"[Openai connect error] {e}")
             raise e
         except pydantic.ValidationError as e:
             logger.error(f"[Api format error] {e}")
             raise e
-        if self._echo:
+        if self.echo:
             logger.info(f"[Openai Raw response] {return_result}")
         return return_result
 
@@ -265,7 +263,7 @@ class Openai(LlmRequest):
 SCHEMA_GROUP.add_model(
     models=[
         SingleModel(
-            model_name="chatglm3",
+            llm_model="chatglm3",
             token_limit=4096,
             request=Openai,
             response=OpenaiResult,
@@ -274,7 +272,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="chatglm3-16k",
+            llm_model="chatglm3-16k",
             token_limit=16384,
             request=Openai,
             response=OpenaiResult,
@@ -288,7 +286,7 @@ SCHEMA_GROUP.add_model(
 SCHEMA_GROUP.add_model(
     models=[
         SingleModel(
-            model_name="gpt-3.5-turbo-1106",
+            llm_model="gpt-3.5-turbo-1106",
             token_limit=16384,
             request=Openai,
             response=OpenaiResult,
@@ -297,7 +295,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-3.5-turbo",
+            llm_model="gpt-3.5-turbo",
             token_limit=4096,
             request=Openai,
             response=OpenaiResult,
@@ -306,7 +304,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-3.5-turbo-16k",
+            llm_model="gpt-3.5-turbo-16k",
             token_limit=16384,
             request=Openai,
             response=OpenaiResult,
@@ -315,7 +313,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-3.5-turbo-0613",
+            llm_model="gpt-3.5-turbo-0613",
             token_limit=4096,
             request=Openai,
             response=OpenaiResult,
@@ -324,7 +322,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-3.5-turbo-16k-0613",
+            llm_model="gpt-3.5-turbo-16k-0613",
             token_limit=16384,
             request=Openai,
             response=OpenaiResult,
@@ -333,7 +331,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-4",
+            llm_model="gpt-4",
             token_limit=8192,
             request=Openai,
             response=OpenaiResult,
@@ -342,7 +340,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-4-32k",
+            llm_model="gpt-4-32k",
             token_limit=32768,
             request=Openai,
             response=OpenaiResult,
@@ -351,7 +349,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-4-0613",
+            llm_model="gpt-4-0613",
             token_limit=8192,
             request=Openai,
             response=OpenaiResult,
@@ -360,7 +358,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-4-vision-preview",
+            llm_model="gpt-4-vision-preview",
             token_limit=128000,
             request=Openai,
             response=OpenaiResult,
@@ -369,7 +367,7 @@ SCHEMA_GROUP.add_model(
             exception=None
         ),
         SingleModel(
-            model_name="gpt-4-1106-preview",
+            llm_model="gpt-4-1106-preview",
             token_limit=128000,
             request=Openai,
             response=OpenaiResult,

@@ -60,7 +60,7 @@ class ChainFunc(object):
         """
         认证链重发注册
         """
-        _task_forward: TaskHeader = task.copy()
+        _task_forward: TaskHeader = task.model_copy()
         meta: TaskHeader.Meta = _task_forward.task_meta.chain(
             name=__receiver__,
             write_back=False,  # 因为是发送给自己，所以不需要写回
@@ -105,7 +105,7 @@ class ChainFunc(object):
         :param repeatable: 是否可重复
         :param deploy_child: 是否部署子链
         """
-        _task_forward: TaskHeader = task.copy()
+        _task_forward: TaskHeader = task.model_copy()
         # 添加认证链并重置路由数据
         meta: TaskHeader.Meta = _task_forward.task_meta.chain(
             name=__receiver__,
@@ -189,7 +189,7 @@ class FunctionReceiver(object):
                                         task=task,
                                         text=f"🔭 Sorry function `{pending_task.get_batch_name()}` executor not found"
                                         )
-            return ModuleNotFoundError(f"Function {pending_task.get_batch_name()} not found")
+            raise ModuleNotFoundError(f"Function {pending_task.get_batch_name()} not found")
         # Run Function
         _tool_obj = _tool_cls()
         if _tool_obj.require_auth:
@@ -232,7 +232,7 @@ class FunctionReceiver(object):
         # Parse Message
         if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
-        task: TaskHeader = TaskHeader.parse_raw(message.body.decode("utf-8"))
+        task: TaskHeader = TaskHeader.model_validate_json(json_data=message.body.decode("utf-8"))
         # Get Function Call
         pending_task = await task.task_meta.work_pending_task(
             verify_uuid=task.task_meta.verify_uuid

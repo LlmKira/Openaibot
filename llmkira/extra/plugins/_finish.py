@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pydantic import ConfigDict
+
 __package__name__ = "llmkira.extra.plugins.finish"
 __plugin_name__ = "finish_conversation"
 __openapi_version__ = "20231111"
@@ -31,9 +33,7 @@ finish.add_property(
 
 class Finish(BaseModel):
     comment: str = Field(default=":)", description="end with a question or a comment.(__language: $context)")
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class FinishTool(BaseTool):
@@ -99,7 +99,7 @@ class FinishTool(BaseTool):
         """
         处理message，返回message
         """
-        _set = Finish.parse_obj(arg)
+        _set = Finish.model_validate(arg)
         # META
         _meta = task.task_meta.reply_message(
             plugin_name=__plugin_name__,

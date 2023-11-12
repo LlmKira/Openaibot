@@ -58,7 +58,9 @@ cd Openaibot || echo "DO NOT Exist Openaibot Dir" && exit
 
 # Install project dependencies
 echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
-python3 -m pip install -r requirements.txt
+python3 -m pip install poetry
+poetry config virtualenvs.in-project true &&
+  poetry install
 python3 -m pip install rich loguru && python3 start_tutorial.py
 echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
 

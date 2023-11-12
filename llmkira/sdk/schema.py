@@ -13,8 +13,9 @@ from typing import Literal, Optional, List, Type, Union
 from typing import TYPE_CHECKING
 
 import shortuuid
+from docstring_parser import parse
 from loguru import logger
-from pydantic import BaseModel, root_validator, Field, PrivateAttr
+from pydantic import model_validator, BaseModel, Field, PrivateAttr
 
 from .error import ValidationError, CheckError
 from .utils import sync
@@ -45,8 +46,8 @@ class File(BaseModel):
             return self.file_name, self.file_data
 
     file_id: Optional[str] = Field(None, description="文件ID")
-    file_name: str = Field(None, description="文件名")
-    file_url: str = Field(None, description="文件URL")
+    file_name: Optional[str] = Field(None, description="文件名")
+    file_url: Optional[str] = Field(None, description="文件URL")
     caption: str = Field(default='', description="文件注释")
     bytes: int = Field(default=None, description="文件大小")
     created_by: str = Field(default=None, description="上传者")
@@ -76,7 +77,7 @@ class File(BaseModel):
         FOR LLM
         """
         _comment = '('
-        for key, value in self.dict().items():
+        for key, value in self.model_dump().items():
             if value:
                 _comment += f"{key}={value},"
         return f"[Attachment{_comment[:-1]})]"
@@ -148,14 +149,14 @@ class BaseFunction(BaseModel):
     """
 
     class FunctionExtra(BaseModel):
-        system_prompt: str = Field(None, description="系统提示")
+        system_prompt: Optional[str] = Field(None, description="系统提示")
 
         @classmethod
         def default(cls):
             return cls(system_prompt=None)
 
     _config: FunctionExtra = FunctionExtra.default()
-    name: str = Field(None, description="函数名称", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
 
     def update_config(self, config: FunctionExtra) -> "BaseFunction":
         self._config = config
@@ -172,8 +173,7 @@ class BaseFunction(BaseModel):
     def request_final(self,
                       *,
                       schema_model: str):
-        return self.copy(
-            include={"name"}
+        return self.model_copy(
         )
 
 
@@ -188,7 +188,7 @@ class Function(BaseFunction):
         properties: dict = {}
         required: List[str] = Field(default=[], description="必填参数")
 
-    name: str = Field(None, description="函数名称", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
 
@@ -200,19 +200,17 @@ class Function(BaseFunction):
         :param schema_model: 适配的模型
         """
         if schema_model.startswith("gpt-"):
-            return self.copy(
-                include={"name", "description", "parameters"}
+            return self.model_copy(
             )
         elif schema_model.startswith("chatglm"):
-            return self.copy(
-                include={"name", "description", "parameters"}
+            return self.model_copy(
             )
         else:
             raise CheckError(f"unknown model {schema_model}, cant classify model type")
 
     def add_property(self,
                      property_name: str,
-                     property_type: Literal["string", "integer", "number", "boolean", "object"],
+                     property_type: Literal["string", "integer", "number", "boolean", "object", "array"],
                      property_description: str,
                      enum: Optional[tuple] = None,
                      required: bool = False
@@ -228,12 +226,41 @@ class Function(BaseFunction):
         if required:
             self.parameters.required.append(property_name)
 
-    def parse_schema_to_properties(self, schema: Type[BaseModel]):
+    @classmethod
+    def parse_pydantic_schema(cls, schema_model: Type[BaseModel]):
         """
         解析 pydantic 的 schema
         """
-        self.parameters.properties = schema.schema()["properties"]
-        self.parameters.required = schema.schema()["required"]
+        schema = schema_model.model_json_schema()
+        docstring = parse(schema.__doc__ or "")
+        parameters = {
+            k: v for k, v in schema.items() if k not in ("title", "description")
+        }
+        for param in docstring.params:
+            name = param.arg_name
+            description = param.description
+            if (name in parameters["properties"]) and description:
+                if "description" not in parameters["properties"][name]:
+                    parameters["properties"][name]["description"] = description
+
+        parameters["required"] = sorted(
+            k for k, v in parameters["properties"].items() if "default" not in v
+        )
+
+        if "description" not in schema:
+            if docstring.short_description:
+                schema["description"] = docstring.short_description
+            else:
+                schema["description"] = (
+                    f"Correctly extracted `{cls.__name__}` with all "
+                    f"the required parameters with correct types"
+                )
+
+        return {
+            "name": schema["title"],
+            "description": schema["description"],
+            "parameters": parameters,
+        }
 
 
 class FunctionCallCompletion(BaseModel):
@@ -254,17 +281,11 @@ class Tool(BaseModel):
             schema_model
     ):
         if schema_model.startswith("gpt-"):
-            return self.copy(
-                include={"type", "function"},
-            )
+            return self
         elif schema_model.startswith("chatglm"):
-            return self.copy(
-                include={"type", "function"},
-            )
+            return self
         else:
-            return self.copy(
-                include={"type", "function"},
-            )
+            return self
             # raise CheckError(f"unknown model {schema_model}, cant classify model type")
 
 
@@ -327,7 +348,7 @@ class ContentParts(BaseModel):
 
     class Image(BaseModel):
         url: str
-        detail: Optional[str]
+        detail: Optional[str] = None
 
     type: str
     image_url: Optional[str]
@@ -396,7 +417,7 @@ class Message(BaseModel, ABC):
 class SystemMessage(Message):
     role: str = Field(default="system")
     content: str
-    name: Optional[str] = Field(default=None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
 
     def request_final(self,
                       *,
@@ -408,7 +429,7 @@ class SystemMessage(Message):
 class UserMessage(Message):
     role: str = Field(default="user")
     content: Union[str, List[ContentParts], List[dict]]
-    name: Optional[str] = Field(default=None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
 
     @property
     def fold(self) -> "Message":
@@ -421,11 +442,10 @@ class UserMessage(Message):
                         f"""\ntimestamp={self._meta.datatime}"""
                         f"""\ndescription={self.content[:20] + "..."})"""
                         )
-        return self.copy(
+        return self.model_copy(
             update={
                 "content": metadata_str
-            },
-            include={"role", "content", "name"}
+            }
         )
 
     def request_final(self,
@@ -471,21 +491,21 @@ class UserMessage(Message):
 class AssistantMessage(Message):
     role: str = Field(default="assistant")
     content: Union[None, str] = Field(default='', description="assistant content")
-    name: Optional[str] = Field(default=None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
     tool_calls: Optional[List[ToolCallCompletion]] = Field(default=None, description="tool calls")
     """a array of tools, for result"""
     function_call: Optional[FunctionCallCompletion] = Field(default=None, description="Deprecated")
     """Deprecated by openai ,for result"""
 
-    @root_validator()
-    def deprecate_validator(cls, values):
-        if values.get("tool_calls") and values.get("function_call"):
+    @model_validator(mode="after")
+    def deprecate_validator(self):
+        if self.tool_calls and self.function_call:
             raise ValidationError("sdk param validator:tool_calls and function_call cannot both be provided")
-        if values.get("function_call"):
+        if self.function_call:
             logger.warning("sdk param validator:function_call is deprecated")
-        if values.get("content") is None:
-            values["content"] = ""
-        return values
+        if self.content is None:
+            self.content = ""
+        return self
 
     def get_executor_batch(self) -> List[TaskBatch]:
         """
@@ -536,12 +556,12 @@ class FunctionMessage(Message):
     content: str
     name: str
 
-    @root_validator()
-    def function_validator(cls, values):
+    @model_validator(mode="after")
+    def function_validator(self):
         logger.warning("Function Message is deprecated by openai")
-        if values.get("role") == "function" and not values.get("name"):
+        if self.role == "function" and not self.name:
             raise ValidationError("sdk param validator:name must be specified when role is function")
-        return values
+        return self
 
     def request_final(self,
                       *,
@@ -586,15 +606,15 @@ def parse_message_dict(item: dict):
         return None
     try:
         if role == "assistant":
-            _message = AssistantMessage.parse_obj(item)
+            _message = AssistantMessage.model_validate(item)
         elif role == "user":
-            _message = UserMessage.parse_obj(item)
+            _message = UserMessage.model_validate(item)
         elif role == "system":
-            _message = SystemMessage.parse_obj(item)
+            _message = SystemMessage.model_validate(item)
         elif role == "tool":
-            _message = ToolMessage.parse_obj(item)
+            _message = ToolMessage.model_validate(item)
         elif role == "function":
-            _message = FunctionMessage.parse_obj(item)
+            _message = FunctionMessage.model_validate(item)
         else:
             raise CheckError(f"unknown message type {role}")
     except Exception as e:
@@ -613,7 +633,7 @@ def standardise_for_request(
     标准化转换，供请求使用
     """
     if isinstance(message, dict):
-        message = Message.parse_obj(message)
+        message = Message.model_validate(message)
     if hasattr(message, "message"):
         return message.request_final(schema_model=schema_model)
     else:

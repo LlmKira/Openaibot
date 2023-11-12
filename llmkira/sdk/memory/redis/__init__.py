@@ -6,7 +6,8 @@ import json
 
 import redis
 from loguru import logger
-from pydantic import BaseSettings, Field, root_validator
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from llmkira.sdk.schema import Message, parse_message_dict
 from .utils import get_client
@@ -14,16 +15,13 @@ from .utils import get_client
 
 class RedisChatMessageHistory(object):
     class RedisSettings(BaseSettings):
-        redis_url: str = Field("redis://localhost:6379/0", env="REDIS_DSN")
+        redis_url: str = Field("redis://localhost:6379/0", validation_alias="REDIS_DSN")
         redis_key_prefix: str = "llm_message_store_1:"
+        model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
 
-        class Config:
-            env_file = '.env'
-            env_file_encoding = 'utf-8'
-
-        @root_validator
-        def redis_is_connected(cls, values):
-            redis_url = values.get("redis_url")
+        @model_validator(mode="after")
+        def redis_is_connected(self):
+            redis_url = self.redis_url
             try:
                 get_client(redis_url=redis_url)
             except redis.exceptions.ConnectionError as error:
@@ -31,7 +29,7 @@ class RedisChatMessageHistory(object):
                 raise ValueError("Could not connect to Redis")
             else:
                 logger.info("Core:Created Redis client successfully")
-            return values
+            return self
 
     def __init__(
             self,
@@ -72,7 +70,7 @@ class RedisChatMessageHistory(object):
 
     def add_message(self, message: Message) -> None:
         """Append the message to the record in Redis"""
-        self.redis_client.lpush(self.key, message.json())
+        self.redis_client.lpush(self.key, message.model_dump_json())
         if self.ttl:
             self.redis_client.expire(self.key, self.ttl)
 

@@ -20,8 +20,8 @@ from pydantic import BaseModel
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
-from ...sdk.cache.redis import cache
 from ..schema import Runner
+from ...sdk.cache.redis import cache
 from ...task import Task, TaskHeader
 
 __sender__ = "rss"
@@ -138,7 +138,7 @@ class Rss(object):
 
     async def re_init(self, update: Update) -> (str, list):
         _entry = list(update.entry.values())[:1]
-        await cache.set_data(key=self.db_key, value=update.json(), timeout=60 * 60 * 60 * 7)
+        await cache.set_data(key=self.db_key, value=update.model_dump_json(), timeout=60 * 60 * 60 * 7)
         return update.title, _entry
 
     async def update(self, cache_, update_, keys):
@@ -147,7 +147,7 @@ class Rss(object):
             # copy
             cache_.entry[key] = update_.entry[key]
             _return.append(update_.entry[key])
-        await cache.set_data(key=self.db_key, value=cache_.json(), timeout=60 * 60 * 60 * 7)
+        await cache.set_data(key=self.db_key, value=cache_.model_dump_json(), timeout=60 * 60 * 60 * 7)
         return update_.title, _return
 
     async def get_updates(self):
@@ -157,7 +157,7 @@ class Rss(object):
         if not _data:
             return await self.re_init(_load)
         assert isinstance(_data, dict), "wrong rss data"
-        _cache = self.Update.parse_obj(_data)
+        _cache = self.Update.model_validate(_data)
 
         # 验证是否全部不一样
         _old = list(_cache.entry.keys())

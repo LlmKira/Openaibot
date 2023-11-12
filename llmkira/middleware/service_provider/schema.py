@@ -5,19 +5,20 @@
 # @Software: PyCharm
 from abc import ABC, abstractmethod
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import field_validator, Field
 
 from llmkira.sdk.endpoint import Driver
+from pydantic_settings import BaseSettings
 
 
 class ProviderSetting(BaseSettings):
-    provider: str = Field("PUBLIC", env="SERVICE_PROVIDER")
+    provider: str = Field("PUBLIC", validation_alias="SERVICE_PROVIDER")
 
     @property
     def is_open_everyone(self):
         return self.provider.upper() == "PUBLIC"
 
-    @validator("provider")
+    @field_validator("provider")
     def provider_upper(cls, v):
         return v.upper()
 

@@ -3,46 +3,46 @@
 # @Author  : sudoskys
 # @File    : slack.py
 # @Software: PyCharm
+from typing import Optional
+
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseSettings, Field, root_validator
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SlackBot(BaseSettings):
     """
     代理设置
     """
-    app_token: str = Field(None, env='SLACK_APP_TOKEN')
+    app_token: Optional[str] = Field(None, validation_alias='SLACK_APP_TOKEN')
     # https://api.slack.com/apps
 
-    bot_token: str = Field(None, env='SLACK_BOT_TOKEN')
+    bot_token: Optional[str] = Field(None, validation_alias='SLACK_BOT_TOKEN')
     # https://api.slack.com/apps/XXXX/oauth?
 
-    secret: str = Field(None, env='SLACK_SIGNING_SECRET')
+    secret: Optional[str] = Field(None, validation_alias='SLACK_SIGNING_SECRET')
     # https://api.slack.com/authentication/verifying-requests-from-slack#signing_secrets_admin_page
 
-    proxy_address: str = Field(None, env="SLACK_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
-    bot_id: str = Field(None)
-    bot_username: str = Field(None)
+    proxy_address: Optional[str] = Field(None, validation_alias="SLACK_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
+    bot_id: Optional[str] = Field(None)
+    bot_username: Optional[str] = Field(None)
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
 
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-
-    @root_validator
-    def bot_setting_validator(cls, values):
+    @model_validator(mode='after')
+    def bot_setting_validator(self):
         try:
-            if values['app_token'] is None:
+            if self.app_token is None:
                 raise ValueError("\n🍀Check:SlackBot app_token is empty")
-            if values['bot_token'] is None:
+            if self.bot_token is None:
                 raise ValueError("\n🍀Check:SlackBot bot_token is empty")
-            if values['secret'] is None:
+            if self.secret is None:
                 raise ValueError("\n🍀Check:SlackBot secret is empty")
         except Exception as e:
             logger.warning(e)
         else:
             logger.success(f"🍀Check:SlackBot token ready")
-        return values
+        return self
 
     @property
     def available(self):
