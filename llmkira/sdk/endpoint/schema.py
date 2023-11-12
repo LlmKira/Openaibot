@@ -8,7 +8,7 @@ from typing import Optional, Any, Union, List
 from typing import TYPE_CHECKING
 
 import shortuuid
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import ConfigDict, BaseModel, Field, PrivateAttr
 
 from .tee import Driver
 
@@ -21,16 +21,13 @@ class LlmResult(BaseModel, ABC):
     LlmResult
     """
 
-    id: str = Field(default_factory=lambda x: str(shortuuid.uuid()[0:8]), alias="request_id")
+    id: Optional[str] = Field(default=str(shortuuid.uuid()))
     object: str
     created: int
     model: str
     choices: list
-    usage: Any
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    usage: Any = None
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     @property
     def result_type(self):
@@ -51,28 +48,29 @@ class LlmRequest(BaseModel, ABC):
     """
     LlmRequest
     """
-
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     _config: Driver = PrivateAttr()
     messages: list
     temperature: Optional[float] = 1
-    top_p: Optional[float]
+    top_p: Optional[float] = None
     n: Optional[int] = 1
-    stop: Optional[Union[str, List[str]]]
-    max_tokens: Optional[int]
-    presence_penalty: Optional[float]
-    frequency_penalty: Optional[float]
-    seed: Optional[int]
+    stop: Optional[Union[str, List[str]]] = None
+    max_tokens: Optional[int] = None
+    presence_penalty: Optional[float] = None
+    frequency_penalty: Optional[float] = None
+    seed: Optional[int] = None
 
     # 用于调试
-    _echo: bool = Field(default=None)
+    __echo: bool = PrivateAttr(default=False)
 
     @property
     def config(self):
         return self._config
+
+    @property
+    def echo(self):
+        return self.__echo
 
     @property
     def model(self):
@@ -112,7 +110,7 @@ class LlmRequest(BaseModel, ABC):
         }
 
     def create_params(self):
-        _arg = self.dict(
+        _arg = self.model_dump(
             exclude_none=True,
             include=self.schema_map
         )

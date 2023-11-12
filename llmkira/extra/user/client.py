@@ -27,7 +27,7 @@ class UserCostClient(Client):
         self.client = self.use_collection("user_cost")
 
     async def insert(self, data: UserCost):
-        await self.client.insert_one(data.dict())
+        await self.client.insert_one(data.model_dump())
         return data
 
     async def read_by_uid(self, uid: str) -> List[UserCost]:
@@ -50,9 +50,9 @@ class UserConfigClient(Client):
             [("uid", 1)], unique=True
         )
         try:
-            await self.client.insert_one(data.dict())
+            await self.client.insert_one(data.model_dump(mode="json"))
         except DuplicateKeyError:
-            await self.client.update_one({"uid": uid}, {"$set": data.dict()})
+            await self.client.update_one({"uid": uid}, {"$set": data.model_dump(mode="json")})
         return data
 
     async def read_by_uid(self, uid: str) -> Optional[UserConfig]:

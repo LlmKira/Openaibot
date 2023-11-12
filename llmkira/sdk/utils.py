@@ -7,6 +7,7 @@ bilibili_api.utils.sync
 """
 import asyncio
 import hashlib
+from bisect import bisect_left
 from typing import Coroutine, Dict, List
 
 import aiohttp
@@ -73,3 +74,16 @@ async def download_file(url, timeout=None, size_limit=None, headers=None):
 
             contents = await response.read()
             return contents
+
+
+def prefix_search(wordlist, prefix):
+    """
+    在有序列表中二分查找前缀
+    :param wordlist: 有序列表
+    :param prefix: 前缀
+    """
+    try:
+        index = bisect_left(wordlist, prefix)
+        return wordlist[index].startswith(prefix)
+    except IndexError:
+        return False

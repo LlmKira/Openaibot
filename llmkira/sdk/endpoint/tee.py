@@ -12,9 +12,10 @@ import os
 from typing import Optional
 from typing import TYPE_CHECKING
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import field_validator, Field
 
 from ..error import ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
     pass
@@ -38,8 +39,8 @@ class Driver(BaseSettings):
     api_key: str = Field(default=None)
     org_id: Optional[str] = Field(default=None)
     model: str = Field(default="gpt-3.5-turbo-0613")
-    model_retrieve: str = Field(default="gpt-3.5-turbo-16k")
-    proxy_address: str = Field(None)
+    retrieve_model: str = Field(default="gpt-3.5-turbo-16k")
+    proxy_address: Optional[str] = Field(None)
 
     # TODO:AZURE API VERSION
 
@@ -51,7 +52,7 @@ class Driver(BaseSettings):
         api_key = "****" + str(self.api_key)[-4:]
         return (
             f"Endpoint: {self.endpoint}\nApi_key: {api_key}\n"
-            f"Org_id: {self.org_id}\nModel: {self.model}\nRetrieve_model: {self.model_retrieve}"
+            f"Org_id: {self.org_id}\nModel: {self.model}\nRetrieve_model: {self.retrieve_model}"
         )
 
     @property
@@ -79,7 +80,7 @@ class Driver(BaseSettings):
             proxy_address=openai_proxy
         )
 
-    @validator("api_key")
+    @field_validator("api_key")
     def check_key(cls, v):
         if v:
             if len(str(v)) < 4:
@@ -101,10 +102,4 @@ class Driver(BaseSettings):
         """
         _flag = self.api_key[-3:]
         return f"{_flag}:{sha1_encrypt(self.api_key)}"
-
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-        case_sensitive = True
-        arbitrary_types_allowed = True
-        extra = "allow"
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=True, arbitrary_types_allowed=True, extra="allow")

@@ -108,6 +108,9 @@ class OpenaiMiddleware(object):
         )
 
     def init(self):
+        """
+        :raise: ProviderException
+        """
         # 构建请求的驱动信息
         self.auth_client = GetAuthDriver(uid=self.session_user_uid)
         self.driver = sync(self.auth_client.get())
@@ -132,13 +135,14 @@ class OpenaiMiddleware(object):
     def write_back(
             self,
             *,
-            message: Message
+            message: Optional[Message] = None
     ):
         """
         写回消息到 Redis 数据库中
         function 写回必须指定 name
         """
-        self.message_history.add_message(message=message)
+        if message:
+            self.message_history.add_message(message=message)
 
     def _append_function_tools(self, functions: List[Function]):
         """
@@ -214,7 +218,7 @@ class OpenaiMiddleware(object):
         :param retrieve_mode: 是否为检索模式，当我们需要重新处理超长消息时候，需要设定为 True
         :return: OpenaiResult
         """
-        run_driver_model = self.driver.model if not retrieve_mode else self.driver.model_retrieve
+        run_driver_model = self.driver.model if not retrieve_mode else self.driver.retrieve_model
         endpoint_schema = self.get_schema(model_name=run_driver_model)
         # 添加函数定义的系统提示
         if not disable_function:
@@ -281,6 +285,7 @@ class OpenaiMiddleware(object):
         _message = result.default_message
         _usage = result.usage.total_tokens
         self.message_history.add_message(message=_message)
+        # print(result.model_dump_json(indent=2))
         # 记录消耗
         await CostControl.add_cost(
             cost=UserCost.create_from_task(
@@ -290,7 +295,7 @@ class OpenaiMiddleware(object):
                     cost_by=self.task.receiver.platform,
                     token_usage=_usage,
                     token_uuid=self.driver.uuid,
-                    model_name=self.driver.model,
+                    llm_model=self.driver.model,
                     provide_type=self.auth_client.provide_type().value
                 )
             )

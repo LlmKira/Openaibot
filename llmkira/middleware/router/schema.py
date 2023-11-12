@@ -5,7 +5,7 @@
 # @Software: PyCharm
 from typing import Literal, List
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 SENDER = {}
 RECEIVER = {}
@@ -52,7 +52,7 @@ class Router(BaseModel):
 class RouterCache(BaseModel):
     router: List[Router] = []
 
-    @validator("router", always=True)
+    @field_validator("router")
     def router_validate(cls, v):
         _dict = {}
         for item in v:

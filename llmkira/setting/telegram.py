@@ -3,49 +3,49 @@
 # @Author  : sudoskys
 # @File    : telegram.py
 # @Software: PyCharm
+from typing import Optional
+
 from dotenv import load_dotenv
 from loguru import logger
-from pydantic import BaseSettings, Field, root_validator
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class TelegramBot(BaseSettings):
     """
     代理设置
     """
-    token: str = Field(None, env='TELEGRAM_BOT_TOKEN')
-    proxy_address: str = Field(None, env="TELEGRAM_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
-    bot_link: str = Field(None, env='TELEGRAM_BOT_LINK')
-    bot_id: str = Field(None, env="TELEGRAM_BOT_ID")
-    bot_username: str = Field(None, env="TELEGRAM_BOT_USERNAME")
+    token: Optional[str] = Field(None, validation_alias='TELEGRAM_BOT_TOKEN')
+    proxy_address: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
+    bot_link: Optional[str] = Field(None, validation_alias='TELEGRAM_BOT_LINK')
+    bot_id: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_ID")
+    bot_username: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_USERNAME")
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
 
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
-
-    @root_validator
-    def bot_validator(cls, values):
-        if values['proxy_address']:
-            logger.success(f"TelegramBot proxy was set to {values['proxy_address']}")
-        if values.get('token') is None:
+    @model_validator(mode='after')
+    def bot_validator(self):
+        if self.proxy_address:
+            logger.success(f"TelegramBot proxy was set to {self.proxy_address}")
+        if self.token is None:
             logger.warning(f"\n🍀Check:Telegrambot token is empty")
-        if values.get('bot_id') is None and values.get('token', None):
+        if self.bot_id is None and self.token:
             try:
                 from telebot import TeleBot
                 # 创建 Bot
-                if values['proxy_address'] is not None:
+                if self.proxy_address is not None:
                     from telebot import apihelper
-                    if "socks5://" in values['proxy_address']:
-                        values['proxy_address'] = values['proxy_address'].replace("socks5://", "socks5h://")
-                    apihelper.proxy = {'https': values['proxy_address']}
-                _bot = TeleBot(token=values.get('token')).get_me()
-                values['bot_id'] = _bot.id
-                values['bot_username'] = _bot.username
-                values['bot_link'] = f"https://t.me/{values['bot_username']}"
+                    if "socks5://" in self.proxy_address:
+                        self.proxy_address = self.proxy_address.replace("socks5://", "socks5h://")
+                    apihelper.proxy = {'https': self.proxy_address}
+                _bot = TeleBot(token=self.token).get_me()
+                self.bot_id = str(_bot.id)
+                self.bot_username = _bot.username
+                self.bot_link = f"https://t.me/{self.bot_username}"
             except Exception as e:
                 logger.error(f"\n🍀Check:Telegrambot token is empty:{e}")
             else:
-                logger.success(f"🍀Check:TelegramBot connect success: {values.get('bot_username')}")
-        return values
+                logger.success(f"🍀Check:TelegramBot connect success: {self.bot_username}")
+        return self
 
     @property
     def available(self):

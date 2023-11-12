@@ -4,10 +4,10 @@
 # @File    : schema.py
 # @Software: PyCharm
 import time
-from typing import Any, Type
+from typing import Any, Type, Optional
 
 import shortuuid
-from pydantic import BaseModel, Field, validator
+from pydantic import field_validator, BaseModel, Field
 
 
 class Chain(BaseModel):
@@ -34,13 +34,13 @@ class Chain(BaseModel):
             data["deprecated"] = True
         if not data.get("expire"):
             data["deprecated"] = True
-        return cls.parse_obj(data)
+        return cls.model_validate(data)
 
     @property
     def is_expire(self):
         return (int(time.time()) - self.created_times > self.expire) or self.deprecated
 
-    @validator("uid")
+    @field_validator("uid")
     def check_user_id(cls, v):
         if v.count(":") != 1:
             raise ValueError("Chain:uid format error")
@@ -48,7 +48,7 @@ class Chain(BaseModel):
             raise ValueError("Chain:uid is empty")
         return v
 
-    @validator("address")
+    @field_validator("address")
     def check_address(cls, v):
         if not v:
             raise ValueError("Chain:address is empty")
@@ -59,5 +59,5 @@ class Chain(BaseModel):
         神祗的格式化
         """
         if isinstance(self.arg, dict):
-            self.arg = arg.parse_obj(self.arg)
+            self.arg = arg.model_validate(self.arg)
         return self

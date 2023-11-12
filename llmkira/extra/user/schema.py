@@ -8,7 +8,8 @@ import time
 from enum import Enum
 from typing import List, Union, Optional
 
-from pydantic import BaseModel, Field, BaseSettings, validator
+from pydantic import field_validator, ConfigDict, BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ...sdk.endpoint import Driver
 
@@ -35,17 +36,17 @@ class UserCost(BaseModel):
         """
         cost_by: str = Field("chat", description="环节")
         token_usage: int = Field(0)
-        token_uuid: str = Field(None, description="Api Key 的 hash")
-        model_name: str = Field(None, description="Model Name")
+        token_uuid: Optional[str] = Field(None, description="Api Key 的 hash")
+        llm_model: Optional[str] = Field(None, description="Model Name")
         provide_type: int = Field(None, description="认证模式")
 
         @classmethod
         def by_function(cls, function_name: str,
                         token_usage: int,
                         token_uuid: str,
-                        model_name: str,
+                        llm_model: str,
                         ):
-            return cls(cost_by=function_name, token_usage=token_usage, token_uuid=token_uuid, model_name=model_name)
+            return cls(cost_by=function_name, token_usage=token_usage, token_uuid=token_uuid, model_name=llm_model)
 
     request_id: str = Field(default=None, description="请求 UUID")
     uid: str = Field(default=None, description="用户 UID ,注意是平台+用户")
@@ -70,7 +71,7 @@ class UserCost(BaseModel):
                 function_name=cost_by,
                 token_usage=token_usage,
                 token_uuid=token_uuid,
-                model_name=model_name,
+                llm_model=model_name,
             ),
             cost_time=int(time.time()),
         )
@@ -89,13 +90,11 @@ class UserCost(BaseModel):
             cost_time=int(time.time()),
         )
 
-    class Config:
-        extra = "ignore"
-        allow_mutation = True
-        arbitrary_types_allowed = True
-        validate_assignment = True
-        validate_all = True
-        validate_on_assignment = True
+    model_config = ConfigDict(extra="ignore",
+                              arbitrary_types_allowed=True,
+                              validate_assignment=True,
+                              validate_default=True
+                              )
 
 
 class UserConfig(BaseSettings):
@@ -133,7 +132,7 @@ class UserConfig(BaseSettings):
             self.token = token
             return self
 
-        @validator("provider")
+        @field_validator("provider")
         def upper_provider(cls, v):
             if v:
                 return v.upper()
@@ -146,12 +145,12 @@ class UserConfig(BaseSettings):
         def default(cls):
             return cls()
 
-        def block(self, plugin_name: str) -> "PluginConfig":
+        def block(self, plugin_name: str) -> "UserConfig.PluginConfig":
             if plugin_name not in self.block_list:
                 self.block_list.append(plugin_name)
             return self
 
-        def unblock(self, plugin_name: str) -> "PluginConfig":
+        def unblock(self, plugin_name: str) -> "UserConfig.PluginConfig":
             if plugin_name in self.block_list:
                 self.block_list.remove(plugin_name)
             return self
@@ -162,16 +161,15 @@ class UserConfig(BaseSettings):
     plugin_subs: PluginConfig = Field(default_factory=PluginConfig.default, description="插件订阅")
     llm_driver: LlmConfig = Field(default_factory=LlmConfig.default, description="驱动")
 
-    @validator("uid")
+    @field_validator("uid")
     def check_user_id(cls, v):
         if v:
             return str(v)
         return v
 
-    class Config:
-        extra = "ignore"
-        allow_mutation = True
-        arbitrary_types_allowed = True
-        validate_assignment = True
-        validate_all = True
-        validate_on_assignment = True
+    model_config = SettingsConfigDict(extra="ignore",
+                                      frozen=True,
+                                      arbitrary_types_allowed=True,
+                                      validate_assignment=True,
+                                      validate_default=True
+                                      )

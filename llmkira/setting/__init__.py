@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-from pydantic import Field, BaseModel
+from pydantic import ConfigDict, Field, BaseModel
 
 from .discord import BotSetting as DiscordSetting
 from .kook import BotSetting as KookSetting
@@ -19,9 +19,7 @@ class StartSetting(BaseModel):
     kook: bool = Field(default=False)
     slack: bool = Field(default=False)
     telegram: bool = Field(default=False)
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     @classmethod
     def from_subdir(cls):

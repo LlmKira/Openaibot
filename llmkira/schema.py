@@ -4,11 +4,11 @@
 # @File    : schema.py
 # @Software: PyCharm
 import time
-from typing import TYPE_CHECKING, Literal, Type
+from typing import TYPE_CHECKING, Literal, Type, Optional
 from typing import Union, List
 
 import nest_asyncio
-from pydantic import Field, BaseModel, validator
+from pydantic import field_validator, ConfigDict, Field, BaseModel
 
 from .sdk.endpoint.tokenizer import get_tokenizer
 from .sdk.schema import File, generate_uid, UserMessage, Message
@@ -22,9 +22,9 @@ nest_asyncio.apply()
 class RawMessage(BaseModel):
     user_id: Union[int, str] = Field(None, description="user id")
     chat_id: Union[int, str] = Field(None, description="guild id(channel in dm)/Telegram chat id")
-    thread_id: Union[int, str] = Field(None, description="channel id/Telegram thread")
+    thread_id: Optional[Union[int, str]] = Field(None, description="channel id/Telegram thread")
 
-    text: str = Field(None, description="文本")
+    text: str = Field("", description="文本")
     file: List[File] = Field([], description="文件")
 
     created_at: str = Field(default=str(int(time.time())), description="创建时间")
@@ -33,12 +33,9 @@ class RawMessage(BaseModel):
     sign_loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
     sign_fold_docs: bool = Field(default=False, description="是否获取元数据")
     extra_kwargs: dict = Field(default={}, description="extra kwargs for loop")
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
-    class Config:
-        arbitrary_types_allowed = True
-        extra = "allow"
-
-    @validator("text")
+    @field_validator("text")
     def check_text(cls, v):
         if v == "":
             v = ""
@@ -79,7 +76,7 @@ class RawMessage(BaseModel):
             user_id=locate.user_id,
             text=message.content,
             chat_id=locate.chat_id,
-            created_at=int(time.time())
+            created_at=str(int(time.time()))
         )
 
 

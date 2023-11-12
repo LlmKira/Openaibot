@@ -58,20 +58,20 @@ class PublicProvider(BaseProvider):
             return True
         logger.debug(f"🍦 Public Provider Check Times UID({uid}) Read({read})")
         if read:
-            _data: UserToday = UserToday.parse_obj(read)
+            _data: UserToday = UserToday.model_validate(read)
             if str(_data.time) != str(date):
-                await cache.set_data(self.__database_key(uid=uid), value=UserToday().dict())
+                await cache.set_data(self.__database_key(uid=uid), value=UserToday().model_dump())
                 return True
             else:
                 if _data.count > times:
                     return False
                 if _data.count < times:
                     _data.count += 1
-                    await cache.set_data(self.__database_key(uid=uid), value=_data.dict())
+                    await cache.set_data(self.__database_key(uid=uid), value=_data.model_dump())
                     return True
         else:
             _data = UserToday()
-            await cache.set_data(self.__database_key(uid=uid), value=_data.dict())
+            await cache.set_data(self.__database_key(uid=uid), value=_data.model_dump())
             return True
         return False
 

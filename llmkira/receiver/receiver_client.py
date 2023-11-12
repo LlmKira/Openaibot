@@ -12,9 +12,11 @@ import ssl
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Tuple, List
 
+import httpx
 import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
+from pydantic import ValidationError as PydanticValidationError
 from telebot import formatting
 
 from llmkira.error import get_request_error_message, ReplyNeededError
@@ -89,19 +91,13 @@ class BaseSender(object, metaclass=ABCMeta):
                                        ):
         auth_map = {}
 
-        async def _action_block(_task_batch: TaskBatch):
+        async def _action_block(_task_batch: TaskBatch) -> Tuple[List[str], bool]:
             _tool = ToolRegister().get_tool(_task_batch.get_batch_name())
             if not _tool:
                 logger.warning(f"not found function {_task_batch.get_batch_name()}")
-                return await self.forward(
-                    receiver=receiver,
-                    message=[
-                        RawMessage(
-                            text=f"🔭 Sorry function `{_task_batch.get_batch_name()}` not found",
-                            only_send_file=False
-                        )
-                    ]
-                )
+                return [
+                    formatting.mbold("🍩 [Unknown]") + f" `{_task_batch.get_batch_name()}` "
+                ], False
             tool = _tool()
             icon = "🌟"
             if tool.require_auth:
@@ -136,6 +132,7 @@ class BaseSender(object, metaclass=ABCMeta):
             formatting.mbold("💫 Plan") + f" `{llm_result.id[-4:]}` ",
         ]
         total_silent = True
+        assert isinstance(task_batch, list), f"task batch type error {type(task_batch)}"
         for _task_batch in task_batch:
             _message, _silent = await _action_block(_task_batch=_task_batch)
             if not _silent:
@@ -203,16 +200,22 @@ class BaseReceiver(object):
             return _result
         except ssl.SSLSyscallError as e:
             logger.error(f"[Network ssl error] {e},that maybe caused by bad proxy")
-            raise ReplyNeededError(e)
+            raise Exception(e)
+        except httpx.RemoteProtocolError as e:
+            logger.error(f"[Network RemoteProtocolError] {e}")
+            raise ReplyNeededError(message=f"Server disconnected without sending a response.")
         except ServiceUnavailableError as e:
             logger.error(f"[Service Unavailable Error] {e}")
-            raise ReplyNeededError(e)
+            raise ReplyNeededError(message=f"[551721]Service Unavailable {e}")
         except RateLimitError as e:
             logger.error(f"ApiEndPoint:{e}")
-            raise ReplyNeededError(e)
+            raise ReplyNeededError(message=f"[551580]Rate Limit Error {e}")
         except ProviderException as e:
             logger.info(f"[Service Provider]{e}")
-            raise ReplyNeededError(e)
+            raise ReplyNeededError(message=f"[551183]Service Provider Error {e}")
+        except PydanticValidationError as e:
+            logger.exception(e)
+            raise ReplyNeededError(message=f"[551684]Request Data ValidationError")
         except Exception as e:
             logger.exception(e)
             raise e
@@ -249,13 +252,12 @@ class BaseReceiver(object):
                 if not isinstance(get_message, AssistantMessage):
                     raise ReplyNeededError("[55682]Request Result Not Valid, Must Be `AssistantMessage`")
             except Exception as e:
-                await self.sender.error(
-                    receiver=task.receiver,
-                    text=get_request_error_message(str(e))
-                )
-                if not isinstance(e, ReplyNeededError):
-                    raise e
-                return None
+                if isinstance(e, ReplyNeededError):
+                    await self.sender.error(
+                        receiver=task.receiver,
+                        text=get_request_error_message(str(e))
+                    )
+                raise e
             if intercept_function:
                 if get_message.sign_function:
                     await self.sender.reply(
@@ -284,7 +286,7 @@ class BaseReceiver(object):
         处理消息
         """
         logger.debug(f"[x] Received Message \n--message {message.body}")
-        _task: TaskHeader = TaskHeader.parse_raw(message.body.decode("utf-8"))
+        _task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
         # 没有任何参数
         if _task.task_meta.direct_reply:
             await self.sender.forward(
@@ -295,16 +297,22 @@ class BaseReceiver(object):
 
         functions = await FunctionReorganize(task=_task).build_arg()
         """函数组建，自动过滤拉黑后的插件和错误过多的插件"""
-
-        _llm = OpenaiMiddleware(
-            task=_task,
-            functions=functions,
-            tools=[]
-            # 内部会初始化函数工具，这里是其他类型工具
-        ).init()
+        try:
+            _llm = OpenaiMiddleware(
+                task=_task,
+                functions=functions,
+                tools=[]
+                # 内部会初始化函数工具，这里是其他类型工具
+            ).init()
+        except ProviderException as e:
+            await self.sender.error(
+                receiver=_task.receiver,
+                text=f"🥞 Auth System Report {formatting.escape_markdown(str(e))}"
+            )
+            raise e
         """构建通信代理"""
         schema = _llm.get_schema()
-        logger.debug(f"[x] Received Order \n--order {_task.json()}")
+        logger.debug(f"[x] Received Order \n--order {_task.model_dump_json()}")
         # function_response write back
         if _task.task_meta.write_back:
             for call in _task.task_meta.callback:
@@ -312,9 +320,12 @@ class BaseReceiver(object):
                     _func_tool_msg = call.get_tool_message()
                 elif schema.func_executor == "function_call":
                     _func_tool_msg = call.get_function_message()
+                elif schema.func_executor == "unsupported":
+                    _func_tool_msg = None
                 else:
                     raise NotImplementedError(f"func_executor {schema.func_executor} not implemented")
                 """消息类型是由请求结果决定的。也就是理论不存在预料外的冲突。"""
+
                 _llm.write_back(
                     message=_func_tool_msg
                 )
@@ -353,7 +364,6 @@ class BaseReceiver(object):
         try:
             if os.getenv("LLMBOT_STOP_REPLY") == "1":
                 return None
-
             # 处理消息
             task, llm, point, release = await self.deal_message(message)
             # 启动链式函数应答循环
@@ -362,7 +372,6 @@ class BaseReceiver(object):
                 if chain:
                     await Task(queue=chain.address).send_task(task=chain.arg)
                     logger.info(f"🧀 Chain point release\n--callback_send_by {point}")
-
         except Exception as e:
             logger.exception(e)
             await message.reject(requeue=False)

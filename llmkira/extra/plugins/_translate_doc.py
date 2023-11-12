@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pydantic import ConfigDict
+
 __package__name__ = "llmkira.extra.plugins.translate_file"
 __plugin_name__ = "translate_file"
 __openapi_version__ = "20231027"
@@ -44,9 +46,7 @@ translate.add_property(
 class Translate(BaseModel):
     language: str
     file_id: str
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class TranslateTool(BaseTool):
@@ -179,7 +179,7 @@ class TranslateTool(BaseTool):
                 for i in item.file:
                     _translate_file.append(i)
         try:
-            translate_arg = Translate.parse_obj(arg)
+            translate_arg = Translate.model_validate(arg)
         except Exception:
             raise ValueError("Please specify the following parameters clearly\n file_id=xxx,language=xxx")
         _file_obj = [await i.raw_file()

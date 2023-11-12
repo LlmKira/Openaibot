@@ -42,7 +42,7 @@ class Task(object):
             # await channel.initialize(timeout=2000)
             # Creating a message
             message = Message(
-                body=task.json().encode("utf-8"),
+                body=task.model_dump_json().encode("utf-8"),
                 delivery_mode=DeliveryMode.PERSISTENT,
                 expiration=EXPIRATION_SECOND
             )

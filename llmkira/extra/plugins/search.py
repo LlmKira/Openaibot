@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from pydantic import ConfigDict
+
 __package__name__ = "llmkira.extra.plugins.search"
 __plugin_name__ = "search_in_google"
 __openapi_version__ = "20231111"
@@ -74,9 +76,7 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
 
 class Search(BaseModel):
     keywords: str
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 
 class SearchTool(BaseTool):
@@ -200,7 +200,7 @@ class SearchTool(BaseTool):
         处理message，返回message
         """
 
-        _set = Search.parse_obj(arg)
+        _set = Search.model_validate(arg)
         _search_result = search_on_duckduckgo(_set.keywords)
         # META
         _meta = task.task_meta.reply_raw(

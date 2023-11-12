@@ -8,7 +8,7 @@ from typing import Optional, Type, Dict, Any, List, Union, Set, final, Literal
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import field_validator, BaseModel, Field, model_validator
 
 if TYPE_CHECKING:
     from ...task import TaskHeader
@@ -43,15 +43,14 @@ class BaseTool(ABC, BaseModel):
         return self.function.name
 
     @final
-    @root_validator
-    def _check_conflict(cls, values):
-        # env_required and silent
-        if values["silent"] and values["env_required"]:
+    @model_validator(mode="after")
+    def _check_conflict(self):
+        if self.silent and self.env_required:
             raise ValueError("silent and env_required can not be True at the same time")
-        return values
+        return self
 
     @final
-    @validator("keywords", pre=True)
+    @field_validator("keywords", mode="before")
     def _check_keywords(cls, v):
         for i in v:
             if not isinstance(i, str):

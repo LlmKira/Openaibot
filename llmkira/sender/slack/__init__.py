@@ -166,7 +166,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/clear_endpoint')
         async def listen_clear_endpoint_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             # _cmd, _arg = parse_command(command=message.text)
             _tips = "🪄 Done"
@@ -177,7 +177,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/set_endpoint')
         async def listen_set_endpoint_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -202,7 +202,7 @@ class SlackBotRunner(Runner):
                 return await respond(
                     text=formatting.format_text(
                         formatting.mbold(f"🪄 Failed: {e}", escape=False),
-                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>#<model_name>"),
+                        formatting.mitalic("Format: /set_endpoint <openai_key>#<openai_endpoint>#<llm_model>"),
                         formatting.mitalic(f"Model Name: {UserControl.get_model()}"),
                         separator="\n"
                     )
@@ -218,7 +218,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/func_ban')
         async def listen_func_ban_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -247,7 +247,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/func_unban')
         async def listen_func_unban_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -276,7 +276,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/token')
         async def listen_token_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -304,7 +304,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/token_clear')
         async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             try:
                 token = await UserControl.set_token(
@@ -329,7 +329,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/bind')
         async def listen_bind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -357,7 +357,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/unbind')
         async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -385,7 +385,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/env')
         async def listen_env_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
@@ -412,7 +412,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/clear')
         async def listen_clear_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             RedisChatMessageHistory(session_id=f"{__sender__}:{command.user_id}", ttl=60 * 60 * 1).clear()
             return await respond(
@@ -424,7 +424,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/help')
         async def listen_help_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             await respond(
                 text=formatting.format_text(
@@ -436,7 +436,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/tool')
         async def listen_tool_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             _tool = ToolRegister().functions
             _paper = [[c.name, c.description] for name, c in _tool.items()]
@@ -467,7 +467,7 @@ class SlackBotRunner(Runner):
 
         @bot.command(command='/auth')
         async def listen_auth_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.parse_obj(command)
+            command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return await respond(
@@ -489,7 +489,7 @@ class SlackBotRunner(Runner):
                 _res = await self.bot.client.conversations_info(
                     channel=event_.channel
                 )
-                _channel: SlackChannelInfo = SlackChannelInfo.parse_obj(_res.get("channel", {}))
+                _channel: SlackChannelInfo = SlackChannelInfo.model_validate(_res.get("channel", {}))
                 if not _channel.is_member:
                     raise Exception("Not in channel")
             except Exception as e:
@@ -553,16 +553,16 @@ class SlackBotRunner(Runner):
                 return await create_task(event_, funtion_enable=__default_function_enable__)
 
         @bot.event("message")
-        async def listen_im(event, logger):
+        async def listen_im(_event, _logger):
             """
             自动响应私聊消息
             """
 
-            logger.info(event)
-            event_: SlackMessageEvent = SlackMessageEvent.parse_obj(event)
+            _logger.info(event)
+            event_: SlackMessageEvent = SlackMessageEvent.model_validate(_event)
             # 校验消息是否过期
             if int(float(event_.event_ts)) < int(time.time()) - 60 * 60 * 5:
-                logger.warning(f"slack: message expired {event_.event_ts}")
+                _logger.warning(f"slack: message expired {event_.event_ts}")
                 return
             if not event_.text:
                 return None
