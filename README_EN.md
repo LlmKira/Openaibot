@@ -142,7 +142,8 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install -r requirements.txt
+pip install poetry
+poetry install
 docker-compose -f docker-compose.yml up -d
 
 ```

@@ -19,6 +19,6 @@ class Child(Test):
     env_required = ["test"]
 
 
-_r = Child().dict()
+_r = Child().model_dump()
 _s = Child().env_help_docs
 print(_r)

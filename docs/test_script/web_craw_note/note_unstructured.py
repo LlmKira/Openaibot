@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : note_unstructured.py
 # @Software: PyCharm
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 from rich import print
@@ -20,13 +20,13 @@ test_url_list = [
 class UnstructuredElement(BaseModel):
     class Meta(BaseModel):
         url: str
-        title: str = Field(None, alias="title")
-        filetype: str = Field(None, alias="filetype")
+        title: Optional[str] = Field(None, alias="title")
+        filetype: Optional[str] = Field(None, alias="filetype")
         page_number: int = Field(None, alias="page_number")
         languages: List[str] = Field(None, alias="languages")
         category_depth: int = Field(None, alias="category_depth")
         link_urls: List[str] = Field(None, alias="link_urls")
-        link_texts: str = Field(None, alias="link_text")
+        link_texts: Optional[str] = Field(None, alias="link_text")
 
     text: str
     metadata: Meta
