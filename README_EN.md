@@ -31,6 +31,8 @@
   <a href="https://llmkira.github.io/Docs/en/dev/basic">🧀 Dev Docs</a>
   &
   <a href="README.md">📝 中文Readme</a>
+  &
+  <a href="CONTRIBUTING.md">🤝 How to contribute</a>
 </p>
 
 > Any issues with deployment? Submit an Issue to help us fix SLA
