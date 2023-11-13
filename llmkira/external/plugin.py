@@ -3,7 +3,7 @@ from llmkira.external.schema import PluginExternal
 
 # ========== CHANGE FOLLOWING BLOCK TO ADD YOUR OWN PLUGIN ========== #
 EXPORT = [
-    Plugin(
+    PluginExternal(
         plugin_name="llmbot_plugin_bilisearch",
         plugin_link="https://github.com/LlmKira/llmbot_plugin_bilisearch",
         plugin_desc="通过自然语言调用哔哩哔哩搜索",
@@ -12,7 +12,7 @@ EXPORT = [
         ],
         org_id=None,
         author_id="sudoskys",
-        plugin_install=Plugin.Install(
+        plugin_install=PluginExternal.Install(
             shell="pip3 install llmbot_plugin_bilisearch",
             pypi="llmbot_plugin_bilisearch",
             github=None,
