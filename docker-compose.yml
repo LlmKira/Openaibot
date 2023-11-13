@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   llmbot:
-    image: sudoskys/llmbot:latest
+    image: sudoskys/llmbot:lib0.27.1
     container_name: llmbot
     volumes:
       # 挂载配置目录 config_dir
