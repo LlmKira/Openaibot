@@ -1,15 +1,10 @@
 name: publish
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - lib*
-  workflow_dispatch:
-    inputs:
-      tags:
-        description: 'Test tags'
-        required: true
-
+      - pypi*
 
 permissions:
   contents: read

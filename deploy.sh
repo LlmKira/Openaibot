@@ -6,6 +6,8 @@ if [ -d "Openaibot" ]; then
   # shellcheck disable=SC2164
   pip uninstall llmkira
   cd Openaibot && git pull && echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
+  docker-compose -f docker-compose.yml down
+  docker-compose -f docker-compose.yml pull
   docker-compose -f docker-compose.yml up -d
   # Update the Openaibot project
   exit 0

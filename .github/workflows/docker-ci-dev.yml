@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'main'
-    tags:
-      - v*
+      - 'dev'
 
 jobs:
   build-and-push-image:
@@ -44,8 +42,8 @@ jobs:
             type=ref,event=branch
 
           flavors: |
-            latest=true
-            prefix=stable-
+            latest=false
+            prefix=dev-
 
       - name: echo
         run: echo ${{ steps.meta.outputs.json }}
