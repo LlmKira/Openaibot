@@ -2,9 +2,6 @@ name: Docker Image CI (dev)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'dev'
 
 jobs:
   build-and-push-image:
