@@ -34,16 +34,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4.1.1
         with:
-          images: sudoskys/llmbot
+          images: |
+            sudoskys/llmbot
           tags: |
             # set latest tag for default branch
             type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
             type=ref,event=branch
 
           flavors: |
             latest=false
-            prefix=dev-
+            suffix=-dev,onlatest=false
 
       - name: echo
         run: echo ${{ steps.meta.outputs.json }}
