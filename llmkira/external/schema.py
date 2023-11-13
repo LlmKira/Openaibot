@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+# @Time    : 2023/11/13 下午3:55
+# @Author  : sudoskys
+# @File    : schema.py
+# @Software: PyCharm
 from typing import Optional, List
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class PluginExport(BaseModel):
+class PluginExternal(BaseModel):
     class Install(BaseModel):
         shell: Optional[str] = Field(..., title="shell安装命令")
         pypi: Optional[str] = Field(..., title="pypi安装命令")
@@ -25,20 +29,7 @@ class PluginExport(BaseModel):
     plugin_install: Install = Field(..., title="插件安装方式")
 
 
-EXPORT = [
-    PluginExport(
-        plugin_name="llmbot_plugin_bilisearch",
-        plugin_link="https://github.com/LlmKira/llmbot_plugin_bilisearch",
-        plugin_desc="通过自然语言调用哔哩哔哩搜索",
-        plugin_functions=[
-            "search_in_bilibili"
-        ],
-        org_id=None,
-        author_id="sudoskys",
-        plugin_install=PluginExport.Install(
-            shell="pip3 install llmbot_plugin_bilisearch",
-            pypi="llmbot_plugin_bilisearch",
-            github=None,
-        )
-    )
-]
+class PluginTestResultExport(BaseModel):
+    plugin: PluginExternal = Field(..., title="插件信息")
+    test_pass: bool = Field(..., title="测试是否通过")
+    out_date: bool = Field(..., title="是否过期")

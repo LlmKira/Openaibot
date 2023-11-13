@@ -46,7 +46,8 @@ checks when releasing new versions.
 
 ## Add plugins to the registry
 
-If you want to add your plugin to the registry, please submit the `assert/plugin.py` file update, we will automatically
+If you want to add your plugin to the registry, please submit the `llmkira/external/plugin.py` file update, we will
+automatically
 synchronize to the registry and test through CI.
 
 ---------------
@@ -89,4 +90,4 @@ Manager 或 Manager 手动触发。
 
 ## 添加插件到注册表
 
-如果你想要将你的插件添加到注册表，请提交 `assert/plugin.py` 文件更新，我们会自动通过 CI 同步到注册表并测试。
+如果你想要将你的插件添加到注册表，请提交 `llmkira/external/plugin.py` 文件更新，我们会自动通过 CI 同步到注册表并测试。

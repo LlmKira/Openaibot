@@ -32,7 +32,7 @@
   &
   <a href="README_EN.md">📝 English Readme</a>
   &
-  <a href="CONTRIBUTING.md">🤝 如何贡献</a>
+  <a href="CONTRIBUTING.md">🤝 贡献必看</a>
 </p>
 
 
