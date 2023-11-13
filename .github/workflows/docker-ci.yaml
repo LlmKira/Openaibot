@@ -1,12 +1,9 @@
-name: Docker Image CI
+name: Docker Image CI (stable)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'main'
-    tags:
-      - v*
+  release:
+    types: [ published ]
 
 jobs:
   build-and-push-image:
