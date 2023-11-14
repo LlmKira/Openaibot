@@ -31,7 +31,8 @@ jobs:
           architecture: "x64"
       - name: Install dependencies
         run: |
-          pip install -r subtitle_utils/requirements.txt
+          pip install poetry==1.6.1
+          poetry install --all-extras --no-root
           python -m pip install pytest
 
       - name: Run tests
