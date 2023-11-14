@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev
-      - develop
-      - '**-develop'
+      - docker
+      # - develop
+      # - '**-develop'
 
 jobs:
   build-and-push-image:
