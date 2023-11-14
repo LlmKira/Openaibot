@@ -64,10 +64,9 @@ class ChainReloader(object):
     def __init__(self, uid: str):
         self.uid = uid
 
-    @classmethod
-    def _prefix(cls, uuid: str) -> str:
+    def _prefix(self) -> str:
         """chain:{auth_schema_version}:uuid"""
-        return f"chain:v1:{uuid}"
+        return f"chain:v1:{self.uid}"
 
     async def add_task(self, chain: Chain) -> str:
         """
@@ -77,7 +76,7 @@ class ChainReloader(object):
         """
         cache = global_cache_runtime.get_redis()
         await cache.lpush_data(
-            key=self._prefix(uuid=chain.uuid),
+            key=self._prefix(),
             value=chain.model_dump_json()
         )
         return chain.uuid
@@ -89,7 +88,7 @@ class ChainReloader(object):
         """
         cache = global_cache_runtime.get_redis()
         redis_raw = await cache.lpop_data(
-            key=self._prefix(uuid=self.uid)
+            key=self._prefix()
         )
         if not redis_raw:
             return None

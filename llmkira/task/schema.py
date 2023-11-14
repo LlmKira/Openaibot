@@ -10,13 +10,12 @@ from typing import Tuple, List, Union, Optional
 import hikari
 import khl
 import orjson
-from loguru import logger
-from pydantic import model_validator, ConfigDict, Field, BaseModel
-from telebot import types
-
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
+from loguru import logger
+from pydantic import model_validator, ConfigDict, Field, BaseModel
+from telebot import types
 
 if TYPE_CHECKING:
     from llmkira.sender.slack.schema import SlackMessageEvent
@@ -108,7 +107,7 @@ class TaskHeader(BaseModel):
 
         release_chain: bool = Field(False, description="是否响应队列中的函数集群拉起请求")
         """部署点的生长规则"""
-        resign_next_step: bool = Field(True, description="函数集群是否可以继续拉起其他函数集群")
+        resign_next_step: bool = Field(False, description="函数集群是否可以继续拉起其他函数集群")
         run_step_already: int = Field(0, description="函数集群计数器")
         run_step_limit: int = Field(4, description="函数集群计数器上限")
 
@@ -211,16 +210,22 @@ class TaskHeader(BaseModel):
                     return key
             return None
 
-        def is_complete(self, if_end_at=None) -> bool:
+        def is_complete(self,
+                        if_end_at: "TaskBatch" = None,
+                        num_end: int = 0
+                        ) -> bool:
             """
-            完成状态
+            完成状态,谨慎使用
             :param if_end_at: 偏移量
+            :param num_end: 偏移量, 优先级高于 if_end_at
             :return: Meta
             """
             if self.plan_chain_complete:
                 return True
             if not self.plan_chain_pending:
                 self.plan_chain_complete = True
+                return True
+            if len(self.plan_chain_pending) - num_end <= 0:
                 return True
             if if_end_at:
                 if len(self.plan_chain_pending) == 1:

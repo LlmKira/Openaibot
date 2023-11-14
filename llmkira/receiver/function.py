@@ -10,14 +10,13 @@ import json
 import os
 
 from aio_pika.abc import AbstractIncomingMessage
-from loguru import logger
-
 from llmkira.middleware.chain_box import Chain, AuthReloader, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import TaskBatch
 from llmkira.task import Task, TaskHeader
+from loguru import logger
 
 
 class ChainFunc(object):
@@ -207,6 +206,19 @@ class FunctionReceiver(object):
         _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_list)
         assert isinstance(_env_dict, dict), "unexpected env dict? it should be dict..."
         # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+
+        # 必须提前注册，否则无法获取到结果
+        if (task.task_meta.resign_next_step or task.task_meta.is_complete(
+                num_end=1)) and not _tool_obj.repeatable:
+            # 路由
+            logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
+            await chain_func.resign_chain(
+                task=task,
+                parent_func=pending_task.get_batch_name(),
+                repeatable=_tool_obj.repeatable,
+                deploy_child=_tool_obj.deploy_child,
+            )
+        # 运行函数
         run_result = await _tool_obj.load(task=task,
                                           receiver=task.receiver,
                                           arg=_arg,
@@ -215,14 +227,6 @@ class FunctionReceiver(object):
                                           refer_llm_result=task.task_meta.llm_result
                                           )
         await task.task_meta.complete_task(task_batch=pending_task, run_result=run_result)
-        # 当前节点要求生产或者任务完成
-        if task.task_meta.resign_next_step or task.task_meta.is_complete():  # 路由
-            logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
-            await chain_func.resign_chain(task=task,
-                                          parent_func=pending_task.get_batch_name(),
-                                          repeatable=_tool_obj.repeatable,
-                                          deploy_child=_tool_obj.deploy_child,
-                                          )
         return run_result
 
     async def process_function_call(self, message: AbstractIncomingMessage
