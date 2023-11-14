@@ -10,16 +10,13 @@ from typing import Tuple, List, Union, Optional
 import hikari
 import khl
 import orjson
-from dotenv import load_dotenv
 from loguru import logger
-from pydantic import model_validator, ConfigDict, Field, BaseModel, PrivateAttr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import model_validator, ConfigDict, Field, BaseModel
 from telebot import types
 
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
-from llmkira.sdk.utils import sync
 
 if TYPE_CHECKING:
     from llmkira.sender.slack.schema import SlackMessageEvent
@@ -30,49 +27,11 @@ def orjson_dumps(v, *, default):
     return orjson.dumps(v, default=default).decode()
 
 
-class RabbitMQ(BaseSettings):
-    """
-    代理设置
-    """
-    amqp_dsn: str = Field("amqp://admin:8a8a8a@localhost:5672", validation_alias='AMQP_DSN')
-    _verify_status: bool = PrivateAttr(default=False)
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
-
-    @model_validator(mode='after')
-    def is_connect(self):
-        import aio_pika
-        try:
-            sync(aio_pika.connect_robust(
-                self.amqp_dsn
-            ))
-        except Exception as e:
-            self._verify_status = False
-            logger.error(f'\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e} --dsn {self.amqp_dsn}')
-        else:
-            self._verify_status = True
-            logger.success(f"RabbitMQ connect success")
-            if self.amqp_dsn == "amqp://admin:8a8a8a@localhost:5672":
-                logger.warning(f"\n⚠️ You are using the default RabbitMQ password")
-        return self
-
-    @property
-    def available(self):
-        return self._verify_status
-
-    @property
-    def task_server(self):
-        return self.amqp_dsn
-
-
-load_dotenv()
-RabbitMQSetting = RabbitMQ()
-
-
 class TaskHeader(BaseModel):
     """
     任务链节点
     """
-    model_config = ConfigDict()
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     class Meta(BaseModel):
         class Callback(BaseModel):
@@ -102,7 +61,7 @@ class TaskHeader(BaseModel):
                     tool_call_id=tool_call_id,
                 )
 
-            def get_tool_message(self) -> Union[ToolMessage]:
+            def get_tool_message(self) -> Union["ToolMessage"]:
                 if self.tool_call_id:
                     return ToolMessage(
                         tool_call_id=self.tool_call_id,
@@ -110,7 +69,7 @@ class TaskHeader(BaseModel):
                     )
                 raise ValueError("tool_call_id is empty")
 
-            def get_function_message(self) -> Union[FunctionMessage]:
+            def get_function_message(self) -> Union["FunctionMessage"]:
                 if self.name:
                     return FunctionMessage(
                         name=self.name,
@@ -122,22 +81,22 @@ class TaskHeader(BaseModel):
         sign_as: Tuple[int, str, str] = Field((0, "root", "default"), description="签名")
 
         """函数并行的信息"""
-        plan_chain_archive: List[Tuple[TaskBatch, Union[Exception, dict, str]]] = Field(
+        plan_chain_archive: List[Tuple["TaskBatch", Union[Exception, dict, str]]] = Field(
             default=[],
             description="完成的节点"
         )
-        plan_chain_pending: List[TaskBatch] = Field(default=[], description="待完成的节点")
+        plan_chain_pending: List["TaskBatch"] = Field(default=[], description="待完成的节点")
         plan_chain_length: int = Field(default=0, description="节点长度")
         plan_chain_complete: Optional[bool] = Field(False, description="是否完成此集群")
 
         """功能状态与缓存"""
         function_enable: bool = Field(False, description="功能开关")
-        function_list: List[Function] = Field([], description="功能列表")
-        function_salvation_list: List[Function] = Field([], description="上回合的功能列表，用于容错")
+        function_list: List["Function"] = Field([], description="功能列表")
+        function_salvation_list: List["Function"] = Field([], description="上回合的功能列表，用于容错")
 
         """携带插件的写回结果"""
         write_back: bool = Field(False, description="写回消息")
-        callback: List[Callback] = Field(
+        callback: List["Callback"] = Field(
             default=[],
             description="用于回写，插件返回的消息头，标识 function 的名字"
         )
@@ -155,11 +114,13 @@ class TaskHeader(BaseModel):
 
         """函数中枢的依赖变量"""
         verify_uuid: Optional[str] = Field(None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行")
-        verify_map: Dict[str, TaskBatch] = Field({},
-                                                 description="函数节点的认证信息，经携带认证重发后可通过")
+        verify_map: Dict[str, "TaskBatch"] = Field({},
+                                                   description="函数节点的认证信息，经携带认证重发后可通过")
         llm_result: Any = Field(None, description="存储任务的衍生信息源")
         llm_type: Optional[str] = Field(None, description="存储任务的衍生信息源类型")
         extra_args: dict = Field({}, description="提供额外参数")
+
+        model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
 
         @model_validator(mode="after")
         def check(self):
@@ -235,7 +196,8 @@ class TaskHeader(BaseModel):
             :return: Meta
             """
             self.plan_chain_archive.append((task_batch, run_result))
-            self.plan_chain_pending.remove(task_batch)
+            if task_batch in self.plan_chain_pending:
+                self.plan_chain_pending.remove(task_batch)
             if not self.plan_chain_pending:
                 self.plan_chain_complete = True
             return self
@@ -249,17 +211,22 @@ class TaskHeader(BaseModel):
                     return key
             return None
 
-        @property
-        def is_complete(self) -> bool:
+        def is_complete(self, if_end_at=None) -> bool:
             """
             完成状态
+            :param if_end_at: 偏移量
             :return: Meta
             """
-            return self.plan_chain_complete
-
-        model_config = ConfigDict(extra="ignore",
-                                  arbitrary_types_allowed=True
-                                  )
+            if self.plan_chain_complete:
+                return True
+            if not self.plan_chain_pending:
+                self.plan_chain_complete = True
+                return True
+            if if_end_at:
+                if len(self.plan_chain_pending) == 1:
+                    if self.plan_chain_pending[0] == if_end_at:
+                        return True
+            return False
 
         def child(self, name) -> "TaskHeader.Meta":
             """
@@ -315,6 +282,7 @@ class TaskHeader(BaseModel):
             """
             决定路由规则
             默认回复消息，其他参数自由
+            只通知，不重组函数和初始化任何东西。
             :param plugin_name: 插件名称
             :param callback: 元信息
             :param write_back: 是否写回，写回此通知到消息历史,比如插件运行失败了，要不要写回消息历史让AI看到呢
@@ -384,7 +352,7 @@ class TaskHeader(BaseModel):
     class Location(BaseModel):
         """
         Union[str, int]
-        here .... address
+        here .... channel
         """
         platform: str = Field(None, description="platform")
         user_id: Union[str, int] = Field(None, description="user id")

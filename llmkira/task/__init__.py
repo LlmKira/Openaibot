@@ -11,7 +11,7 @@ from aiormq import DeliveryError
 from loguru import logger
 from pamqp.commands import Basic
 
-from .schema import TaskHeader, RabbitMQSetting
+from .schema import TaskHeader
 
 EXPIRATION_SECOND = 60 * 5  # 5min
 QUEUE_MAX_LENGTH = 120
@@ -25,15 +25,22 @@ QUEUE_ARGUMENTS = {
 
 
 class Task(object):
-    def __init__(self, *, queue: str):
+    def __init__(self, *,
+                 queue: str,
+                 amqp_dsn: str = None
+                 ):
         """
         :param queue: 队列名字
+        :param amqp_dsn: 队列数据库
         """
         self.queue_name = queue
-        self.amqp_url = RabbitMQSetting.amqp_dsn
+        if amqp_dsn is None:
+            from ..setting.rabbitmq import RabbitMQSetting
+            amqp_dsn = RabbitMQSetting.amqp_dsn
+        self._amqp_url = amqp_dsn
 
     async def send_task(self, task: TaskHeader):
-        connection = await aio_pika.connect_robust(self.amqp_url)
+        connection = await aio_pika.connect_robust(self._amqp_url)
         async with connection:
             channel = await connection.channel(
                 publisher_confirms=True  # 消息确认
@@ -83,7 +90,7 @@ class Task(object):
                     return True, "Task sent success"
 
     async def consuming_task(self, func: callable):
-        connection = await aio_pika.connect_robust(self.amqp_url)
+        connection = await aio_pika.connect_robust(self._amqp_url)
         async with connection:
             # Creating a channel
             channel = await connection.channel()
