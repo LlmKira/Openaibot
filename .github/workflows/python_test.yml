@@ -8,11 +8,6 @@ on:
       - dev
       - develop
       - '**-develop'
-  pull_request:
-    branches:
-      - main
-      - dev
-      - develop
 
 jobs:
   test:
