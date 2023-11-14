@@ -38,4 +38,5 @@ jobs:
       - name: Run tests
         run: |
           cd test
-          pytest
+          poetry install --no-root
+          poetry run pytest
