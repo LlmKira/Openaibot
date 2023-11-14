@@ -56,7 +56,7 @@ class Sticker(BaseModel):
 
 @resign_plugin_executor(function=sticker)
 async def resize_image(photo):
-    logger.debug(f"Plugin:resize_image")
+    logger.debug(f"Plugin --resize_image")
     image = Image.open(photo)
     if (image.width and image.height) < 512:
         size1 = image.width
@@ -173,7 +173,7 @@ class StickerTool(BaseTool):
             file.seek(0)
             file_obj = await File.upload_file(file_name="sticker.webp",
                                               file_data=file.getvalue(),
-                                              created_by=__plugin_name__
+                                              creator_uid=receiver.uid
                                               )
             _result.append(file_obj)
         # META
@@ -203,7 +203,7 @@ class StickerTool(BaseTool):
             )
         )
 
-        logger.debug("convert_to_sticker say: {}".format(_set.yes_no))
+        logger.debug("Plugin --convert_to_sticker {}".format(_set.yes_no))
 
 
 __plugin_meta__ = PluginMetadata(

@@ -129,6 +129,9 @@ class TranslateTool(BaseTool):
         write_out_file.name = write_out_name
         write_out_list = []
 
+        # FIXME
+        llm_task = ...
+
         async def _fill_box(text):
             try:
                 await asyncio.sleep(2)
@@ -194,7 +197,7 @@ class TranslateTool(BaseTool):
             translated_file = await self.translate_docs(task=task, file=item, target_lang=translate_arg.language)
             file_obj = await File.upload_file(file_name=translated_file.name,
                                               file_data=translated_file.getvalue(),
-                                              created_by=__plugin_name__
+                                              creator_uid=receiver.uid
                                               )
             _result.append(file_obj)
         # META

@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-from pydantic import field_validator, ConfigDict
+
 
 __package__name__ = "llmkira.extra.plugins.alarm"
 __plugin_name__ = "set_alarm_reminder"
 __openapi_version__ = "20231111"
 
 from llmkira.sdk.func_calling import verify_openapi_version
-from llmkira.sdk.schema import Function
 
 verify_openapi_version(__package__name__, __openapi_version__)
+
+from pydantic import field_validator, ConfigDict
+
+from llmkira.sdk.schema import Function
 
 import datetime
 import re
@@ -159,10 +162,10 @@ class AlarmTool(BaseTool):
             ]
         )
 
-        logger.debug("Plugin:set alarm {} minutes later".format(_set.delay))
+        logger.debug("Plugin --set_alarm {} minutes".format(_set.delay))
         SCHEDULER.add_job(
             func=send_notify,
-            id=str(receiver.user_id),
+            id=receiver.uid,
             trigger="date",
             replace_existing=True,
             misfire_grace_time=1000,
