@@ -10,7 +10,6 @@ sys.path.append("..")
 from llmkira.sdk.schema import Message, UserMessage
 
 
-
 def test_schema():
     try:
         Message(role="user", content="test")

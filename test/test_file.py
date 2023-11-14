@@ -10,7 +10,6 @@ sys.path.append("..")
 from llmkira.sdk.schema import File
 
 
-
 def test_schema():
     File(
         file_id=None, file_name="test"
