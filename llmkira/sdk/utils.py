@@ -7,12 +7,15 @@ bilibili_api.utils.sync
 """
 import asyncio
 import hashlib
+import tempfile
 from bisect import bisect_left
-from typing import Coroutine, Dict, List
+from typing import Coroutine, Dict, List, Optional
 
 import aiohttp
+import ffmpeg
 import nest_asyncio
 import shortuuid
+from loguru import logger
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
@@ -62,9 +65,19 @@ def generate_uid():
     return shortuuid.uuid()[0:8].upper()
 
 
-async def download_file(url, timeout=None, size_limit=None, headers=None):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, timeout=timeout, headers=headers) as response:
+async def aiohttp_download_file(url,
+                                session: aiohttp.ClientSession = None,
+                                timeout=None,
+                                size_limit=None,
+                                headers=None,
+                                **kwargs):
+    if not session:
+        session = aiohttp.ClientSession()
+    async with session as session:
+        async with session.get(url,
+                               timeout=timeout,
+                               headers=headers, **kwargs
+                               ) as response:
             if response.status != 200:
                 raise Exception("无法下载文件")
 
@@ -74,6 +87,57 @@ async def download_file(url, timeout=None, size_limit=None, headers=None):
 
             contents = await response.read()
             return contents
+
+
+class Ffmpeg(object):
+    @staticmethod
+    def convert(*,
+                input_c: str = "mp3",
+                output_c: str = "ogg",
+                stream_data: bytes = None,
+                quiet=False
+                ) -> Optional[bytes]:
+        """
+        使用ffmpeg转换音频格式
+        :param input_c: 输入音频格式
+        :param output_c: 输出音频格式
+        :param stream_data: 输入音频流
+        :param quiet: 是否静默
+        """
+        if not input_c.startswith("."):
+            input_c = "." + input_c
+        if not output_c.startswith("."):
+            output_c = "." + output_c
+        in_fd, temp_filename = tempfile.mkstemp(suffix=input_c, prefix=None, dir=None, text=False)
+        out_fd, out_temp_filename = tempfile.mkstemp(suffix=output_c, prefix=None, dir=None, text=False)
+        _bytes = None
+        try:
+            # 写入文件
+            with open(temp_filename, "wb") as f:
+                f.write(stream_data)
+            stream = ffmpeg.input(filename=temp_filename)
+            if output_c == ".ogg":
+                stream = ffmpeg.output(stream, filename=out_temp_filename, acodec="libopus")
+            else:
+                stream = ffmpeg.output(stream, filename=out_temp_filename)
+            stream = ffmpeg.overwrite_output(stream)
+            _ = ffmpeg.run(stream_spec=stream,
+                           quiet=quiet
+                           )
+            # 读取文件
+            import os
+            _bytes = os.read(out_fd, os.path.getsize(out_temp_filename))
+            assert _bytes, "ffmpeg convert failed"
+        except Exception as e:
+            logger.error(f"ffmpeg convert failed {e}")
+            raise e
+        finally:
+            import os
+            os.close(in_fd)
+            os.close(out_fd)
+            os.remove(out_temp_filename)
+            os.remove(temp_filename)
+        return _bytes
 
 
 def prefix_search(wordlist, prefix):
