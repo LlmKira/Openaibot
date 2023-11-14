@@ -10,11 +10,13 @@
 # 注意，注意回调的实现。
 ####
 from typing import Dict
+from typing import TYPE_CHECKING
 
 import wrapt
 from loguru import logger
 
-from llmkira.sdk.schema import Function
+if TYPE_CHECKING:
+    from ...schema import Function
 
 __error_table__: Dict[str, int] = {}
 
@@ -37,7 +39,7 @@ def recover_error_plugin(function_name: str):
     __error_table__[function_name] = 0
 
 
-def resign_plugin_executor(function: Function):
+def resign_plugin_executor(function: "Function", handle_exceptions: tuple = (Exception,)):
     """
     装饰器
     """
@@ -55,8 +57,11 @@ def resign_plugin_executor(function: Function):
         try:
             res = wrapped(*args, **kwargs)
         except Exception as e:
-            __error_table__[function.name] = __error_table__.get(function.name, 0) + 1
-            logger.exception(e)
+            if e in handle_exceptions:
+                __error_table__[function.name] = __error_table__.get(function.name, 0) + 1
+                logger.exception(e)
+            else:
+                raise e
         else:
             return res
         return {}

@@ -117,11 +117,11 @@ class LoopRunner(object):
                     validator(**self.pipe_arg)
                 new_pipe_arg = await loop().pipe(self.pipe_arg)
             except Exception as e:
-                logger.info(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}")
+                # logger.info(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}")
                 logger.debug(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}, pipe_arg:{pipe_arg}")
                 # 不更新 pipe_arg
             else:
-                logger.info(f"{loop.__name__} exec_loop success, for sign:{loop.sign}")
+                # logger.info(f"{loop.__name__} exec_loop success, for sign:{loop.sign}")
                 logger.debug(f"{loop.__name__} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}")
                 self.pipe_arg = new_pipe_arg
 
