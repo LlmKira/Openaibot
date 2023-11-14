@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field, model_validator
 
 class PluginExternal(BaseModel):
     class Install(BaseModel):
-        shell: Optional[str] = Field(..., title="shell安装命令")
-        pypi: Optional[str] = Field(..., title="pypi安装命令")
+        shell: Optional[str] = Field(None, title="shell安装命令")
+        pypi: Optional[str] = Field(None, title="pypi安装命令")
         github: Optional[str] = Field(None, title="github安装命令")
 
         @model_validator(mode="after")
