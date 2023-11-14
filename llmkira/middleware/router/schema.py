@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
-from typing import Literal, List
+from typing import Literal, List, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -32,7 +32,12 @@ class Router(BaseModel):
     method: ROUTER_METHOD = Field('push', description="")  # "summary"
 
     @classmethod
-    def build_from_receiver(cls, receiver, user_id, dsn: str):
+    def build_from_receiver(cls,
+                            receiver_channel: str,
+                            user_id: Union[int, str],
+                            dsn: str
+                            ):
+        user_id = str(user_id)
         try:
             from_, rules, _method = dsn.split("@", maxsplit=3)
         except Exception as e:
@@ -41,7 +46,7 @@ class Router(BaseModel):
             raise ValueError(f"sender must in {SENDER}, not {from_}")
         if _method not in ALLOW_METHOD:
             raise ValueError(f"method must in {ALLOW_METHOD}, not {_method}")
-        return cls(from_=from_, to_=receiver, user_id=user_id, rules=rules)
+        return cls(from_=from_, to_=receiver_channel, user_id=user_id, rules=rules)
 
     def dsn(self, user_dsn=False):
         if user_dsn:
@@ -50,7 +55,7 @@ class Router(BaseModel):
 
 
 class RouterCache(BaseModel):
-    router: List[Router] = []
+    router: List[Router] = Field(default=[])
 
     @field_validator("router")
     def router_validate(cls, v):

@@ -51,7 +51,7 @@ class TelegramBotRunner(Runner):
             name = file.file_name
         return await File.upload_file(file_name=name,
                                       file_data=downloaded_file,
-                                      created_by=uid
+                                      creator_uid=uid
                                       )
 
     async def run(self):
@@ -74,6 +74,7 @@ class TelegramBotRunner(Runner):
             :return:
             """
             _file = []
+            message.text = message.text if message.text else message.caption
             if message.text:
                 if message.text.startswith(("/chat", "/task")):
                     message.text = message.text[5:]
@@ -113,7 +114,6 @@ class TelegramBotRunner(Runner):
                                 uid=UserControl.uid_make(__sender__, message.from_user.id)
                             )
                         )
-            message.text = message.text if message.text else ""
             logger.info(
                 f"telegram:create task from {message.chat.id} {message.text[:300]} funtion_enable:{funtion_enable}"
             )
@@ -310,7 +310,7 @@ class TelegramBotRunner(Runner):
                 return
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=message.from_user.id, dsn=_arg)
                 _manager.add_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
             except Exception as e:
@@ -340,7 +340,7 @@ class TelegramBotRunner(Runner):
                 return None
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=message.from_user.id, dsn=_arg)
                 _manager.remove_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
             except Exception as e:
@@ -477,7 +477,7 @@ class TelegramBotRunner(Runner):
                 return await create_task(message, funtion_enable=False)
             return await create_task(message, funtion_enable=__default_function_enable__)
 
-        @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['supergroup', 'group'])
+        @bot.message_handler(content_types=['text', 'photo', 'document', 'voice'], chat_types=['supergroup', 'group'])
         async def handle_group_msg(message: types.Message):
             """
             自动响应群组消息
@@ -514,7 +514,7 @@ class TelegramBotRunner(Runner):
             # 检查回复
             if message.reply_to_message:
                 # 回复了 Bot
-                if message.reply_to_message.from_user.id == BotSetting.bot_id:
+                if str(message.reply_to_message.from_user.id) == str(BotSetting.bot_id):
                     return await create_task(message, funtion_enable=__default_function_enable__)
 
         from telebot import asyncio_filters

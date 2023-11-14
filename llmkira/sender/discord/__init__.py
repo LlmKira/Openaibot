@@ -71,7 +71,7 @@ class DiscordBotRunner(Runner):
         file_data = await attachment.read()
         return await File.upload_file(file_name=file_name,
                                       file_data=file_data,
-                                      created_by=uid
+                                      creator_uid=uid
                                       )
 
     async def run(self):
@@ -310,7 +310,7 @@ class DiscordBotRunner(Runner):
         async def listen_bind_command(ctx: crescent.Context, token: str):
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=ctx.user.id, dsn=token)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=ctx.user.id, dsn=token)
                 _manager.add_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=ctx.user.id, to_=__sender__)
             except Exception as e:
@@ -335,7 +335,7 @@ class DiscordBotRunner(Runner):
         async def listen_unbind_command(ctx: crescent.Context, token: str):
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=ctx.user.id, dsn=token)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=ctx.user.id, dsn=token)
                 _manager.remove_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=ctx.user.id, to_=__sender__)
             except Exception as e:

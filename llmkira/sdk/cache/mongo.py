@@ -67,26 +67,6 @@ class MongoClientWrapper:
         return result
 
 
-# 加载 .env 文件
-load_dotenv()
-mongo_dsn = os.getenv('MONGODB_DSN', "mongodb://admin:8a8a8a@localhost:27017/?authSource=admin")
-mongo_client: MongoClientWrapper = MongoClientWrapper(mongo_dsn)
-
-
-async def ping():
-    return await mongo_client.ping()
-
-
-loop = asyncio.get_event_loop()
-_ping = loop.run_until_complete(ping())
-if not _ping:
-    logger.error(f'\n⚠️ Mongodb DISCONNECT:Cant connect to mongodb, please check MONGODB_DSN in .env \n {mongo_dsn}')
-    raise ValueError('MONGO DISCONNECT')
-else:
-    logger.success(f'MongoClientWrapper loaded successfully in {mongo_dsn}')
-    if mongo_dsn.strip('/') == "mongodb://localhost:27017":
-        logger.warning("\n⚠️ You are using a non-password local MONGODB database.")
-
 # Test
 if __name__ == '__main__':
     async def main():

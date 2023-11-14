@@ -13,6 +13,7 @@ from telebot import TeleBot
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
+from llmkira.receiver.telegram import md2tgmd
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import Message, File
@@ -65,12 +66,22 @@ class TelegramSender(BaseSender):
                     sticker=_data.pair,
                 )
             elif file_obj.file_name.endswith(".ogg"):
-                self.bot.send_voice(
-                    chat_id=receiver.chat_id,
-                    voice=_data.pair,
-                    reply_to_message_id=receiver.message_id,
-                    caption=file_obj.caption
-                )
+                try:
+                    self.bot.send_voice(
+                        chat_id=receiver.chat_id,
+                        voice=_data.pair,
+                        reply_to_message_id=receiver.message_id,
+                        caption=file_obj.caption
+                    )
+                except telebot.apihelper.ApiTelegramException as e:
+                    if "VOICE_MESSAGES_FORBIDDEN" in str(e):
+                        self.bot.send_message(
+                            chat_id=receiver.chat_id,
+                            reply_to_message_id=receiver.message_id,
+                            text="I can't send voice message because of your privacy settings."
+                        )
+                    else:
+                        raise e
             else:
                 self.bot.send_document(
                     chat_id=receiver.chat_id,
@@ -103,7 +114,7 @@ class TelegramSender(BaseSender):
                 logger.error(f"telegram send message error, retry\n{e}")
                 self.bot.send_message(
                     chat_id=receiver.chat_id,
-                    text=item.text,
+                    text=md2tgmd.escape(item.text),
                     reply_to_message_id=receiver.message_id
                 )
 
@@ -123,11 +134,20 @@ class TelegramSender(BaseSender):
             if not raw_message.text:
                 continue
             assert raw_message.text, f"message content is empty"
-            self.bot.send_message(
-                chat_id=receiver.chat_id,
-                text=raw_message.text,
-                reply_to_message_id=receiver.message_id if reply_to_message else None,
-            )
+            try:
+                self.bot.send_message(
+                    chat_id=receiver.chat_id,
+                    text=raw_message.text,
+                    reply_to_message_id=receiver.message_id if reply_to_message else None,
+                )
+            except telebot.apihelper.ApiTelegramException as e:
+                if "message to reply not found" in str(e):
+                    self.bot.send_message(
+                        chat_id=receiver.chat_id,
+                        text=raw_message.text
+                    )
+                else:
+                    raise e
         return logger.trace(f"reply message")
 
     async def error(self, receiver: TaskHeader.Location, text):

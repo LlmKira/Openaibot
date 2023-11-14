@@ -35,3 +35,13 @@ https://mp.weixin.qq.com/s?__biz=Mzg2OTY0MDk0NQ==&mid=2247502626&idx=1&sn=17603e
 LangChain？
 https://twitter.com/AravSrinivas/status/1677884199183994881
 https://minimaxir.com/2023/07/langchain-problem/
+
+"""
+1 lock
+2 ...
+1 ...
+2 lock
+1 ...
+2 ...
+3 lock
+"""

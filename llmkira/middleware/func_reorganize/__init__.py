@@ -18,7 +18,7 @@ class FunctionReorganize(object):
         self.task: TaskHeader = task
         self._functions: List[Function] = []
 
-    async def _ignore(self, error_times):
+    async def _ignore(self, error_times) -> None:
         """
         忽略错误插件
         """
@@ -27,7 +27,7 @@ class FunctionReorganize(object):
                 self._functions.remove(_plugin)
 
     @staticmethod
-    async def unique(functions: List[Function] = None):
+    async def unique(functions: List[Function] = None) -> List[Function]:
         _dict = {}
         for function in functions:
             assert isinstance(function, Function), "llm_task.py:function type error,cant unique"
@@ -35,7 +35,10 @@ class FunctionReorganize(object):
         functions = list(_dict.values())
         return functions
 
-    async def _build(self):
+    async def _build(self) -> None:
+        """
+        重新建造函数表
+        """
         functions = []
         if self.task.task_meta.function_enable:
             # 继承函数
@@ -48,7 +51,9 @@ class FunctionReorganize(object):
                 for _index, _message in enumerate(self.task.message):
                     _message: RawMessage
                     functions.extend(
-                        ToolRegister().filter_pair(key_phrases=_message.text, file_list=_message.file)
+                        ToolRegister().filter_pair(key_phrases=_message.text,
+                                                   message_raw=_message,
+                                                   file_list=_message.file)
                     )
                 self.task.task_meta.function_list = functions
         if self.task.task_meta.sign_as[0] == 0:
@@ -56,9 +61,12 @@ class FunctionReorganize(object):
             functions.extend(self.task.task_meta.function_salvation_list)
         self._functions = await self.unique(functions)
 
-    async def build_arg(self) -> List[Function]:
+    async def build_arg(self,
+                        *,
+                        errored_limit: int = 10
+                        ) -> List[Function]:
         await self._build()
         self._functions = await self.unique(self._functions)
         # 过滤
-        await self._ignore(error_times=10)
+        await self._ignore(error_times=errored_limit)
         return self._functions

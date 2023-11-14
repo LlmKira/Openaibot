@@ -5,10 +5,10 @@
 # @Software: PyCharm
 from typing import List, Union
 
-from ...schema import singleton
-from ...sdk.cache.redis import cache
-from ...sdk.utils import sync
 from .schema import RouterCache, Router
+from ...schema import singleton
+from ...sdk.cache import global_cache_runtime
+from ...sdk.utils import sync
 
 
 @singleton
@@ -18,11 +18,13 @@ class RouterManager(object):
         self.router = sync(self._sync())
 
     async def _upload(self):
+        cache = global_cache_runtime.get_redis()
         assert isinstance(self.router, RouterCache), "router info error"
         # self.router = RouterCache.model_validate(self.router.dict())
         return await cache.set_data(key=self.__redis_key__, value=self.router.model_dump_json())
 
     async def _sync(self) -> RouterCache:
+        cache = global_cache_runtime.get_redis()
         _cache = await cache.read_data(key=self.__redis_key__)
         if not _cache:
             return RouterCache()
@@ -42,11 +44,11 @@ class RouterManager(object):
         _all = self.router.router
         return [router for router in _all if router.from_ == from_]
 
-    def add_router(self, router: Router):
+    def add_router(self, router: Router) -> None:
         self.router.router.append(router)
-        return sync(self._upload())
+        sync(self._upload())
 
-    def remove_router(self, router: Router):
+    def remove_router(self, router: Router) -> None:
         if router in self.router.router:
             self.router.router.remove(router)
-        return sync(self._upload())
+        sync(self._upload())

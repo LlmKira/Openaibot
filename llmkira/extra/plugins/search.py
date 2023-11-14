@@ -42,7 +42,7 @@ search.add_property(
 
 @resign_plugin_executor(function=search)
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
-    logger.debug(f"Plugin:search_on_duckduckgo {search_sentence}")
+    logger.debug(f"Plugin --search_on_duckduckgo {search_sentence}")
     from duckduckgo_search import DDGS
     # 内存优化抛弃 NLP
     # from llmkira.sdk.filter import Sublimate

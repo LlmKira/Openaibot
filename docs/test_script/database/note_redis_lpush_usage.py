@@ -5,10 +5,11 @@
 # @Software: PyCharm
 import time
 
-from llmkira.sdk.cache.redis import cache
+from llmkira.sdk.cache import RedisRuntime
 
 
 async def redis():
+    cache = RedisRuntime().get_redis()
     await cache.lpush_data("test", int(time.time()))
     await cache.lpush_data("test", int(time.time()) + 1)
     _data = await cache.lrange_data("test")

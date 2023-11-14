@@ -31,6 +31,8 @@
   <a href="https://llmkira.github.io/Docs/dev/basic">🧀 开发文档</a>
   &
   <a href="README_EN.md">📝 English Readme</a>
+  &
+  <a href="CONTRIBUTING.md">🤝 贡献必看</a>
 </p>
 
 
@@ -139,11 +141,9 @@ docker-compose -f docker-compose.yml up -d
 
 ```
 
-
 更新镜像使用 `docker-compose pull`。
 
 在 docker 中查看 Shell，使用 `docker exec -it llmbot /bin/bash`，输入 `exit` 退出。
-
 
 ### 🍔 Shell
 

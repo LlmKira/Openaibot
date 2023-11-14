@@ -12,13 +12,15 @@ from io import BytesIO
 from typing import Literal, Optional, List, Type, Union
 from typing import TYPE_CHECKING
 
+import aiohttp
 import shortuuid
 from docstring_parser import parse
 from loguru import logger
 from pydantic import model_validator, BaseModel, Field, PrivateAttr, ConfigDict
 
+from .cache import global_cache_runtime
 from .error import ValidationError, CheckError
-from .utils import sync
+from .utils import sync, aiohttp_download_file
 
 if TYPE_CHECKING:
     pass
@@ -45,13 +47,22 @@ class File(BaseModel):
         def pair(self):
             return self.file_name, self.file_data
 
-    file_id: Optional[str] = Field(None, description="文件ID")
-    file_name: Optional[str] = Field(None, description="文件名")
-    file_url: Optional[str] = Field(None, description="文件URL")
-    caption: str = Field(default='', description="文件注释")
-    bytes: int = Field(default=None, description="文件大小")
-    created_by: str = Field(default=None, description="上传者")
+    file_name: str = Field(..., description="文件名，不一定和数据匹配")
+    file_id: Optional[str] = Field(None, description="文件的数据库ID，用于索引文件数据，所以没有数据就不要填")
+    file_url: Optional[str] = Field(None, description="文件URL，不一定有")
+    caption: Optional[str] = Field(default='', description="文件注释，展示给LLM")
+    created_by: str = Field(default=None, description="Uploader **UID**")
     created_at: int = Field(default=int(time.time()))
+    bytes_length: int = Field(default=None, description="File Size")
+
+    @model_validator(mode="after")
+    def file_id_validator(self):
+        if self.file_id:
+            assert len(self.file_id) <= 8, "file_id must be less than 8"
+            assert isinstance(self.file_id, str), "file_id must be str"
+        if self.created_by:
+            assert ":" in self.created_by, "created_by must be uid, include `:` ,like `discord:123456`"
+        return self
 
     def __eq__(self, other):
         if isinstance(other, File):
@@ -80,13 +91,16 @@ class File(BaseModel):
         for key, value in self.model_dump().items():
             if value:
                 _comment += f"{key}={value},"
+            else:
+                if key == "file_id":
+                    _comment += f"{key}=MissingAlertNeeded,"
         return f"[Attachment{_comment[:-1]})]"
 
     @staticmethod
     async def download_file_by_id(
             file_id: str,
     ) -> Optional[Data]:
-        from .cache.redis import cache
+        cache = global_cache_runtime.get_redis()
         file = await cache.read_data(file_id)
         if not file:
             return None
@@ -96,7 +110,7 @@ class File(BaseModel):
     async def raw_file(
             self,
     ) -> Optional[Data]:
-        from .cache.redis import cache
+        cache = global_cache_runtime.get_redis()
         if not self.file_id:
             return None
         file = await cache.read_data(self.file_id)
@@ -107,14 +121,70 @@ class File(BaseModel):
 
     @classmethod
     async def upload_file(cls,
-                          file_name,
-                          file_data,
-                          created_by: str,
-                          caption: str = None,
+                          file_name: str,
+                          file_data: Union[bytes, BytesIO],
+                          creator_uid: str,
+                          caption: str,
+                          file_id: str = None,
+                          size_limit: int = 1024 * 1024 * 10,
                           ):
-        from .cache.redis import cache
+        """
+        上传文件，要求用户使用 UID
+        """
+        assert isinstance(file_data, bytes) or isinstance(file_data, BytesIO), "file_data must be bytes or BytesIO"
+        if file_id is None:
+            file_id = str(generate_short_md5(file_data))
+        cache = global_cache_runtime.get_redis()
         _byte_length = len(file_data)
-        _key = str(generate_md5_short_id(file_data))
+        if _byte_length > size_limit:
+            raise CheckError(f"file size must be less than {size_limit}")
+        await cache.set_data(
+            key=file_id,
+            value=pickle.dumps(File.Data(file_name=file_name, file_data=file_data)),
+            timeout=60 * 60 * 24 * 7
+        )
+        assert len(file_id) <= 8, "file_id must be less than 8"
+        assert isinstance(file_id, str), "file_id must be str"
+        return cls(file_id=file_id,
+                   file_name=file_name,
+                   bytes=_byte_length,
+                   created_by=creator_uid,
+                   caption=caption,
+                   )
+
+    @classmethod
+    async def upload_file_only_url(cls,
+                                   file_name,
+                                   file_url,
+                                   created_by: str,
+                                   caption: str = "",
+                                   ):
+        return cls(file_id=None,
+                   file_url=file_url,
+                   file_name=file_name,
+                   created_by=created_by,
+                   caption=caption,
+                   )
+
+    @classmethod
+    async def upload_file_by_download_url(cls,
+                                          file_name,
+                                          file_url,
+                                          created_by: str,
+                                          caption: str = "",
+                                          size_limit: int = 1024 * 1024 * 10,
+                                          headers: dict = None,
+                                          session: aiohttp.ClientSession = None,
+                                          ):
+        cache = global_cache_runtime.get_redis()
+        file_data = await aiohttp_download_file(file_url,
+                                                session=session,
+                                                timeout=20,
+                                                size_limit=size_limit,
+                                                headers=headers
+                                                )
+        _byte_length = len(file_data)
+        _key = generate_short_md5(file_data)
         await cache.set_data(
             key=_key,
             value=pickle.dumps(File.Data(file_name=file_name, file_data=file_data)),
@@ -123,20 +193,6 @@ class File(BaseModel):
         return cls(file_id=_key,
                    file_name=file_name,
                    bytes=_byte_length,
-                   created_by=created_by,
-                   caption=caption,
-                   )
-
-    @classmethod
-    async def upload_file_by_url(cls,
-                                 file_name,
-                                 file_url,
-                                 created_by: str,
-                                 caption: str = None,
-                                 ):
-        return cls(file_id=None,
-                   file_url=file_url,
-                   file_name=file_name,
                    created_by=created_by,
                    caption=caption,
                    )
@@ -158,7 +214,7 @@ class BaseFunction(BaseModel):
     _config: FunctionExtra = FunctionExtra.default()
     name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
 
-    def update_config(self, config: FunctionExtra) -> "BaseFunction":
+    def update_config(self, config: "FunctionExtra") -> "BaseFunction":
         self._config = config
         return self
 
@@ -167,14 +223,13 @@ class BaseFunction(BaseModel):
         return self
 
     @property
-    def config(self) -> FunctionExtra:
+    def config(self) -> "FunctionExtra":
         return self._config
 
     def request_final(self,
                       *,
                       schema_model: str):
-        return self.model_copy(
-        )
+        return self.model_copy(deep=True)
 
 
 class Function(BaseFunction):
@@ -191,7 +246,7 @@ class Function(BaseFunction):
 
     name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
     description: Optional[str] = None
-    parameters: Parameters = Parameters(type="object")
+    parameters: "Parameters" = Field(default_factory=lambda: Function.Parameters(), description="参数")
     model_config = ConfigDict(extra="ignore")
 
     def request_final(self,
@@ -202,11 +257,9 @@ class Function(BaseFunction):
         :param schema_model: 适配的模型
         """
         if schema_model.startswith("gpt-"):
-            return self.model_copy(
-            )
+            return self.model_copy(deep=True)
         elif schema_model.startswith("chatglm"):
-            return self.model_copy(
-            )
+            return self.model_copy(deep=True)
         else:
             raise CheckError(f"unknown model {schema_model}, cant classify model type")
 
@@ -278,7 +331,7 @@ class Tool(BaseModel):
     请求体
     """
     type: str = Field(default="function")
-    function: Function
+    function: "Function"
 
     def request_final(
             self,
@@ -299,7 +352,7 @@ class ToolChoice(BaseModel):
     请求体
     """
     type: str = Field(default=None)
-    function: BaseFunction = Field(default=None)
+    function: "BaseFunction" = Field(default=None)
 
 
 class ToolCallCompletion(ToolChoice):
@@ -308,16 +361,16 @@ class ToolCallCompletion(ToolChoice):
     """
     id: str = Field(default=None)
     type: str = Field(default=None)
-    function: FunctionCallCompletion = Field(default=None)
+    function: "FunctionCallCompletion" = Field(default=None)
 
 
 class TaskBatch(BaseModel):
     id: str = Field(default=None)
     type: str = Field(default=None)
-    function: FunctionCallCompletion = Field(default=None)
+    function: "FunctionCallCompletion" = Field(default=None)
 
     @classmethod
-    def from_tool_call(cls, tool_call: ToolCallCompletion):
+    def from_tool_call(cls, tool_call: "ToolCallCompletion"):
         if not tool_call:
             return None
         return cls(
@@ -327,7 +380,7 @@ class TaskBatch(BaseModel):
         )
 
     @classmethod
-    def from_function_call(cls, function_call: FunctionCallCompletion):
+    def from_function_call(cls, function_call: "FunctionCallCompletion"):
         if not function_call:
             return None
         return cls(
@@ -381,14 +434,14 @@ class Message(BaseModel, ABC):
         extra: dict = Field(default_factory=dict, description="额外信息")
         """额外信息"""
 
-        files: List[File] = Field(default_factory=list, description="文件信息")
+        files: List["File"] = Field(default_factory=list, description="文件信息")
         """文件信息"""
 
         @classmethod
         def default(cls, message_class):
             return cls(message_class=message_class)
 
-    _meta: Meta = PrivateAttr(default=None)
+    _meta: "Meta" = PrivateAttr(default=None)
     """元数据"""
     role: str
     content: Union[str, List[ContentParts], List[dict]]
@@ -396,7 +449,7 @@ class Message(BaseModel, ABC):
     def get_meta(self) -> Meta:
         return self._meta
 
-    def update_meta(self, meta: Meta) -> "Message":
+    def update_meta(self, meta: "Meta") -> "Message":
         self._meta = meta
         return self
 
@@ -404,7 +457,7 @@ class Message(BaseModel, ABC):
     def fold(self) -> "Message":
         return self
 
-    def get_functions(self) -> List[TaskBatch]:
+    def get_functions(self) -> List["TaskBatch"]:
         raise NotImplementedError
 
     @abstractmethod
@@ -433,7 +486,7 @@ class SystemMessage(Message):
 
 class UserMessage(Message):
     role: str = Field(default="user")
-    content: Union[str, List[ContentParts], List[dict]]
+    content: Union[str, List["ContentParts"], List[dict]]
     name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
 
     @property
@@ -450,7 +503,8 @@ class UserMessage(Message):
         return self.model_copy(
             update={
                 "content": metadata_str
-            }
+            },
+            deep=True
         )
 
     def request_final(self,
@@ -645,23 +699,26 @@ def standardise_for_request(
         return message
 
 
-def generate_md5_short_id(data):
-    # 检查输入数据是否是一个文件
-    is_file = False
-    if isinstance(data, str):
-        is_file = True
-    if isinstance(data, BytesIO):
-        data = data.getvalue()
+def generate_short_md5(data: Union[bytes, str, BytesIO],
+                       *,
+                       length: int = 8,
+                       upper: bool = True,
+                       ):
+    assert 0 < length <= 32, "length must be less than 32"
     # 计算 MD5 哈希值
     md5_hash = hashlib.md5()
-    if is_file:
+    if isinstance(data, bytes) or isinstance(data, BytesIO):
+        if isinstance(data, BytesIO):
+            data = data.getvalue()
         with open(data, "rb") as file:
             for chunk in iter(lambda: file.read(4096), b""):
                 md5_hash.update(chunk)
-    else:
-        md5_hash.update(data)
+    if isinstance(data, str):
+        md5_hash.update(data.encode("utf-8"))
     # 获取哈希值的 16 进制表示
     hex_digest = md5_hash.hexdigest()
     # 生成唯一的短ID
-    short_id = hex_digest[:8]
+    short_id = str(hex_digest[:length])
+    if upper:
+        short_id = short_id.upper()
     return short_id

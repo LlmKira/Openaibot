@@ -15,7 +15,9 @@ def run():
     import asyncio
     from .aps import aps_start
     from .function import FunctionReceiver
-
+    from llmkira.sdk.cache import global_cache_runtime, global_mongodb_runtime
+    global_cache_runtime.init_cache(verbose=True)
+    global_mongodb_runtime.init_mongodb(verbose=True)
     func = [
         aps_start(),
         FunctionReceiver().function(),

@@ -25,7 +25,7 @@ class RawMessage(BaseModel):
     thread_id: Optional[Union[int, str]] = Field(None, description="channel id/Telegram thread")
 
     text: str = Field("", description="文本")
-    file: List[File] = Field([], description="文件")
+    file: List["File"] = Field([], description="文件")
 
     created_at: str = Field(default=str(int(time.time())), description="创建时间")
     only_send_file: bool = Field(default=False, description="Send file only")

@@ -27,7 +27,7 @@ class TelegramBot(BaseSettings):
         if self.proxy_address:
             logger.success(f"TelegramBot proxy was set to {self.proxy_address}")
         if self.token is None:
-            logger.warning(f"\n🍀Check:Telegrambot token is empty")
+            logger.info(f"\n🍀Check:Telegrambot token is empty")
         if self.bot_id is None and self.token:
             try:
                 from telebot import TeleBot
@@ -42,9 +42,11 @@ class TelegramBot(BaseSettings):
                 self.bot_username = _bot.username
                 self.bot_link = f"https://t.me/{self.bot_username}"
             except Exception as e:
-                logger.error(f"\n🍀Check:Telegrambot token is empty:{e}")
+                logger.error(f"\n🍀TelegramBot Token Not Set --error {e}")
             else:
-                logger.success(f"🍀Check:TelegramBot connect success: {self.bot_username}")
+                logger.success(
+                    f"🍀TelegramBot Init Connection Success --bot_name {self.bot_username} --bot_id {self.bot_id}"
+                )
         return self
 
     @property

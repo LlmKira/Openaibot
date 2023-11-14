@@ -68,7 +68,10 @@ class KookBotRunner(Runner):
         self.bot = None
         self.proxy = None
 
-    async def upload(self, file_info: dict, uid: str):
+    async def upload(self,
+                     file_info: dict,
+                     uid: str
+                     ):
         if not file_info.get("url"):
             return Exception("File url not found")
         if file_info.get("type") == "file":
@@ -84,7 +87,7 @@ class KookBotRunner(Runner):
             return Exception(f"Download file failed {e}")
         return await File.upload_file(file_name=name,
                                       file_data=data,
-                                      created_by=uid
+                                      creator_uid=uid
                                       )
 
     async def run(self):
@@ -319,7 +322,7 @@ class KookBotRunner(Runner):
         async def listen_bind_command(msg: Message, dsn: str):
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=msg.author_id, dsn=dsn)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=msg.author_id, dsn=dsn)
                 _manager.add_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=msg.author_id, to_=__sender__)
             except Exception as e:
@@ -345,7 +348,7 @@ class KookBotRunner(Runner):
         async def listen_unbind_command(msg: Message, dsn: str):
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=msg.author_id, dsn=dsn)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=msg.author_id, dsn=dsn)
                 _manager.remove_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=msg.author_id, to_=__sender__)
             except Exception as e:

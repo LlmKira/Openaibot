@@ -2,6 +2,11 @@ name: Docker Image CI (dev)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - docker
+      # - develop
+      # - '**-develop'
 
 jobs:
   build-and-push-image:
@@ -35,7 +40,6 @@ jobs:
             sudoskys/llmbot
           tags: |
             # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
 
           flavors: |

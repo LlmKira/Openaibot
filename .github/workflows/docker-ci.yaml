@@ -2,9 +2,11 @@ name: Docker Image CI (stable)
 
 on:
   workflow_dispatch:
-  pull_request:
+  push:
     branches:
       - main
+    tags:
+      - '**'
   release:
     types: [ published ]
 
@@ -40,7 +42,7 @@ jobs:
             sudoskys/llmbot
           tags: |
             # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=ref,event=tag
             type=ref,event=branch
 

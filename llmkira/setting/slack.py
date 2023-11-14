@@ -33,15 +33,15 @@ class SlackBot(BaseSettings):
     def bot_setting_validator(self):
         try:
             if self.app_token is None:
-                raise ValueError("\n🍀Check:SlackBot app_token is empty")
+                raise ValueError("🍀SlackBot `app_token` Not Set")
             if self.bot_token is None:
-                raise ValueError("\n🍀Check:SlackBot bot_token is empty")
+                raise LookupError("\n🍀SlackBot `bot_token` is empty")
             if self.secret is None:
-                raise ValueError("\n🍀Check:SlackBot secret is empty")
-        except Exception as e:
-            logger.warning(e)
-        else:
-            logger.success(f"🍀Check:SlackBot token ready")
+                raise LookupError("\n🍀SlackBot `secret` is empty")
+        except ValueError as e:
+            logger.info(str(e))
+        except LookupError as e:
+            logger.warning(str(e))
         return self
 
     @property

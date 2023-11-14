@@ -41,7 +41,7 @@ class GetAuthDriver(object):
         # Public Provider
         if ProviderSettingObj.is_open_everyone:
             provider = PublicProvider()
-            logger.debug(f"🍦 Public Provider({provider.name})&Mode({self.user.mode})&UID({self.uid})")
+            logger.debug(f"🍦 Public Provider --name ({provider.name}) --mode ({self.user.mode}) --uid ({self.uid})")
             if await provider.authenticate(
                     uid=self.uid,
                     token=self.user.token, status=self.user.mode):

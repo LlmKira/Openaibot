@@ -9,6 +9,23 @@ from typing import Any
 PREFIX = 'base_bot:'
 
 
+def singleton(cls):
+    _instance = {}
+
+    def _singleton(*args, **kargs):
+        if cls not in _instance:
+            _instance[cls] = cls(*args, **kargs)
+        return _instance[cls]
+
+    return _singleton
+
+
+class BaseRuntime(ABC):
+    init_already = False
+    client = None
+    dsn = None
+
+
 class AbstractDataClass(ABC):
 
     @abstractmethod
@@ -26,4 +43,3 @@ class AbstractDataClass(ABC):
     @abstractmethod
     async def read_data(self, key: str) -> Any:
         pass
-

@@ -170,7 +170,7 @@ class KookSender(BaseSender):
             llm_result=llm_result,
             receiver=receiver
         )
-        new_receiver = task.receiver.model_copy()
+        new_receiver = task.receiver.model_copy(deep=True)
         new_receiver.platform = __receiver__
         """更新接收者为当前平台，便于创建的函数消息能返回到正确的客户端"""
         new_meta = task.task_meta.pack_loop(

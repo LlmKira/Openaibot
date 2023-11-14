@@ -9,14 +9,15 @@ from typing import List, Optional
 
 from pymongo.errors import DuplicateKeyError
 
-from llmkira.sdk.cache.mongo import mongo_client
 from .schema import UserCost, UserConfig
 
 __DB_NAME__ = "llm_bot"
 
+from ...sdk.cache import global_mongodb_runtime
+
 
 class Client(ABC):
-    client = mongo_client.with_database(__DB_NAME__)
+    client = global_mongodb_runtime.get_mongodb().with_database(__DB_NAME__)
 
     def use_collection(self, collection_name: str):
         return self.client.with_collection(collection_name)

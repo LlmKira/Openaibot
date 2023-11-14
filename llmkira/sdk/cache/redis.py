@@ -4,11 +4,9 @@
 # @File    : redis.py
 # @Software: PyCharm
 import json
-import os
 from typing import Optional, Tuple, List, Union
 
 import redis
-from dotenv import load_dotenv
 from loguru import logger
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import ConnectionPool
@@ -75,27 +73,3 @@ class RedisClientWrapper(AbstractDataClass):
         _items = await self._redis.lrange(self.prefix + str(key), start=start_end[0], end=start_end[1])
         items = [m.decode("utf-8") for m in _items[::-1]]
         return items
-
-
-def check_redis_dsn(dsn):
-    import redis
-    r = redis.from_url(dsn)
-    assert r.ping() is True
-
-
-# 加载 .env 文件
-load_dotenv()
-redis_url = os.getenv('REDIS_DSN', 'redis://localhost:6379/0')
-cache: Optional[RedisClientWrapper]
-
-try:
-    check_redis_dsn(redis_url)
-except Exception as e:
-    logger.error(f'\n⚠️ Redis DISCONNECT,pls check REDIS_DSN in env\n--error: {e} --dsn {redis_url}')
-    cache = None
-    raise e
-else:
-    logger.success(f'RedisClientWrapper loaded successfully in {redis_url}')
-    cache = RedisClientWrapper(redis_url)
-    if redis_url == 'redis://localhost:6379/0':
-        logger.warning("\n⚠️ You are using a non-password-protected local REDIS database.")

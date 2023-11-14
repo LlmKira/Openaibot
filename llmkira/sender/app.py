@@ -17,6 +17,9 @@ def run():
     from llmkira import load_plugins
     from llmkira.sdk import load_from_entrypoint, get_entrypoint_plugins
     from llmkira.setting import StartSetting
+    from llmkira.sdk.cache import global_cache_runtime, global_mongodb_runtime
+    global_cache_runtime.init_cache(verbose=True)
+    global_mongodb_runtime.init_mongodb(verbose=True)
     from .rss import RssAppRunner
 
     start_setting = StartSetting.from_subdir()
