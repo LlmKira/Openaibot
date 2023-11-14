@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 import re
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
@@ -8,7 +8,7 @@ from typing import Optional, Type, Dict, Any, List, Union, Set, final, Literal
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from pydantic import field_validator, BaseModel, Field, model_validator
+from pydantic import field_validator, BaseModel, Field, model_validator, PrivateAttr
 
 if TYPE_CHECKING:
     from ...task import TaskHeader
@@ -20,6 +20,7 @@ class BaseTool(ABC, BaseModel):
     """
     基础工具类，所有工具类都应该继承此类
     """
+
     __slots__ = ()
     silent: bool = Field(False, description="是否静默")
     function: "Function" = Field(..., description="功能")
@@ -29,10 +30,29 @@ class BaseTool(ABC, BaseModel):
     repeatable: bool = Field(False, description="是否可重复使用")
     deploy_child: Literal[0, 1] = Field(1, description="如果为0，终结于此链点，不再向下传递")
     require_auth_kwargs: dict = {}
-    env_required: List[str] = Field([], description="环境变量要求")
+    env_required: List[str] = Field([], description="环境变量要求,ALSO NEED env_prefix")
+    env_prefix: str = Field("", description="环境变量前缀")
     file_match_required: Optional[re.Pattern] = Field(None, description="re.compile 文件名正则")
+    extra_arg: Dict[Any, Any] = Field({}, description="额外参数")
+    __run_arg: Dict[Any, Any] = PrivateAttr(default_factory=dict)
 
     # exp: re.compile(r"file_id=([a-z0-9]{8})")
+
+    @final
+    def get_os_env(self, env_name):
+        """
+        获取 PLUGIN_+ 公共环境变量
+        """
+        env = os.getenv("PLUGIN_" + env_name, None)
+        return env
+
+    @final
+    @property
+    def env_list(self):
+        """
+        #🍪# If you think its shouldnt be final, you can issue it.
+        """
+        return [f"{self.env_prefix}{i}" for i in self.env_required]
 
     @final
     @property
@@ -46,7 +66,13 @@ class BaseTool(ABC, BaseModel):
     @model_validator(mode="after")
     def _check_conflict(self):
         if self.silent and self.env_required:
-            raise ValueError("silent and env_required can not be True at the same time")
+            # raise ValueError("silent and env_required can not be True at the same time")
+            logger.warning(
+                "\n Plugin `silent` And `env_required` Should Not Be True Same Time"
+                "Please Validate `env_required` In Execute Manual, Or Provide Callback To User Instead"
+            )
+        if self.env_required and not self.env_prefix:
+            raise ValueError("env_required must be used with env_prefix")
         return self
 
     @final
@@ -82,6 +108,8 @@ class BaseTool(ABC, BaseModel):
     def func_message(self, message_text, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
+        message_text: 消息文本
+        message_raw: 消息原始数据 `RawMessage`
         """
         for i in self.keywords:
             if i in message_text:
@@ -163,35 +191,36 @@ class BaseTool(ABC, BaseModel):
         """
         if not env:
             env = {}
-        run_arg = {
-            "task": task,
-            "receiver": receiver,
+        # 拒绝循环引用, 复制一份传递
+        self.__run_arg = {
+            "task": task.model_copy(deep=True),
+            "receiver": receiver.model_copy(deep=True),
             "arg": arg,
             "env": env,
-            "pending_task": pending_task,
+            "pending_task": pending_task.model_copy(deep=True),
             "refer_llm_result": refer_llm_result
         }
-        run_arg.update(kwargs)
+        self.__run_arg.update(kwargs)
         try:
             run_result = await self.run(
-                **run_arg
+                **self.__run_arg
             )
         except Exception as e:
             logger.exception(e)
             logger.error(f"ToolExecutor:run error: {e}")
-            run_arg["exception"] = e
+            self.__run_arg["exception"] = str(e)
             await self.failed(
-                **run_arg
+                **self.__run_arg
             )
         else:
-            run_arg["result"] = run_result
+            self.__run_arg["result"] = run_result
             try:
                 await self.callback(
-                    **run_arg
+                    **self.__run_arg
                 )
             except Exception as e:
                 logger.error(f"ToolExecutor:callback error: {e}")
-        return run_arg
+        return self.__run_arg
 
 
 @dataclass(eq=False)
