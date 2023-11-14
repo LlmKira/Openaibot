@@ -72,7 +72,7 @@ class SlackBotRunner(Runner):
             return Exception(f"Download file failed {e},be sure bot have the scope `files.read`")
         return await File.upload_file(file_name=name,
                                       file_data=data,
-                                      created_by=uid
+                                      creator_uid=uid
                                       )
 
     async def run(self):
@@ -336,7 +336,7 @@ class SlackBotRunner(Runner):
             _arg = command.text
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=command.user_id, dsn=_arg)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=command.user_id, dsn=_arg)
                 _manager.add_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=command.user_id, to_=__sender__)
             except Exception as e:
@@ -364,7 +364,7 @@ class SlackBotRunner(Runner):
             _arg = command.text
             _manager = RouterManager()
             try:
-                router = Router.build_from_receiver(receiver=__sender__, user_id=command.user_id, dsn=_arg)
+                router = Router.build_from_receiver(receiver_channel=__sender__, user_id=command.user_id, dsn=_arg)
                 _manager.remove_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=command.user_id, to_=__sender__)
             except Exception as e:

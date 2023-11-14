@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : util_func.py
 # @Software: PyCharm
+from typing import Tuple, Optional
 from urllib.parse import urlparse
 
 from loguru import logger
@@ -11,7 +12,12 @@ from ..middleware.chain_box import Chain, AuthReloader
 from ..task import Task
 
 
-def parse_command(command):
+def parse_command(command: str) -> Tuple[Optional[str], Optional[str]]:
+    """
+    :param command like `/chat something`
+    :return command_head,command_body
+    """
+    assert isinstance(command, str), "Command Must Be Str"
     if not command:
         return None, None
     parts = command.split(" ", 1)
@@ -23,7 +29,11 @@ def parse_command(command):
         return None, None
 
 
-def is_valid_url(url):
+def is_valid_url(url) -> bool:
+    """
+    :param url url
+    :return bool
+    """
     try:
         result = urlparse(url)
         return all([result.scheme, result.netloc])
@@ -31,7 +41,10 @@ def is_valid_url(url):
         return False
 
 
-def is_command(text: str, command: str, at_bot_username: str = None, check_empty=False):
+def is_command(text: str,
+               command: str,
+               at_bot_username: str = None,
+               check_empty=False) -> bool:
     """
     :param text: message text
     :param command: command
@@ -53,7 +66,8 @@ def is_command(text: str, command: str, at_bot_username: str = None, check_empty
     return False
 
 
-def is_empty_command(text: str):
+def is_empty_command(text: str) -> bool:
+    assert text, "Command Input Must Be Str"
     if not text.startswith("/"):
         return False
     if len(text.split(" ")) == 1:
@@ -61,9 +75,24 @@ def is_empty_command(text: str):
     return False
 
 
-async def auth_reloader(uuid: str, platform: str, user_id: str):
-    chain: Chain = await AuthReloader.from_meta(platform=platform, user_id=user_id).get_auth(uuid=uuid)
+async def auth_reloader(uuid: str,
+                        platform: str,
+                        user_id: str
+                        ) -> None:
+    """
+    :param uuid: verify id
+    :param platform: message channel
+    :param user_id: raw user id
+    :raise LookupError Not Found
+    :return None
+    """
+    assert isinstance(uuid, str), "`uuid` Must Be Str"
+    assert isinstance(platform, str), "`platform` Must Be Str"
+    assert isinstance(user_id, str), "`user_id` Must Be Str"
+    chain: Chain = await AuthReloader.from_form(platform=platform,
+                                                user_id=user_id
+                                                ).read_auth(uuid=uuid)
     if not chain:
-        raise Exception(f"Auth Task not found")
-    logger.info(f"Auth Task be sent\n--uuid {uuid} --user {user_id}")
-    await Task(queue=chain.address).send_task(task=chain.arg)
+        raise LookupError(f"Auth Task Not Found")
+    logger.info(f"Auth Task Sent  --task uuid {uuid}  --user {user_id}")
+    await Task(queue=chain.channel).send_task(task=chain.arg)

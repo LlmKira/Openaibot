@@ -21,7 +21,7 @@ from telebot import formatting
 from telebot.formatting import escape_markdown
 
 from ..schema import Runner
-from ...sdk.cache.redis import cache
+from ...sdk.cache import global_cache_runtime
 from ...task import Task, TaskHeader
 
 __sender__ = "rss"
@@ -138,6 +138,7 @@ class Rss(object):
 
     async def re_init(self, update: Update) -> (str, list):
         _entry = list(update.entry.values())[:1]
+        cache = global_cache_runtime.get_redis()
         await cache.set_data(key=self.db_key, value=update.model_dump_json(), timeout=60 * 60 * 60 * 7)
         return update.title, _entry
 
@@ -147,12 +148,14 @@ class Rss(object):
             # copy
             cache_.entry[key] = update_.entry[key]
             _return.append(update_.entry[key])
+        cache = global_cache_runtime.get_redis()
         await cache.set_data(key=self.db_key, value=cache_.model_dump_json(), timeout=60 * 60 * 60 * 7)
         return update_.title, _return
 
     async def get_updates(self):
         # 从缓存拉取
         _load = self.get_feed()
+        cache = global_cache_runtime.get_redis()
         _data = await cache.read_data(key=self.db_key)
         if not _data:
             return await self.re_init(_load)
