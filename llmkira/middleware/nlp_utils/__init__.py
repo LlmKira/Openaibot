@@ -5,4 +5,4 @@
 # @Software: PyCharm
 
 
-# TODO sumy/cosine similarity
+# TODO sumy/cosine similarity in low memory mode

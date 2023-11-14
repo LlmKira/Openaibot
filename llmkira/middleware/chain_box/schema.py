@@ -4,32 +4,52 @@
 # @File    : schema.py
 # @Software: PyCharm
 import time
-from typing import Any, Type, Optional
 
 import shortuuid
-from pydantic import field_validator, BaseModel, Field
+from pydantic import field_validator, BaseModel, Field, ConfigDict, model_validator
+
+from ...task.schema import TaskHeader
 
 
 class Chain(BaseModel):
-    uid: str = Field(None, description="platform:user_id")
-    address: str = Field(None, description="address")
-    arg: Any = Field(None, description="arg")
-    uuid: str = Field(default=str(shortuuid.uuid()[0:5]).upper(), description="uuid")
+    creator_uid: str = Field(default=str, description="platform:user_id")
+    channel: str = Field(..., description="channel")
+    arg: TaskHeader = Field(..., description="arg")
 
-    created_times: int = Field(default_factory=lambda: int(time.time()), description="created_times")
+    uuid: str = Field(default=str(shortuuid.uuid()[0:5]).upper(), description="Always Auto Gen")
     expire: int = Field(default=60 * 60 * 24 * 1, description="expire")
-
     deprecated: bool = Field(default=False, description="deprecated")
+    created_times: int = Field(default_factory=lambda: int(time.time()), description="created_times")
 
-    def set_expire(self, expire: int):
+    model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
+
+    def set_expire(self, expire: int) -> "Chain":
         self.expire = expire
         return self
 
     @classmethod
-    def from_redis(cls, data: dict):
+    def create(cls,
+               *,
+               creator_uid: str,
+               channel: str,
+               arg: "TaskHeader",
+               expire: int,
+               **kwargs
+               ) -> "Chain":
+        return cls(
+            creator_uid=creator_uid,
+            channel=channel,
+            arg=arg,
+            expire=expire,
+            **kwargs
+        )
+
+    @classmethod
+    def from_redis(cls, data: dict) -> "Chain":
         """
         从redis中获取,自动检查是否带有 created_times 和 expire
         """
+        assert isinstance(data, dict), "From Redis Receive Empty Data"
         if not data.get("created_times"):
             data["deprecated"] = True
         if not data.get("expire"):
@@ -37,27 +57,29 @@ class Chain(BaseModel):
         return cls.model_validate(data)
 
     @property
-    def is_expire(self):
+    def is_expire(self) -> bool:
         return (int(time.time()) - self.created_times > self.expire) or self.deprecated
 
-    @field_validator("uid")
+    @model_validator(mode="before")
+    def check_root(cls, values):
+        arg = values.get("arg")
+        if arg:
+            if isinstance(arg, dict):
+                values["arg"] = TaskHeader.model_validate(arg)
+            if isinstance(arg, TaskHeader):
+                values["arg"] = arg.model_copy(deep=True)
+        return values
+
+    @field_validator("creator_uid")
     def check_user_id(cls, v):
         if v.count(":") != 1:
-            raise ValueError("Chain:uid format error")
+            raise ValueError("Chain `creator_uid` Must Be `platform:user_id` Format")
         if not v:
-            raise ValueError("Chain:uid is empty")
+            raise ValueError("Chain `creator_uid` Is Empty")
         return v
 
-    @field_validator("address")
+    @field_validator("channel")
     def check_address(cls, v):
         if not v:
-            raise ValueError("Chain:address is empty")
+            raise ValueError("Chain:channel is empty")
         return v
-
-    def format_arg(self, arg: Type[BaseModel]):
-        """
-        神祗的格式化
-        """
-        if isinstance(self.arg, dict):
-            self.arg = arg.model_validate(self.arg)
-        return self

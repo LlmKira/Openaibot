@@ -8,41 +8,53 @@ from typing import Optional
 from loguru import logger
 
 from .schema import Chain
-from ...sdk.cache.redis import cache
-from ...task import TaskHeader
+from ...sdk.cache import global_cache_runtime
 
 
 class AuthReloader(object):
     """
-    任务链条认证
+    重放任务
     """
 
     def __init__(self, uid: str = None):
         self.uid = uid
 
     @classmethod
-    def from_meta(cls, platform: str, user_id: str):
+    def _prefix(cls, uuid: str) -> str:
+        """auth:{auth_schema_version}:uuid"""
+        return f"auth:v1:{uuid}"
+
+    @classmethod
+    def from_form(cls, platform: str, user_id: str):
         _c = cls()
         _c.uid = f"{platform}:{user_id}"
         return _c
 
-    async def add_auth(self, chain: Chain):
-        _cache = await cache.set_data(key=f"auth:{chain.uuid}", value=chain.model_dump_json(), timeout=60 * 60 * 24 * 7)
+    async def save_auth(self,
+                        chain: Chain,
+                        timeout: int = 60 * 60 * 24
+                        ):
+        cache = global_cache_runtime.get_redis()
+        logger.debug("Resign Auth Point")
+        assert chain.creator_uid == self.uid, "Cant Resign Uid Diff From `self`"
+        _cache = await cache.set_data(
+            key=self._prefix(uuid=chain.uuid),
+            value=chain.model_dump_json(),
+            timeout=timeout
+        )
         return chain.uuid
 
-    async def get_auth(self, uuid: str) -> Optional[Chain]:
-        _cache = await cache.read_data(key=f"auth:{uuid}")
-        logger.debug(f"[x] Auth \n--data {_cache}")
+    async def read_auth(self, uuid: str) -> Optional[Chain]:
+        cache = global_cache_runtime.get_redis()
+        _cache = await cache.read_data(key=self._prefix(uuid=uuid))
         if not _cache:
-            logger.debug(f"[x] Auth \n--empty {uuid}")
             return None
-        chain = Chain().from_redis(_cache)
+        logger.debug(f"Get Auth Data {_cache} {_cache}")
+        chain = Chain.from_redis(_cache)
         if chain.is_expire:
-            logger.debug(f"[x] Auth \n--expire {uuid}")
             return None
-        chain = chain.format_arg(arg=TaskHeader)
-        if chain.uid != self.uid:
-            logger.debug(f"[x] Auth \n--not found user {uuid}")
+        if chain.creator_uid != self.uid:
+            logger.debug(f"Not User {self.uid} Created Auth")
             return None
         return chain
 
@@ -52,16 +64,36 @@ class ChainReloader(object):
     def __init__(self, uid: str):
         self.uid = uid
 
-    async def add_task(self, chain: Chain):
-        _cache = await cache.lpush_data(key=f"chain:{self.uid}", value=chain.model_dump_json())
+    @classmethod
+    def _prefix(cls, uuid: str) -> str:
+        """chain:{auth_schema_version}:uuid"""
+        return f"chain:v1:{uuid}"
+
+    async def add_task(self, chain: Chain) -> str:
+        """
+        Add A Chain To Redis List
+        :param chain Task
+        :return uuid
+        """
+        cache = global_cache_runtime.get_redis()
+        await cache.lpush_data(
+            key=self._prefix(uuid=chain.uuid),
+            value=chain.model_dump_json()
+        )
         return chain.uuid
 
     async def get_task(self) -> Optional[Chain]:
-        _data = await cache.lpop_data(key=f"chain:{self.uid}")
-        if not _data:
+        """
+        Get Task From Redis List
+        :return Optional[Chain]
+        """
+        cache = global_cache_runtime.get_redis()
+        redis_raw = await cache.lpop_data(
+            key=self._prefix(uuid=self.uid)
+        )
+        if not redis_raw:
             return None
-        chain = Chain.from_redis(_data)
+        chain = Chain.from_redis(redis_raw)
         if chain.is_expire:
             return None
-        chain = chain.format_arg(arg=TaskHeader)
         return chain

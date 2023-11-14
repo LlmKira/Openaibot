@@ -9,7 +9,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from config import provider_settings
-from llmkira.sdk.cache.redis import cache
+from ...sdk.cache import global_cache_runtime
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
 from ...sdk.endpoint import Driver
@@ -52,6 +52,7 @@ class PublicProvider(BaseProvider):
         return True
 
     async def check_times(self, times: int, uid: str):
+        cache = global_cache_runtime.get_redis()
         date = time.strftime("%Y%m%d", time.localtime())
         read = await cache.read_data(self.__database_key(uid=uid))
         if uid in WHITE_LIST:

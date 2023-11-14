@@ -8,7 +8,7 @@ import re
 from copy import deepcopy
 from typing import Optional, Dict, Union, List
 
-from ...sdk.cache.redis import cache
+from llmkira.sdk.cache import global_cache_runtime
 
 
 class EnvManager(object):
@@ -32,21 +32,24 @@ class EnvManager(object):
         return _env_table
 
     @classmethod
-    def from_uid(cls, uid: str):
+    def _prefix(cls, uid: str) -> str:
+        return f"env:{uid}"
+
+    @classmethod
+    def from_uid(cls, uid: str) -> "EnvManager":
         _c = cls()
         _c.uid = uid
         return _c
 
     @classmethod
-    def from_meta(cls, platform: str, user_id: Union[str, int]):
+    def from_meta(cls, platform: str, user_id: Union[str, int]) -> "EnvManager":
         _c = cls()
         _c.uid = f"{platform}:{user_id}"
         return _c
 
     async def __get_env(self) -> dict:
-        if not cache:
-            raise Exception("Redis not connected")
-        _cache = await cache.read_data(key=f"env:{self.uid}")
+        cache = global_cache_runtime.get_redis()
+        _cache = await cache.read_data(key=self._prefix(uid=self.uid))
         if not isinstance(_cache, dict):
             return {}
         return _cache
@@ -73,6 +76,7 @@ class EnvManager(object):
         :param env: 环境变量
         :return: 更新后的环境变量
         """
+        cache = global_cache_runtime.get_redis()
         _env = await self.__get_env()
         _user_env = deepcopy(_env)
         # 检查是否为一级嵌套
@@ -83,5 +87,7 @@ class EnvManager(object):
                 _user_env.pop(_key, None)
                 continue
             _user_env[_key] = _value
-        _cache = await cache.set_data(key=f"env:{self.uid}", value=json.dumps(_user_env), timeout=60 * 60 * 24 * 7)
+        _cache = await cache.set_data(key=self._prefix(uid=self.uid),
+                                      value=json.dumps(_user_env),
+                                      timeout=60 * 60 * 24 * 7)
         return _user_env

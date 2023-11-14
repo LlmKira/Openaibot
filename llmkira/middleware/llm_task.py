@@ -13,7 +13,7 @@ from .llm_provider import GetAuthDriver
 from ..extra.user import UserCost, CostControl
 from ..schema import RawMessage, Scraper
 from ..sdk.adapter import SCHEMA_GROUP
-from ..sdk.endpoint import openai, Driver
+from ..sdk.endpoint import Driver
 from ..sdk.endpoint.openai import Message
 from ..sdk.endpoint.schema import LlmRequest, LlmResult
 from ..sdk.memory.redis import RedisChatMessageHistory
@@ -82,7 +82,7 @@ class OpenaiMiddleware(object):
 
     def __init__(self,
                  task: TaskHeader,
-                 functions: List[openai.Function] = None,
+                 functions: List[Function] = None,
                  tools: List[ToolCallCompletion] = None
                  ):
         self.auth_client = None
@@ -100,10 +100,10 @@ class OpenaiMiddleware(object):
         self.tools: List[Tool] = tools
         self.scraper = Scraper()  # 刮削器
         self.task = task
-        self.session_user_uid = task.receiver.uid
+        self.session_uid = task.receiver.uid
         self.system_prompt: SystemPrompt = SystemPrompt()
         self.message_history = RedisChatMessageHistory(
-            session_id=f"{task.receiver.platform}:{task.receiver.user_id}",
+            session_id=self.session_uid,
             ttl=60 * 60 * 1
         )
 
@@ -112,7 +112,7 @@ class OpenaiMiddleware(object):
         :raise: ProviderException
         """
         # 构建请求的驱动信息
-        self.auth_client = GetAuthDriver(uid=self.session_user_uid)
+        self.auth_client = GetAuthDriver(uid=self.session_uid)
         self.driver = sync(self.auth_client.get())
         assert isinstance(self.driver, Driver), "llm_task.py:GetAuthDriver s return not a driver!"
         return self
@@ -128,7 +128,7 @@ class OpenaiMiddleware(object):
         """
         _dict = {}
         for function in self.functions:
-            assert isinstance(function, openai.Function), "llm_task.py:function type error,cant unique"
+            assert isinstance(function, Function), "llm_task.py:function type error,cant unique"
             _dict[function.name] = function
         self.functions = list(_dict.values())
 
@@ -266,7 +266,7 @@ class OpenaiMiddleware(object):
         )
         # 禁用函数？
         if disable_function or not functions:
-            logger.debug(f"[x] Openai function empty warn \n--disable function:{disable_function}")
+            logger.debug(f"Llm Driver --disable function:{disable_function}")
         # 必须校验
         if disable_function:
             functions = None
@@ -284,12 +284,12 @@ class OpenaiMiddleware(object):
         result: LlmResult = await endpoint.create()
         _message = result.default_message
         _usage = result.usage.total_tokens
-        self.message_history.add_message(message=_message)
+        self.write_back(message=_message)
         # print(result.model_dump_json(indent=2))
         # 记录消耗
         await CostControl.add_cost(
             cost=UserCost.create_from_task(
-                uid=self.session_user_uid,
+                uid=self.session_uid,
                 request_id=result.id,
                 cost=UserCost.Cost(
                     cost_by=self.task.receiver.platform,
@@ -299,11 +299,5 @@ class OpenaiMiddleware(object):
                     provide_type=self.auth_client.provide_type().value
                 )
             )
-        )
-        logger.debug(
-            f"[x] Openai result "
-            f"\n--message {result.choices} "
-            f"\n--token {result.usage} "
-            f"\n--model {self.driver.model}"
         )
         return result
