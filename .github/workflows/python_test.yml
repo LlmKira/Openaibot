@@ -32,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install poetry==1.6.1
-          poetry install --all-extras --no-root
+          poetry install --all-extras
           python -m pip install pytest
 
       - name: Run tests
         run: |
-          poetry install --no-root
+          poetry install --all-extras
           cd test
           poetry run pytest
