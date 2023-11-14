@@ -74,6 +74,8 @@ ffmpeg-python = "^0.2.0"
 bot = ["hikari", "hikari-crescent", "khl-py", "slack-bolt"]
 all = ["hikari", "hikari-crescent", "khl-py", "slack-bolt"]
 
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
 
 [build-system]
 requires = ["poetry-core"]
