@@ -21,7 +21,7 @@ class KookBot(BaseSettings):
     @model_validator(mode='after')
     def bot_setting_validator(self):
         if self.token is None:
-            logger.warning(f"\n🍀KookBot token is empty")
+            logger.info(f"🍀Kook Bot Token Not Set")
         return self
 
     @property

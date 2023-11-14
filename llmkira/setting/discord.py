@@ -24,7 +24,7 @@ class DiscordBot(BaseSettings):
     @model_validator(mode='after')
     def bot_setting_validator(self):
         if self.token is None:
-            logger.warning(f"\n🍀DiscordBot token is empty")
+            logger.info(f"🍀Discord Bot Token Not Set")
         if self.proxy_address:
             logger.success(f"DiscordBot proxy was set to {self.proxy_address}")
         return self
