@@ -40,7 +40,7 @@ jobs:
             sudoskys/llmbot
           tags: |
             # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
             type=ref,event=branch
 
           flavors: |
