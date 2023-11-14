@@ -33,9 +33,21 @@ Manager or Manager triggered manually.
 - Please use the PEP8 specification for naming.
 - The formatting operation is completed by Reviewer, so there is no need to worry about formatting issues.
 - Make sure all commits are atomic (one feature at a time).
-- We use pydantic>2.0.0 for data validation, you can submit code for version 1.0.0 (very not recommended), but we will
-  upgrade
-  it to 2.0.0 when releasing.
+- We use pydantic>2.0.0 for data verification. You can submit the 1.0.0 version of the code (this is highly
+  discouraged), but we will upgrade it to when released.
+  2.0.0.
+- Fixed Logger needs to be printed at the head or tail of the function of this layer, not at the calling statement
+  level. Loggers that do not conform to the specifications need to be deleted after debugging.
+- The printed content of Logger is concise and clear. It starts with English capital letters and does not require
+  punctuation at the end. Do not use `:` to separate, use `--`
+  Separate parameters.
+- It is recommended to use `assert` in the function header for parameter verification, and do not use `if` for parameter
+  verification.
+- If it is not a reading function, please throw an exception if the execution fails and do not return `None`.
+- Issues must be marked with `# TODO` or `# FIXME`, and add `# [Issue Number]` after `# TODO` or `# FIXME`, if there is
+  no Issue
+  Number, please create an Issue when submitting.
+- Please do not use `str | None` `:=` `list[dict]` and other new features.
 
 ## Compatibility instructions
 
@@ -82,6 +94,34 @@ Manager 或 Manager 手动触发。
 - 确保所有提交都是原子的（每次提交一个功能）。
 - 我们使用 pydantic>2.0.0 来进行数据校验，你可以提交 1.0.0 版本的代码（非常不建议这样做），但是我们会在发布时将其升级到
   2.0.0。
+- 固定式 Logger 需要在本层函数的头部或尾部进行打印，不要在调用语句层打印。调试后不合规范的 Logger 需要删除。
+- Logger 的打印内容简洁明了，使用英文大写字母开头，结尾不需要标点符号，不要使用 `:` 分隔，使用 `--`
+  分隔参数。
+- 推荐在函数头部使用 `assert` 进行参数校验，不要使用 `if` 进行参数校验。
+- 如果不是读取函数，执行失败请抛出异常，不要返回 `None`。
+- 问题必须注明 `# TODO` 或 `# FIXME`，并且在 `# TODO` 或 `# FIXME` 后面加上 `# [Issue Number]`，如果没有 Issue
+  Number，请在提交时创建 Issue。
+- 请不要使用 `str | None` `:=` `list[dict]` 等新特性。
+
+- 错误示例
+
+```python
+cache = global_cache_runtime.get_redis()
+if not cache:
+    raise Exception("Redis not connected")
+```
+
+- 正确示例
+
+```python
+cache = global_cache_runtime.get_redis()
+# cache 由函数 get_redis() 返回，raise Exception("Redis not connected") 会抛出异常，不需要返回 None
+```
+
+```python
+cache = dict().get("cache")
+assert cache, "Redis not connected"
+```
 
 ## 兼容说明
 
