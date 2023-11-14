@@ -13,10 +13,6 @@ import crescent
 import hikari
 from hikari import Intents
 from hikari.impl import ProxySettings
-from loguru import logger
-from telebot import formatting
-from typing_extensions import Annotated
-
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
@@ -24,6 +20,10 @@ from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.discord import BotSetting
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from telebot import formatting
+from typing_extensions import Annotated
+
 from .event import help_message
 from ..schema import Runner
 
@@ -398,21 +398,22 @@ class DiscordBotRunner(Runner):
         @client.include
         @crescent.command(dm_enabled=True, name="tool", description="Show function tool list")
         async def listen_tool_command(ctx: crescent.Context):
-            _tool = ToolRegister().functions
-            _paper = [[c.name, c.description] for name, c in _tool.items()]
+            _tool = ToolRegister().get_plugins_meta
+            _paper = [[tool_item.name, tool_item.get_function_string, tool_item.usage] for tool_item in _tool]
             arg = [
                 f"**{item[0]}**\n"
-                f"{item[1]}\n"
+                + f"`{item[1]}`\n"
+                + f"{item[2]}\n"
                 for item in _paper
             ]
-            tool_message = formatting.format_text(
+            reply_message_text = formatting.format_text(
                 formatting.mbold("🔧 Tool List"),
                 *arg,
                 separator="\n"
             )
             await ctx.respond(
                 ephemeral=True,
-                content=tool_message,
+                content=reply_message_text,
             )
 
         @client.include

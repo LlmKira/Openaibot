@@ -6,8 +6,6 @@
 from typing import List
 
 from khl import HTTPRequester, Cert, api, MessageTypes
-from loguru import logger
-
 from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.receiver import function
 from llmkira.receiver.receiver_client import BaseReceiver, BaseSender
@@ -16,6 +14,7 @@ from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Message
 from llmkira.setting.kook import BotSetting
 from llmkira.task import Task, TaskHeader
+from loguru import logger
 
 __receiver__ = "kook"
 
@@ -37,7 +36,7 @@ class KookSender(BaseSender):
     def __init__(self):
         if not BotSetting.available:
             return
-        self.bot = HTTPRequester(cert=Cert(token=BotSetting.token))
+        self.bot = HTTPRequester(cert=Cert(token=BotSetting.token), ratelimiter=None)
 
     async def create_asset(self, file: File.Data) -> str:
         return (await self.bot.exec_req(api.Asset.create(file=file.pair)))['url']

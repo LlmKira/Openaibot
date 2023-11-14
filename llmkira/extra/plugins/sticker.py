@@ -209,7 +209,7 @@ class StickerTool(BaseTool):
 __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
     description="Convert pictures to stickers",
-    usage=str(StickerTool().keywords),
+    usage="需要回复图片，用中文指示转换贴纸即可",
     openapi_version=__openapi_version__,
     function={
         FuncPair(function=sticker, tool=StickerTool)

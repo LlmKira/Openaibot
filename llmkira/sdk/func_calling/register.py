@@ -8,6 +8,8 @@ from typing import List, Dict
 from typing import Optional, Type
 from typing import TYPE_CHECKING
 
+from llmkira.sdk.func_calling import PluginMetadata
+
 from . import _openapi_version_, BaseTool, get_loaded_plugins, Plugin, get_plugin
 from .schema import FuncPair
 from ..schema import Function, File
@@ -42,6 +44,10 @@ class ToolRegister(object):
 
     def get_plugin(self, name: str) -> Optional[Plugin]:
         return get_plugin(name)
+
+    @property
+    def get_plugins_meta(self) -> List[PluginMetadata]:
+        return [item.metadata for item in get_loaded_plugins() if item.metadata]
 
     @property
     def functions(self) -> Dict[str, Function]:

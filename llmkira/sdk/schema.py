@@ -53,7 +53,7 @@ class File(BaseModel):
     caption: Optional[str] = Field(default='', description="文件注释，展示给LLM")
     created_by: str = Field(default=None, description="Uploader **UID**")
     created_at: int = Field(default=int(time.time()))
-    bytes_length: int = Field(default=None, description="File Size")
+    bytes_length: Optional[int] = Field(default=None, description="File Size")
 
     @model_validator(mode="after")
     def file_id_validator(self):
@@ -124,7 +124,7 @@ class File(BaseModel):
                           file_name: str,
                           file_data: Union[bytes, BytesIO],
                           creator_uid: str,
-                          caption: str,
+                          caption: str = "",
                           file_id: str = None,
                           size_limit: int = 1024 * 1024 * 10,
                           ):
@@ -710,7 +710,7 @@ def generate_short_md5(data: Union[bytes, str, BytesIO],
     if isinstance(data, bytes) or isinstance(data, BytesIO):
         if isinstance(data, BytesIO):
             data = data.getvalue()
-        with open(data, "rb") as file:
+        with BytesIO(data) as file:
             for chunk in iter(lambda: file.read(4096), b""):
                 md5_hash.update(chunk)
     if isinstance(data, str):

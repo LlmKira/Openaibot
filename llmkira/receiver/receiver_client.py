@@ -15,10 +15,6 @@ from typing import Optional, Tuple, List
 import httpx
 import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
-from loguru import logger
-from pydantic import ValidationError as PydanticValidationError
-from telebot import formatting
-
 from llmkira.error import get_request_error_message, ReplyNeededError
 from llmkira.middleware.chain_box import Chain, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
@@ -32,6 +28,9 @@ from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.openapi.transducer import LoopRunner
 from llmkira.sdk.schema import AssistantMessage, TaskBatch
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from pydantic import ValidationError as PydanticValidationError
+from telebot import formatting
 
 
 class BaseSender(object, metaclass=ABCMeta):
@@ -373,6 +372,8 @@ class BaseReceiver(object):
                 if chain:
                     await Task(queue=chain.channel).send_task(task=chain.arg)
                     logger.info(f"🧀 Chain point release\n--callback_send_by {point}")
+                else:
+                    logger.info(f"🧀🧀 Chain point release but empty {point}")
         except Exception as e:
             logger.exception(e)
             await message.reject(requeue=False)

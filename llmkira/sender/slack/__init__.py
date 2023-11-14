@@ -8,6 +8,14 @@ import time
 from ssl import SSLContext
 
 import aiohttp
+from llmkira.extra.user import UserControl
+from llmkira.middleware.env_virtual import EnvManager
+from llmkira.middleware.router import RouterManager, Router
+from llmkira.sdk.func_calling.register import ToolRegister
+from llmkira.sdk.memory.redis import RedisChatMessageHistory
+from llmkira.sender.util_func import is_command, auth_reloader, parse_command
+from llmkira.setting.slack import BotSetting
+from llmkira.task import Task, TaskHeader
 from loguru import logger
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 from slack_bolt.app.async_app import AsyncApp
@@ -17,14 +25,6 @@ from slack_sdk.web.async_client import AsyncWebClient
 from telebot import formatting
 from telebot.formatting import escape_markdown
 
-from llmkira.extra.user import UserControl
-from llmkira.middleware.env_virtual import EnvManager
-from llmkira.middleware.router import RouterManager, Router
-from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.memory.redis import RedisChatMessageHistory
-from llmkira.sender.util_func import is_command, auth_reloader, parse_command
-from llmkira.setting.slack import BotSetting
-from llmkira.task import Task, TaskHeader
 from .event import SlashCommand, SlackChannelInfo, help_message
 from .schema import SlackMessageEvent
 from ..schema import Runner
@@ -438,21 +438,24 @@ class SlackBotRunner(Runner):
         async def listen_tool_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
-            _tool = ToolRegister().functions
-            _paper = [[c.name, c.description] for name, c in _tool.items()]
+            _tool = ToolRegister().get_plugins_meta
+            _paper = [[tool_item.name, tool_item.get_function_string, tool_item.usage] for tool_item in _tool]
             arg = [
-                formatting.mbold(item[0], escape=False) +
-                "\n" +
-                item[1] +
-                "\n"
+                formatting.mbold(item[0], escape=False)
+                + "\n"
+                + formatting.mcode(item[1])
+                + "\n"
+                + formatting.mitalic(item[2], escape=False)
+                + "\n"
                 for item in _paper
             ]
+            reply_message_text = formatting.format_text(
+                formatting.mbold("🔧 Tool List"),
+                *arg,
+                separator="\n"
+            )
             return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🔧 Tool List"),
-                    *arg,
-                    separator="\n"
-                )
+                text=reply_message_text
             )
 
         async def auth_chain(uuid, user_id):

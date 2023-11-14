@@ -231,8 +231,8 @@ class SearchTool(BaseTool):
 
 __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
-    description="Search/validate uncertain/unknownEvents/Meme fact on google.com",
-    usage="search <keywords>",
+    description="Search fact on google.com",
+    usage="以问号结尾的句子即可触发",
     openapi_version=__openapi_version__,
     function={
         FuncPair(function=search, tool=SearchTool)

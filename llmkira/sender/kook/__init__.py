@@ -8,9 +8,6 @@ import random
 
 import aiohttp
 from khl import Bot, Message, Cert, MessageTypes, PrivateMessage, PublicMessage
-from loguru import logger
-from telebot import formatting
-
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
@@ -18,6 +15,9 @@ from llmkira.sdk.func_calling import ToolRegister
 from llmkira.sdk.memory.redis import RedisChatMessageHistory
 from llmkira.setting.kook import BotSetting
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from telebot import formatting
+
 from .event import help_message, _upload_error_message_template, MappingDefault
 from ..schema import Runner
 
@@ -397,14 +397,18 @@ class KookBotRunner(Runner):
 
         @bot.command(name='tool')
         async def listen_tool_command(msg: Message):
-            _tool = ToolRegister().functions
-            _paper = [[c.name, c.description] for name, c in _tool.items()]
+            _tool = ToolRegister().get_plugins_meta
+            _paper = [[tool_item.name, tool_item.get_function_string, tool_item.usage] for tool_item in _tool]
             arg = [
-                f"**{item[0]}**\n"
-                f"{item[1]}\n"
+                formatting.mbold(item[0])
+                + "\n"
+                + f"`{item[1]}`"
+                + "\n"
+                + formatting.mitalic(item[2])
+                + "\n"
                 for item in _paper
             ]
-            tool_message = formatting.format_text(
+            reply_message_text = formatting.format_text(
                 formatting.mbold("🔧 Tool List"),
                 *arg,
                 separator="\n"
@@ -412,7 +416,7 @@ class KookBotRunner(Runner):
             await msg.reply(
                 is_temp=True,
                 type=MessageTypes.KMD,
-                content=tool_message,
+                content=reply_message_text,
             )
 
         @bot.command(name='auth')

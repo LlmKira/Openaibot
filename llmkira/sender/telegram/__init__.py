@@ -5,13 +5,6 @@
 # @Software: PyCharm
 import json
 
-from loguru import logger
-from telebot import formatting, util
-from telebot import types
-from telebot.async_telebot import AsyncTeleBot
-from telebot.asyncio_storage import StateMemoryStorage
-from telebot.formatting import escape_markdown
-
 from llmkira.extra.user import UserControl
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.middleware.router import RouterManager, Router
@@ -21,6 +14,13 @@ from llmkira.sdk.openapi.trigger import get_trigger_loop
 from llmkira.sender.util_func import parse_command, is_command, is_empty_command, auth_reloader
 from llmkira.setting.telegram import BotSetting
 from llmkira.task import Task, TaskHeader
+from loguru import logger
+from telebot import formatting, util
+from telebot import types
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
+from telebot.formatting import escape_markdown
+
 from ..schema import Runner
 from ...sdk.schema import File
 
@@ -51,7 +51,7 @@ class TelegramBotRunner(Runner):
             name = file.file_name
         return await File.upload_file(file_name=name,
                                       file_data=downloaded_file,
-                                      creator_uid=uid
+                                      creator_uid=uid,
                                       )
 
     async def run(self):
@@ -417,22 +417,27 @@ class TelegramBotRunner(Runner):
 
         @bot.message_handler(commands='tool', chat_types=['private', 'supergroup', 'group'])
         async def listen_tool_command(message: types.Message):
-            _tool = ToolRegister().functions
-            _paper = [[c.name, c.description] for name, c in _tool.items()]
+            _tool = ToolRegister().get_plugins_meta
+            _paper = [[tool_item.name, tool_item.get_function_string, tool_item.usage] for tool_item in _tool]
             arg = [
-                formatting.mbold(item[0]) +
-                "\n" +
-                escape_markdown(item[1]) +
-                "\n"
+                formatting.mbold(item[0])
+                + "\n"
+                + formatting.mcode(item[1])
+                + "\n"
+                + formatting.mitalic(item[2])
+                + "\n"
                 for item in _paper
             ]
+            reply_message_text = formatting.format_text(
+                formatting.mbold("🔧 Tool List"),
+                *arg,
+                separator="\n"
+            )
+            if len(reply_message_text) > 4096:
+                reply_message_text = reply_message_text[:4096]
             return await bot.reply_to(
                 message,
-                text=formatting.format_text(
-                    formatting.mbold("🔧 Tool List"),
-                    *arg,
-                    separator="\n"
-                ),
+                text=reply_message_text,
                 parse_mode="MarkdownV2"
             )
 
