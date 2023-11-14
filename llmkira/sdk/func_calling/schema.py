@@ -234,30 +234,45 @@ class FuncPair:
         return self.function.name
 
 
-@dataclass(eq=False)
-class PluginMetadata:
+class PluginMetadata(BaseModel):
     """
     插件元信息，由插件编写者提供
     """
 
-    name: str
+    name: str = Field(..., max_length=20)
     """插件名称"""
-    description: str
+    description: str = Field(..., max_length=200)
     """插件功能介绍"""
-    usage: str
+    usage: str = Field(..., max_length=300)
     """插件使用方法"""
-    openapi_version: str
+    openapi_version: str = Field(..., max_length=10)
     """适应版本"""
-    function: Set[FuncPair] = field(default_factory=set)
+    function: Set[FuncPair] = Field(default_factory=set)
     """插件工具"""
     type: Optional[str] = None
     """插件类型"""
-    homepage: Optional[str] = None
+    homepage: Optional[str] = Field(None, max_length=50)
     """插件主页"""
     config: Optional[Type[BaseModel]] = None
     """插件配置项"""
-    extra: Dict[Any, Any] = field(default_factory=dict)
+    extra: Dict[Any, Any] = Field(default_factory=dict)
     """插件额外信息，可由插件编写者自由扩展定义"""
+
+    @model_validator(mode="before")
+    def limit(cls, values):
+        if len(values.get("function", [])) == 0:
+            raise ValueError("function can not be empty")
+        if not values.get("openapi_version", None):
+            raise ValueError("openapi_version can not be empty")
+        if len(values.get("description", "")) > 200:
+            raise ValueError("description must be less than 200 characters")
+        if len(values.get("usage", "")) > 300:
+            raise ValueError("usage must be less than 300 characters")
+        return values
+
+    @property
+    def get_function_string(self) -> str:
+        return "include{" + ",".join([f"{i.name}" for i in self.function]) + "}"
 
 
 @dataclass(eq=False)

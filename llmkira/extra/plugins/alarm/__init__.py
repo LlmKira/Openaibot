@@ -197,7 +197,7 @@ class AlarmTool(BaseTool):
 __plugin_meta__ = PluginMetadata(
     name=__plugin_name__,
     description="Set a timed reminder (only for minutes)",
-    usage="set_alarm_reminder 10 minutes later remind me to do something",
+    usage="直接说，以分钟为单位，如：10分钟后提醒我吃饭",
     openapi_version=__openapi_version__,
     function={
         FuncPair(function=alarm, tool=AlarmTool)

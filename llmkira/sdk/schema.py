@@ -124,7 +124,7 @@ class File(BaseModel):
                           file_name: str,
                           file_data: Union[bytes, BytesIO],
                           creator_uid: str,
-                          caption: str,
+                          caption: str = "",
                           file_id: str = None,
                           size_limit: int = 1024 * 1024 * 10,
                           ):

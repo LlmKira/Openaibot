@@ -64,7 +64,7 @@ inscriptis = "^2.3.2"
 aiohttp = "^3.8.6"
 pytelegrambotapi = { version = "^4.14.0" }
 # 暂时还是必须的
-hikari = { version = "^2.0.0.dev121", optional = true }
+hikari = { version = "2.0.0.dev121", optional = true }
 hikari-crescent = { version = "^0.6.4", optional = true }
 khl-py = { version = "^0.3.17", optional = true }
 slack-bolt = { version = "^1.18.0", optional = true }

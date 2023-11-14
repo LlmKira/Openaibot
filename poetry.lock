@@ -217,13 +217,13 @@ zookeeper = ["kazoo"]
 
 [[package]]
 name = "arclet-alconna"
-version = "1.7.33"
+version = "1.7.34"
 description = "A High-performance, Generality, Humane Command Line Arguments Parser Library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "arclet_alconna-1.7.33-py3-none-any.whl", hash = "sha256:9f540a0885354bca207099ab4b3daabc67ca312c6cc54db8c452815e9b0193a7"},
-    {file = "arclet_alconna-1.7.33.tar.gz", hash = "sha256:f4dc5a82f66caa9579093a5bed1d22f2c53015300f43246f099af4120c92dfbc"},
+    {file = "arclet_alconna-1.7.34-py3-none-any.whl", hash = "sha256:2c9999fc1ae6c690e4ff79c8ba1134eb782b61bd9c5fe7b7a4a3b92ec4be2f36"},
+    {file = "arclet_alconna-1.7.34.tar.gz", hash = "sha256:ff409c34fdf934cbb10e8ff9ab9fad0ff05530cccab697050ecada091b2bdf93"},
 ]
 
 [package.dependencies]
@@ -2397,17 +2397,17 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydantic-settings"
-version = "2.0.3"
+version = "2.1.0"
 description = "Settings management using Pydantic"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pydantic_settings-2.0.3-py3-none-any.whl", hash = "sha256:ddd907b066622bd67603b75e2ff791875540dc485b7307c4fffc015719da8625"},
-    {file = "pydantic_settings-2.0.3.tar.gz", hash = "sha256:962dc3672495aad6ae96a4390fac7e593591e144625e5112d359f8f67fb75945"},
+    {file = "pydantic_settings-2.1.0-py3-none-any.whl", hash = "sha256:7621c0cb5d90d1140d2f0ef557bdf03573aac7035948109adf2574770b77605a"},
+    {file = "pydantic_settings-2.1.0.tar.gz", hash = "sha256:26b1492e0a24755626ac5e6d715e9077ab7ad4fb5f19a8b7ed7011d52f36141c"},
 ]
 
 [package.dependencies]
-pydantic = ">=2.0.1"
+pydantic = ">=2.3.0"
 python-dotenv = ">=0.21.0"
 
 [[package]]
@@ -3916,4 +3916,4 @@ bot = ["hikari", "hikari-crescent", "khl-py", "slack-bolt"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "2447f3c474c225a852cf87a8ea759d427f39180a4a56f5bf69962c4aea01f9b2"
+content-hash = "157e689adfcd5cf35ef3681eb9c5c4bcf6138488c1dacda7ef8a44a3e22272fc"
