@@ -5,11 +5,12 @@
 # @Software: PyCharm
 import sys
 
+sys.path.append("..")
+
 from pydantic import ValidationError
 
 from llmkira.external.schema import PluginExternal, PluginTestResultExport
 
-sys.path.append("..")
 
 def test_install():
     try:

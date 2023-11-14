@@ -5,9 +5,10 @@
 # @Software: PyCharm
 import sys
 
+sys.path.append("..")
+
 from llmkira.middleware.router import RouterCache, Router
 
-sys.path.append("..")
 
 def test_schema():
     r1 = RouterCache(

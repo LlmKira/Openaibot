@@ -5,9 +5,10 @@
 # @Software: PyCharm
 import sys
 
+sys.path.append("..")
+
 from llmkira.sdk.schema import Message, UserMessage
 
-sys.path.append("..")
 
 
 def test_schema():

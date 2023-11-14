@@ -4,12 +4,13 @@
 # @File    : test_chain_box.py
 # @Software: PyCharm
 import sys
+
+sys.path.append("..")
+
 from pprint import pprint
 
 from llmkira.middleware import chain_box
 from llmkira.task.schema import TaskHeader
-
-sys.path.append("..")
 
 
 def test_schema():
