@@ -3,3 +3,14 @@
 # @Author  : sudoskys
 # @File    : test_file.py
 # @Software: PyCharm
+import sys
+
+from llmkira.sdk.schema import File
+
+sys.path.append("..")
+
+
+def test_schema():
+    File(
+        file_id=None, file_name="test"
+    )

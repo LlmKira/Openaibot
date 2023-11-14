@@ -3,3 +3,18 @@
 # @Author  : sudoskys
 # @File    : test_message.py
 # @Software: PyCharm
+import sys
+
+from llmkira.sdk.schema import Message, UserMessage
+
+sys.path.append("..")
+
+
+def test_schema():
+    try:
+        Message(role="user", content="test")
+    except TypeError as e:
+        pass
+    else:
+        assert False, "Should Raise Error"
+    UserMessage(content="test")
