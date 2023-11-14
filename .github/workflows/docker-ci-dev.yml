@@ -2,7 +2,7 @@ name: Docker Image CI (dev)
 
 on:
   workflow_dispatch:
-  pull_request:
+  push:
     branches:
       - dev
       - develop

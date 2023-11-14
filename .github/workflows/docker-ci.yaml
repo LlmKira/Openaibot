@@ -2,9 +2,11 @@ name: Docker Image CI (stable)
 
 on:
   workflow_dispatch:
-  pull_request:
+  push:
     branches:
       - main
+    tags:
+      - '**'
   release:
     types: [ published ]
 
