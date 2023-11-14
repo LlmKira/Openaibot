@@ -2,6 +2,11 @@ name: Docker Image CI (dev)
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - dev
+      - develop
+      - '**-develop'
 
 jobs:
   build-and-push-image:
