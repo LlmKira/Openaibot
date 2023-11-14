@@ -84,8 +84,8 @@ class BaseSender(object, metaclass=ABCMeta):
 
     async def push_task_create_message(self,
                                        *,
-                                       receiver,
-                                       task,
+                                       receiver: TaskHeader.Location,
+                                       task: TaskHeader,
                                        llm_result: LlmResult,
                                        task_batch: List[TaskBatch]
                                        ):
@@ -108,14 +108,14 @@ class BaseSender(object, metaclass=ABCMeta):
                 formatting.mbold(f"{icon} [ActionBlock]") + f" `{_task_batch.get_batch_name()}` ",
                 f"""```\n{_task_batch.get_batch_args()}\n```""" if not tool.silent else "",
             ]
-            if tool.env_required:
+            if tool.env_list:
                 __secret__ = await EnvManager.from_uid(
                     uid=task.receiver.uid
-                ).get_env_list(name_list=tool.env_required)
+                ).get_env_list(name_list=tool.env_list)
                 # 查找是否有空
                 _required_env = [
                     name
-                    for name in tool.env_required
+                    for name in tool.env_list
                     if not __secret__.get(name, None)
                 ]
                 _need_env_list = [
@@ -285,7 +285,7 @@ class BaseReceiver(object):
         """
         处理消息
         """
-        logger.debug(f"[x] Received Message \n--message {message.body}")
+        logger.trace(f"[x] Received Raw Task \n--message {message.body}")
         _task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
         # 没有任何参数
         if _task.task_meta.direct_reply:
@@ -366,11 +366,12 @@ class BaseReceiver(object):
                 return None
             # 处理消息
             task, llm, point, release = await self.deal_message(message)
+            logger.debug(f"--point {point}")
             # 启动链式函数应答循环
             if release and task:
                 chain: Chain = await ChainReloader(uid=task.receiver.uid).get_task()
                 if chain:
-                    await Task(queue=chain.address).send_task(task=chain.arg)
+                    await Task(queue=chain.channel).send_task(task=chain.arg)
                     logger.info(f"🧀 Chain point release\n--callback_send_by {point}")
         except Exception as e:
             logger.exception(e)

@@ -72,11 +72,11 @@ class ChainFunc(object):
         """拒绝不合法的请求"""
         meta.verify_uuid = meta.get_verify_uuid(task_batch=task_batch)
         # 注册本地部署点
-        task_id = await AuthReloader(uid=_task_forward.receiver.uid).add_auth(
+        task_id = await AuthReloader(uid=_task_forward.receiver.uid).save_auth(
             chain=Chain(
                 uuid=meta.verify_uuid,
-                uid=_task_forward.receiver.uid,
-                address=__receiver__,
+                creator_uid=_task_forward.receiver.uid,
+                channel=__receiver__,
                 # 重要：转发回来这里
                 arg=TaskHeader(sender=_task_forward.sender,
                                receiver=_task_forward.receiver,
@@ -113,10 +113,9 @@ class ChainFunc(object):
             release_chain=True
         )
         if meta.run_step_limit < meta.run_step_already:
-            return logger.trace("Reject Invalid Request, Already Reach Limit")
+            return logger.debug("Reject Invalid Request, Already Reach Limit")
         if deploy_child == 0:
-            logger.debug(f"[112532] Function {parent_func} End its chain...")
-            return logger.trace("Parent Function Reject Resign Its Child Chain")
+            return logger.debug("Parent Function Reject Resign Its Child Chain")
         """拒绝不合法的请求"""
         _task_forward.task_meta = meta
         try:
@@ -132,20 +131,22 @@ class ChainFunc(object):
             logger.warning(f"[362211]Remove function {parent_func} failed")
         """拒绝不合法的请求"""
         # 注册本地部署点
+        _task = TaskHeader(
+            sender=_task_forward.sender,
+            receiver=_task_forward.receiver,
+            task_meta=meta,
+            message=[]
+        )
         await ChainReloader(uid=_task_forward.receiver.uid).add_task(
-            chain=Chain(
-                uid=_task_forward.receiver.uid,
-                address=_task_forward.receiver.platform,
+            chain=Chain.create(
+                creator_uid=_task_forward.receiver.uid,
+                channel=_task_forward.receiver.platform,
                 expire=60 * 60 * 2,
-                arg=TaskHeader(
-                    sender=_task_forward.sender,
-                    receiver=_task_forward.receiver,
-                    task_meta=meta,
-                    message=[]
-                )
+                arg=_task
             )
         )
-        return logger.trace("Resign Chain Success")
+        logger.debug(f"Resign Chain Success --from_function {parent_func}")
+        return None
 
 
 class FunctionReceiver(object):
@@ -203,7 +204,7 @@ class FunctionReceiver(object):
                                             )
                 return logger.info(f"[Resign Auth] \n--auth-require {pending_task.get_batch_name()} require.")
         # 获取环境变量
-        _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_required)
+        _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_list)
         assert isinstance(_env_dict, dict), "unexpected env dict? it should be dict..."
         # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(task=task,
@@ -213,8 +214,10 @@ class FunctionReceiver(object):
                                           pending_task=pending_task,
                                           refer_llm_result=task.task_meta.llm_result
                                           )
+        await task.task_meta.complete_task(task_batch=pending_task, run_result=run_result)
         # 当前节点要求生产或者任务完成
-        if task.task_meta.resign_next_step or task.task_meta.is_complete:  # 路由
+        if task.task_meta.resign_next_step or task.task_meta.is_complete():  # 路由
+            logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
             await chain_func.resign_chain(task=task,
                                           parent_func=pending_task.get_batch_name(),
                                           repeatable=_tool_obj.repeatable,
@@ -262,10 +265,10 @@ class FunctionReceiver(object):
         try:
             await self.process_function_call(message=message)
         except Exception as e:
-            logger.error(f"Function Receiver Error {e}")
+            logger.exception(f"Function Receiver Error {e}")
             await message.reject(requeue=False)
             raise e
-        finally:
+        else:
             await message.ack(multiple=False)
 
     async def function(self):
