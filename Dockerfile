@@ -24,7 +24,8 @@ FROM python:3.11-slim-buster as runtime
 RUN apt update &&  \
     apt install -y npm &&  \
     npm install pm2 -g && \
-    pip install poetry==1.6.1
+    pip install poetry==1.6.1 && \
+    apt install ffmpeg -y
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
