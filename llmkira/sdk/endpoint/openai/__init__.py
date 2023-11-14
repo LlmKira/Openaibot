@@ -75,7 +75,7 @@ class Openai(LlmRequest):
 
     _config: Driver = PrivateAttr(default=None)
     """模型信息和配置"""
-    messages: List[Union[Message, Type[Message]]]
+    messages: List[Union["Message", Type["Message"]]]
     temperature: Optional[float] = 1
     n: Optional[int] = 1
     top_p: Optional[float] = None
@@ -94,13 +94,13 @@ class Openai(LlmRequest):
     response_format: Optional[dict] = None
     """回复指定的格式，See: https://platform.openai.com/docs/api-reference/chat/create"""
     # 函数
-    functions: Optional[List[Function]] = None
+    functions: Optional[List["Function"]] = None
     """deprecated"""
-    function_call: Optional[Union[BaseFunction, Literal["auto", "none"]]] = None
+    function_call: Optional[Union["BaseFunction", Literal["auto", "none"]]] = None
     """deprecated"""
     # 工具
-    tools: Optional[List[Tool]] = None
-    tool_choice: Optional[Union[ToolChoice, Literal["auto", "none"]]] = None
+    tools: Optional[List["Tool"]] = None
+    tool_choice: Optional[Union["ToolChoice", Literal["auto", "none"]]] = None
     """工具调用"""
 
     # 注意，我们
@@ -110,7 +110,6 @@ class Openai(LlmRequest):
     """
 
     @model_validator(mode="before")
-    @classmethod
     def fix_tool(cls, values):
         if not values.get("tools"):
             values["tools"] = None
@@ -151,35 +150,50 @@ class Openai(LlmRequest):
             "tool_choice": True,
         }
 
-    def create_params(self):
-        # 获取已经传递的工具模型
-        _done = []
-        _need = []
-        for message in self.messages:
+    @staticmethod
+    def sort_insert_message(message_list: List[Message]):
+        """
+        排序插入
+        :param message_list:
+        :return:
+        """
+        origin_message_list = message_list.copy()
+        ordered_message_list = []
+        child_resp = {}
+        for message in message_list:
             if isinstance(message, ToolMessage):
-                _done.append(message.tool_call_id)
-        for message in self.messages:
-            if isinstance(message, AssistantMessage):
-                if message.tool_calls:
-                    for tool in message.tool_calls:
-                        _need.append(tool.id)
-        # 修补
-        _need_fix = list(set(_need) - set(_done))
-        _new_messages = []
-        for message in self.messages:
-            _new_messages.append(message)
-            if isinstance(message, AssistantMessage):
-                if message.tool_calls:
-                    for tool in message.tool_calls:
-                        if tool.id in _need_fix:
-                            _new_messages.append(
-                                ToolMessage(
-                                    tool_call_id=tool.id,
-                                    content="[On Queue]"
-                                )
+                if message.tool_call_id in child_resp:
+                    child_resp[message.tool_call_id].append(message)
+                else:
+                    child_resp[message.tool_call_id] = [message]
+                message_list.remove(message)
+        # 在不存在 child 的情况下，修补
+        for message in message_list:
+            # 存放一个
+            ordered_message_list.append(message)
+            if isinstance(message, AssistantMessage) and message.tool_calls:
+                # 需要修补的消息
+                for tool in message.tool_calls:
+                    if tool.id in child_resp:
+                        # 匹配到了 对应的 child
+                        ordered_message_list.extend(child_resp[tool.id])
+                    else:
+                        # 没有匹配到对应的 child
+                        ordered_message_list.append(
+                            ToolMessage(
+                                tool_call_id=tool.id,
+                                content="[On Queue]"
                             )
-        self.messages = _new_messages
-        #
+                        )
+        # 修补完毕
+        if len(origin_message_list) != len(ordered_message_list):
+            logger.warning(f"message_list is not match, origin:{origin_message_list}, orderd:{ordered_message_list}")
+        return ordered_message_list
+
+    def create_params(self):
+        # 修补消息
+        self.messages = self.sort_insert_message(message_list=self.messages)
+        # 获取已经传递的工具模型
         _arg = self.model_dump(
             exclude_none=True,
             include=self.schema_map

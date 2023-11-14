@@ -13,9 +13,9 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from pydantic import field_validator, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ..error import ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
     pass
@@ -102,4 +102,6 @@ class Driver(BaseSettings):
         """
         _flag = self.api_key[-3:]
         return f"{_flag}:{sha1_encrypt(self.api_key)}"
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=True, arbitrary_types_allowed=True, extra="allow")
+
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=True,
+                                      arbitrary_types_allowed=True, extra="allow")
