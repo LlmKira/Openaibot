@@ -20,7 +20,7 @@ python = ">=3.8,<3.12"
 pathlib = ">=1.0.1"
 pydantic = ">=2.0.0"
 loguru = ">=0.5.3"
-httpx = "0.24.1"
+httpx = ">=0.24.1"
 socksio = "^1.0.0"
 python-dotenv = "^1.0.0"
 redis = ">=4.5.4"
@@ -69,6 +69,7 @@ hikari-crescent = { version = "^0.6.4", optional = true }
 khl-py = { version = "^0.3.17", optional = true }
 slack-bolt = { version = "^1.18.0", optional = true }
 ffmpeg-python = "^0.2.0"
+duckduckgo-search = "^3.9.5"
 
 [tool.poetry.extras]
 bot = ["hikari", "hikari-crescent", "khl-py", "slack-bolt"]
