@@ -12,3 +12,5 @@ docs
 /llmkira/mongodb/
 /docs/test/
 /jobs.sqlite
+/config_dir/*.pem
+/config_dir/*.secret/

@@ -70,6 +70,9 @@ khl-py = { version = "^0.3.17", optional = true }
 slack-bolt = { version = "^1.18.0", optional = true }
 ffmpeg-python = "^0.2.0"
 duckduckgo-search = "^3.9.5"
+pygithub = { version = ">=1.58" }
+flask = "^3.0.0"
+github-bot-api = "^0.5.2"
 
 [tool.poetry.extras]
 bot = ["hikari", "hikari-crescent", "khl-py", "slack-bolt"]

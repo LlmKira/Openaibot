@@ -51,9 +51,12 @@ class FunctionReorganize(object):
                 for _index, _message in enumerate(self.task.message):
                     _message: RawMessage
                     functions.extend(
-                        ToolRegister().filter_pair(key_phrases=_message.text,
-                                                   message_raw=_message,
-                                                   file_list=_message.file)
+                        ToolRegister().filter_pair(
+                            key_phrases=_message.text,
+                            message_raw=_message,
+                            file_list=_message.file,
+                            address=(self.task.sender, self.task.receiver),
+                        )
                     )
                 self.task.task_meta.function_list = functions
         if self.task.task_meta.sign_as[0] == 0:

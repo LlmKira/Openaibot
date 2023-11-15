@@ -110,6 +110,7 @@ class BaseTool(ABC, BaseModel):
         如果合格则返回message，否则返回None，表示不处理
         message_text: 消息文本
         message_raw: 消息原始数据 `RawMessage`
+        address: 消息地址 `tuple(sender,receiver)`
         """
         for i in self.keywords:
             if i in message_text:
