@@ -143,3 +143,5 @@ config_dir/*.db
 /memray-*.html
 /docs/test_script/sticker/
 /jobs.sqlite
+config_dir/*.pem
+config_dir/*.secret/
