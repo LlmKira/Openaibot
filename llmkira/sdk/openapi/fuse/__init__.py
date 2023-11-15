@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 __error_table__: Dict[str, int] = {}
 
 
-def get_error_plugin(error_times: int = 10):
+def get_error_plugin(error_times: int = 10) -> list:
     """
     获取错误次数过多的插件
     :param error_times: 错误次数
@@ -30,7 +30,7 @@ def get_error_plugin(error_times: int = 10):
     return [k for k, v in __error_table__.items() if v > error_times]
 
 
-def recover_error_plugin(function_name: str):
+def recover_error_plugin(function_name: str) -> None:
     """
     恢复错误插件
     :param function_name:
@@ -39,10 +39,22 @@ def recover_error_plugin(function_name: str):
     __error_table__[function_name] = 0
 
 
-def resign_plugin_executor(function: "Function", handle_exceptions: tuple = (Exception,)):
+def resign_plugin_executor(function: "Function",
+                           *,
+                           handle_exceptions: tuple = (Exception,),
+                           exclude_exceptions: tuple = ()
+                           ):
     """
-    装饰器
+    装饰器，先判断是否排除，再判断是否处理
+    :param function: 被装饰的函数
+    :param handle_exceptions: 处理的异常，只有在此列表中的异常才会被计数
+    :param exclude_exceptions: 排除的异常，不会被计数。不可以是宽泛的异常，如 Exception
+    :return: 装饰器
     """
+    if not handle_exceptions:
+        handle_exceptions = (Exception,)
+    if Exception in handle_exceptions or BaseException in handle_exceptions:
+        raise ValueError("Exception is not allowed in handle_exceptions")
     logger.success(f"📦 [Plugin exception hook] {function.name}")
 
     @wrapt.decorator  # 保留被装饰函数的元信息
@@ -57,11 +69,13 @@ def resign_plugin_executor(function: "Function", handle_exceptions: tuple = (Exc
         try:
             res = wrapped(*args, **kwargs)
         except Exception as e:
+            if e in exclude_exceptions:
+                logger.exception(e)
+                return {}
             if e in handle_exceptions:
                 __error_table__[function.name] = __error_table__.get(function.name, 0) + 1
                 logger.exception(e)
-            else:
-                raise e
+            logger.warning(f"📦 [Plugin Not Handle Exception Hook] {function.name} {e}")
         else:
             return res
         return {}

@@ -9,7 +9,6 @@ from typing import Optional, Type
 from typing import TYPE_CHECKING
 
 from llmkira.sdk.func_calling import PluginMetadata
-
 from . import _openapi_version_, BaseTool, get_loaded_plugins, Plugin, get_plugin
 from .schema import FuncPair
 from ..schema import Function, File
@@ -69,6 +68,7 @@ class ToolRegister(object):
                     key_phrases: str,
                     message_raw: "RawMessage" = None,
                     file_list: List[File] = None,
+                    address: tuple = None,
                     ignore: List[str] = None
                     ) -> List[Function]:
         """
@@ -88,7 +88,10 @@ class ToolRegister(object):
 
         for func_name, pair_cls in self.pair_function.items():
             _tool_cls = pair_cls.tool()
-            if _tool_cls.func_message(message_text=key_phrases, message_raw=message_raw):
+            if _tool_cls.func_message(message_text=key_phrases,
+                                      message_raw=message_raw,
+                                      address=address
+                                      ):
                 # 关键词大类匹配成功
                 if func_name in ignore:
                     continue  # 忽略函数
