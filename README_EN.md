@@ -110,7 +110,7 @@ Both the authentication component and the backend need to be implemented by your
 
 Read the [🧀 Deployment Documentation](https://llmkira.github.io/Docs/) for more information.
 
-Please use `python3 start_sender.py` `python3 start_receiver.py` to test whether it can run normally.
+Please use `poetry run python3 start_sender.py` `poetry run python3 start_receiver.py` to test whether it can run normally.
 
 #### Performance indicator test (Until 2023/11/1)
 

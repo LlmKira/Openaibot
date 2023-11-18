@@ -103,7 +103,7 @@ documentation [here](https://llmkira.github.io/Docs/en).**
 
 阅读 [🧀 部署文档](https://llmkira.github.io/Docs/) 获得更多信息。
 
-请提前用 `python3 start_sender.py`  `python3 start_receiver.py` 测试是否能正常运行。
+请提前用 `poetry run python3 start_sender.py`  `poetry run python3 start_receiver.py` 测试是否能正常运行。
 
 #### 性能指标测试(Until 2023/11/1)
 
