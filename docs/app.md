@@ -379,3 +379,69 @@ AGI：情绪不拟人，反而要用人的方式操作物理GUI。
 ## 应用性
 
 ## 释放链是否需要强匹配
+
+## 评估 Openai 的 Assistant 的实现
+
+https://platform.openai.com/docs/assistants/how-it-works/runs-and-run-steps
+
+这个实现很像Github的CI/CD。
+
+我们采用的是简单的 Meta + 简单队列的方式。
+
+不足之处：我们混合了无数线程，导致预料外的排序预期。
+
+```python
+
+run = client.beta.threads.runs.create(
+    thread_id=thread.id,
+    assistant_id=assistant.id,
+    model="gpt-4-1106-preview",
+    instructions="additional instructions",
+    tools=[{"type": "code_interpreter"}, {"type": "retrieval"}]
+)
+```
+
+这实际上是一个 `Batch` 的实现。这种私有实现我是应该不会接入的。因为和我们整个系统都冲突了。
+
+不过仍有参考价值。我们需要调整schema,增加线程设计。更加规范化 “子链递送”，排查所有的 TaskHeader 子类产生。
+
+`instructions` 这个字段，和我们插件的管理器 Access 是相对应的。
+
+### GPTs
+
+网页的设计本身就是一个限制。虽然他们的设计很好，但是实用性集成性不足。
+
+既然要 Function 了... 仍然像小程序一样工作，可能并不会很好。而且这个设计本身就有账户权限的准入门槛。
+
+现在受欢迎的都是 集成，copilot,小爱,这些都是和生产环境集成的。
+
+### 核心方向
+
+- 查询构建解决方案
+- 格式化工作流输入
+
+没有实业的参与，不会提升生产力。
+
+从企业构建上说，客服组件，工单系统的NLP替换，这些都是很好的方向。
+
+传统的订单下单模式，甚至也可能被替换为交互式的。
+
+除了 inspecter 大概能做，其他都不太行。
+
+本框架的核心方向是，**构建一个可配置组件的协作平台**。
+
+那么基于 Bots 的话，有些地方还是不合格的，比如，命令自定义，这个就没有自定义 hook 的选项。
+
+订单 shcema -> 信息索引 + 交互提取 -> 确认。
+
+其中前两步写一点包装其实就可以用了。要想清楚框架的存在意义。
+
+## 平台指定支持
+
+插件需要支持平台指定，这个是一个很重要的功能。
+
+## 通道
+
+通道是一个很重要的概念.
+
+我们依赖这个来充当事件的调度器。让链可随时启动。
