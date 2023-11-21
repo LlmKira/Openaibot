@@ -10,6 +10,7 @@ from typing import Tuple, List, Union, Optional
 import hikari
 import khl
 import orjson
+import shortuuid
 from llmkira.schema import RawMessage
 from llmkira.sdk.endpoint.schema import LlmResult
 from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
@@ -77,7 +78,10 @@ class TaskHeader(BaseModel):
                 raise ValueError("name is empty")
 
         """当前链条的层级"""
-        sign_as: Tuple[int, str, str] = Field((0, "root", "default"), description="签名")
+        sign_as: Tuple[int, str, str, str] = Field(
+            default=(0, "root", "default", str(shortuuid.uuid()).upper()[:5]),
+            description="签名"
+        )
 
         """函数并行的信息"""
         plan_chain_archive: List[Tuple["TaskBatch", Union[Exception, dict, str]]] = Field(
@@ -120,6 +124,10 @@ class TaskHeader(BaseModel):
         extra_args: dict = Field({}, description="提供额外参数")
 
         model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
+
+        @property
+        def task_uuid(self):
+            return self.sign_as[3]
 
         @model_validator(mode="after")
         def check(self):
@@ -237,7 +245,7 @@ class TaskHeader(BaseModel):
             """
             生成副本，仅仅是子节点，继承父节点的功能
             """
-            self.sign_as = (self.sign_as[0] + 1, "child", name)
+            self.sign_as = (self.sign_as[0] + 1, "child", name, self.sign_as[3])
             self.run_step_already += 1
             return self.model_copy(deep=True)
 
@@ -249,7 +257,7 @@ class TaskHeader(BaseModel):
             """
             生成副本，重置链条
             """
-            self.sign_as = (self.sign_as[0] + 1, "chain", name)
+            self.sign_as = (self.sign_as[0] + 1, "chain", name, self.sign_as[3])
             self.run_step_already += 1
             self.callback_forward = False
             self.callback_forward_reprocess = False
