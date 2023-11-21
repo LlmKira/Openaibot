@@ -13,7 +13,7 @@ from ...task.schema import TaskHeader
 
 class Chain(BaseModel):
     creator_uid: str = Field(default=str, description="platform:user_id")
-    channel: str = Field(..., description="channel")
+    channel: str = Field(..., description="platform channel")
     arg: TaskHeader = Field(..., description="arg")
 
     uuid: str = Field(default=str(shortuuid.uuid()[0:5]).upper(), description="Always Auto Gen")
