@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm sync -G :all -v
+          pdm install --no-lock -G testing
       - name: Run Tests
         run: |
           pdm run -v pytest tests
