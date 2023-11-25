@@ -53,8 +53,8 @@ def resign_plugin_executor(function: "Function",
     """
     if not handle_exceptions:
         handle_exceptions = (Exception,)
-    if Exception in handle_exceptions or BaseException in handle_exceptions:
-        raise ValueError("Exception is not allowed in handle_exceptions")
+    if Exception in exclude_exceptions or BaseException in exclude_exceptions:
+        raise ValueError("Exception and BaseException cant be exclude")
     logger.success(f"📦 [Plugin exception hook] {function.name}")
 
     @wrapt.decorator  # 保留被装饰函数的元信息
