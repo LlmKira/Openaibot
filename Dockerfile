@@ -1,39 +1,33 @@
 # 第一个阶段
 FROM python:3.11-buster as builder
 
-RUN apt update && apt install -y build-essential \
-    && pip install poetry==1.6.1
+RUN apt update && \
+    apt install -y build-essential && \
+    pip install -U pip setuptools wheel && \
+    pip install pdm
 
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+COPY pyproject.toml pdm.lock README.md /app/
+COPY llmkira /app/llmkira
 
 WORKDIR /app
-
-COPY ["pyproject.toml", "poetry.lock", "/app/"]
-
-VOLUME ["/redis", "/rabbitmq", "/mongodb", "run.log", "/config_dir"]
-
-RUN poetry config virtualenvs.in-project true && \
-    poetry install --all-extras --no-root && rm -rf $POETRY_CACHE_DIR
+RUN mkdir __pypackages__ && pdm sync -G bot --prod --no-editable
 
 # 第二个阶段
 FROM python:3.11-slim-buster as runtime
 
-RUN apt update &&  \
-    apt install -y npm &&  \
+RUN apt update && \
+    apt install -y npm && \
     npm install pm2 -g && \
-    pip install poetry==1.6.1 && \
-    apt install ffmpeg -y
+    apt install -y ffmpeg
 
-ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
+VOLUME ["/redis", "/rabbitmq", "/mongodb", "/run.log", "/config_dir"]
+
+ENV PYTHONPATH=/project/pkgs
+COPY --from=builder /app/__pypackages__/3.11/lib /project/pkgs
+# retrieve executables
+COPY --from=builder /app/__pypackages__/3.11/bin/* /bin/
 
 WORKDIR /app
-
-COPY --from=builder /app/.venv /app/.venv
-
 COPY pm2.json ./
 COPY config_dir ./config_dir
 COPY . /app
