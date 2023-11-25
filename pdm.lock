@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev", "testing"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:9fa39c46d7983d67c75024eb05ab22f7839d215f14bd75db3ab29cfc8cd6b7b6"
+content_hash = "sha256:b491d68bf48d665f184b4f985cb273bc73d6e7b0161bf679bc225ef38ae8cbd8"
 
 [[package]]
 name = "aio-pika"
