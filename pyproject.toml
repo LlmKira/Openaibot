@@ -84,8 +84,8 @@ dependencies = [
     "duckduckgo-search<4.0.0,>=3.9.5",
     "pygithub>=1.58",
     "flask<4.0.0,>=3.0.0",
+    "pyjwt[crypto]>=2.8.0",
     "github-bot-api<1.0.0,>=0.5.2",
-    "pyjwt>=2.8.0",
 ]
 requires-python = ">=3.8,<3.12"
 readme = "README.md"
