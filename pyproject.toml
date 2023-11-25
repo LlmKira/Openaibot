@@ -85,7 +85,7 @@ dependencies = [
     "pygithub>=1.58",
     "flask<4.0.0,>=3.0.0",
     "github-bot-api<1.0.0,>=0.5.2",
-    "pyjwt[crypto]>=2.8.0",
+    "pyjwt>=2.8.0",
     "cryptography>=39.0.2",
 ]
 requires-python = ">=3.8,<3.12"
