@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "llm_sender",
-      "script": "sleep 3&&python -m start_sender --no_tutorial",
+      "script": "sleep 3&&pdm run python start_sender.py --no_tutorial",
       "instances": 1,
       "max_restarts": 3,
       "restart_delay": 10000,
@@ -13,7 +13,7 @@
     },
     {
       "name": "llm_receiver",
-      "script": "sleep 3&&python -m start_receiver --no_tutorial",
+      "script": "sleep 3&&pdm run python start_receiver.py --no_tutorial",
       "instances": 1,
       "max_restarts": 3,
       "restart_delay": 10000,
