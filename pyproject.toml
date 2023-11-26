@@ -83,8 +83,6 @@ dependencies = [
     "ffmpeg-python<1.0.0,>=0.2.0",
     "duckduckgo-search<4.0.0,>=3.9.5",
     "flask<4.0.0,>=3.0.0",
-    "pyjwt[crypto]>=2.8.0",
-    "pygithub>=1.58",
     "github-bot-api<1.0.0,>=0.5.2",
 ]
 requires-python = ">=3.8,<3.12"
