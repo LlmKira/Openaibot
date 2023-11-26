@@ -10,13 +10,14 @@ import json
 import os
 
 from aio_pika.abc import AbstractIncomingMessage
+from loguru import logger
+
 from llmkira.middleware.chain_box import Chain, AuthReloader, ChainReloader
 from llmkira.middleware.env_virtual import EnvManager
 from llmkira.schema import RawMessage
 from llmkira.sdk.func_calling.register import ToolRegister
 from llmkira.sdk.schema import TaskBatch
 from llmkira.task import Task, TaskHeader
-from loguru import logger
 
 
 class ChainFunc(object):
@@ -28,7 +29,7 @@ class ChainFunc(object):
                          receiver: TaskHeader.Location
                          ):
         """
-        通知用户
+        包装一下发送消息
         :param platform: Default should be `task.receiver.platform`
         :param task: 任务 header
         :param text: 文本 str
@@ -72,7 +73,7 @@ class ChainFunc(object):
         meta.verify_uuid = meta.get_verify_uuid(task_batch=task_batch)
         # 注册本地部署点
         task_id = await AuthReloader(uid=_task_forward.receiver.uid).save_auth(
-            chain=Chain(
+            chain=Chain.create(
                 uuid=meta.verify_uuid,
                 creator_uid=_task_forward.receiver.uid,
                 channel=__receiver__,
@@ -81,7 +82,8 @@ class ChainFunc(object):
                                receiver=_task_forward.receiver,
                                task_meta=meta,
                                message=[]
-                               )
+                               ),
+                expire=60 * 60 * 2,
             )
         )
         await self.reply_user(platform=_task_forward.receiver.platform,
@@ -202,15 +204,12 @@ class FunctionReceiver(object):
                                             task_batch=pending_task
                                             )
                 return logger.info(f"[Resign Auth] \n--auth-require {pending_task.get_batch_name()} require.")
-        # 获取环境变量
+        # Get Env
         _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_list)
         assert isinstance(_env_dict, dict), "unexpected env dict? it should be dict..."
-        # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
-
-        # 必须提前注册，否则无法获取到结果
+        # Resign Chain
         if (task.task_meta.resign_next_step or task.task_meta.is_complete(
                 num_end=1)) and not _tool_obj.repeatable:
-            # 路由
             logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
             await chain_func.resign_chain(
                 task=task,
@@ -218,7 +217,7 @@ class FunctionReceiver(object):
                 repeatable=_tool_obj.repeatable,
                 deploy_child=_tool_obj.deploy_child,
             )
-        # 运行函数
+        # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(task=task,
                                           receiver=task.receiver,
                                           arg=_arg,
@@ -226,6 +225,7 @@ class FunctionReceiver(object):
                                           pending_task=pending_task,
                                           refer_llm_result=task.task_meta.llm_result
                                           )
+        # 更新任务状态
         await task.task_meta.complete_task(task_batch=pending_task, run_result=run_result)
         return run_result
 
