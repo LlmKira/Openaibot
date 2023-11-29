@@ -202,7 +202,7 @@ class BaseReceiver(object):
             raise Exception(e)
         except httpx.RemoteProtocolError as e:
             logger.error(f"[Network RemoteProtocolError] {e}")
-            raise ReplyNeededError(message=f"Server disconnected without sending a response.")
+            raise ReplyNeededError(message="Server disconnected without sending a response.")
         except ServiceUnavailableError as e:
             logger.error(f"[Service Unavailable Error] {e}")
             raise ReplyNeededError(message=f"[551721]Service Unavailable {e}")
@@ -214,7 +214,7 @@ class BaseReceiver(object):
             raise ReplyNeededError(message=f"[551183]Service Provider Error {e}")
         except PydanticValidationError as e:
             logger.exception(e)
-            raise ReplyNeededError(message=f"[551684]Request Data ValidationError")
+            raise ReplyNeededError(message="[551684]Request Data ValidationError")
         except Exception as e:
             logger.exception(e)
             raise e

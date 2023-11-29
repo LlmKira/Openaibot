@@ -208,8 +208,8 @@ class FunctionReceiver(object):
         _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_list)
         assert isinstance(_env_dict, dict), "unexpected env dict? it should be dict..."
         # Resign Chain
-        if (task.task_meta.resign_next_step or task.task_meta.is_complete(
-                num_end=1)) and not _tool_obj.repeatable:
+        if ((task.task_meta.resign_next_step or task.task_meta.is_complete(num_end=1))
+                and not _tool_obj.repeatable):
             logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
             await chain_func.resign_chain(
                 task=task,
@@ -248,7 +248,7 @@ class FunctionReceiver(object):
             logger.trace("No Function Call")
             return None
         pending_task: TaskBatch
-        logger.debug(f"Received A Batch FunctionRequest")
+        logger.debug("Received A Batch FunctionRequest")
         try:
             await self.run_pending_task(task=task, pending_task=pending_task)
         except Exception as e:
