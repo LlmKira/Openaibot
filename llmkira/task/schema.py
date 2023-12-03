@@ -11,12 +11,13 @@ import hikari
 import khl
 import orjson
 import shortuuid
-from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.schema import LlmResult
-from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
 from loguru import logger
 from pydantic import model_validator, ConfigDict, Field, BaseModel
 from telebot import types
+
+from llmkira.schema import RawMessage
+from llmkira.sdk.endpoint.schema import LlmResult
+from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
 
 if TYPE_CHECKING:
     from llmkira.sender.slack.schema import SlackMessageEvent
@@ -151,7 +152,7 @@ class TaskHeader(BaseModel):
         @classmethod
         def from_root(cls, release_chain, function_enable, platform: str = "default", **kwargs):
             return cls(
-                sign_as=(0, "root", platform),
+                sign_as=(0, "root", platform, str(shortuuid.uuid()).upper()[:5]),
                 release_chain=release_chain,
                 function_enable=function_enable,
                 **kwargs
@@ -418,7 +419,7 @@ class TaskHeader(BaseModel):
             消息标准化
             """
             if not _message:
-                raise ValueError(f"Message is empty")
+                raise ValueError("Message is empty")
             if isinstance(_message, types.Message):
                 user_id = _message.from_user.id
                 chat_id = _message.chat.id
@@ -429,7 +430,7 @@ class TaskHeader(BaseModel):
             return RawMessage(
                 user_id=user_id,
                 chat_id=chat_id,
-                text=text if text else f"(empty message)",
+                text=text if text else "(empty message)",
                 created_at=str(created_at)
             )
 
@@ -555,7 +556,7 @@ class TaskHeader(BaseModel):
             消息标准化
             """
             if not _message:
-                raise ValueError(f"Message is empty")
+                raise ValueError("Message is empty")
             if isinstance(_message, hikari.Message):
                 user_id = message.author.id
                 chat_id = message.guild_id if message.guild_id else message.channel_id
@@ -568,7 +569,7 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
-                text=text if text else f"(empty message)",
+                text=text if text else "(empty message)",
                 created_at=str(created_at)
             )
 
@@ -638,7 +639,7 @@ class TaskHeader(BaseModel):
             消息标准化
             """
             if not _message:
-                raise ValueError(f"Message is empty")
+                raise ValueError("Message is empty")
             if isinstance(_message, khl.Message):
                 user_id = message.author_id
                 chat_id = message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id
@@ -651,7 +652,7 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
-                text=text if text else f"(empty message)",
+                text=text if text else "(empty message)",
                 created_at=str(created_at)
             )
 
@@ -721,7 +722,7 @@ class TaskHeader(BaseModel):
             消息标准化
             """
             if not _message:
-                raise ValueError(f"Message is empty")
+                raise ValueError("Message is empty")
             if _message.__repr_name__() == "SlackMessageEvent":
                 user_id = message.user
                 chat_id = message.channel
@@ -734,7 +735,7 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
-                text=text if text else f"(empty message)",
+                text=text if text else "(empty message)",
                 created_at=str(created_at)
             )
 
