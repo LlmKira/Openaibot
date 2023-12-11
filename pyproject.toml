@@ -80,7 +80,8 @@ testing = [
     # FIXME code not compatible with hikari 2.0.0.dev121
     "hikari-crescent<1.0.0,>=0.6.4",
     "khl-py<1.0.0,>=0.3.17",
-    "slack-bolt<2.0.0,>=1.18.0"
+    "slack-bolt<2.0.0,>=1.18.0",
+    "pre-commit<3.5.0,>=2.15.0",
 ]
 
 [tool.pdm.dev-dependencies]
@@ -94,4 +95,3 @@ includes = ["llmkira"]
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
-
