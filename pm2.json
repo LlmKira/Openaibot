@@ -7,8 +7,8 @@
       "max_restarts": 3,
       "restart_delay": 10000,
       "exp_backoff_restart_delay": 100,
-      "error_file": "sender.log",
-      "out_file": "sender.log",
+      "error_file": "/dev/null",
+      "out_file": "/dev/null",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     },
     {
@@ -18,8 +18,8 @@
       "max_restarts": 3,
       "restart_delay": 10000,
       "exp_backoff_restart_delay": 100,
-      "error_file": "receiver.log",
-      "out_file": "receiver.log",
+      "error_file": "/dev/null",
+      "out_file": "/dev/null",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     }
   ]
