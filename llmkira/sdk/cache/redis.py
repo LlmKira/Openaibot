@@ -11,7 +11,7 @@ from loguru import logger
 from redis.asyncio.client import Redis
 from redis.asyncio.connection import ConnectionPool
 
-from llmkira.sdk.cache.base import AbstractDataClass, PREFIX
+from .base import AbstractDataClass, PREFIX
 
 
 class RedisClientWrapper(AbstractDataClass):
@@ -35,7 +35,9 @@ class RedisClientWrapper(AbstractDataClass):
     async def set_data(self, key, value, timeout=None):
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
-        return await self._redis.set(name=f"{self.prefix}{key}", value=value, ex=timeout)
+        return await self._redis.set(
+            name=f"{self.prefix}{key}", value=value, ex=timeout
+        )
 
     async def read_data(self, key) -> Optional[Union[str, dict, int]]:
         data = await self._redis.get(self.prefix + str(key))
@@ -70,6 +72,8 @@ class RedisClientWrapper(AbstractDataClass):
         return None
 
     async def lrange_data(self, key, start_end: Tuple[int, int] = (0, -1)) -> List[str]:
-        _items = await self._redis.lrange(self.prefix + str(key), start=start_end[0], end=start_end[1])
+        _items = await self._redis.lrange(
+            self.prefix + str(key), start=start_end[0], end=start_end[1]
+        )
         items = [m.decode("utf-8") for m in _items[::-1]]
         return items

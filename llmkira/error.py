@@ -3,6 +3,8 @@
 # @Author  : sudoskys
 # @File    : error.py
 # @Software: PyCharm
+# 更安全的 format
+import random
 
 
 class ReplyNeededError(Exception):
@@ -13,10 +15,6 @@ class ReplyNeededError(Exception):
     def __init__(self, message: str = None, *args):
         # 拦截 url 信息
         super().__init__(message, *args)
-
-
-# 更安全的 format
-import random
 
 
 class MappingDefault(dict):
@@ -61,9 +59,7 @@ REQUEST_ERROR_MESSAGE_TEMPLATE = [
 
 def get_request_error_message(error: str):
     _txt: str = random.choice(REQUEST_ERROR_MESSAGE_TEMPLATE)
-    return _txt.format_map(
-        MappingDefault(error=error)
-    )
+    return _txt.format_map(MappingDefault(error=error))
 
 
 # 同样贴心的上传错误提示 (ﾉ>ω<)ﾉ
@@ -78,12 +74,10 @@ UPLOAD_ERROR_MESSAGE_TEMPLATE = [
     "OMG, {filename} ,ERROR UPLOAD, `{error}`",
     "WTF, I CANT UPLOAD {filename} BECAUSE `{error}`",
     "MY PHONE IS BROKEN, I CANT UPLOAD {filename} BECAUSE `{error}`",
-    "As a human, I can't upload {filename} for you :( \n `{error}`"
+    "As a human, I can't upload {filename} for you :( \n `{error}`",
 ]
 
 
 def get_upload_error_message(filename: str, error: str):
     _txt: str = random.choice(REQUEST_ERROR_MESSAGE_TEMPLATE)
-    return _txt.format_map(
-        MappingDefault(filename=filename, error=error)
-    )
+    return _txt.format_map(MappingDefault(filename=filename, error=error))

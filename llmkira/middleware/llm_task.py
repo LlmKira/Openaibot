@@ -47,10 +47,10 @@ class SystemPrompt(BaseModel):
         )
         top.clear()
         top.append("DONT RE-USE THE FUNCTION WITH SAME PARAM")
-        top.append("PARAMS NOT NULL")
-        top.append("DONT REPEAT YOURSELF")
+        top.append("DONT REPEAT")
         top.append("REPLY IN SHORT-CONCISE")
         top.append("SPEAK IN MORE かわいい STYLE")
+        top.append("ACT STEP BY STEP")
         top.append(f"<Time|{time.asctime(time.localtime(time.time()))}>")
         return top.prompt_message
 

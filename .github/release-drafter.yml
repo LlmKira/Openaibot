@@ -11,11 +11,14 @@ categories:
     labels:
       - 'fix'
       - 'bugfix'
+      - 'Level High'
       - 'Bug'
       - 'Bugfix'
   - title: '🧰 Maintenance'
     labels:
+      - 'Broken Change'
       - 'PluginApi'
+      - 'Slow progress'
       - 'Improve our documentation'
   - title: '🎮 New Plugin'
     labels:

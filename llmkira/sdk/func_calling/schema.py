@@ -87,7 +87,8 @@ class BaseTool(ABC, BaseModel):
                 raise ValueError(f"keyword must be more than 2 characters, got {len(i)}")
         return v
 
-    def env_help_docs(self, empty_env: List[str]) -> str:
+    @classmethod
+    def env_help_docs(cls, empty_env: List[str]) -> str:
         """
         环境变量帮助文档
         :param empty_env: 未被配置的环境变量列表

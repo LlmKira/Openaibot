@@ -6,20 +6,25 @@
 import time
 
 import shortuuid
-from pydantic import field_validator, BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 
 from ...task.schema import TaskHeader
 
 
 class Chain(BaseModel):
+    thead_uuid: str = Field(..., description="Thead UUID")
     creator_uid: str = Field(default=str, description="platform:user_id")
-    channel: str = Field(..., description="channel")
+    channel: str = Field(..., description="platform channel")
     arg: TaskHeader = Field(..., description="arg")
 
-    uuid: str = Field(default=str(shortuuid.uuid()[0:5]).upper(), description="Always Auto Gen")
+    uuid: str = Field(
+        default=str(shortuuid.uuid()[0:5]).upper(), description="Always Auto Gen"
+    )
     expire: int = Field(default=60 * 60 * 24 * 1, description="expire")
     deprecated: bool = Field(default=False, description="deprecated")
-    created_times: int = Field(default_factory=lambda: int(time.time()), description="created_times")
+    created_times: int = Field(
+        default_factory=lambda: int(time.time()), description="created_times"
+    )
 
     model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
 
@@ -28,20 +33,11 @@ class Chain(BaseModel):
         return self
 
     @classmethod
-    def create(cls,
-               *,
-               creator_uid: str,
-               channel: str,
-               arg: "TaskHeader",
-               expire: int,
-               **kwargs
-               ) -> "Chain":
+    def create(
+        cls, *, creator_uid: str, channel: str, arg: "TaskHeader", expire: int, **kwargs
+    ) -> "Chain":
         return cls(
-            creator_uid=creator_uid,
-            channel=channel,
-            arg=arg,
-            expire=expire,
-            **kwargs
+            creator_uid=creator_uid, channel=channel, arg=arg, expire=expire, **kwargs
         )
 
     @classmethod

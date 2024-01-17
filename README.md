@@ -103,7 +103,7 @@ documentation [here](https://llmkira.github.io/Docs/en).**
 
 阅读 [🧀 部署文档](https://llmkira.github.io/Docs/) 获得更多信息。
 
-请提前用 `python3 start_sender.py`  `python3 start_receiver.py` 测试是否能正常运行。
+请提前用 `pdm run python3 start_sender.py`  `pdm run python3 start_receiver.py` 测试是否能正常运行。
 
 #### 性能指标测试(Until 2023/11/1)
 
@@ -151,10 +151,10 @@ docker-compose -f docker-compose.yml up -d
 
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
-pip install poetry
+pip install pdm
 cd Openaibot
-poetry install --all-extras
-cp .env.exp .env&&nano .env
+pdm install -G bot
+cp .env.exp .env && nano .env
 apt install npm -y && npm install pm2 && pm2 start pm2.json
 pm2 monit
 
@@ -162,7 +162,7 @@ pm2 monit
 
 重启程序使用 `pm2 restart pm2.json` 。
 
-> 推荐使用 `poetry` 进行依赖管理，因为我们使用了 `pydantic^1.9.0`，为了防止出现版本冲突，我们使用了 `poetry` 进行依赖管理。
+> 推荐使用 `pdm` 进行依赖管理，因为我们使用了 `pydantic^1.9.0`，为了防止出现版本冲突，我们使用了 `pdm` 进行依赖管理。
 
 ## 🍪 Slash Command
 

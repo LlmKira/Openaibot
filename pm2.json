@@ -2,24 +2,24 @@
   "apps": [
     {
       "name": "llm_sender",
-      "script": "sleep 6&&poetry run python3 start_sender.py --no_tutorial",
+      "script": "sleep 3&&pdm run python start_sender.py --no_tutorial",
       "instances": 1,
       "max_restarts": 3,
       "restart_delay": 10000,
       "exp_backoff_restart_delay": 100,
-      "error_file": "sender.log",
-      "out_file": "sender.log",
+      "error_file": "/dev/null",
+      "out_file": "/dev/null",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     },
     {
       "name": "llm_receiver",
-      "script": "sleep 6&&poetry run python3 start_receiver.py --no_tutorial",
+      "script": "sleep 3&&pdm run python start_receiver.py --no_tutorial",
       "instances": 1,
       "max_restarts": 3,
       "restart_delay": 10000,
       "exp_backoff_restart_delay": 100,
-      "error_file": "receiver.log",
-      "out_file": "receiver.log",
+      "error_file": "/dev/null",
+      "out_file": "/dev/null",
       "log_date_format": "YYYY-MM-DD HH-mm-ss"
     }
   ]

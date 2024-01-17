@@ -22,7 +22,7 @@ class AuthReloader(object):
     @classmethod
     def _prefix(cls, uuid: str) -> str:
         """auth:{auth_schema_version}:uuid"""
-        return f"auth:v1:{uuid}"
+        return f"auth:v2:{uuid}"
 
     @classmethod
     def from_form(cls, platform: str, user_id: str):
@@ -52,6 +52,7 @@ class AuthReloader(object):
         logger.debug(f"Get Auth Data {_cache} {_cache}")
         chain = Chain.from_redis(_cache)
         if chain.is_expire:
+            logger.debug(f"Auth Expire {chain.uuid}")
             return None
         if chain.creator_uid != self.uid:
             logger.debug(f"Not User {self.uid} Created Auth")
@@ -66,7 +67,7 @@ class ChainReloader(object):
 
     def _prefix(self) -> str:
         """chain:{auth_schema_version}:uuid"""
-        return f"chain:v1:{self.uid}"
+        return f"chain:v2:{self.uid}"
 
     async def add_task(self, chain: Chain) -> str:
         """
@@ -87,6 +88,8 @@ class ChainReloader(object):
         :return Optional[Chain]
         """
         cache = global_cache_runtime.get_redis()
+        # FIXME 优化为获取对应空间的数据
+        # FIXME signas 应该添加 uuid
         redis_raw = await cache.lpop_data(
             key=self._prefix()
         )
@@ -94,5 +97,6 @@ class ChainReloader(object):
             return None
         chain = Chain.from_redis(redis_raw)
         if chain.is_expire:
+            logger.debug(f"Chain Expire {chain.uuid}")
             return None
         return chain
