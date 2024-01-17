@@ -16,7 +16,7 @@ import aiohttp
 import shortuuid
 from docstring_parser import parse
 from loguru import logger
-from pydantic import model_validator, BaseModel, Field, PrivateAttr, ConfigDict
+from pydantic import model_validator, BaseModel, Field, ConfigDict
 
 from .cache import global_cache_runtime
 from .error import ValidationError, CheckError
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
 
 # ATTENTION:禁止调用上层任何schema包，否则会导致循环引用
+
 
 def generate_uid():
     return shortuuid.uuid()[0:8].upper()
@@ -48,9 +49,11 @@ class File(BaseModel):
             return self.file_name, self.file_data
 
     file_name: str = Field(..., description="文件名，不一定和数据匹配")
-    file_id: Optional[str] = Field(None, description="文件的数据库ID，用于索引文件数据，所以没有数据就不要填")
+    file_id: Optional[str] = Field(
+        None, description="文件的数据库ID，用于索引文件数据，所以没有数据就不要填"
+    )
     file_url: Optional[str] = Field(None, description="文件URL，不一定有")
-    caption: Optional[str] = Field(default='', description="文件注释，展示给LLM")
+    caption: Optional[str] = Field(default="", description="文件注释，展示给LLM")
     created_by: str = Field(default=None, description="Uploader **UID**")
     created_at: int = Field(default=int(time.time()))
     bytes_length: Optional[int] = Field(default=None, description="File Size")
@@ -61,12 +64,16 @@ class File(BaseModel):
             assert len(self.file_id) <= 8, "file_id must be less than 8"
             assert isinstance(self.file_id, str), "file_id must be str"
         if self.created_by:
-            assert ":" in self.created_by, "created_by must be uid, include `:` ,like `discord:123456`"
+            assert (
+                ":" in self.created_by
+            ), "created_by must be uid, include `:` ,like `discord:123456`"
         return self
 
     def __eq__(self, other):
         if isinstance(other, File):
-            return (self.file_id == other.file_id) and (self.file_name == other.file_name)
+            return (self.file_id == other.file_id) and (
+                self.file_name == other.file_name
+            )
         else:
             return False
 
@@ -87,7 +94,7 @@ class File(BaseModel):
         """
         FOR LLM
         """
-        _comment = '('
+        _comment = "("
         for key, value in self.model_dump().items():
             if value:
                 _comment += f"{key}={value},"
@@ -98,7 +105,7 @@ class File(BaseModel):
 
     @staticmethod
     async def download_file_by_id(
-            file_id: str,
+        file_id: str,
     ) -> Optional[Data]:
         cache = global_cache_runtime.get_redis()
         file = await cache.read_data(file_id)
@@ -108,7 +115,7 @@ class File(BaseModel):
         return file_obj
 
     async def raw_file(
-            self,
+        self,
     ) -> Optional[Data]:
         cache = global_cache_runtime.get_redis()
         if not self.file_id:
@@ -120,18 +127,21 @@ class File(BaseModel):
         return file_obj
 
     @classmethod
-    async def upload_file(cls,
-                          file_name: str,
-                          file_data: Union[bytes, BytesIO],
-                          creator_uid: str,
-                          caption: str = "",
-                          file_id: str = None,
-                          size_limit: int = 1024 * 1024 * 10,
-                          ):
+    async def upload_file(
+        cls,
+        file_name: str,
+        file_data: Union[bytes, BytesIO],
+        creator_uid: str,
+        caption: str = "",
+        file_id: str = None,
+        size_limit: int = 1024 * 1024 * 10,
+    ):
         """
         上传文件，要求用户使用 UID
         """
-        assert isinstance(file_data, bytes) or isinstance(file_data, BytesIO), "file_data must be bytes or BytesIO"
+        assert isinstance(file_data, bytes) or isinstance(
+            file_data, BytesIO
+        ), "file_data must be bytes or BytesIO"
         if file_id is None:
             file_id = str(generate_short_md5(file_data))
         cache = global_cache_runtime.get_redis()
@@ -141,61 +151,67 @@ class File(BaseModel):
         await cache.set_data(
             key=file_id,
             value=pickle.dumps(File.Data(file_name=file_name, file_data=file_data)),
-            timeout=60 * 60 * 24 * 7
+            timeout=60 * 60 * 24 * 7,
         )
         assert len(file_id) <= 8, "file_id must be less than 8"
         assert isinstance(file_id, str), "file_id must be str"
-        return cls(file_id=file_id,
-                   file_name=file_name,
-                   bytes=_byte_length,
-                   created_by=creator_uid,
-                   caption=caption,
-                   )
+        return cls(
+            file_id=file_id,
+            file_name=file_name,
+            bytes=_byte_length,
+            created_by=creator_uid,
+            caption=caption,
+        )
 
     @classmethod
-    async def upload_file_only_url(cls,
-                                   file_name,
-                                   file_url,
-                                   created_by: str,
-                                   caption: str = "",
-                                   ):
-        return cls(file_id=None,
-                   file_url=file_url,
-                   file_name=file_name,
-                   created_by=created_by,
-                   caption=caption,
-                   )
+    async def upload_file_only_url(
+        cls,
+        file_name,
+        file_url,
+        created_by: str,
+        caption: str = "",
+    ):
+        return cls(
+            file_id=None,
+            file_url=file_url,
+            file_name=file_name,
+            created_by=created_by,
+            caption=caption,
+        )
 
     @classmethod
-    async def upload_file_by_download_url(cls,
-                                          file_name,
-                                          file_url,
-                                          created_by: str,
-                                          caption: str = "",
-                                          size_limit: int = 1024 * 1024 * 10,
-                                          headers: dict = None,
-                                          session: aiohttp.ClientSession = None,
-                                          ):
+    async def upload_file_by_download_url(
+        cls,
+        file_name,
+        file_url,
+        created_by: str,
+        caption: str = "",
+        size_limit: int = 1024 * 1024 * 10,
+        headers: dict = None,
+        session: aiohttp.ClientSession = None,
+    ):
         cache = global_cache_runtime.get_redis()
-        file_data = await aiohttp_download_file(file_url,
-                                                session=session,
-                                                timeout=20,
-                                                size_limit=size_limit,
-                                                headers=headers
-                                                )
+        file_data = await aiohttp_download_file(
+            file_url,
+            session=session,
+            timeout=20,
+            size_limit=size_limit,
+            headers=headers,
+        )
         _byte_length = len(file_data)
         _key = generate_short_md5(file_data)
         await cache.set_data(
             key=_key,
             value=pickle.dumps(File.Data(file_name=file_name, file_data=file_data)),
-            timeout=60 * 60 * 24 * 7
+            timeout=60 * 60 * 24 * 7,
         )
-        return cls(file_id=_key,
-                   file_name=file_name,
-                   bytes=_byte_length,
-                   created_by=created_by,
-                   caption=caption,
-                   )
+        return cls(
+            file_id=_key,
+            file_name=file_name,
+            bytes=_byte_length,
+            created_by=created_by,
+            caption=caption,
+        )
 
 
 class BaseFunction(BaseModel):
@@ -212,7 +228,9 @@ class BaseFunction(BaseModel):
             return cls(system_prompt=None)
 
     _config: FunctionExtra = FunctionExtra.default()
-    name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(
+        None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$"
+    )
 
     def update_config(self, config: "FunctionExtra") -> "BaseFunction":
         self._config = config
@@ -226,9 +244,7 @@ class BaseFunction(BaseModel):
     def config(self) -> "FunctionExtra":
         return self._config
 
-    def request_final(self,
-                      *,
-                      schema_model: str):
+    def request_final(self, *, schema_model: str):
         return self.model_copy(deep=True)
 
 
@@ -244,14 +260,16 @@ class Function(BaseFunction):
         required: List[str] = Field(default=[], description="必填参数")
         model_config = ConfigDict(extra="ignore")
 
-    name: Optional[str] = Field(None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(
+        None, description="函数名称", pattern=r"^[a-zA-Z0-9_]+$"
+    )
     description: Optional[str] = None
-    parameters: "Parameters" = Field(default_factory=lambda: Function.Parameters(), description="参数")
+    parameters: "Parameters" = Field(
+        default_factory=lambda: Function.Parameters(), description="参数"
+    )
     model_config = ConfigDict(extra="ignore")
 
-    def request_final(self,
-                      *,
-                      schema_model: str):
+    def request_final(self, *, schema_model: str):
         """
         标准化
         :param schema_model: 适配的模型
@@ -263,29 +281,33 @@ class Function(BaseFunction):
         else:
             raise CheckError(f"unknown model {schema_model}, cant classify model type")
 
-    def add_property(self,
-                     property_name: str,
-                     property_type: Literal["string", "integer", "number", "boolean", "object", "array"],
-                     property_description: str,
-                     enum: Optional[tuple] = None,
-                     required: bool = False
-                     ):
+    def add_property(
+        self,
+        property_name: str,
+        property_type: Literal[
+            "string", "integer", "number", "boolean", "object", "array"
+        ],
+        property_description: str,
+        enum: Optional[tuple] = None,
+        required: bool = False,
+    ):
         """
         加注属性
         """
         self.parameters.properties[property_name] = {}
-        self.parameters.properties[property_name]['type'] = property_type
-        self.parameters.properties[property_name]['description'] = property_description
+        self.parameters.properties[property_name]["type"] = property_type
+        self.parameters.properties[property_name]["description"] = property_description
         if enum:
-            self.parameters.properties[property_name]['enum'] = tuple(enum)
+            self.parameters.properties[property_name]["enum"] = tuple(enum)
         if required:
             self.parameters.required.append(property_name)
 
     @classmethod
-    def parse_from_pydantic(cls,
-                            schema_model: Type[BaseModel],
-                            plugin_name: str = None,
-                            ):
+    def parse_from_pydantic(
+        cls,
+        schema_model: Type[BaseModel],
+        plugin_name: str = None,
+    ):
         """
         解析 pydantic 的 schema
         """
@@ -330,14 +352,11 @@ class Tool(BaseModel):
     """
     请求体
     """
+
     type: str = Field(default="function")
     function: "Function"
 
-    def request_final(
-            self,
-            *,
-            schema_model
-    ):
+    def request_final(self, *, schema_model):
         if schema_model.startswith("gpt-"):
             return self
         elif schema_model.startswith("chatglm"):
@@ -351,6 +370,7 @@ class ToolChoice(BaseModel):
     """
     请求体
     """
+
     type: str = Field(default=None)
     function: "BaseFunction" = Field(default=None)
 
@@ -359,6 +379,7 @@ class ToolCallCompletion(ToolChoice):
     """
     响应
     """
+
     id: str = Field(default=None)
     type: str = Field(default=None)
     function: "FunctionCallCompletion" = Field(default=None)
@@ -373,21 +394,13 @@ class TaskBatch(BaseModel):
     def from_tool_call(cls, tool_call: "ToolCallCompletion"):
         if not tool_call:
             return None
-        return cls(
-            id=tool_call.id,
-            type=tool_call.type,
-            function=tool_call.function
-        )
+        return cls(id=tool_call.id, type=tool_call.type, function=tool_call.function)
 
     @classmethod
     def from_function_call(cls, function_call: "FunctionCallCompletion"):
         if not function_call:
             return None
-        return cls(
-            id=None,
-            type="function",
-            function=function_call
-        )
+        return cls(id=None, type="function", function=function_call)
 
     def get_batch_name(self):
         return self.function.name
@@ -406,11 +419,11 @@ class ContentParts(BaseModel):
 
     class Image(BaseModel):
         url: str
-        detail: Optional[str] = None
+        detail: Optional[Literal["low", "high", "auto"]] = "auto"
 
     type: str
-    image_url: Optional[str]
-    text: Optional[str]
+    text: Optional[str] = None
+    image_url: Optional[Image] = None
 
 
 class Message(BaseModel, ABC):
@@ -424,7 +437,10 @@ class Message(BaseModel, ABC):
         index_id: str = Field(default_factory=generate_uid, description="消息ID")
         """消息ID"""
 
-        datatime: str = Field(default=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), description="消息时间")
+        datatime: str = Field(
+            default=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            description="消息时间",
+        )
         timestamp: int = Field(default=int(time.time()), description="消息时间戳")
         """消息时间"""
 
@@ -441,7 +457,7 @@ class Message(BaseModel, ABC):
         def default(cls, message_class):
             return cls(message_class=message_class)
 
-    _meta: "Meta" = PrivateAttr(default=None)
+    _meta: Optional["Meta"] = None
     """元数据"""
     role: str
     content: Union[str, List[ContentParts], List[dict]]
@@ -461,10 +477,10 @@ class Message(BaseModel, ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def request_final(self,
-                      schema_model: str,
-
-                      ) -> "Message":
+    def request_final(
+        self,
+        schema_model: str,
+    ) -> "Message":
         """
         Openai 请求标准格式最终转换根据 message_class 元信息锁定字段
         :param schema_model: 适配的模型
@@ -475,19 +491,24 @@ class Message(BaseModel, ABC):
 class SystemMessage(Message):
     role: str = Field(default="system")
     content: str
-    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(
+        default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$"
+    )
 
-    def request_final(self,
-                      *,
-                      schema_model: str,
-                      ) -> "Message":
+    def request_final(
+        self,
+        *,
+        schema_model: str,
+    ) -> "Message":
         return self
 
 
 class UserMessage(Message):
     role: str = Field(default="user")
     content: Union[str, List["ContentParts"], List[dict]]
-    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(
+        default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$"
+    )
 
     @property
     def fold(self) -> "Message":
@@ -496,70 +517,83 @@ class UserMessage(Message):
         插件定义 fold_id 引诱查询
         :return: Message
         """
-        metadata_str = (f"""[FoldText](fold_id={self._meta.index_id}"""
-                        f"""\ntimestamp={self._meta.datatime}"""
-                        f"""\ndescription={self.content[:20] + "..."})"""
-                        )
-        return self.model_copy(
-            update={
-                "content": metadata_str
-            },
-            deep=True
+        metadata_str = (
+            f"""[FoldText](fold_id={self._meta.index_id}"""
+            f"""\ntimestamp={self._meta.datatime}"""
+            f"""\ndescription={self.content[:20] + "..."})"""
         )
+        return self.model_copy(update={"content": metadata_str}, deep=True)
 
-    def request_final(self,
-                      *,
-                      schema_model: str,
-                      ) -> "Message":
+    def request_final(
+        self,
+        *,
+        schema_model: str,
+    ) -> "Message":
         """
         Openai 请求标准格式最终转换根据 message_class 元信息锁定字段
         :param schema_model: 适配的模型
         """
         if "vision" in schema_model:
+            _new_content: List[ContentParts] = []
             if isinstance(self.content, str):
-                _new_content: List[ContentParts] = [ContentParts(
-                    type="text",
-                    text=self.content
-                )]
-                if self._meta.files:
-                    for file in self._meta.files:
-                        if file.file_url:
-                            _new_content.append(
-                                ContentParts(
-                                    type="image_url",
-                                    image_url=file.file_url
-                                )
-                            )
-                        elif file.file_id:
-                            if file.file_name.endswith(("jpg", "png", "jpeg", "gif", "webp", "svg")):
-                                base64_image = base64.b64encode(
-                                    sync(file.raw_file())
-                                ).decode('utf-8')
+                _new_content.append(
+                    ContentParts.model_validate({"type": "text", "text": self.content})
+                )
+                if self.get_meta():
+                    if self.get_meta().files:
+                        logger.debug(f"vision model: {self._meta.files}")
+                        for file in self.get_meta().files:
+                            file: File
+                            if file.file_url:
                                 _new_content.append(
                                     ContentParts(
                                         type="image_url",
-                                        image_url=f"data:image/png;base64,{base64_image}"
+                                        image_url=ContentParts.Image(url=file.file_url),
                                     )
                                 )
-                        else:
-                            pass
-                self.content = _new_content
+                            elif file.file_id:
+                                if file.file_name.endswith(
+                                    ("jpg", "png", "jpeg", "gif", "webp", "svg")
+                                ):
+                                    data: File.Data = sync(file.raw_file())
+                                    base64_image = base64.b64encode(
+                                        data.file_data
+                                    ).decode("utf-8")
+                                    _new_content.append(
+                                        ContentParts(
+                                            type="image_url",
+                                            image_url=ContentParts.Image(
+                                                url=f"data:image/png;base64,{base64_image}"
+                                            ),
+                                        )
+                                    )
+                            else:
+                                pass
+            self.content = _new_content
         return self
 
 
 class AssistantMessage(Message):
     role: str = Field(default="assistant")
-    content: Union[None, str] = Field(default='', description="assistant content")
-    name: Optional[str] = Field(default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$")
-    tool_calls: Optional[List[ToolCallCompletion]] = Field(default=None, description="tool calls")
+    content: Union[None, str] = Field(default="", description="assistant content")
+    name: Optional[str] = Field(
+        default=None, description="speaker_name", pattern=r"^[a-zA-Z0-9_]+$"
+    )
+    tool_calls: Optional[List[ToolCallCompletion]] = Field(
+        default=None, description="tool calls"
+    )
     """a array of tools, for result"""
-    function_call: Optional[FunctionCallCompletion] = Field(default=None, description="Deprecated")
+    function_call: Optional[FunctionCallCompletion] = Field(
+        default=None, description="Deprecated"
+    )
     """Deprecated by openai ,for result"""
 
     @model_validator(mode="after")
     def deprecate_validator(self):
         if self.tool_calls and self.function_call:
-            raise ValidationError("sdk param validator:tool_calls and function_call cannot both be provided")
+            raise ValidationError(
+                "sdk param validator:tool_calls and function_call cannot both be provided"
+            )
         if self.function_call:
             logger.warning("sdk param validator:function_call is deprecated")
         if self.content is None:
@@ -591,10 +625,11 @@ class AssistantMessage(Message):
                     return True
         return False
 
-    def request_final(self,
-                      *,
-                      schema_model: str,
-                      ) -> "Message":
+    def request_final(
+        self,
+        *,
+        schema_model: str,
+    ) -> "Message":
         return self
 
 
@@ -603,10 +638,11 @@ class ToolMessage(Message):
     content: str
     tool_call_id: str
 
-    def request_final(self,
-                      *,
-                      schema_model: str,
-                      ) -> "Message":
+    def request_final(
+        self,
+        *,
+        schema_model: str,
+    ) -> "Message":
         return self
 
 
@@ -619,13 +655,16 @@ class FunctionMessage(Message):
     def function_validator(self):
         logger.warning("Function Message is deprecated by openai")
         if self.role == "function" and not self.name:
-            raise ValidationError("sdk param validator:name must be specified when role is function")
+            raise ValidationError(
+                "sdk param validator:name must be specified when role is function"
+            )
         return self
 
-    def request_final(self,
-                      *,
-                      schema_model: str,
-                      ) -> "Message":
+    def request_final(
+        self,
+        *,
+        schema_model: str,
+    ) -> "Message":
         """
         Openai 请求标准格式最终转换根据 message_class 元信息锁定字段
         :param schema_model: 适配的模型
@@ -649,10 +688,8 @@ def create_short_task(task_desc, refer, role: str = None):
             content=role,
         ),
         UserMessage(
-            role="user",
-            content=f"{refer} <hint>{task_desc}<hint>",
-            name="task"
-        )
+            role="user", content=f"{refer} <hint>{task_desc}<hint>", name="task"
+        ),
     ]
 
 
@@ -677,17 +714,15 @@ def parse_message_dict(item: dict):
         else:
             raise CheckError(f"unknown message type {role}")
     except Exception as e:
-        logger.exception(f"[ParseError]\nparse_message_dict:Unknown message type in redis data:\n{e}")
+        logger.exception(
+            f"[ParseError]\nparse_message_dict:Unknown message type in redis data:\n{e}"
+        )
         return None
     else:
         return _message
 
 
-def standardise_for_request(
-        *,
-        message: "Message",
-        schema_model: str
-) -> "Message":
+def standardise_for_request(*, message: "Message", schema_model: str) -> "Message":
     """
     标准化转换，供请求使用
     """
@@ -699,11 +734,12 @@ def standardise_for_request(
         return message
 
 
-def generate_short_md5(data: Union[bytes, str, BytesIO],
-                       *,
-                       length: int = 8,
-                       upper: bool = True,
-                       ):
+def generate_short_md5(
+    data: Union[bytes, str, BytesIO],
+    *,
+    length: int = 8,
+    upper: bool = True,
+):
     assert 0 < length <= 32, "length must be less than 32"
     # 计算 MD5 哈希值
     md5_hash = hashlib.md5()

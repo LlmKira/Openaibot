@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import List
 
 import redis
 from loguru import logger
@@ -17,7 +18,9 @@ class RedisChatMessageHistory(object):
     class RedisSettings(BaseSettings):
         redis_url: str = Field("redis://localhost:6379/0", validation_alias="REDIS_DSN")
         redis_key_prefix: str = "llm_message_store_1:"
-        model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
+        model_config = SettingsConfigDict(
+            env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        )
 
         @model_validator(mode="after")
         def redis_is_connected(self):
@@ -32,10 +35,10 @@ class RedisChatMessageHistory(object):
             return self
 
     def __init__(
-            self,
-            session_id: str,
-            ttl: int,
-            redis_config: RedisSettings = RedisSettings(),
+        self,
+        session_id: str,
+        ttl: int,
+        redis_config: RedisSettings = RedisSettings(),
     ):
         try:
             import redis
@@ -60,7 +63,7 @@ class RedisChatMessageHistory(object):
         return self.key_prefix + self.session_id
 
     @property
-    def messages(self) -> List[BaseMessage]:  # type: ignore
+    def messages(self) -> List["Message"]:
         """Retrieve the messages_box from Redis"""
         _items = self.redis_client.lrange(self.key, 0, -1)
         items = [json.loads(m.decode("utf-8")) for m in _items[::-1]]
@@ -70,7 +73,8 @@ class RedisChatMessageHistory(object):
 
     def add_message(self, message: Message) -> None:
         """Append the message to the record in Redis"""
-        self.redis_client.lpush(self.key, message.model_dump_json())
+        message_json = message.model_dump_json()
+        self.redis_client.lpush(self.key, message_json)
         if self.ttl:
             self.redis_client.expire(self.key, self.ttl)
 
