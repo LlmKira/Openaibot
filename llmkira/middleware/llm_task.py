@@ -26,6 +26,7 @@ class SystemPrompt(BaseModel):
     """
     系统提示
     """
+
     start_tag: str = Field(default="[ACT CLAUSE]", description="开始标签")
     end_tag: str = Field(default="[CLAUSE END]", description="结束标签")
     content: List[str] = Field([], description="内容")
@@ -68,9 +69,7 @@ class SystemPrompt(BaseModel):
         """
         content = self.prompt()
         if content:
-            return SystemMessage(
-                content=content
-            )
+            return SystemMessage(content=content)
         return None
 
 
@@ -80,11 +79,12 @@ class OpenaiMiddleware(object):
     任务数据>转换器+函数填充>提取历史>放进刮削器>任务数据+刮削结果请求>获取Openai返回>进行声明通知/返回消息
     """
 
-    def __init__(self,
-                 task: TaskHeader,
-                 functions: List[Function] = None,
-                 tools: List[ToolCallCompletion] = None
-                 ):
+    def __init__(
+        self,
+        task: TaskHeader,
+        functions: List[Function] = None,
+        tools: List[ToolCallCompletion] = None,
+    ):
         self.auth_client = None
         self.driver = None
         if functions is None:
@@ -103,8 +103,7 @@ class OpenaiMiddleware(object):
         self.session_uid = task.receiver.uid
         self.system_prompt: SystemPrompt = SystemPrompt()
         self.message_history = RedisChatMessageHistory(
-            session_id=self.session_uid,
-            ttl=60 * 60 * 1
+            session_id=self.session_uid, ttl=60 * 60 * 1
         )
 
     def init(self):
@@ -114,7 +113,9 @@ class OpenaiMiddleware(object):
         # 构建请求的驱动信息
         self.auth_client = GetAuthDriver(uid=self.session_uid)
         self.driver = sync(self.auth_client.get())
-        assert isinstance(self.driver, Driver), "llm_task.py:GetAuthDriver s return not a driver!"
+        assert isinstance(
+            self.driver, Driver
+        ), "llm_task.py:GetAuthDriver s return not a driver!"
         return self
 
     def get_schema(self, model_name: str = None):
@@ -128,15 +129,13 @@ class OpenaiMiddleware(object):
         """
         _dict = {}
         for function in self.functions:
-            assert isinstance(function, Function), "llm_task.py:function type error,cant unique"
+            assert isinstance(
+                function, Function
+            ), "llm_task.py:function type error,cant unique"
             _dict[function.name] = function
         self.functions = list(_dict.values())
 
-    def write_back(
-            self,
-            *,
-            message: Optional[Message] = None
-    ):
+    def write_back(self, *, message: Optional[Message] = None):
         """
         写回消息到 Redis 数据库中
         function 写回必须指定 name
@@ -145,24 +144,15 @@ class OpenaiMiddleware(object):
             self.message_history.add_message(message=message)
 
     def _append_function_tools(self, functions: List[Function]):
-        """
-
-        """
+        """ """
         for function_item in functions:
-            assert isinstance(function_item, Function), "llm_task.py:function type error"
-            self.tools.append(
-                Tool(
-                    type="function",
-                    function=function_item
-                )
-            )
+            assert isinstance(
+                function_item, Function
+            ), "llm_task.py:function type error"
+            self.tools.append(Tool(type="function", function=function_item))
         return self.tools
 
-    def scraper_create_message(
-            self,
-            write_back=True,
-            system_prompt=True
-    ):
+    def scraper_create_message(self, write_back=True, system_prompt=True):
         """
         从人类消息和历史消息中构建请求所用消息
         :param write_back: 是否写回,如果是 False,那么就不会写回到 Redis 数据库中，也就是重新请求
@@ -174,7 +164,9 @@ class OpenaiMiddleware(object):
             self.scraper.add_message(self.system_prompt.on_system(), score=1000)
             _plugin_system_prompt = self.system_prompt.prompt_message
             if _plugin_system_prompt is not None:
-                assert isinstance(_plugin_system_prompt, Message), "llm_task.py:system prompt type error"
+                assert isinstance(
+                    _plugin_system_prompt, Message
+                ), "llm_task.py:system prompt type error"
                 self.scraper.add_message(_plugin_system_prompt, score=500)
         _history = []
         # database:read redis
@@ -192,11 +184,10 @@ class OpenaiMiddleware(object):
             for i, message in enumerate(raw_message):
                 message: RawMessage
                 # message covert
-                _buffer.append(
-                    message.format_user_message(
-                        role="user",
-                    )
+                user_message = message.format_user_message(
+                    role="user",
                 )
+                _buffer.append(user_message)
             # 装样子添加评分
             # TODO 评分机制
             for i, _msg in enumerate(_buffer):
@@ -206,10 +197,10 @@ class OpenaiMiddleware(object):
                 self.message_history.add_message(message=_msg)
 
     async def request_openai(
-            self,
-            auto_write_back: bool,
-            retrieve_mode: bool = False,
-            disable_function: bool = False
+        self,
+        auto_write_back: bool,
+        retrieve_mode: bool = False,
+        disable_function: bool = False,
     ) -> LlmResult:
         """
         处理消息转换和调用工具
@@ -218,12 +209,16 @@ class OpenaiMiddleware(object):
         :param retrieve_mode: 是否为检索模式，当我们需要重新处理超长消息时候，需要设定为 True
         :return: OpenaiResult
         """
-        run_driver_model = self.driver.model if not retrieve_mode else self.driver.retrieve_model
+        run_driver_model = (
+            self.driver.model if not retrieve_mode else self.driver.retrieve_model
+        )
         endpoint_schema = self.get_schema(model_name=run_driver_model)
         # 添加函数定义的系统提示
         if not disable_function:
             for function_item in self.functions:
-                assert isinstance(function_item, Function), "llm_task.py:function type error"
+                assert isinstance(
+                    function_item, Function
+                ), "llm_task.py:function type error"
                 self.system_prompt.append(function_item.config.system_prompt)
         # 构建标准函数列表并转换添加到工具列表
         functions = [
@@ -236,23 +231,19 @@ class OpenaiMiddleware(object):
             for tool_item in self.tools
         ]
         # 构建消息列表
-        self.scraper_create_message(
-            write_back=auto_write_back
-        )
+        self.scraper_create_message(write_back=auto_write_back)
         # 折叠消息列表
         if retrieve_mode:
             self.scraper.fold_message()
         # 削减消息列表
         self.scraper.reduce_messages(
-            limit=endpoint_schema.token_limit,
-            model_name=run_driver_model
+            limit=endpoint_schema.token_limit, model_name=run_driver_model
         )
         # 获取消息列表
         messages = self.scraper.get_messages()
         # 标准化消息列表
         messages = [
-            message.request_final(schema_model=run_driver_model)
-            for message in messages
+            message.request_final(schema_model=run_driver_model) for message in messages
         ]
         # 日志
         logger.info(
@@ -267,6 +258,9 @@ class OpenaiMiddleware(object):
         # 禁用函数？
         if disable_function or not functions:
             logger.debug(f"Llm Driver --disable function:{disable_function}")
+        if endpoint_schema.func_executor == "unsupported":
+            logger.debug(f"Llm Driver --unsupported function:{functions}")
+            disable_function = True
         # 必须校验
         if disable_function:
             functions = None
@@ -278,7 +272,7 @@ class OpenaiMiddleware(object):
             messages=messages,
             functions=functions,
             tools=tools,
-            echo=False
+            echo=False,
         )
         # 调用Openai
         result: LlmResult = await endpoint.create()
@@ -296,8 +290,8 @@ class OpenaiMiddleware(object):
                     token_usage=_usage,
                     token_uuid=self.driver.uuid,
                     llm_model=self.driver.model,
-                    provide_type=self.auth_client.provide_type().value
-                )
+                    provide_type=self.auth_client.provide_type().value,
+                ),
             )
         )
         return result

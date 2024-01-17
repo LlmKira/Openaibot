@@ -21,7 +21,15 @@ from ..tokenizer import get_tokenizer
 from ...adapter import SCHEMA_GROUP, SingleModel
 from ...error import ValidationError
 from ...network import request
-from ...schema import Message, Function, ToolChoice, AssistantMessage, Tool, BaseFunction, ToolMessage
+from ...schema import (
+    Message,
+    Function,
+    ToolChoice,
+    AssistantMessage,
+    Tool,
+    BaseFunction,
+    ToolMessage,
+)
 
 load_dotenv()
 
@@ -37,9 +45,9 @@ class OpenaiResult(LlmResult):
         message: AssistantMessage
         finish_reason: str
         """
-        The reason the model stopped generating tokens. This will be stop if the model hit a natural stop point or 
-        a provided stop sequence, length if the maximum number of tokens specified in the request was reached, 
-        content_filter if content was omitted due to a flag from our content filters, tool_calls if the model called 
+        The reason the model stopped generating tokens. This will be stop if the model hit a natural stop point or
+        a provided stop sequence, length if the maximum number of tokens specified in the request was reached,
+        content_filter if content was omitted due to a flag from our content filters, tool_calls if the model called
         a tool, or function_call (deprecated) if the model called a function.
         """
         delta: dict = None
@@ -48,8 +56,7 @@ class OpenaiResult(LlmResult):
         def sign_function(self):
             return bool(
                 "function_call" == self.finish_reason
-                or
-                "tool_calls" == self.finish_reason
+                or "tool_calls" == self.finish_reason
             )
 
     id: str
@@ -121,7 +128,9 @@ class Openai(LlmRequest):
         else:
             assert isinstance(values.get("functions"), list)
         if values.get("tools") and values.get("functions"):
-            logger.warning("sdk param validator:'functions' and 'tools' cannot both be provided. ignoring 'functions'")
+            logger.warning(
+                "sdk param validator:'functions' and 'tools' cannot both be provided. ignoring 'functions'"
+            )
             values["functions"] = None
             values["function_call"] = None
         """Deprecated by openai"""
@@ -180,31 +189,23 @@ class Openai(LlmRequest):
                     else:
                         # 没有匹配到对应的 child
                         ordered_message_list.append(
-                            ToolMessage(
-                                tool_call_id=tool.id,
-                                content="[On Queue]"
-                            )
+                            ToolMessage(tool_call_id=tool.id, content="[On Queue]")
                         )
         # 修补完毕
         if len(origin_message_list) != len(ordered_message_list):
-            logger.warning(f"message_list is not match, origin:{origin_message_list}, orderd:{ordered_message_list}")
+            logger.warning(
+                f"message_list is not match, origin:{origin_message_list}, orderd:{ordered_message_list}"
+            )
         return ordered_message_list
 
     def create_params(self):
         # 修补消息
         self.messages = self.sort_insert_message(message_list=self.messages)
         # 获取已经传递的工具模型
-        _arg = self.model_dump(
-            exclude_none=True,
-            include=self.schema_map
-        )
+        _arg = self.model_dump(exclude_none=True, include=self.schema_map)
         assert "messages" in _arg, "messages is required"
         _arg["model"] = self.model
-        _arg = {
-            k: v
-            for k, v in _arg.items()
-            if v is not None
-        }
+        _arg = {k: v for k, v in _arg.items() if v is not None}
         return _arg
 
     @field_validator("presence_penalty")
@@ -225,9 +226,7 @@ class Openai(LlmRequest):
             raise ValidationError("temperature must be between 0 and 2")
         return v
 
-    async def create(self,
-                     **kwargs
-                     ) -> OpenaiResult:
+    async def create(self, **kwargs) -> OpenaiResult:
         """
         请求
         :return:
@@ -236,11 +235,15 @@ class Openai(LlmRequest):
         Docs:https://platform.openai.com/docs/api-reference/chat/create
         """
         # Check Token Limit
-        num_tokens_from_messages = get_tokenizer(model_name=self.model).num_tokens_from_messages(
+        num_tokens_from_messages = get_tokenizer(
+            model_name=self.model
+        ).num_tokens_from_messages(
             messages=self.messages,
             model=self.model,
         )
-        if num_tokens_from_messages > SCHEMA_GROUP.get_token_limit(model_name=self.model):
+        if num_tokens_from_messages > SCHEMA_GROUP.get_token_limit(
+            model_name=self.model
+        ):
             raise ValidationError("messages_box num_tokens > max_tokens")
         # 返回请求
         headers = {
@@ -258,7 +261,7 @@ class Openai(LlmRequest):
                 data=self.create_params(),
                 headers=headers,
                 proxy=self.proxy_address(),
-                json_body=True
+                json_body=True,
             )
             assert _response, ValidationError("response is empty")
             logger.debug(f"[Openai response] {_response}")
@@ -283,7 +286,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="function_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="chatglm3-16k",
@@ -292,7 +295,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="function_call",
-            exception=None
+            exception=None,
         ),
     ]
 )
@@ -306,7 +309,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-3.5-turbo",
@@ -315,7 +318,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-3.5-turbo-16k",
@@ -324,7 +327,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-3.5-turbo-0613",
@@ -333,7 +336,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-3.5-turbo-16k-0613",
@@ -342,7 +345,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-4",
@@ -351,7 +354,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-4-32k",
@@ -360,7 +363,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-4-0613",
@@ -369,7 +372,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-4-vision-preview",
@@ -377,8 +380,8 @@ SCHEMA_GROUP.add_model(
             request=Openai,
             response=OpenaiResult,
             schema_type="openai",
-            func_executor="tool_call",
-            exception=None
+            func_executor="unsupported",
+            exception=None,
         ),
         SingleModel(
             llm_model="gpt-4-1106-preview",
@@ -387,7 +390,7 @@ SCHEMA_GROUP.add_model(
             response=OpenaiResult,
             schema_type="openai",
             func_executor="tool_call",
-            exception=None
-        )
+            exception=None,
+        ),
     ]
 )

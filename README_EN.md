@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <a href="https://llmkira.github.io/Docs/en">🍩 Deploy Docs</a> 
+  <a href="https://llmkira.github.io/Docs/en">🍩 Deploy Docs</a>
   &
   <a href="https://llmkira.github.io/Docs/en/dev/basic">🧀 Dev Docs</a>
   &
@@ -46,7 +46,7 @@ supported access to file.
 
 Supports multiple model sources and cross-platform message forwarding.
 
-| Demo                              | 
+| Demo                              |
 |-----------------------------------|
 | ![sticker](./docs/chain_chat.gif) |
 
@@ -110,7 +110,7 @@ Both the authentication component and the backend need to be implemented by your
 
 Read the [🧀 Deployment Documentation](https://llmkira.github.io/Docs/) for more information.
 
-Please use `poetry run python3 start_sender.py` `poetry run python3 start_receiver.py` to test whether it can run normally.
+Please use `pdm run python3 start_sender.py` `pdm run python3 start_receiver.py` to test whether it can run normally.
 
 #### Performance indicator test (Until 2023/11/1)
 
@@ -144,7 +144,7 @@ curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | b
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install poetry && poetry install --all-extras
+pip install pdm && pdm install -G bot
 docker-compose -f docker-compose.yml up -d
 
 ```
@@ -160,7 +160,7 @@ To manually start using Pm2, you need to install `redis`, `rabbitmq`, `mongodb` 
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
-pip install poetry && poetry install --all-extras
+pip install pdm && pdm install -G bot
 apt install npm -y && npm install pm2 && pm2 start pm2.json
 pm2 monit
 
@@ -168,8 +168,8 @@ pm2 monit
 
 Use `pm2 restart pm2.json` to restart the program.
 
-> Recommend using `poetry` for dependency management, because we use `pydantic^1.9.0`, in order to prevent version
-> conflicts, we use `poetry` for dependency management.
+> Recommend using `pdm` for dependency management, because we use `pydantic^1.9.0`, in order to prevent version
+> conflicts, we use `pdm` for dependency management.
 
 ## 🍪 Slash Command
 
