@@ -266,7 +266,7 @@ class SearchTool(BaseTool):
             callback=[
                 TaskHeader.Meta.Callback.create(
                     name=__plugin_name__,
-                    function_response=_search_result,
+                    function_response=str(_search_result),
                     tool_call_id=pending_task.get_batch_id(),
                 )
             ],
