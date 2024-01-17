@@ -22,12 +22,9 @@ from llmkira.task import Task, TaskHeader
 
 class ChainFunc(object):
     @staticmethod
-    async def reply_user(*,
-                         platform: str,
-                         task: TaskHeader,
-                         text: str,
-                         receiver: TaskHeader.Location
-                         ):
+    async def reply_user(
+        *, platform: str, task: TaskHeader, text: str, receiver: TaskHeader.Location
+    ):
         """
         包装一下发送消息
         :param platform: Default should be `task.receiver.platform`
@@ -46,17 +43,13 @@ class ChainFunc(object):
                     RawMessage(
                         user_id=task.receiver.user_id,
                         chat_id=task.receiver.chat_id,
-                        text=text
+                        text=text,
                     )
-                ]
-            )
+                ],
+            ),
         )
 
-    async def auth_chain(self,
-                         *,
-                         task: TaskHeader,
-                         task_batch: TaskBatch
-                         ):
+    async def auth_chain(self, *, task: TaskHeader, task_batch: TaskBatch):
         """
         认证链重发注册
         """
@@ -64,7 +57,7 @@ class ChainFunc(object):
         meta: TaskHeader.Meta = _task_forward.task_meta.chain(
             name=__receiver__,
             write_back=False,  # 因为是发送给自己，所以不需要写回
-            release_chain=True  # 要求释放链
+            release_chain=True,  # 要求释放链
         )
         """添加认证链并重置路由数据"""
         if meta.run_step_limit < meta.run_step_already:
@@ -74,30 +67,31 @@ class ChainFunc(object):
         # 注册本地部署点
         task_id = await AuthReloader(uid=_task_forward.receiver.uid).save_auth(
             chain=Chain.create(
+                thead_uuid=_task_forward.task_meta.task_uuid,
                 uuid=meta.verify_uuid,
                 creator_uid=_task_forward.receiver.uid,
                 channel=__receiver__,
                 # 重要：转发回来这里
-                arg=TaskHeader(sender=_task_forward.sender,
-                               receiver=_task_forward.receiver,
-                               task_meta=meta,
-                               message=[]
-                               ),
+                arg=TaskHeader(
+                    sender=_task_forward.sender,
+                    receiver=_task_forward.receiver,
+                    task_meta=meta,
+                    message=[],
+                ),
                 expire=60 * 60 * 2,
             )
         )
-        await self.reply_user(platform=_task_forward.receiver.platform,
-                              receiver=_task_forward.receiver,
-                              task=task,
-                              text=f"🔑 Type `/auth {task_id}` to run `{task_batch.get_batch_name()}`"
-                                   f"\ntry `!auth {task_id}` when no slash command"
-                              )
+        await self.reply_user(
+            platform=_task_forward.receiver.platform,
+            receiver=_task_forward.receiver,
+            task=task,
+            text=f"🔑 Type `/auth {task_id}` to run `{task_batch.get_batch_name()}`"
+            f"\ntry `!auth {task_id}` when no slash command",
+        )
         return logger.trace("Auth Chain Resign Success")
 
     async def resign_chain(
-            self,
-            task: TaskHeader, parent_func: str,
-            repeatable: bool, deploy_child: int
+        self, task: TaskHeader, parent_func: str, repeatable: bool, deploy_child: int
     ):
         """
         子链孩子函数，请注意，此处为高风险区域，预定一下函数部署点位
@@ -109,9 +103,7 @@ class ChainFunc(object):
         _task_forward: TaskHeader = task.model_copy()
         # 添加认证链并重置路由数据
         meta: TaskHeader.Meta = _task_forward.task_meta.chain(
-            name=__receiver__,
-            write_back=True,
-            release_chain=True
+            name=__receiver__, write_back=True, release_chain=True
         )
         if meta.run_step_limit < meta.run_step_already:
             return logger.debug("Reject Invalid Request, Already Reach Limit")
@@ -136,14 +128,15 @@ class ChainFunc(object):
             sender=_task_forward.sender,
             receiver=_task_forward.receiver,
             task_meta=meta,
-            message=[]
+            message=[],
         )
         await ChainReloader(uid=_task_forward.receiver.uid).add_task(
             chain=Chain.create(
+                thead_uuid=_task_forward.task_meta.task_uuid,
                 creator_uid=_task_forward.receiver.uid,
                 channel=_task_forward.receiver.platform,
                 expire=60 * 60 * 2,
-                arg=_task
+                arg=_task,
             )
         )
         logger.debug(f"Resign Chain Success --from_function {parent_func}")
@@ -174,24 +167,28 @@ class FunctionReceiver(object):
             _arg = json.loads(pending_task.get_batch_args())
         except json.JSONDecodeError as decode_error:
             logger.warning("Function Arguments is not json format")
-            await chain_func.reply_user(platform=task.receiver.platform,
-                                        receiver=task.receiver,
-                                        task=task,
-                                        text=f"🔭 Sorry function `{pending_task.get_batch_name()}` "
-                                             f"arguments is not json format"
-                                             f"\narguments {pending_task.get_batch_args()}"
-                                        )
+            await chain_func.reply_user(
+                platform=task.receiver.platform,
+                receiver=task.receiver,
+                task=task,
+                text=f"🔭 Sorry function `{pending_task.get_batch_name()}` "
+                f"arguments is not json format"
+                f"\narguments {pending_task.get_batch_args()}",
+            )
             raise decode_error
         # Get Function Object
         _tool_cls = ToolRegister().get_tool(name=pending_task.get_batch_name())
         if not _tool_cls:
             logger.warning(f"Not found function {pending_task.get_batch_name()}")
-            await chain_func.reply_user(platform=task.receiver.platform,
-                                        receiver=task.receiver,
-                                        task=task,
-                                        text=f"🔭 Sorry function `{pending_task.get_batch_name()}` executor not found"
-                                        )
-            raise ModuleNotFoundError(f"Function {pending_task.get_batch_name()} not found")
+            await chain_func.reply_user(
+                platform=task.receiver.platform,
+                receiver=task.receiver,
+                task=task,
+                text=f"🔭 Sorry function `{pending_task.get_batch_name()}` executor not found",
+            )
+            raise ModuleNotFoundError(
+                f"Function {pending_task.get_batch_name()} not found"
+            )
         # Run Function
         _tool_obj = _tool_cls()
         if _tool_obj.require_auth:
@@ -200,16 +197,19 @@ class FunctionReceiver(object):
                 task.task_meta.verify_uuid = None
             else:
                 # 需要认证，预构建携带密钥的待发消息并回退
-                await chain_func.auth_chain(task=task,
-                                            task_batch=pending_task
-                                            )
-                return logger.info(f"[Resign Auth] \n--auth-require {pending_task.get_batch_name()} require.")
+                await chain_func.auth_chain(task=task, task_batch=pending_task)
+                return logger.info(
+                    f"[Resign Auth] \n--auth-require {pending_task.get_batch_name()} require."
+                )
         # Get Env
-        _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(name_list=_tool_obj.env_list)
+        _env_dict = await EnvManager.from_uid(uid=task.receiver.uid).get_env_list(
+            name_list=_tool_obj.env_list
+        )
         assert isinstance(_env_dict, dict), "unexpected env dict? it should be dict..."
         # Resign Chain
-        if ((task.task_meta.resign_next_step or task.task_meta.is_complete(num_end=1))
-                and not _tool_obj.repeatable):
+        if (
+            task.task_meta.resign_next_step or task.task_meta.is_complete(num_end=1)
+        ) and not _tool_obj.repeatable:
             logger.debug(f"Function {pending_task.get_batch_name()} need resign chain")
             await chain_func.resign_chain(
                 task=task,
@@ -218,19 +218,21 @@ class FunctionReceiver(object):
                 deploy_child=_tool_obj.deploy_child,
             )
         # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
-        run_result = await _tool_obj.load(task=task,
-                                          receiver=task.receiver,
-                                          arg=_arg,
-                                          env=_env_dict,
-                                          pending_task=pending_task,
-                                          refer_llm_result=task.task_meta.llm_result
-                                          )
+        run_result = await _tool_obj.load(
+            task=task,
+            receiver=task.receiver,
+            arg=_arg,
+            env=_env_dict,
+            pending_task=pending_task,
+            refer_llm_result=task.task_meta.llm_result,
+        )
         # 更新任务状态
-        await task.task_meta.complete_task(task_batch=pending_task, run_result=run_result)
+        await task.task_meta.complete_task(
+            task_batch=pending_task, run_result=run_result
+        )
         return run_result
 
-    async def process_function_call(self, message: AbstractIncomingMessage
-                                    ):
+    async def process_function_call(self, message: AbstractIncomingMessage):
         """
         定位，解析，运行函数。要求认证，或申请结束/继续指标。
         :param message: message from queue
@@ -239,7 +241,9 @@ class FunctionReceiver(object):
         # Parse Message
         if os.getenv("LLMBOT_STOP_REPLY") == "1":
             return None
-        task: TaskHeader = TaskHeader.model_validate_json(json_data=message.body.decode("utf-8"))
+        task: TaskHeader = TaskHeader.model_validate_json(
+            json_data=message.body.decode("utf-8")
+        )
         # Get Function Call
         pending_task = await task.task_meta.work_pending_task(
             verify_uuid=task.task_meta.verify_uuid
@@ -258,9 +262,7 @@ class FunctionReceiver(object):
         finally:
             logger.trace("Function Call Finished")
 
-    async def on_message(self,
-                         message: AbstractIncomingMessage
-                         ):
+    async def on_message(self, message: AbstractIncomingMessage):
         """
         处理message
         :param message: message from queue
