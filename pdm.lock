@@ -618,7 +618,7 @@ files = [
 
 [[package]]
 name = "duckduckgo-search"
-version = "3.9.8"
+version = "3.9.11"
 requires_python = ">=3.8"
 summary = "Search for words, documents, images, news, maps and text translation using the DuckDuckGo.com search engine."
 dependencies = [
@@ -628,8 +628,8 @@ dependencies = [
     "lxml>=4.9.3",
 ]
 files = [
-    {file = "duckduckgo_search-3.9.8-py3-none-any.whl", hash = "sha256:5643995fc77f903943875870c3127d1c05d48f7b06a5ae074fddd28f544fb613"},
-    {file = "duckduckgo_search-3.9.8.tar.gz", hash = "sha256:ea7acd40ab0166891b5b21c54898b4aacc63e3ee6b1a3370ecafd8b10f192ca7"},
+    {file = "duckduckgo_search-3.9.11-py3-none-any.whl", hash = "sha256:3636df4c5eec383c1c02f89c9693b6c5bbaeda38952e467a2fa930132f632ed4"},
+    {file = "duckduckgo_search-3.9.11.tar.gz", hash = "sha256:4d07a02647da58f1e46e35f11719265f0ce06eed60e2c9c2b00b1105b9084d07"},
 ]
 
 [[package]]
