@@ -41,10 +41,9 @@ def is_valid_url(url) -> bool:
         return False
 
 
-def is_command(text: str,
-               command: str,
-               at_bot_username: str = None,
-               check_empty=False) -> bool:
+def is_command(
+    text: str, command: str, at_bot_username: str = None, check_empty=False
+) -> bool:
     """
     :param text: message text
     :param command: command
@@ -75,10 +74,7 @@ def is_empty_command(text: str) -> bool:
     return False
 
 
-async def auth_reloader(uuid: str,
-                        platform: str,
-                        user_id: str
-                        ) -> None:
+async def auth_reloader(uuid: str, platform: str, user_id: str) -> None:
     """
     :param uuid: verify id
     :param platform: message channel
@@ -89,10 +85,10 @@ async def auth_reloader(uuid: str,
     assert isinstance(uuid, str), "`uuid` Must Be Str"
     assert isinstance(platform, str), "`platform` Must Be Str"
     assert isinstance(user_id, str), "`user_id` Must Be Str"
-    chain: Chain = await AuthReloader.from_form(platform=platform,
-                                                user_id=user_id
-                                                ).read_auth(uuid=uuid)
+    chain: Chain = await AuthReloader.from_form(
+        platform=platform, user_id=user_id
+    ).read_auth(uuid=uuid)
     if not chain:
-        raise LookupError(f"Auth Task Not Found")
+        raise LookupError("Auth Task Not Found")
     logger.info(f"Auth Task Sent  --task uuid {uuid}  --user {user_id}")
     await Task(queue=chain.channel).send_task(task=chain.arg)
