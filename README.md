@@ -39,6 +39,8 @@
 > **Look for English README? Click [here](README_EN.md). We also have English
 documentation [here](https://llmkira.github.io/Docs/en).**
 
+> **The fourth refactoring(agents) is under developing**
+
 > 部署遇到问题？提交 Issue 帮助我们提升可用性
 
 此项目为自部署，实用可扩展的机器人核心，以 `FunctionCall` `ToolCall` 为核心，支持多种消息平台。
