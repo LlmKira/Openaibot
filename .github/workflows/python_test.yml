@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm install --frozen-lockfile -G testing
+          pdm install --frozen-lockfile -G bot
       - name: Run Tests
         run: |
           pdm run -v pytest tests
