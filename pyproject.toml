@@ -1,6 +1,6 @@
 [project]
 name = "llmkira"
-version = "0.27.3"
+version = "0.27.4"
 description = "A chain message bot based on OpenAI"
 authors = [
     { name = "sudoskys", email = "me@dianas.cyou" },
@@ -56,7 +56,7 @@ dependencies = [
     "duckduckgo-search<4.0.0,>=3.9.5",
     "flask<4.0.0,>=3.0.0",
 ]
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.9,<3.12"
 readme = "README.md"
 license = { text = "GPL3" }
 keywords = ["llmbot", "llmkira", "openai", "chatgpt", "telegram", "bot"]
