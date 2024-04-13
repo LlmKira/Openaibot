@@ -274,12 +274,7 @@ class Function(BaseFunction):
         标准化
         :param schema_model: 适配的模型
         """
-        if schema_model.startswith("gpt-"):
-            return self.model_copy(deep=True)
-        elif schema_model.startswith("chatglm"):
-            return self.model_copy(deep=True)
-        else:
-            raise CheckError(f"unknown model {schema_model}, cant classify model type")
+        return self.model_copy(deep=True)
 
     def add_property(
         self,

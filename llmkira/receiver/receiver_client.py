@@ -42,21 +42,20 @@ class BaseSender(object, metaclass=ABCMeta):
         """
         loop_runner = LoopRunner()
         trans_loop = loop_runner.get_receiver_loop(platform_name=platform_name)
-        _raw_message = RawMessage.format_openai_message(
-            message=message,
-            locate=locate
-        )
+        _raw_message = RawMessage.format_openai_message(message=message, locate=locate)
         await loop_runner.exec_loop(
             pipe=trans_loop,
             pipe_arg={
                 "message": _raw_message,
-            }
+            },
         )
         arg: dict = loop_runner.result_pipe_arg
         if not arg.get("message"):
             logger.error("Message Loop Lose Message")
         raw_message: RawMessage = arg.get("message", _raw_message)
-        assert isinstance(raw_message, RawMessage), f"message type error {type(raw_message)}"
+        assert isinstance(
+            raw_message, RawMessage
+        ), f"message type error {type(raw_message)}"
         return raw_message
 
     @abstractmethod
@@ -81,13 +80,14 @@ class BaseSender(object, metaclass=ABCMeta):
     async def error(self, receiver, text):
         raise NotImplementedError
 
-    async def push_task_create_message(self,
-                                       *,
-                                       receiver: TaskHeader.Location,
-                                       task: TaskHeader,
-                                       llm_result: LlmResult,
-                                       task_batch: List[TaskBatch]
-                                       ):
+    async def push_task_create_message(
+        self,
+        *,
+        receiver: TaskHeader.Location,
+        task: TaskHeader,
+        llm_result: LlmResult,
+        task_batch: List[TaskBatch],
+    ):
         auth_map = {}
 
         async def _action_block(_task_batch: TaskBatch) -> Tuple[List[str], bool]:
@@ -95,7 +95,8 @@ class BaseSender(object, metaclass=ABCMeta):
             if not _tool:
                 logger.warning(f"not found function {_task_batch.get_batch_name()}")
                 return [
-                    formatting.mbold("🍩 [Unknown]") + f" `{_task_batch.get_batch_name()}` "
+                    formatting.mbold("🍩 [Unknown]")
+                    + f" `{_task_batch.get_batch_name()}` "
                 ], False
             tool = _tool()
             icon = "🌟"
@@ -104,8 +105,11 @@ class BaseSender(object, metaclass=ABCMeta):
                 auth_map[str(shortuuid.uuid()[0:5]).upper()] = _task_batch
                 logger.trace(f"🔐 Auth Map {auth_map}")
             _func_tips = [
-                formatting.mbold(f"{icon} [ActionBlock]") + f" `{_task_batch.get_batch_name()}` ",
-                f"""```\n{_task_batch.get_batch_args()}\n```""" if not tool.silent else "",
+                formatting.mbold(f"{icon} [ActionBlock]")
+                + f" `{_task_batch.get_batch_name()}` ",
+                f"""```\n{_task_batch.get_batch_args()}\n```"""
+                if not tool.silent
+                else "",
             ]
             if tool.env_list:
                 __secret__ = await EnvManager.from_uid(
@@ -113,16 +117,15 @@ class BaseSender(object, metaclass=ABCMeta):
                 ).get_env_list(name_list=tool.env_list)
                 # 查找是否有空
                 _required_env = [
-                    name
-                    for name in tool.env_list
-                    if not __secret__.get(name, None)
+                    name for name in tool.env_list if not __secret__.get(name, None)
                 ]
                 _need_env_list = [
-                    f"`{formatting.escape_markdown(name)}`"
-                    for name in _required_env
+                    f"`{formatting.escape_markdown(name)}`" for name in _required_env
                 ]
                 _need_env_str = ",".join(_need_env_list)
-                _func_tips.append(formatting.mbold("🦴 Env required:") + f" {_need_env_str} ")
+                _func_tips.append(
+                    formatting.mbold("🦴 Env required:") + f" {_need_env_str} "
+                )
                 help_docs = tool.env_help_docs(_required_env)
                 _func_tips.append(formatting.mitalic(help_docs))
             return _func_tips, tool.silent
@@ -138,29 +141,16 @@ class BaseSender(object, metaclass=ABCMeta):
                 total_silent = False
             if isinstance(_message, list):
                 task_message.extend(_message)
-        task_message_str = formatting.format_text(
-            *task_message,
-            separator="\n"
-        )
+        task_message_str = formatting.format_text(*task_message, separator="\n")
         if not total_silent:
-            await self.forward(receiver=receiver,
-                               message=[
-                                   RawMessage(
-                                       text=task_message_str,
-                                       only_send_file=False
-                                   )
-                               ]
-                               )
+            await self.forward(
+                receiver=receiver,
+                message=[RawMessage(text=task_message_str, only_send_file=False)],
+            )
         return auth_map
 
     @abstractmethod
-    async def function(self,
-                       *,
-                       receiver,
-                       task,
-                       llm,
-                       llm_result
-                       ):
+    async def function(self, *, receiver, task, llm, llm_result):
         raise NotImplementedError
 
 
@@ -175,11 +165,11 @@ class BaseReceiver(object):
 
     @staticmethod
     async def llm_request(
-            *,
-            llm_agent: OpenaiMiddleware,
-            auto_write_back: bool = True,
-            retrieve_message: bool = False,
-            disable_function: bool = False
+        *,
+        llm_agent: OpenaiMiddleware,
+        auto_write_back: bool = True,
+        retrieve_message: bool = False,
+        disable_function: bool = False,
     ):
         """
         Openai请求
@@ -194,7 +184,6 @@ class BaseReceiver(object):
             _result = await llm_agent.request_openai(
                 auto_write_back=auto_write_back,
                 disable_function=disable_function,
-                retrieve_mode=retrieve_message
             )
             return _result
         except ssl.SSLSyscallError as e:
@@ -202,7 +191,9 @@ class BaseReceiver(object):
             raise Exception(e)
         except httpx.RemoteProtocolError as e:
             logger.error(f"[Network RemoteProtocolError] {e}")
-            raise ReplyNeededError(message="Server disconnected without sending a response.")
+            raise ReplyNeededError(
+                message="Server disconnected without sending a response."
+            )
         except ServiceUnavailableError as e:
             logger.error(f"[Service Unavailable Error] {e}")
             raise ReplyNeededError(message=f"[551721]Service Unavailable {e}")
@@ -219,15 +210,16 @@ class BaseReceiver(object):
             logger.exception(e)
             raise e
 
-    async def _flash(self,
-                     *,
-                     task: TaskHeader,
-                     llm: OpenaiMiddleware,
-                     auto_write_back: bool = True,
-                     intercept_function: bool = False,
-                     retrieve_message: bool = False,
-                     disable_function: bool = False
-                     ):
+    async def _flash(
+        self,
+        *,
+        task: TaskHeader,
+        llm: OpenaiMiddleware,
+        auto_write_back: bool = True,
+        intercept_function: bool = False,
+        retrieve_message: bool = False,
+        disable_function: bool = False,
+    ):
         """
         函数池刷新
         :param intercept_function: 是否拦截函数调用转发到函数处理器
@@ -244,17 +236,18 @@ class BaseReceiver(object):
                     llm_agent=llm,
                     auto_write_back=auto_write_back,
                     disable_function=disable_function,
-                    retrieve_message=retrieve_message
+                    retrieve_message=retrieve_message,
                 )
                 get_message = _llm_result.default_message
                 logger.debug(f"[x] LLM Message Sent \n--message {get_message}")
                 if not isinstance(get_message, AssistantMessage):
-                    raise ReplyNeededError("[55682]Request Result Not Valid, Must Be `AssistantMessage`")
+                    raise ReplyNeededError(
+                        "[55682]Request Result Not Valid, Must Be `AssistantMessage`"
+                    )
             except Exception as e:
                 if isinstance(e, ReplyNeededError):
                     await self.sender.error(
-                        receiver=task.receiver,
-                        text=get_request_error_message(str(e))
+                        receiver=task.receiver, text=get_request_error_message(str(e))
                     )
                 raise e
             if intercept_function:
@@ -262,23 +255,24 @@ class BaseReceiver(object):
                     await self.sender.reply(
                         receiver=task.receiver,
                         message=[get_message],
-                        reply_to_message=False
+                        reply_to_message=False,
                     )
                     await self.sender.function(
                         receiver=task.receiver,
                         task=task,
                         llm=llm,  # IMPORTANT
-                        llm_result=_llm_result
+                        llm_result=_llm_result,
                     )
                     return logger.debug("Function loop ended")
             return await self.sender.reply(
-                receiver=task.receiver,
-                message=[get_message]
+                receiver=task.receiver, message=[get_message]
             )
         except Exception as e:
             raise e
 
-    async def deal_message(self, message) -> Tuple[
+    async def deal_message(
+        self, message
+    ) -> Tuple[
         Optional[TaskHeader], Optional[OpenaiMiddleware], Optional[str], Optional[bool]
     ]:
         """
@@ -288,10 +282,7 @@ class BaseReceiver(object):
         _task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
         # 没有任何参数
         if _task.task_meta.direct_reply:
-            await self.sender.forward(
-                receiver=_task.receiver,
-                message=_task.message
-            )
+            await self.sender.forward(receiver=_task.receiver, message=_task.message)
             return _task, None, "direct_reply", _task.task_meta.release_chain
 
         functions = await FunctionReorganize(task=_task).build_arg()
@@ -300,13 +291,13 @@ class BaseReceiver(object):
             _llm = OpenaiMiddleware(
                 task=_task,
                 functions=functions,
-                tools=[]
+                tools=[],
                 # 内部会初始化函数工具，这里是其他类型工具
             ).init()
         except ProviderException as e:
             await self.sender.error(
                 receiver=_task.receiver,
-                text=f"🥞 Auth System Report {formatting.escape_markdown(str(e))}"
+                text=f"🥞 Auth System Report {formatting.escape_markdown(str(e))}",
             )
             raise e
         """构建通信代理"""
@@ -322,13 +313,15 @@ class BaseReceiver(object):
                 elif schema.func_executor == "unsupported":
                     _func_tool_msg = None
                 else:
-                    raise NotImplementedError(f"func_executor {schema.func_executor} not implemented")
+                    raise NotImplementedError(
+                        f"func_executor {schema.func_executor} not implemented"
+                    )
                 """消息类型是由请求结果决定的。也就是理论不存在预料外的冲突。"""
 
-                _llm.write_back(
-                    message=_func_tool_msg
+                _llm.write_back(message=_func_tool_msg)
+                logger.debug(
+                    f"[x] Function Response Write Back \n--callback {call.name}"
                 )
-                logger.debug(f"[x] Function Response Write Back \n--callback {call.name}")
 
         # 插件直接转发与重处理
         if _task.task_meta.callback_forward:
@@ -341,16 +334,18 @@ class BaseReceiver(object):
                     task=_task,
                     intercept_function=True,
                     disable_function=True,
-                    auto_write_back=False
+                    auto_write_back=False,
                 )
                 # 同时递交部署点
-                return _task, _llm, "callback_forward_reprocess", _task.task_meta.release_chain
+                return (
+                    _task,
+                    _llm,
+                    "callback_forward_reprocess",
+                    _task.task_meta.release_chain,
+                )
 
             # 转发函数
-            await self.sender.forward(
-                receiver=_task.receiver,
-                message=_task.message
-            )
+            await self.sender.forward(receiver=_task.receiver, message=_task.message)
             # 同时递交部署点
             return _task, _llm, "callback_forward", _task.task_meta.release_chain
 

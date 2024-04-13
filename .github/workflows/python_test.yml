@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
+        python-version: [ '3.9', '3.10', '3.11' ]
         os: [ ubuntu-latest ] # , windows-latest, macos-latest ]
 
     steps:
@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pdm install --no-lock -G testing
+          pdm install --frozen-lockfile -G bot
       - name: Run Tests
         run: |
           pdm run -v pytest tests
