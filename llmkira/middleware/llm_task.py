@@ -11,10 +11,11 @@ from pydantic import Field, BaseModel
 
 from .llm_provider import GetAuthDriver
 from ..extra.user import UserCost, CostControl
+from ..extra.user.schema import Cost
 from ..schema import RawMessage, Scraper
-from ..sdk.adapter import SCHEMA_GROUP
+from ..sdk.adapter import SCHEMA_GROUP, SingleModel
 from ..sdk.endpoint import Driver
-from ..sdk.endpoint.openai import Message
+from ..sdk.endpoint.openai import Message, Openai, OpenaiResult
 from ..sdk.endpoint.schema import LlmRequest, LlmResult
 from ..sdk.memory.redis import RedisChatMessageHistory
 from ..sdk.schema import ToolCallCompletion, SystemMessage, Function, Tool
@@ -23,6 +24,7 @@ from ..task import TaskHeader
 
 
 class SystemPrompt(BaseModel):
+    # FIXME Deprecated
     """
     系统提示
     """
@@ -153,6 +155,7 @@ class OpenaiMiddleware(object):
         return self.tools
 
     def scraper_create_message(self, write_back=True, system_prompt=True):
+        # FIXME Deprecated
         """
         从人类消息和历史消息中构建请求所用消息
         :param write_back: 是否写回,如果是 False,那么就不会写回到 Redis 数据库中，也就是重新请求
@@ -188,8 +191,6 @@ class OpenaiMiddleware(object):
                     role="user",
                 )
                 _buffer.append(user_message)
-            # 装样子添加评分
-            # TODO 评分机制
             for i, _msg in enumerate(_buffer):
                 self.scraper.add_message(_msg, score=len(str(_msg)) + 50)
             # database:save redis
@@ -199,20 +200,29 @@ class OpenaiMiddleware(object):
     async def request_openai(
         self,
         auto_write_back: bool,
-        retrieve_mode: bool = False,
         disable_function: bool = False,
     ) -> LlmResult:
         """
         处理消息转换和调用工具
         :param auto_write_back: 是否自动写回
         :param disable_function: 禁用函数
-        :param retrieve_mode: 是否为检索模式，当我们需要重新处理超长消息时候，需要设定为 True
         :return: OpenaiResult
         """
-        run_driver_model = (
-            self.driver.model if not retrieve_mode else self.driver.retrieve_model
-        )
+        run_driver_model = self.driver.model
         endpoint_schema = self.get_schema(model_name=run_driver_model)
+        if not endpoint_schema:
+            logger.warning(
+                f"Openai model {run_driver_model} not found, use {run_driver_model} instead"
+            )
+            endpoint_schema = SingleModel(
+                llm_model=run_driver_model,
+                token_limit=8192,
+                request=Openai,
+                response=OpenaiResult,
+                schema_type="openai",
+                func_executor="tool_call",
+                exception=None,
+            )
         # 添加函数定义的系统提示
         if not disable_function:
             for function_item in self.functions:
@@ -232,9 +242,6 @@ class OpenaiMiddleware(object):
         ]
         # 构建消息列表
         self.scraper_create_message(write_back=auto_write_back)
-        # 折叠消息列表
-        if retrieve_mode:
-            self.scraper.fold_message()
         # 削减消息列表
         self.scraper.reduce_messages(
             limit=endpoint_schema.token_limit, model_name=run_driver_model
@@ -253,7 +260,6 @@ class OpenaiMiddleware(object):
             f"\n--org {self.driver.org_id} "
             f"\n--model {run_driver_model} "
             f"\n--function {functions}"
-            f"\n--retrieve_mode {retrieve_mode}"
         )
         # 禁用函数？
         if disable_function or not functions:
@@ -284,8 +290,7 @@ class OpenaiMiddleware(object):
         await CostControl.add_cost(
             cost=UserCost.create_from_task(
                 uid=self.session_uid,
-                request_id=result.id,
-                cost=UserCost.Cost(
+                cost=Cost(
                     cost_by=self.task.receiver.platform,
                     token_usage=_usage,
                     token_uuid=self.driver.uuid,
