@@ -28,6 +28,7 @@ class ModelMeta(object):
     """
     第三方管理分发模型相关的操作类
     """
+
     model_list: List[SingleModel] = []
 
     def add_model(self, models: List[SingleModel]):
@@ -36,10 +37,7 @@ class ModelMeta(object):
                 logger.debug(f"🥐 [Model Available] {model.llm_model}")
             self.model_list.append(model)
 
-    def get_by_model_name(self,
-                          *,
-                          model_name: str
-                          ) -> SingleModel:
+    def get_by_model_name(self, *, model_name: str) -> Optional[SingleModel]:
         for model in self.model_list:
             if model.llm_model == model_name:
                 if model.exception:
@@ -48,30 +46,13 @@ class ModelMeta(object):
                         f"exception: {model.exception}"
                     )
                 return model
-        raise LookupError(
-            f"model {model_name} not found! "
-            f"please check your model name"
-        )
+        return None
 
     def get_model_list(self):
         return [model.llm_model for model in self.model_list]
 
-    def get_token_limit(self,
-                        *,
-                        model_name: str
-                        ) -> int:
-        return self.get_by_model_name(
-            model_name=model_name
-        ).token_limit
-
-    def get_schema_model_group(self,
-                               *,
-                               schema_type: str
-                               ) -> List[SingleModel]:
-        return [
-            model for model in self.model_list
-            if model.schema_type == schema_type
-        ]
+    def get_schema_model_group(self, *, schema_type: str) -> List[SingleModel]:
+        return [model for model in self.model_list if model.schema_type == schema_type]
 
 
 SCHEMA_GROUP = ModelMeta()
