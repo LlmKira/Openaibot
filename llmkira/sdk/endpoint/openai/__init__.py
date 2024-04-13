@@ -3,11 +3,11 @@
 # @Author  : sudoskys
 # @File    : base.py
 # @Software: PyCharm
-from pydantic import field_validator, ConfigDict, model_validator
+from pydantic import field_validator, ConfigDict
 
 __version__ = "0.0.1"
 
-from typing import Union, List, Optional, Literal, Type
+from typing import Union, List, Optional, Literal
 
 import httpx
 import pydantic
@@ -17,17 +17,14 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from ..schema import LlmResult, LlmRequest
 from ..tee import Driver
-from ..tokenizer import get_tokenizer
 from ...adapter import SCHEMA_GROUP, SingleModel
 from ...error import ValidationError
 from ...network import request
 from ...schema import (
     Message,
-    Function,
     ToolChoice,
     AssistantMessage,
     Tool,
-    BaseFunction,
     ToolMessage,
 )
 
@@ -41,7 +38,6 @@ class OpenaiResult(LlmResult):
         total_tokens: int
 
     class Choices(BaseModel):
-        index: int
         message: AssistantMessage
         finish_reason: str
         """
@@ -59,18 +55,11 @@ class OpenaiResult(LlmResult):
                 or "tool_calls" == self.finish_reason
             )
 
-    id: str
-    object: str
-    created: int
     model: str
     system_fingerprint: str = Field(default=None, alias="system_prompt_fingerprint")
     choices: List[Choices]
     usage: Usage
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
-
-    @property
-    def result_type(self):
-        return self.object
 
     @property
     def default_message(self):
@@ -82,82 +71,32 @@ class Openai(LlmRequest):
 
     _config: Driver = PrivateAttr(default=None)
     """模型信息和配置"""
-    messages: List[Union["Message", Type["Message"]]]
-    temperature: Optional[float] = 1
+    messages: List["Message"]
     n: Optional[int] = 1
     top_p: Optional[float] = None
     stop: Optional[Union[str, List[str]]] = None
     max_tokens: Optional[int] = None
+    """Max Tokens"""
     presence_penalty: Optional[float] = None
+    """Presence Penalty"""
     frequency_penalty: Optional[float] = None
+    """Frequency Penalty"""
     seed: Optional[int] = None
-    """基础设置"""
+    """Seed"""
     stream: Optional[bool] = False
-    """暂时不打算用的流式"""
+    """Stream"""
     logit_bias: Optional[dict] = None
-    """暂时不打算用的logit_bias"""
-    user: Optional[str] = None
-    """追踪 User"""
+    """Logit Bias"""
     response_format: Optional[dict] = None
     """回复指定的格式，See: https://platform.openai.com/docs/api-reference/chat/create"""
-    # 函数
-    functions: Optional[List["Function"]] = None
-    """deprecated"""
-    function_call: Optional[Union["BaseFunction", Literal["auto", "none"]]] = None
-    """deprecated"""
     # 工具
     tools: Optional[List["Tool"]] = None
     tool_choice: Optional[Union["ToolChoice", Literal["auto", "none"]]] = None
     """工具调用"""
 
-    # 注意，我们
-    """
-    如果是 vison ，需要转换消息。
-    注意验证 tool choice 的字段。
-    """
-
-    @model_validator(mode="before")
-    def fix_tool(cls, values):
-        if not values.get("tools"):
-            values["tools"] = None
-        else:
-            assert isinstance(values.get("tools"), list)
-
-        if not values.get("functions"):
-            values["functions"] = None
-        else:
-            assert isinstance(values.get("functions"), list)
-        if values.get("tools") and values.get("functions"):
-            logger.warning(
-                "sdk param validator:'functions' and 'tools' cannot both be provided. ignoring 'functions'"
-            )
-            values["functions"] = None
-            values["function_call"] = None
-        """Deprecated by openai"""
-        return values
-
     @property
-    def schema_map(self) -> dict:
-        return {
-            "model": True,
-            "messages": True,
-            "temperature": True,
-            "top_p": True,
-            "n": True,
-            "stop": True,
-            "max_tokens": True,
-            "seed": True,
-            "presence_penalty": True,
-            "frequency_penalty": True,
-            "stream": True,
-            "logit_bias": True,
-            "user": True,
-            "response_format": True,
-            "functions": True,
-            "function_call": True,
-            "tools": True,
-            "tool_choice": True,
-        }
+    def config(self):
+        return self._config
 
     @staticmethod
     def sort_insert_message(message_list: List[Message]):
@@ -234,30 +173,20 @@ class Openai(LlmRequest):
         """
         Docs:https://platform.openai.com/docs/api-reference/chat/create
         """
-        # Check Token Limit
-        num_tokens_from_messages = get_tokenizer(
-            model_name=self.model
-        ).num_tokens_from_messages(
-            messages=self.messages,
-            model=self.model,
-        )
-        if num_tokens_from_messages > SCHEMA_GROUP.get_token_limit(
-            model_name=self.model
-        ):
-            raise ValidationError("messages_box num_tokens > max_tokens")
+        # Do not check token limit, 没有意义
         # 返回请求
         headers = {
             "User-Agent": "Mozilla/5.0",
-            "Authorization": f"Bearer {self._config.api_key}",
-            "api-key": f"{self._config.api_key}",
+            "Authorization": f"Bearer {self.config.api_key}",
+            "api-key": f"{self.config.api_key}",
         }
-        if self._config.org_id:
-            headers["Openai-Organization"] = self._config.org_id
+        if self.config.org_id:
+            headers["Openai-Organization"] = self.config.org_id
         try:
             logger.debug(f"[Openai request] {self.create_params()}")
             _response = await request(
                 method="POST",
-                url=self._config.endpoint,
+                url=self.config.endpoint,
                 data=self.create_params(),
                 headers=headers,
                 proxy=self.proxy_address(),
@@ -265,7 +194,7 @@ class Openai(LlmRequest):
             )
             assert _response, ValidationError("response is empty")
             logger.debug(f"[Openai response] {_response}")
-            return_result = OpenaiResult.model_validate(_response).ack()
+            return_result = OpenaiResult.model_validate(_response)
         except httpx.ConnectError as e:
             logger.error(f"[Openai connect error] {e}")
             raise e
@@ -276,29 +205,6 @@ class Openai(LlmRequest):
             logger.info(f"[Openai Raw response] {return_result}")
         return return_result
 
-
-SCHEMA_GROUP.add_model(
-    models=[
-        SingleModel(
-            llm_model="chatglm3",
-            token_limit=4096,
-            request=Openai,
-            response=OpenaiResult,
-            schema_type="openai",
-            func_executor="function_call",
-            exception=None,
-        ),
-        SingleModel(
-            llm_model="chatglm3-16k",
-            token_limit=16384,
-            request=Openai,
-            response=OpenaiResult,
-            schema_type="openai",
-            func_executor="function_call",
-            exception=None,
-        ),
-    ]
-)
 
 SCHEMA_GROUP.add_model(
     models=[

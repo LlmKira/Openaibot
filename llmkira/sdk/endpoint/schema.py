@@ -7,8 +7,7 @@ from abc import ABC
 from typing import Optional, Any, Union, List
 from typing import TYPE_CHECKING
 
-import shortuuid
-from pydantic import ConfigDict, BaseModel, Field, PrivateAttr
+from pydantic import ConfigDict, BaseModel, PrivateAttr
 
 from .tee import Driver
 
@@ -21,17 +20,10 @@ class LlmResult(BaseModel, ABC):
     LlmResult
     """
 
-    id: Optional[str] = Field(default=str(shortuuid.uuid()))
-    object: str
-    created: int
     model: str
     choices: list
     usage: Any = None
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
-
-    @property
-    def result_type(self):
-        return self.object
 
     def ack(self):
         """
@@ -48,6 +40,7 @@ class LlmRequest(BaseModel, ABC):
     """
     LlmRequest
     """
+
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
     _config: Driver = PrivateAttr()
@@ -86,9 +79,7 @@ class LlmRequest(BaseModel, ABC):
         :param kwargs: 配置
         :return: LlmRequest Object
         """
-        return cls(
-            **kwargs
-        ).set_driver(driver=driver)
+        return cls(**kwargs).set_driver(driver=driver)
 
     def set_driver(self, driver: Driver):
         self._config = driver
@@ -110,26 +101,16 @@ class LlmRequest(BaseModel, ABC):
         }
 
     def create_params(self):
-        _arg = self.model_dump(
-            exclude_none=True,
-            include=self.schema_map
-        )
+        _arg = self.model_dump(exclude_none=True, include=self.schema_map)
         assert "messages" in _arg, "messages is required"
         _arg["model"] = self.model
-        _arg = {
-            k: v
-            for k, v in _arg.items()
-            if v is not None
-        }
+        _arg = {k: v for k, v in _arg.items() if v is not None}
         return _arg
 
     def proxy_address(self):
         return self._config.proxy_address
 
-    async def create(
-            self,
-            **kwargs
-    ):
+    async def create(self, **kwargs):
         raise NotImplementedError
 
 

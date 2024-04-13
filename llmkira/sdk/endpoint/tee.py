@@ -26,7 +26,7 @@ def sha1_encrypt(string):
     sha1加密算法
     """
 
-    sha = hashlib.sha1(string.encode('utf-8'))
+    sha = hashlib.sha1(string.encode("utf-8"))
     encrypts = sha.hexdigest()
     return encrypts[:8]
 
@@ -35,6 +35,7 @@ class Driver(BaseSettings):
     """
     通用配置
     """
+
     endpoint: str = Field(default="https://api.openai.com/v1/chat/completions")
     api_key: str = Field(default=None)
     org_id: Optional[str] = Field(default=None)
@@ -43,6 +44,21 @@ class Driver(BaseSettings):
     proxy_address: Optional[str] = Field(None)
 
     # TODO:AZURE API VERSION
+
+    @field_validator("endpoint")
+    def check_endpoint(cls, v):
+        if v:
+            # 先去掉末尾的 /
+            if v[-1] == "/":
+                v = v[:-1]
+            # 如果以 v1 结尾，添加 chat/completions
+            if v.endswith("/v1"):
+                v += "/chat/completions"
+            if not v.endswith("/chat/completions"):
+                raise ValidationError(
+                    "endpoint must end with /v1/chat/completions or /v1"
+                )
+        return v
 
     @property
     def detail(self):
@@ -66,10 +82,14 @@ class Driver(BaseSettings):
     @classmethod
     def from_public_env(cls):
         openai_api_key = os.getenv("OPENAI_API_KEY", None)
-        openai_endpoint = os.getenv("OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions")
+        openai_endpoint = os.getenv(
+            "OPENAI_API_ENDPOINT", "https://api.openai.com/v1/chat/completions"
+        )
         openai_org_id = os.getenv("OPENAI_API_ORG_ID", None)
         openai_model = os.getenv("OPENAI_API_MODEL", "gpt-3.5-turbo-0613")
-        openai_model_retrieve = os.getenv("OPENAI_API_RETRIEVE_MODEL", "gpt-3.5-turbo-16k")
+        openai_model_retrieve = os.getenv(
+            "OPENAI_API_RETRIEVE_MODEL", "gpt-3.5-turbo-16k"
+        )
         openai_proxy = os.getenv("OPENAI_API_PROXY", None)
         return cls(
             endpoint=openai_endpoint,
@@ -77,19 +97,14 @@ class Driver(BaseSettings):
             org_id=openai_org_id,
             model=openai_model,
             model_retrieve=openai_model_retrieve,
-            proxy_address=openai_proxy
+            proxy_address=openai_proxy,
         )
 
     @field_validator("api_key")
     def check_key(cls, v):
         if v:
-            if len(str(v)) < 4:
+            if len(str(v)) < 2:
                 raise ValidationError("api_key is too short???")
-            """
-            # 严格检查
-            if not len(str(v)) == 51:
-                raise ValidationError("api_key must be 51 characters long")
-            """
         else:
             raise ValidationError("api_key is required,pls set OPENAI_API_KEY in .env")
         return v
@@ -103,5 +118,10 @@ class Driver(BaseSettings):
         _flag = self.api_key[-3:]
         return f"{_flag}:{sha1_encrypt(self.api_key)}"
 
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=True,
-                                      arbitrary_types_allowed=True, extra="allow")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        arbitrary_types_allowed=True,
+        extra="allow",
+    )
