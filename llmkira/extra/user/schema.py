@@ -11,7 +11,7 @@ from typing import List, Union, Optional
 from pydantic import field_validator, ConfigDict, BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ...sdk.endpoint import Driver
+from llmkira.sdk.endpoint.tee import Driver
 
 
 class UserDriverMode(Enum):
@@ -74,7 +74,7 @@ class UserCost(BaseModel):
         return cls(
             request_id=request_id,
             uid=uid,
-            cost=cls.Cost.by_function(
+            cost=Cost.by_function(
                 function_name=cost_by,
                 token_usage=token_usage,
                 token_uuid=token_uuid,
