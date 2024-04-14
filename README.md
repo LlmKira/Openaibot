@@ -32,7 +32,7 @@
   &
   <a href="README_EN.md">📝 English Readme</a>
   &
-  <a href="CONTRIBUTING.md">🤝 贡献必看</a>
+  <a href=".github/CONTRIBUTING.md">🤝 贡献必看</a>
 </p>
 
 
