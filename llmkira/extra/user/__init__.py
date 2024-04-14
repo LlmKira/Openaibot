@@ -8,9 +8,8 @@ from urllib.parse import urlparse
 
 from llmkira.sdk.adapter import SCHEMA_GROUP
 from llmkira.sdk.func_calling import ToolRegister
-
 from .client import UserCostClient, UserConfigClient, UserCost, UserConfig
-from ...sdk.endpoint import Driver
+from ...sdk.endpoint.tee import Driver
 
 
 def is_valid_url(url):
