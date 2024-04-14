@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <a href="https://llmkira.github.io/Docs/">🍩 部署文档</a> 
+  <a href="https://llmkira.github.io/Docs/">🍩 部署文档</a>
   &
   <a href="https://llmkira.github.io/Docs/dev/basic">🧀 开发文档</a>
   &
@@ -48,12 +48,22 @@ documentation [here](https://llmkira.github.io/Docs/en).**
 支持多种模型源，支持跨平台消息转发。
 
 | Demo                              |
-|-----------------------------------| 
-| ![sticker](./docs/chain_chat.gif) | 
+|-----------------------------------|
+| ![sticker](./docs/chain_chat.gif) |
 
 与之前的项目不同的是，此项目尝试基于消息平台复刻 ChatGpt 的插件系统，实现部分或更进一步的功能。
 
 > 因为 func call 为 feature,所以只支持 Openai 类型的 api, 不打算支持没有 func call 的 LLM
+
+## 🍔 Roadmap
+
+- [ ] 去除历史遗留代码
+- [ ] 删除计量系统
+- [ ] 删除模型选择系统，统一为 OpenAI Schema
+- [ ] 使用更好的插件系统
+- [ ] 简化项目结构
+- [ ] 尝试用本地化方案替代 RabbitMQ
+- [ ] 去除 Provider 体系
 
 ## 📦 Feature
 
