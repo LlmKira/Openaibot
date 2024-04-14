@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from llmkira.sdk.adapter import SCHEMA_GROUP
 from llmkira.sdk.func_calling import ToolRegister
 from .client import UserCostClient, UserConfigClient, UserCost, UserConfig
+from .schema import LlmConfig
 from ...sdk.endpoint.tee import Driver
 
 
@@ -41,10 +42,10 @@ class UserControl(object):
         return SCHEMA_GROUP.get_model_list()
 
     @staticmethod
-    async def get_driver_config(uid: str) -> UserConfig.LlmConfig:
+    async def get_driver_config(uid: str) -> LlmConfig:
         """
         :param uid: user id
-        :return: UserConfig.LlmConfig(Token/Driver)
+        :return: LlmConfig(Token/Driver)
         """
         _user_data = await UserConfigClient().read_by_uid(uid=uid)
         _user_data = _user_data or UserConfig(uid=uid)

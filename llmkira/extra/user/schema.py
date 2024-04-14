@@ -103,64 +103,66 @@ class UserCost(BaseModel):
     )
 
 
+class LlmConfig(BaseModel):
+    """用户配置
+    driver 作为一个单例模式
+    其他 `公共授权` 组件！
+    """
+
+    driver: Optional[Driver] = Field(None, description="私有端点配置")
+    token: Optional[str] = Field(None, description="代理认证系统的token")
+    provider: Optional[str] = Field(None, description="认证平台")
+
+    @property
+    def mode(self):
+        """
+        :return: 返回模式
+        """
+        if self.driver:
+            if self.driver.api_key:
+                return UserDriverMode.private
+        if self.token and not self.driver:
+            return UserDriverMode.proxy_public
+        return UserDriverMode.public
+
+    @classmethod
+    def default(cls):
+        return cls()
+
+    def set_proxy_public(self, token: str, provider: str):
+        self.provider = provider
+        self.token = token
+        return self
+
+    @field_validator("provider")
+    def upper_provider(cls, v):
+        if v:
+            return v.upper()
+        return v
+
+
+class PluginConfig(BaseModel):
+    block_list: List[str] = Field([], description="黑名单")
+
+    @classmethod
+    def default(cls):
+        return cls()
+
+    def block(self, plugin_name: str) -> "PluginConfig":
+        if plugin_name not in self.block_list:
+            self.block_list.append(plugin_name)
+        return self
+
+    def unblock(self, plugin_name: str) -> "PluginConfig":
+        if plugin_name in self.block_list:
+            self.block_list.remove(plugin_name)
+        return self
+
+
 class UserConfig(BaseSettings):
     """
     :tip 注意此类和公共环境变量的区别！禁止用户使用 公共变量 请求 私有端点！
     """
-
-    class LlmConfig(BaseModel):
-        """用户配置
-        driver 作为一个单例模式
-        其他 `公共授权` 组件！
-        """
-
-        driver: Optional[Driver] = Field(None, description="私有端点配置")
-        token: Optional[str] = Field(None, description="代理认证系统的token")
-        provider: Optional[str] = Field(None, description="认证平台")
-
-        @property
-        def mode(self):
-            """
-            :return: 返回模式
-            """
-            if self.driver:
-                if self.driver.api_key:
-                    return UserDriverMode.private
-            if self.token and not self.driver:
-                return UserDriverMode.proxy_public
-            return UserDriverMode.public
-
-        @classmethod
-        def default(cls):
-            return cls()
-
-        def set_proxy_public(self, token: str, provider: str):
-            self.provider = provider
-            self.token = token
-            return self
-
-        @field_validator("provider")
-        def upper_provider(cls, v):
-            if v:
-                return v.upper()
-            return v
-
-    class PluginConfig(BaseModel):
-        block_list: List[str] = Field([], description="黑名单")
-
-        @classmethod
-        def default(cls):
-            return cls()
-
-        def block(self, plugin_name: str) -> "UserConfig.PluginConfig":
-            if plugin_name not in self.block_list:
-                self.block_list.append(plugin_name)
-            return self
-
-        def unblock(self, plugin_name: str) -> "UserConfig.PluginConfig":
-            if plugin_name in self.block_list:
-                self.block_list.remove(plugin_name)
-            return self
 
     created_time: int = Field(default=int(time.time()), description="创建时间")
     last_use_time: int = Field(default=int(time.time()), description="最后使用时间")

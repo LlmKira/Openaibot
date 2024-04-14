@@ -5,10 +5,10 @@
 # @Software: PyCharm
 from loguru import logger
 
-from llmkira.extra.user import UserControl, UserConfig
+from llmkira.extra.user import UserControl
 from llmkira.middleware.service_provider.schema import ProviderSettingObj
 from .service_provider import loaded_provider, PublicProvider
-from ..extra.user.schema import UserDriverMode
+from ..extra.user.schema import UserDriverMode, LlmConfig
 
 if not loaded_provider:
     raise Exception("⚠️ No Any Driver Provider Loaded, Even Public Provider")
@@ -25,7 +25,7 @@ class GetAuthDriver(object):
         return cls(uid=UserControl.uid_make(platform=platform, user_id=userid))
 
     def provide_type(self):
-        if not isinstance(self.user, UserConfig.LlmConfig):
+        if not isinstance(self.user, LlmConfig):
             return None
         return self.user.mode
 
@@ -35,9 +35,7 @@ class GetAuthDriver(object):
         :return: Driver
         """
         self.user = await UserControl.get_driver_config(uid=self.uid)
-        assert isinstance(
-            self.user, UserConfig.LlmConfig
-        ), "UserConfig.LlmConfig is empty"
+        assert isinstance(self.user, LlmConfig), "LlmConfig is empty"
         # 配置了自己的私有例
         if self.user.mode == UserDriverMode.private:
             return self.user.driver
