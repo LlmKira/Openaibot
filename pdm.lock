@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:8ef08bc1d045b284301385f49975839084a4a4a36a870b896695a1ddaa1e13c0"
+content_hash = "sha256:b81bdb345d74127597cafc1acfc1f049b3056c4ab7695ecce98e7eef3a3b3dbf"
 
 [[package]]
 name = "aio-pika"
@@ -1379,6 +1379,17 @@ files = [
 ]
 
 [[package]]
+name = "mistletoe"
+version = "1.3.0"
+requires_python = "~=3.5"
+summary = "A fast, extensible Markdown parser in pure Python."
+groups = ["default"]
+files = [
+    {file = "mistletoe-1.3.0-py3-none-any.whl", hash = "sha256:a0710d0cdb7d2458cef91cf6b9b897db442927f8778dae890cbbfb1853a51700"},
+    {file = "mistletoe-1.3.0.tar.gz", hash = "sha256:bd0e788add9b4478d19ec792f6d5fb908a20e70abfe61193f29178c55d3adbe9"},
+]
+
+[[package]]
 name = "motor"
 version = "3.4.0"
 requires_python = ">=3.7"
@@ -2397,6 +2408,22 @@ files = [
     {file = "tarina-0.4.4-cp39-cp39-win_amd64.whl", hash = "sha256:c392456d23594be690a6d1124cb550ae7387694369518c5c5b1aa5354b542ead"},
     {file = "tarina-0.4.4-py3-none-any.whl", hash = "sha256:1c2a10a993119c4a857d721a3b1d6ad0f28193cbcab14b0887abef5940fe0e38"},
     {file = "tarina-0.4.4.tar.gz", hash = "sha256:a72d1f45ebce420199ba2bfb41a1c8269b3cc71fb89f9d5526fd3481b25f8350"},
+]
+
+[[package]]
+name = "telegramify-markdown"
+version = "0.1.2"
+requires_python = ">=3.8"
+summary = "Convert Markdown to a format usable by Telegram."
+groups = ["default"]
+dependencies = [
+    "emoji>=2.10.1",
+    "mistletoe>=1.3.0",
+    "pytelegrambotapi>=4.16.1",
+]
+files = [
+    {file = "telegramify_markdown-0.1.2-py3-none-any.whl", hash = "sha256:0ea42ec0d7f15a42fa674d63c682c4cedf22a844ac9ee592f6ceec41d01e5714"},
+    {file = "telegramify_markdown-0.1.2.tar.gz", hash = "sha256:1305ed2f72892a52d7fc6b9bc67958eb4fd593ee0f5255c29e4bbee55afde373"},
 ]
 
 [[package]]
