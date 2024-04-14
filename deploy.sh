@@ -50,7 +50,7 @@ echo "$(tput setaf 6)Running Docker Compose...$(tput sgr0)"
 if ! [ -x "$(command -v docker-compose)" ]; then
   # Install Docker
   echo "$(tput setaf 6)Installing docker-compose...$(tput sgr0)"
-  curl -L https://github.com/docker/compose/releases/download/v2.14.0/docker-compose-linux-$(uname -m) >/usr/local/bin/docker-compose
+  curl -L "https://github.com/docker/compose/releases/download/v2.14.0/docker-compose-linux-$(uname -m)" >/usr/local/bin/docker-compose
   chmod +x /usr/local/bin/docker-compose
 else
   echo "$(tput setaf 2)docker-compose already installed.$(tput sgr0)"
