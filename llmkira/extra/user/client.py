@@ -40,20 +40,19 @@ class UserConfigClient(Client):
     def __init__(self):
         self.client = self.use_collection("user_config")
 
-    async def update(self, uid: str, data: UserConfig, validate: bool = True) -> UserConfig:
+    async def update(
+        self, uid: str, data: UserConfig, validate: bool = True
+    ) -> UserConfig:
         if validate:
             assert data.uid == uid, "update validate:uid 不一致"
-        data.__dict__.update({
-            "last_use_time": int(time.time()),
-            "uid": uid}
-        )
-        await self.client.collection.create_index(
-            [("uid", 1)], unique=True
-        )
+        data = data.model_copy(update={"last_use_time": int(time.time()), "uid": uid})
+        await self.client.collection.create_index([("uid", 1)], unique=True)
         try:
             await self.client.insert_one(data.model_dump(mode="json"))
         except DuplicateKeyError:
-            await self.client.update_one({"uid": uid}, {"$set": data.model_dump(mode="json")})
+            await self.client.update_one(
+                {"uid": uid}, {"$set": data.model_dump(mode="json")}
+            )
         return data
 
     async def read_by_uid(self, uid: str) -> Optional[UserConfig]:
