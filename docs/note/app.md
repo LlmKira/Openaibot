@@ -299,7 +299,7 @@ provider 不为空时，则启用此模式。
 
 **将用户的token转换为一个 Driver 对象，网络认证**
 
-![ex](SeriveProvider.svg)
+![ex](../SeriveProvider.svg)
 
 ### RAG
 

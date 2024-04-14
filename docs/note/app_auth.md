@@ -14,4 +14,4 @@
 
 ## 服务授权
 
-![exp](SeriveProvider.svg)
+![exp](../SeriveProvider.svg)
