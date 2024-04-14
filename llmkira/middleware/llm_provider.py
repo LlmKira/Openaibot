@@ -5,9 +5,10 @@
 # @Software: PyCharm
 from loguru import logger
 
-from llmkira.extra.user import UserControl, UserConfig, UserDriverMode
+from llmkira.extra.user import UserControl, UserConfig
 from llmkira.middleware.service_provider.schema import ProviderSettingObj
 from .service_provider import loaded_provider, PublicProvider
+from ..extra.user.schema import UserDriverMode
 
 if not loaded_provider:
     raise Exception("⚠️ No Any Driver Provider Loaded, Even Public Provider")
@@ -34,27 +35,33 @@ class GetAuthDriver(object):
         :return: Driver
         """
         self.user = await UserControl.get_driver_config(uid=self.uid)
-        assert isinstance(self.user, UserConfig.LlmConfig), "UserConfig.LlmConfig is empty"
+        assert isinstance(
+            self.user, UserConfig.LlmConfig
+        ), "UserConfig.LlmConfig is empty"
         # 配置了自己的私有例
         if self.user.mode == UserDriverMode.private:
             return self.user.driver
         # Public Provider
         if ProviderSettingObj.is_open_everyone:
             provider = PublicProvider()
-            logger.debug(f"🍦 Public Provider --name ({provider.name}) --mode ({self.user.mode}) --uid ({self.uid})")
+            logger.debug(
+                f"🍦 Public Provider --name ({provider.name}) --mode ({self.user.mode}) --uid ({self.uid})"
+            )
             if await provider.authenticate(
-                    uid=self.uid,
-                    token=self.user.token, status=self.user.mode):
-                return await provider.request_driver(uid=self.uid, token=self.user.token)
+                uid=self.uid, token=self.user.token, status=self.user.mode
+            ):
+                return await provider.request_driver(
+                    uid=self.uid, token=self.user.token
+                )
         else:
             # 用户需要特别配置 Token
             provider = loaded_provider()
             if await provider.authenticate(
-                    uid=self.uid,
-                    token=self.user.token,
-                    status=self.user.mode
+                uid=self.uid, token=self.user.token, status=self.user.mode
             ):
-                return await provider.request_driver(uid=self.uid, token=self.user.token)
+                return await provider.request_driver(
+                    uid=self.uid, token=self.user.token
+                )
         """
         raise ProviderException(
             f"AuthChanged {self.user.provider} >>change>> {loaded_provider.name.upper()}"

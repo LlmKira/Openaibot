@@ -14,9 +14,9 @@ from ..extra.user import UserCost, CostControl
 from ..extra.user.schema import Cost
 from ..schema import RawMessage, Scraper
 from ..sdk.adapter import SCHEMA_GROUP, SingleModel
-from ..sdk.endpoint import Driver
 from ..sdk.endpoint.openai import Message, Openai, OpenaiResult
 from ..sdk.endpoint.schema import LlmRequest, LlmResult
+from ..sdk.endpoint.tee import Driver
 from ..sdk.memory.redis import RedisChatMessageHistory
 from ..sdk.schema import ToolCallCompletion, SystemMessage, Function, Tool
 from ..sdk.utils import sync

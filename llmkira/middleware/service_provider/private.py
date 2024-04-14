@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from config import provider_settings
 from . import resign_provider
 from .schema import BaseProvider, ProviderException
-from ...sdk.endpoint import Driver
+from ...sdk.endpoint.tee import Driver
 
 WHITE_LIST = []
 if provider_settings.get("private", default=None) is not None:
@@ -40,13 +40,13 @@ class PrivateProvider(BaseProvider):
         if not Driver.from_public_env().available:
             raise ProviderException(
                 "\nYou are using a public and free instance.\nThe current instance key is not configured.",
-                provider=self.name
+                provider=self.name,
             )
         raise ProviderException(
             "This is a private instance."
             "\nPlease contact the administrator to apply for a private instance."
             f"\n You id is {uid}",
-            provider=self.name
+            provider=self.name,
         )
 
     async def request_driver(self, uid, token) -> Driver:

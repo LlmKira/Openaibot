@@ -7,8 +7,9 @@ from abc import ABC, abstractmethod
 
 from pydantic import field_validator, Field
 
-from llmkira.sdk.endpoint import Driver
 from pydantic_settings import BaseSettings
+
+from llmkira.sdk.endpoint.tee import Driver
 
 
 class ProviderSetting(BaseSettings):
@@ -27,7 +28,6 @@ ProviderSettingObj = ProviderSetting()
 
 
 class ProviderException(Exception):
-
     def __init__(self, message: str, provider: str = None):
         self.message = message
         self.provider = provider
@@ -57,7 +57,9 @@ class BaseProvider(ABC):
         """
         必须提供认证文档
         """
-        raise ProviderException("Base Provider auth your token,refer docs", provider=self.name)
+        raise ProviderException(
+            "Base Provider auth your token,refer docs", provider=self.name
+        )
 
     @abstractmethod
     async def request_driver(self, uid, token) -> Driver:
