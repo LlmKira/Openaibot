@@ -17,12 +17,6 @@ Copyright (C) 2023  sudoskys
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ```
 
-## GPL2 License
-
-The GPL2 license applies to the denpendencies of this project:
-
-- pyTelegramBotAPI
-
 ## MIT License
 
 The MIT license applies to the files in:
