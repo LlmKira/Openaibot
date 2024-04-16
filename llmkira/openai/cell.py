@@ -181,6 +181,12 @@ class AssistantMessage(Message):
             raise ValueError("content and tool_calls cannot be both None")
         return self
 
+    @field_validator("content")
+    def check_content(cls, v):
+        if v is None:
+            return ""
+        return v
+
 
 class ToolMessage(Message):
     role: Literal["tool"] = "tool"

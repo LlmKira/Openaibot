@@ -62,7 +62,7 @@ class OpenAIResult(BaseModel):
         content_filter if content was omitted due to a flag from our content filters, tool_calls if the model called
         a tool, or function_call (deprecated) if the model called a function.
         """
-        delta: dict = None
+        delta: Optional[dict] = None
         model_config = ConfigDict(arbitrary_types_allowed=True, extra="allow")
 
         @property

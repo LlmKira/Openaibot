@@ -271,7 +271,8 @@ class Sign(BaseModel):
         :param disable_tool_action: If the robot is allowed to call tools again
         :return: Sign
         """
-        assert isinstance(tool_response, list), "callback must be list"
+        if tool_response is not None:
+            assert isinstance(tool_response, list), "callback must be list"
         return self.child(plugin_name).update_state(
             router=Router.DELIVER,
             memory_able=memory_able,
@@ -332,7 +333,7 @@ class Sign(BaseModel):
         获取当前待处理的函数
         """
         if not self.tool_calls_pending:
-            logger.trace("tool_calls is empty")
+            logger.debug("tool_calls is empty")
             return None
         if tool_calls_pending_now in self.certify_needed_map:
             return self.certify_needed_map[tool_calls_pending_now]
@@ -443,25 +444,25 @@ class TaskHeader(BaseModel):
     @classmethod
     def from_function(
         cls,
-        llm_result: OpenAIResult,
-        task_meta: Sign,
+        llm_response: OpenAIResult,
+        task_sign: Sign,
         receiver: Location,
         message: List[EventMessage] = None,
     ):
         """
         从 Openai LLM Task中构建任务
         """
-        # task_meta = task_meta.child("function") 发送到 function 的消息不需加点，因为此时 接收器算发送者
-        task_meta.llm_result = llm_result
+        # task_sign = task_sign.child("function") 发送到 function 的消息不需加点，因为此时 接收器算发送者
+        task_sign.llm_response = llm_response
         return cls(
-            task_meta=task_meta, sender=receiver, receiver=receiver, message=message
+            task_sign=task_sign, sender=receiver, receiver=receiver, message=message
         )
 
     @classmethod
     def from_discord_hikari(
         cls,
         message: hikari.Message,
-        task_meta: Sign,
+        task_sign: Sign,
         file: List[File] = None,
         reply: bool = True,
         hide_file_info: bool = False,
@@ -525,7 +526,7 @@ class TaskHeader(BaseModel):
         message_list = [item for item in message_list if item]
 
         return cls(
-            task_meta=task_meta,
+            task_sign=task_sign,
             sender=cls.Location(
                 platform="discord_hikari",
                 thread_id=message.channel_id,
@@ -549,7 +550,7 @@ class TaskHeader(BaseModel):
         message: khl.Message,
         deliver_back_message: List[khl.Message],
         trace_back_message: List[khl.Message],
-        task_meta: Sign,
+        task_sign: Sign,
         hide_file_info: bool = False,
         file: List[File] = None,
         reply: bool = True,
@@ -615,7 +616,7 @@ class TaskHeader(BaseModel):
         message_list = [item for item in message_list if item]
 
         return cls(
-            task_meta=task_meta,
+            task_sign=task_sign,
             sender=cls.Location(
                 platform="kook",
                 thread_id=message.ctx.channel.id,
@@ -642,7 +643,7 @@ class TaskHeader(BaseModel):
         cls,
         message: "SlackMessageEvent",
         deliver_back_message,
-        task_meta: Sign,
+        task_sign: Sign,
         hide_file_info: bool = False,
         file: List[File] = None,
         reply: bool = True,
@@ -698,7 +699,7 @@ class TaskHeader(BaseModel):
         message_list = [item for item in message_list if item]
 
         return cls(
-            task_meta=task_meta,
+            task_sign=task_sign,
             sender=cls.Location(
                 platform="slack",
                 thread_id=message.channel,

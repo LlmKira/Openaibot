@@ -71,13 +71,15 @@ class Task(object):
                     message, routing_key=self.queue_name, timeout=10
                 )
             except DeliveryError as e:
-                logger.error(f"[502231]Task Delivery failed with exception: {e.reason}")
+                logger.error(
+                    f"[502231] Task Delivery failed with exception: {e.reason}"
+                )
                 return (
                     False,
                     "🔭 Sorry,failure to reach the control centre, possibly i reach design limit 🧯",
                 )
             except TimeoutError:
-                logger.error("[528532]Task Delivery timeout")
+                logger.error("[528532] Task Delivery timeout")
                 return False, "🔭 Sorry, failure to reach the control centre, ⏱ timeout"
             else:
                 if not isinstance(confirmation, Basic.Ack):
@@ -87,7 +89,7 @@ class Task(object):
                         "🔭 Sorry, failure to reach the control centre, sender error",
                     )
                 else:
-                    logger.info("[621132]Task sent success")
+                    logger.info("[621132] Task sent success")
                     return True, "Task sent success"
 
     async def consuming_task(self, func: callable):

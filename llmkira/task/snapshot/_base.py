@@ -1,15 +1,13 @@
 from abc import abstractmethod
 from typing import Optional, List
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from llmkira.task.schema import Snapshot
+from llmkira.task.schema import Snapshot
 
 
 class SnapData(BaseModel):
-    data: List["Snapshot"]
+    data: List[Snapshot]
 
 
 class BaseSnapshotStorage(object):
