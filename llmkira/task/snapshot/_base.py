@@ -1,0 +1,22 @@
+from abc import abstractmethod
+from typing import Optional, List
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from llmkira.task.schema import Snapshot
+
+
+class SnapData(BaseModel):
+    data: List["Snapshot"]
+
+
+class BaseSnapshotStorage(object):
+    @abstractmethod
+    async def read(self, user_id: str) -> Optional["SnapData"]:
+        ...
+
+    @abstractmethod
+    async def write(self, user_id: str, snapshot: "SnapData"):
+        ...
