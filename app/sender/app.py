@@ -7,6 +7,8 @@
 from dotenv import load_dotenv
 from loguru import logger
 
+from llmkira import load_from_entrypoint, get_entrypoint_plugins
+
 load_dotenv()
 __area__ = "sender"
 
@@ -15,7 +17,6 @@ def run():
     import asyncio
 
     from llmkira import load_plugins
-    from llmkira.sdk import load_from_entrypoint, get_entrypoint_plugins
     from app.setting import PlatformSetting
 
     start_setting = PlatformSetting.from_subdir()

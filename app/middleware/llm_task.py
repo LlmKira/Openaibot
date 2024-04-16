@@ -2,12 +2,13 @@
 # @Time    : 2023/8/18 上午9:37
 # @Author  : sudoskys
 # @File    : llm_task.py
-import os
 from typing import List, Optional
 
 from loguru import logger
 from pydantic import SecretStr
 
+from app.components.credential import Credential
+from app.components.user_manager import record_cost
 from llmkira.kv_manager.instruction import InstructionManager
 from llmkira.memory import global_message_runtime
 from llmkira.openai.cell import Tool, Message, active_cell_string, SystemMessage
@@ -48,14 +49,13 @@ class OpenaiMiddleware(object):
         self.message_history = global_message_runtime.update_session(
             session_id=session_uid
         )
-        # TODO:实现用户配置读取
 
     async def remember(self, *, message: Optional[Message] = None):
         """
         写回消息到历史消息
         """
         if message:
-            await self.message_history.append(message=message)
+            await self.message_history.append(messages=[message])
 
     async def build_message(self, remember=True):
         """
@@ -87,18 +87,20 @@ class OpenaiMiddleware(object):
             user_message = message.format_user_message()
             message_run.append(user_message)
             if remember:
-                await self.message_history.append(message=user_message)
+                await self.message_history.append(messages=[user_message])
         return message_run
 
     async def request_openai(
         self,
         remember: bool,
+        credential: Credential,
         disable_tool: bool = False,
     ) -> OpenAIResult:
         """
         处理消息转换和调用工具
         :param remember: 是否自动写回
         :param disable_tool: 禁用函数
+        :param credential: 凭证
         :return: OpenaiResult 返回结果
         :raise RuntimeError: 无法处理消息
         :raise AssertionError: 无法处理消息
@@ -113,7 +115,6 @@ class OpenaiMiddleware(object):
             messages.append(SystemMessage(content=self.task.task_sign.instruction))
         messages.extend(await self.build_message(remember=remember))
         # TODO:实现消息时序切片
-
         # 日志
         logger.info(
             f"[x] Openai request" f"\n--message {messages} " f"\n--tools {tools}"
@@ -125,21 +126,22 @@ class OpenaiMiddleware(object):
         # 根据模型选择不同的驱动a
         assert messages, RuntimeError("llm_task:message cant be none...")
         endpoint: OpenAI = OpenAI(
-            messages=messages,
-            tools=tools,
-            model="gpt-3.5-turbo",  # FIXME:从用户配置中获取
+            messages=messages, tools=tools, model=credential.api_model
         )
         # 调用Openai
         result: OpenAIResult = await endpoint.request(
             session=OpenAICredential(
-                api_key=SecretStr(
-                    os.getenv("OPENAI_API_KEY", None)
-                ),  # FIXME:从用户配置中获取
-                base_url=os.getenv("OPENAI_API_ENDPOINT"),  # FIXME:从用户配置中获取
+                api_key=SecretStr(credential.api_key), base_url=credential.api_endpoint
             )
         )
         _message = result.default_message
         _usage = result.usage.total_tokens
+        await record_cost(
+            cost_model=credential.api_model,
+            cost_token=_usage,
+            endpoint=credential.api_endpoint,
+            user_id=self.session_uid,
+        )
         # 写回数据库
         await self.remember(message=_message)
         return result

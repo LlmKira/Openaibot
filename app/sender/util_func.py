@@ -3,13 +3,25 @@
 # @Author  : sudoskys
 # @File    : util_func.py
 # @Software: PyCharm
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 from urllib.parse import urlparse
 
 from loguru import logger
 
-from llmkira.middleware.chain_box import Chain, AuthReloader
+from app.components.credential import Credential
+from app.components.user_manager import USER_MANAGER
 from llmkira.task import Task
+from llmkira.task.snapshot import SnapData, global_snapshot_storage
+
+
+def uid_make(platform: str, user_id: Union[int, str]):
+    return f"{platform}:{user_id}"
+
+
+async def login(uid, credential: Credential):
+    user = await USER_MANAGER.read(user_id=uid)
+    user.credential = credential
+    await USER_MANAGER.save(user_model=user)
 
 
 def parse_command(command: str) -> Tuple[Optional[str], Optional[str]]:
@@ -74,7 +86,7 @@ def is_empty_command(text: str) -> bool:
     return False
 
 
-async def auth_reloader(uuid: str, platform: str, user_id: str) -> None:
+async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -> None:
     """
     :param uuid: verify id
     :param platform: message channel
@@ -82,13 +94,18 @@ async def auth_reloader(uuid: str, platform: str, user_id: str) -> None:
     :raise LookupError Not Found
     :return None
     """
-    assert isinstance(uuid, str), "`uuid` Must Be Str"
+    assert isinstance(snapshot_credential, str), "`uuid` Must Be Str"
     assert isinstance(platform, str), "`platform` Must Be Str"
     assert isinstance(user_id, str), "`user_id` Must Be Str"
-    chain: Chain = await AuthReloader.from_form(
-        platform=platform, user_id=user_id
-    ).read_auth(uuid=uuid)
-    if not chain:
+    snap_shot: SnapData = await global_snapshot_storage.read(
+        user_id=uid_make(platform, user_id)
+    )
+    if not snap_shot.data:
         raise LookupError("Auth Task Not Found")
-    logger.info(f"Auth Task Sent  --task uuid {uuid}  --user {user_id}")
-    await Task(queue=chain.channel).send_task(task=chain.arg)
+    logger.info(f"Snap Auth:{snapshot_credential},by user {user_id}")
+    for snap in snap_shot.data:
+        if snap.snapshot_credential == snapshot_credential:
+            return await Task.create_and_send(
+                queue_name=snap.channel,
+                task=snap.snapshot_data,
+            )

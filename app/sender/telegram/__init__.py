@@ -12,12 +12,15 @@ from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
+from telegramify_markdown import convert
 
 from app.sender.util_func import (
     parse_command,
     is_command,
     is_empty_command,
     auth_reloader,
+    uid_make,
+    login,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -30,13 +33,12 @@ from ..schema import Runner
 
 __sender__ = "telegram"
 __default_disable_tool_action__ = False
+
+from app.components.credential import split_setting_string, Credential, ProviderError
+
 StepCache = StateMemoryStorage()
 
 TelegramTask = Task(queue=__sender__)
-
-
-def uid_make(platform: str, user_id: int):
-    return f"{platform}:{user_id}"
 
 
 class TelegramBotRunner(Runner):
@@ -206,8 +208,53 @@ class TelegramBotRunner(Runner):
 
         @bot.message_handler(commands="login", chat_types=["private"])
         async def listen_login_command(message: types.Message):
-            logger.debug(f"Debug:login command {message}")
-            pass
+            logger.debug("Debug:login command")
+            _cmd, _arg = parse_command(command=message.text)
+            settings = split_setting_string(_arg)
+            if not settings:
+                return await bot.reply_to(
+                    message,
+                    text=convert(
+                        "🔑 **Incorrect format.**\n"
+                        "You can set it via `https://api.com/v1$key$model` format, "
+                        "or you can log in via URL using `token$https://provider.com`."
+                    ),
+                )
+            if len(settings) == 2:
+                try:
+                    credential = Credential.from_provider(
+                        token=settings[0], provider_url=settings[1]
+                    )
+                except ProviderError as e:
+                    return await bot.reply_to(
+                        message, text=f"Login failed, website return {e}"
+                    )
+                except Exception as e:
+                    logger.error(f"Login failed {e}")
+                    return await bot.reply_to(
+                        message, text=f"Login failed, because {type(e)}"
+                    )
+                else:
+                    await login(
+                        uid=uid_make(__sender__, message.from_user.id),
+                        credential=credential,
+                    )
+                    return await bot.reply_to(
+                        message, text="Login success as provider! Welcome master!"
+                    )
+            elif len(settings) == 3:
+                credential = Credential(
+                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
+                )
+                await login(
+                    uid=uid_make(__sender__, message.from_user.id),
+                    credential=credential,
+                )
+                return await bot.reply_to(
+                    message, text=f"Login success as {settings[2]}! Welcome master! "
+                )
+            else:
+                return logger.trace(f"Login failed {settings}")
 
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):
@@ -267,25 +314,14 @@ class TelegramBotRunner(Runner):
         async def listen_tool_command(message: types.Message):
             _tool = ToolRegister().get_plugins_meta
             _paper = [
-                [tool_item.name, tool_item.get_function_string, tool_item.usage]
+                f"# {tool_item.name}\n{tool_item.get_function_string}\n```{tool_item.usage}```"
                 for tool_item in _tool
             ]
-            arg = [
-                formatting.mbold(item[0])
-                + "\n"
-                + formatting.mcode(item[1])
-                + "\n"
-                + formatting.mitalic(item[2])
-                + "\n"
-                for item in _paper
-            ]
-            reply_message_text = formatting.format_text(
-                formatting.mbold("🔧 Tool List"), *arg, separator="\n"
-            )
+            reply_message_text = "\n".join(_paper)
             if len(reply_message_text) > 4096:
                 reply_message_text = reply_message_text[:4096]
             return await bot.reply_to(
-                message, text=reply_message_text, parse_mode="MarkdownV2"
+                message, text=convert(reply_message_text), parse_mode="MarkdownV2"
             )
 
         @bot.message_handler(
@@ -297,16 +333,18 @@ class TelegramBotRunner(Runner):
                 return None
             try:
                 await auth_reloader(
-                    uuid=_arg, user_id=f"{message.from_user.id}", platform=__sender__
+                    snapshot_credential=_arg,
+                    user_id=f"{message.from_user.id}",
+                    platform=__sender__,
                 )
             except Exception as e:
                 auth_result = (
                     "❌ Auth failed,You dont have permission or the task do not exist"
                 )
-                logger.error(f"[270563]auth_reloader failed {e}")
+                logger.info(f"Auth failed {e}")
             else:
-                auth_result = "🪄 Auth Pass"
-            return await bot.reply_to(message, text=auth_result)
+                auth_result = "🪄 Snapshot released"
+            return await bot.reply_to(message, text=convert(auth_result))
 
         @bot.message_handler(
             content_types=["text", "photo", "document"], chat_types=["private"]
@@ -376,7 +414,7 @@ class TelegramBotRunner(Runner):
                 at_bot_username=BotSetting.bot_username,
             ):
                 if is_empty_command(text=message.text):
-                    return await bot.reply_to(message, text="?")
+                    return await bot.reply_to(message, text="Say something?")
                 return await create_task(
                     message, disable_tool_action=__default_disable_tool_action__
                 )
@@ -386,7 +424,7 @@ class TelegramBotRunner(Runner):
                 at_bot_username=BotSetting.bot_username,
             ):
                 if is_empty_command(text=message.text):
-                    return await bot.reply_to(message, text="?")
+                    return await bot.reply_to(message, text="Say something?")
                 return await create_task(message, disable_tool_action=False)
             if is_command(
                 text=message.text,
@@ -394,7 +432,7 @@ class TelegramBotRunner(Runner):
                 at_bot_username=BotSetting.bot_username,
             ):
                 if is_empty_command(text=message.text):
-                    return await bot.reply_to(message, text="?")
+                    return await bot.reply_to(message, text="Say something?")
                 return await create_task(message, disable_tool_action=True)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(
                 f" @{BotSetting.bot_username}"

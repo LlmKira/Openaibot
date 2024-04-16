@@ -18,8 +18,10 @@ from deprecated import deprecated
 from loguru import logger
 from telebot import formatting
 
+from app.components.credential import Credential
+from app.components.user_manager import USER_MANAGER
+from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.kv_manager.env import EnvManager
-from llmkira.middleware.llm_task import OpenaiMiddleware
 from llmkira.openai import OpenaiError
 from llmkira.openai.cell import ToolCall, Message, Tool
 from llmkira.openai.request import OpenAIResult
@@ -29,6 +31,11 @@ from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Location, EventMessage, Router
 from llmkira.task.snapshot import global_snapshot_storage
+
+
+async def read_user_credential(user_id: str) -> Optional[Credential]:
+    user = await USER_MANAGER.read(user_id=user_id)
+    return user.credential
 
 
 async def generate_authorization(
@@ -147,7 +154,7 @@ class BaseSender(object, metaclass=ABCMeta):
 
     @abstractmethod
     async def reply(
-        self, receiver: Location, message: Message, reply_to_message: bool = True
+        self, receiver: Location, messages: List[Message], reply_to_message: bool = True
     ):
         """
         模型直转发，Message是Openai的类型
@@ -232,20 +239,27 @@ class BaseReceiver(object):
         """
         try:
             try:
+                credentials = await read_user_credential(user_id=task.receiver.uid)
+                assert credentials, "You need to /login first"
                 llm_result = await llm.request_openai(
                     remember=remember,
                     disable_tool=disable_tool,
+                    credential=credentials,
                 )
                 assistant_message = llm_result.default_message
                 logger.debug(f"Assistant:{assistant_message}")
             except OpenaiError as exc:
                 await self.sender.error(receiver=task.receiver, text=exc.message)
                 return exc
-            except (RuntimeError, AssertionError) as exc:
+            except RuntimeError as exc:
+                logger.exception(exc)
                 await self.sender.error(
                     receiver=task.receiver,
                     text="Can't get message validate from your history",
                 )
+                return exc
+            except AssertionError as exc:
+                await self.sender.error(receiver=task.receiver, text=str(exc))
                 return exc
             except Exception as exc:
                 logger.exception(exc)
@@ -269,7 +283,7 @@ class BaseReceiver(object):
                     )
                     return logger.debug("Function loop ended")
             return await self.sender.reply(
-                receiver=task.receiver, message=assistant_message
+                receiver=task.receiver, messages=[assistant_message]
             )
         except Exception as e:
             raise e
@@ -364,30 +378,31 @@ class BaseReceiver(object):
                 snap_data = await global_snapshot_storage.read(
                     user_id=task_head.receiver.uid
                 )
-                data = snap_data.data
-                renew_snap_data = []
-                for task in data:
-                    if not task.snapshot_credential and not task.processed:
-                        try:
-                            await Task.create_and_send(
-                                queue_name=task.channel, task=task.snapshot_data
-                            )
-                        except Exception as e:
-                            logger.exception(f"Response to snapshot error {e}")
+                if snap_data is not None:
+                    data = snap_data.data
+                    renew_snap_data = []
+                    for task in data:
+                        if not task.snapshot_credential and not task.processed:
+                            try:
+                                await Task.create_and_send(
+                                    queue_name=task.channel, task=task.snapshot_data
+                                )
+                            except Exception as e:
+                                logger.exception(f"Response to snapshot error {e}")
+                            else:
+                                logger.info(
+                                    f"🧀 Response to snapshot {task.snap_uuid} at {router}"
+                                )
+                            finally:
+                                task.processed_at = int(time.time())
+                                renew_snap_data.append(task)
                         else:
-                            logger.info(
-                                f"🧀 Response to snapshot {task.snap_uuid} at {router}"
-                            )
-                        finally:
-                            task.processed_at = int(time.time())
+                            task.processed_at = None
                             renew_snap_data.append(task)
-                    else:
-                        task.processed_at = None
-                        renew_snap_data.append(task)
-                snap_data.data = renew_snap_data
-                await global_snapshot_storage.write(
-                    user_id=task_head.receiver.uid, snapshot=snap_data
-                )
+                    snap_data.data = renew_snap_data
+                    await global_snapshot_storage.write(
+                        user_id=task_head.receiver.uid, snapshot=snap_data
+                    )
         except Exception as e:
             logger.exception(e)
             await message.reject(requeue=False)

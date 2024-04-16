@@ -14,7 +14,7 @@ from app.receiver import function
 from app.receiver.receiver_client import BaseReceiver, BaseSender
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.file import File
-from llmkira.middleware.llm_task import OpenaiMiddleware
+from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.openai.cell import Message
 from llmkira.openai.request import OpenAIResult
 from llmkira.task import Task, TaskHeader
