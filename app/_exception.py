@@ -1,0 +1,2 @@
+class ChainBuildException(Exception):
+    pass
