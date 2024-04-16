@@ -146,7 +146,7 @@ class Sign(BaseModel):
     )
     """认证地图，需要快照"""
 
-    llm_response: OpenAIResult = Field(None, description="OpenAI Response")
+    llm_response: Optional[OpenAIResult] = Field(None, description="OpenAI Response")
     """原生响应"""
 
     model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=False)
