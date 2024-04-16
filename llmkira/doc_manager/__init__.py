@@ -40,8 +40,6 @@ class MontyDatabaseClient(DatabaseClient):
     def __init__(self, db_name=None, collection_name=None):
         local_repo = ".montydb"
         self.client = MontyClient(local_repo)
-        self.db = None
-        self.collection = None
         self.update_db_collection(db_name, collection_name)
 
     def update_db_collection(self, db_name, collection_name):
@@ -72,8 +70,6 @@ class MontyDatabaseClient(DatabaseClient):
 class MongoDbClient(DatabaseClient):
     def __init__(self, uri, db_name=None, collection_name=None):
         self.client = pymongo.MongoClient(uri)
-        self.db = None
-        self.collection = None
         self.update_db_collection(db_name, collection_name)
 
     def update_db_collection(self, db_name, collection_name):

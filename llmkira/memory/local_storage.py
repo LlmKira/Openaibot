@@ -32,18 +32,22 @@ class LocalStorage(BaseMessageStorage):
     def path(self) -> Path:
         return _make_json_file(self.session_id)
 
-    async def append(self, message: List[BaseModel]):
+    async def append(self, messages: List[BaseModel]):
         async with self.lock:
+            if not self.path.exists():
+                self.path.touch()
             async with AIOFile(str(self.path), "a") as afp:
                 writer = Writer(afp)
-                for m in message:
+                for m in messages:
                     _json_line = m.model_dump_json(indent=None)
                     await writer(_json_line + "\n")
-            await afp.fsync()
+                await afp.fsync()
 
     async def read(self, lines: int) -> List[str]:
         async with self.lock:
             result = []
+            if not self.path.exists():
+                return result
             with FileReadBackwards(str(self.path), encoding="utf-8") as frb:
                 for i, line in enumerate(frb):
                     if i >= lines:
@@ -58,9 +62,11 @@ class LocalStorage(BaseMessageStorage):
                 for m in message:
                     _json_line = m.model_dump_json(indent=None)
                     await writer(_json_line + "\n")
-            await afp.fsync()
+                await afp.fsync()
 
     async def clear(self):
         async with self.lock:
+            if not self.path.exists():
+                return
             with open(self.path, "w") as f:
                 f.truncate()

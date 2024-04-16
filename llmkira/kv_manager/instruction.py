@@ -1,6 +1,13 @@
+import time
+
 from llmkira.kv_manager._base import KvManager
 
 DEFAULT_INSTRUCTION = "ACT STEP BY STEP, SPEAK IN MORE CUTE STYLE"
+
+
+def time_now():
+    """人类可读时间"""
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
 
 class InstructionManager(KvManager):
@@ -13,7 +20,7 @@ class InstructionManager(KvManager):
     async def read_instruction(self) -> str:
         result = await self.read_data(self.user_id)
         if not result:
-            return DEFAULT_INSTRUCTION
+            return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
         return result
 
     async def set_instruction(self, instruction: str) -> str:

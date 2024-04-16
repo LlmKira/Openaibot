@@ -29,7 +29,7 @@ class RedisSettings(BaseSettings):
             redis_client = get_client(redis_url=redis_url)
             redis_client.ping()
         except redis.exceptions.ConnectionError as error:
-            logger.error(error)
+            logger.warning(f"Could not connect to Redis: {error}")
             raise ValueError("Could not connect to Redis")
         else:
             logger.debug("Core: Connect to Redis")
