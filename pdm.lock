@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:afdd387fbf4142e7effc846ca1e78790c2cb8bac9a606aa47e9ffcaa9dfb57f5"
+content_hash = "sha256:c425b7765cfad8ef9d05993e7bb48f321af2602ba1033bb6ad08e6181e7fea12"
 
 [[package]]
 name = "aio-pika"
@@ -1501,20 +1501,6 @@ dependencies = [
 files = [
     {file = "montydb-2.5.2-py3-none-any.whl", hash = "sha256:5269528c6a4fa8df1728cc629fd4d9c5deaa22fff96f04bc148bce5b588b2aea"},
     {file = "montydb-2.5.2.tar.gz", hash = "sha256:b9857e3fec14fedaa48f0fd14004b8b4b9486ff0612cf055f778bfb50a03d774"},
-]
-
-[[package]]
-name = "motor"
-version = "3.4.0"
-requires_python = ">=3.7"
-summary = "Non-blocking MongoDB driver for Tornado or asyncio"
-groups = ["default"]
-dependencies = [
-    "pymongo<5,>=4.5",
-]
-files = [
-    {file = "motor-3.4.0-py3-none-any.whl", hash = "sha256:4b1e1a0cc5116ff73be2c080a72da078f2bb719b53bc7a6bb9e9a2f7dcd421ed"},
-    {file = "motor-3.4.0.tar.gz", hash = "sha256:c89b4e4eb2e711345e91c7c9b122cb68cce0e5e869ed0387dd0acb10775e3131"},
 ]
 
 [[package]]
