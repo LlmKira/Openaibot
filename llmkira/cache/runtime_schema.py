@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 下午9:43
-# @Author  : sudoskys
-# @File    : base.py
-# @Software: PyCharm
 from abc import abstractmethod, ABC
 from typing import Any
 
-PREFIX = 'base_bot:'
+PREFIX = "oai_bot:"
 
 
 def singleton(cls):
@@ -25,9 +22,21 @@ class BaseRuntime(ABC):
     client = None
     dsn = None
 
+    @staticmethod
+    def check_client_dsn(dsn):
+        raise NotImplementedError
+
+    def check_client(self) -> bool:
+        raise NotImplementedError
+
+    def init_client(self, verbose=False):
+        raise NotImplementedError
+
+    def get_client(self) -> "AbstractDataClass":
+        raise NotImplementedError
+
 
 class AbstractDataClass(ABC):
-
     @abstractmethod
     async def ping(self):
         return True
@@ -37,7 +46,7 @@ class AbstractDataClass(ABC):
         pass
 
     @abstractmethod
-    async def set_data(self, key: str, value: Any, **kwargs) -> Any:
+    async def set_data(self, key: str, value: Any, timeout: int = None) -> Any:
         pass
 
     @abstractmethod
