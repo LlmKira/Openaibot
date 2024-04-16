@@ -11,31 +11,28 @@ from aiormq import DeliveryError
 from loguru import logger
 from pamqp.commands import Basic
 
+from app.setting.database import RabbitMQSetting
 from .schema import TaskHeader
 
 EXPIRATION_SECOND = 60 * 5  # 5min
 QUEUE_MAX_LENGTH = 120
 X_OVERFLOW = "reject-publish"  # 拒绝
-CONSUMER_PREFETCH_COUNT = 12  # 消息流控
+CONSUMER_PREFETCH_COUNT = 20  # 消息流控
 QUEUE_ARGUMENTS = {
     "x-max-length": QUEUE_MAX_LENGTH,  # 上限
     # "message-ttl": EXPIRATION_SECOND * 1000,
-    "x-overflow": X_OVERFLOW  # 拒绝
+    "x-overflow": X_OVERFLOW,  # 拒绝
 }
 
 
 class Task(object):
-    def __init__(self, *,
-                 queue: str,
-                 amqp_dsn: str = None
-                 ):
+    def __init__(self, *, queue: str, amqp_dsn: str = None):
         """
-        :param queue: 队列名字
-        :param amqp_dsn: 队列数据库
+        :param queue: The name of the queue started by the task
+        :param amqp_dsn: Address of the RabbitMQ server
         """
         self.queue_name = queue
         if amqp_dsn is None:
-            from ..setting.rabbitmq import RabbitMQSetting
             amqp_dsn = RabbitMQSetting.amqp_dsn
         self._amqp_url = amqp_dsn
 
@@ -51,14 +48,14 @@ class Task(object):
             message = Message(
                 body=task.model_dump_json().encode("utf-8"),
                 delivery_mode=DeliveryMode.PERSISTENT,
-                expiration=EXPIRATION_SECOND
+                expiration=EXPIRATION_SECOND,
             )
             # Declaring queue
             try:
                 await channel.declare_queue(
                     self.queue_name,
                     arguments=QUEUE_ARGUMENTS,
-                    durable=True  # 持续化
+                    durable=True,  # 持续化
                 )
             except Exception as e:
                 logger.error(
@@ -71,20 +68,24 @@ class Task(object):
             # Sending the message
             try:
                 confirmation = await channel.default_exchange.publish(
-                    message,
-                    routing_key=self.queue_name,
-                    timeout=10
+                    message, routing_key=self.queue_name, timeout=10
                 )
             except DeliveryError as e:
                 logger.error(f"[502231]Task Delivery failed with exception: {e.reason}")
-                return False, "🔭 Sorry,failure to reach the control centre, possibly i reach design limit 🧯"
+                return (
+                    False,
+                    "🔭 Sorry,failure to reach the control centre, possibly i reach design limit 🧯",
+                )
             except TimeoutError:
-                logger.error(f"[528532]Task Delivery timeout")
+                logger.error("[528532]Task Delivery timeout")
                 return False, "🔭 Sorry, failure to reach the control centre, ⏱ timeout"
             else:
                 if not isinstance(confirmation, Basic.Ack):
-                    logger.error(f"[552123]Task Delivery failed with confirmation")
-                    return False, "🔭 Sorry, failure to reach the control centre, sender error"
+                    logger.error("[552123]Task Delivery failed with confirmation")
+                    return (
+                        False,
+                        "🔭 Sorry, failure to reach the control centre, sender error",
+                    )
                 else:
                     logger.info("[621132]Task sent success")
                     return True, "Task sent success"
@@ -103,7 +104,7 @@ class Task(object):
                 queue = await channel.declare_queue(
                     self.queue_name,
                     arguments=QUEUE_ARGUMENTS,
-                    durable=True  # 持续化
+                    durable=True,  # 持续化
                 )
             except Exception as e:
                 logger.error(
@@ -117,11 +118,7 @@ class Task(object):
             await asyncio.Future()  # run forever
 
     @classmethod
-    async def create_and_send(cls,
-                              *,
-                              queue_name: str,
-                              task: TaskHeader
-                              ):
+    async def create_and_send(cls, *, queue_name: str, task: TaskHeader):
         sender = cls(queue=queue_name)
         await sender.send_task(task=task)
         return sender

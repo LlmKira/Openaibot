@@ -4,554 +4,476 @@
 # @File    : schema.py
 # @Software: PyCharm
 import time
-from typing import TYPE_CHECKING, Dict, Any
+from enum import Enum
+from typing import TYPE_CHECKING, Dict
 from typing import Tuple, List, Union, Optional
 
 import hikari
 import khl
-import orjson
 import shortuuid
 from loguru import logger
 from pydantic import model_validator, ConfigDict, Field, BaseModel
-from telebot import types
 
-from llmkira.schema import RawMessage
-from llmkira.sdk.endpoint.schema import LlmResult
-from llmkira.sdk.schema import File, Function, ToolMessage, FunctionMessage, TaskBatch
+from llmkira.kv_manager.file import File
+from llmkira.openai.cell import UserMessage, ToolMessage, ToolCall, Message
+from llmkira.openai.request import OpenAIResult
 
 if TYPE_CHECKING:
-    from llmkira.sender.slack.schema import SlackMessageEvent
+    from app.sender.slack.schema import SlackMessageEvent
 
 
-def orjson_dumps(v, *, default):
-    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
-    return orjson.dumps(v, default=default).decode()
+class EventMessage(BaseModel):
+    """
+    Event Message for mq database
+    """
+
+    user_id: Union[str] = Field(None, description="User id")
+    chat_id: Union[str] = Field(None, description="Chat id")
+    thread_id: Optional[Union[str]] = Field(
+        None, description="Channel ID(slack thread)"
+    )
+    text: str = Field("", description="Text of message")
+    files: List[File] = Field([], description="File(ID*) of message")
+    created_at: str = Field(
+        default_factory=lambda: str(int(time.time())), description="Create time"
+    )
+
+    model_config = ConfigDict(arbitrary_types_allowed=False, extra="allow")
+
+    # only_send_file: bool = Field(default=False, description="Send file only")
+    # sign_loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
+    # sign_fold_docs: bool = Field(default=False, description="是否获取元数据")
+
+    def format_user_message(self, name: str = None) -> UserMessage:
+        """Format message to UserMessage"""
+        return UserMessage(
+            role="user",
+            name=name,
+            content=self.text,
+        )
+
+    @classmethod
+    def from_openai_message(
+        cls, message: Message, locate: "Location"
+    ) -> "EventMessage":
+        """
+        用于 OpenAI 消息转换回复给用户
+        """
+        return cls(
+            user_id=locate.user_id,
+            text=message.content,
+            chat_id=locate.chat_id,
+            created_at=str(int(time.time())),
+        )
+
+
+class ToolResponse(BaseModel):
+    """
+    Tool Callback for plugin tool
+    # TODO:携带自身工具，供我们重组上下文工具时mock使用。
+    """
+
+    name: str = Field(description="功能名称", pattern=r"^[a-zA-Z0-9_]+$")
+    function_response: str = Field("[empty response]", description="工具响应内容")
+    tool_call_id: str = Field(description="工具调用ID")
+    tool_call: ToolCall = Field(description="工具调用")
+
+    def format_tool_message(self) -> Union[ToolMessage]:
+        if self.tool_call_id:
+            return ToolMessage(
+                tool_call_id=self.tool_call_id, content=self.function_response
+            )
+        raise ValueError("tool_call_id is empty")
+
+
+class Router(Enum):
+    REPLIES = "replies"  # 回复消息
+    DELIVER = "deliver"  # 只通知，不重组函数和初始化任何东西。
+    REPROCESS = "reprocess"  # 回写消息，释放任务链，要求再次处理
+    ANSWER = "answer"  # 回复消息
+
+
+class Sign(BaseModel):
+    sign_as: Tuple[int, str, str, str] = Field(
+        default=(0, "root", "default", str(shortuuid.uuid()).upper()[:5]),
+        description="签名",
+    )
+    """当前链条的层级"""
+
+    instruction: Optional[str] = Field(None, description="指令")
+    """System Prompt"""
+
+    disable_tool_action: bool = False
+    """Toolcall 是否被禁用"""
+
+    tool_response: List["ToolResponse"] = Field(
+        default=[], description="用于回写，插件返回的消息头，标识 function 的名字"
+    )
+    """工具响应"""
+
+    memory_able: bool = False
+    """是否写回数据库"""
+
+    router: Router = Field(Router.ANSWER, description="路由规则")
+    """路由规则"""
+
+    response_snapshot: bool = Field(False, description="是否响应函数快照")
+    """接收器是否响应函数快照"""
+
+    # resign_next_step: bool = Field(False, description="函数集群是否可以继续拉起其他函数集群")
+    tool_calls_counter: int = Field(0, description="函数集群计数器")
+    """函数响应计数"""
+
+    tool_calls_limit: int = Field(5, description="函数集群计数器上限")
+    """函数响应限制"""
+
+    tool_calls_pending: List[ToolCall] = Field([], description="函数快照")
+    """待处理的函数响应"""
+
+    tool_calls_completed: List[Tuple[ToolCall, bool, Union[str, dict]]] = Field(
+        default=[], description="完成的节点状态"
+    )
+    """完成的函数响应"""
+
+    # tool_calls_completed: List[ToolCall] = Field([], description="完成的函数快照")
+    snapshot_credential: Optional[str] = Field(
+        None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行"
+    )
+    """当前待处理的函数"""
+
+    certify_needed_map: Dict[str, ToolCall] = Field(
+        {}, description="Snapshot Map for uuid, toolcall"
+    )
+    """认证地图，需要快照"""
+
+    llm_response: OpenAIResult = Field(None, description="OpenAI Response")
+    """原生响应"""
+
+    model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=False)
+
+    @property
+    def task_uuid(self):
+        return self.sign_as[3]
+
+    @model_validator(mode="after")
+    def validate_param(self):
+        # If it is the root node, it cannot be written back.
+        # Because the message posted by the user is always the root node.
+        # Writing back will cause duplicate messages.
+        if self.sign_as[0] == 0 and self.memory_able:
+            logger.warning("root node cant write back")
+            self.memory_able = False
+        return self
+
+    def child(self, name: str) -> "Sign":
+        """
+        生成子节点，继承父节点的功能
+        """
+        self.sign_as = (self.sign_as[0] + 1, "child", name, self.sign_as[3])
+        return self.model_copy(deep=True)
+
+    def snapshot(self, name, memory_able: bool, response_snapshot: bool) -> "Sign":
+        """
+        快照
+        """
+        self.sign_as = (self.sign_as[0] + 1, "chain", name, self.sign_as[3])
+        self.router = Router.ANSWER
+        self.memory_able = memory_able
+        self.response_snapshot = response_snapshot
+        return self.model_copy(deep=True)
+
+    @classmethod
+    def from_root(
+        cls,
+        response_snapshot: bool,
+        disable_tool_action: bool,
+        platform: str = "default",
+    ) -> "Sign":
+        """
+        构造函数，从根节点生成
+        :param response_snapshot: 是否响应函数快照
+        :param disable_tool_action: 是否禁用工具调用
+        :param platform: 平台
+        """
+        node_uuid = str(shortuuid.uuid()).upper()[:5]
+        return cls(
+            sign_as=(0, "root", platform, node_uuid),
+            response_snapshot=response_snapshot,
+            disable_tool_action=disable_tool_action,
+        )
+
+    def update_tool_calls(
+        self,
+        *,
+        tool_calls: List[ToolCall],
+        certify_needed_map: dict,
+    ) -> "Sign":
+        """
+        更新快照
+        :param tool_calls: 快照
+        :param certify_needed_map: 快照Map
+        :return: Sign
+        :raise ValueError: 快照不能为空
+        """
+        if not certify_needed_map:
+            certify_needed_map = self.certify_needed_map
+        if not tool_calls:
+            raise ValueError("plan_chain_pending can't be empty")
+        copy_model = self.model_copy(deep=True)
+        copy_model.certify_needed_map = certify_needed_map
+        copy_model.tool_calls_pending = tool_calls
+        return copy_model
+
+    def update_state(
+        self,
+        router: Router = None,
+        instruction: str = None,
+        disable_tool_action: bool = None,
+        memory_able: bool = None,
+        response_snapshot: bool = None,
+        tool_calls: List[ToolCall] = None,
+        tool_response: List[ToolResponse] = None,
+    ) -> "Sign":
+        """
+        更新状态，用于统一管理状态
+        """
+        if router:
+            self.router = router
+        if instruction:
+            self.instruction = instruction
+        if disable_tool_action is not None:
+            self.disable_tool_action = disable_tool_action
+        if memory_able is not None:
+            self.memory_able = memory_able
+        if response_snapshot is not None:
+            self.response_snapshot = response_snapshot
+        if tool_calls:
+            self.tool_calls_pending = tool_calls
+        if tool_response:
+            self.tool_response = tool_response
+        return self
+
+    def notify(
+        self,
+        *,
+        plugin_name: str,
+        tool_response: List[ToolResponse] = None,
+        response_snapshot: bool,
+        disable_tool_action: bool = False,
+        memory_able: bool = None,
+    ):
+        """
+        Deliver message, release task chain, reply message
+        :param plugin_name: Plugin name
+        :param tool_response: The response of the tool
+        :param memory_able : Whether to write back to history
+        :param response_snapshot: 是否释放任务链，是否释放任务链，比如插件运行失败，错误消息发送的同时需要释放任务链防止挖坟
+        :param disable_tool_action: If the robot is allowed to call tools again
+        :return: Sign
+        """
+        assert isinstance(tool_response, list), "callback must be list"
+        return self.child(plugin_name).update_state(
+            router=Router.DELIVER,
+            memory_able=memory_able,
+            response_snapshot=response_snapshot,
+            disable_tool_action=disable_tool_action,
+            tool_response=tool_response,
+        )
+
+    def reprocess(
+        self,
+        *,
+        plugin_name: str,
+        tool_response: List[ToolResponse],
+        disable_tool_action: bool = False,
+    ):
+        """
+        Reply message, reprocess message raw format, suitable for json/yaml response
+        :param plugin_name: Plugin name
+        :param tool_response: The response of the tool
+        :param disable_tool_action: If the robot is allowed to call tools again
+        """
+        assert isinstance(tool_response, list), "callback must be list"
+        return self.child(plugin_name).update_state(
+            tool_response=tool_response,
+            router=Router.REPROCESS,
+            memory_able=True,
+            response_snapshot=True,
+            disable_tool_action=disable_tool_action,
+        )
+
+    def reply(
+        self,
+        *,
+        plugin_name: str,
+        tool_response: List[ToolResponse],
+        disable_tool_action: bool = False,
+    ):
+        """
+        决定路由规则
+        回写消息，释放任务链，回复消息
+        :param plugin_name: 插件名称
+        :param tool_response: 元信息
+        :param disable_tool_action: 是否允许机器人用函数再次处理
+        """
+        assert isinstance(tool_response, list), "callback must be list"
+        return self.child(plugin_name).update_state(
+            tool_response=tool_response,
+            router=Router.REPLIES,
+            memory_able=True,
+            response_snapshot=True,
+            disable_tool_action=disable_tool_action,
+        )
+
+    async def get_pending_tool_call(
+        self, tool_calls_pending_now: str, return_default_if_empty: bool = False
+    ) -> Optional[ToolCall]:
+        """
+        获取当前待处理的函数
+        """
+        if not self.tool_calls_pending:
+            logger.trace("tool_calls is empty")
+            return None
+        if tool_calls_pending_now in self.certify_needed_map:
+            return self.certify_needed_map[tool_calls_pending_now]
+        if return_default_if_empty:
+            return self.tool_calls_pending[0]
+        return None
+
+    async def complete_task(
+        self, tool_calls: ToolCall, success_or_not: bool, run_result: Union[str, dict]
+    ) -> "Sign":
+        """
+        完成此集群
+        self.plan_chain_archive.append((task_batch, run_result))
+        if task_batch in self.plan_chain_pending:
+            self.plan_chain_pending.remove(task_batch)
+        if not self.plan_chain_pending:
+            self.plan_chain_complete = True
+        :return: Sign
+        """
+        self.tool_calls_completed.append((tool_calls, success_or_not, run_result))
+        if tool_calls in self.tool_calls_pending:
+            self.tool_calls_pending.remove(tool_calls)
+        return self
+
+    def get_snapshot_credential(self, tool_calls: ToolCall) -> Optional[str]:
+        """
+        从 Map 获取验证UUID
+        """
+        for key, item in self.certify_needed_map.items():
+            if item == tool_calls:
+                return key
+        return None
+
+
+class Location(BaseModel):
+    """
+    Union[str, int]
+    here .... channel
+    """
+
+    platform: str = Field(None, description="platform")
+    user_id: Union[str, int] = Field(None, description="user id")
+    chat_id: Union[str, int] = Field(
+        None, description="guild id(channel in dm)/Telegram chat id"
+    )
+    thread_id: Optional[Union[str, int]] = Field(
+        None, description="channel id/Telegram thread"
+    )
+    message_id: Optional[Union[str, int]] = Field(None, description="message id")
+
+    @model_validator(mode="after")
+    def to_string(self):
+        for key in ["user_id", "chat_id", "thread_id", "message_id"]:
+            if isinstance(getattr(self, key), int):
+                setattr(self, key, str(getattr(self, key)))
+        return self
+
+    @property
+    def uid(self):
+        return f"{self.platform}:{self.user_id}"
+
+
+class Plugin(BaseModel):
+    name: str = Field(None, description="插件名称")
+    is_run_out: bool = Field(False, description="是否运行完毕")
+    token_usage: int = Field(0, description="Token 用量")
 
 
 class TaskHeader(BaseModel):
     """
     任务链节点
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    class Meta(BaseModel):
-        class Callback(BaseModel):
-            function_response: str = Field("empty response", description="工具响应内容")
-            name: str = Field(None, description="功能名称", pattern=r"^[a-zA-Z0-9_]+$")
-            tool_call_id: Optional[str] = Field(None, description="工具调用ID")
-
-            @model_validator(mode="after")
-            def check(self):
-                """
-                检查回写消息
-                """
-                if not self.tool_call_id and not self.name:
-                    raise ValueError("tool_call_id or name must be set")
-                return self
-
-            @classmethod
-            def create(cls,
-                       *,
-                       function_response: str,
-                       name: str,
-                       tool_call_id: Union[str, None] = None
-                       ):
-                return cls(
-                    function_response=function_response,
-                    name=name,
-                    tool_call_id=tool_call_id,
-                )
-
-            def get_tool_message(self) -> Union["ToolMessage"]:
-                if self.tool_call_id:
-                    return ToolMessage(
-                        tool_call_id=self.tool_call_id,
-                        content=self.function_response
-                    )
-                raise ValueError("tool_call_id is empty")
-
-            def get_function_message(self) -> Union["FunctionMessage"]:
-                if self.name:
-                    return FunctionMessage(
-                        name=self.name,
-                        content=self.function_response
-                    )
-                raise ValueError("name is empty")
-
-        """当前链条的层级"""
-        sign_as: Tuple[int, str, str, str] = Field(
-            default=(0, "root", "default", str(shortuuid.uuid()).upper()[:5]),
-            description="签名"
-        )
-
-        """函数并行的信息"""
-        plan_chain_archive: List[Tuple["TaskBatch", Union[Exception, dict, str]]] = Field(
-            default=[],
-            description="完成的节点"
-        )
-        plan_chain_pending: List["TaskBatch"] = Field(default=[], description="待完成的节点")
-        plan_chain_length: int = Field(default=0, description="节点长度")
-        plan_chain_complete: Optional[bool] = Field(False, description="是否完成此集群")
-
-        """功能状态与缓存"""
-        function_enable: bool = Field(False, description="功能开关")
-        function_list: List["Function"] = Field([], description="功能列表")
-        function_salvation_list: List["Function"] = Field([], description="上回合的功能列表，用于容错")
-
-        """携带插件的写回结果"""
-        write_back: bool = Field(False, description="写回消息")
-        callback: List["Callback"] = Field(
-            default=[],
-            description="用于回写，插件返回的消息头，标识 function 的名字"
-        )
-
-        """接收器的路由规则"""
-        callback_forward: bool = Field(False, description="转发消息")
-        callback_forward_reprocess: bool = Field(False, description="转发消息，但是要求再次处理")
-        direct_reply: bool = Field(False, description="直接回复,跳过函数处理等")
-
-        release_chain: bool = Field(False, description="是否响应队列中的函数集群拉起请求")
-        """部署点的生长规则"""
-        resign_next_step: bool = Field(False, description="函数集群是否可以继续拉起其他函数集群")
-        run_step_already: int = Field(0, description="函数集群计数器")
-        run_step_limit: int = Field(4, description="函数集群计数器上限")
-
-        """函数中枢的依赖变量"""
-        verify_uuid: Optional[str] = Field(None, description="认证链的UUID，根据此UUID和 Map 可以确定哪个需要执行")
-        verify_map: Dict[str, "TaskBatch"] = Field({},
-                                                   description="函数节点的认证信息，经携带认证重发后可通过")
-        llm_result: Any = Field(None, description="存储任务的衍生信息源")
-        llm_type: Optional[str] = Field(None, description="存储任务的衍生信息源类型")
-        extra_args: dict = Field({}, description="提供额外参数")
-
-        model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
-
-        @property
-        def task_uuid(self):
-            return self.sign_as[3]
-
-        @model_validator(mode="after")
-        def check(self):
-            if isinstance(self.llm_result, dict):
-                if not self.llm_result.get("model"):
-                    raise TypeError("Invalid llm_result")
-
-            if not any([self.callback_forward, self.callback_forward_reprocess, self.direct_reply]):
-                if self.write_back:
-                    logger.warning("you shouldn*t write back without callback_forward or direct_reply")
-                    self.write_back = False
-            # If it is the root node, it cannot be written back.
-            # Because the message posted by the user is always the root node.
-            # Writing back will cause duplicate messages.
-            # Because the middleware will write the message back
-            if self.sign_as[0] == 0 and self.write_back:
-                logger.warning("root node shouldn*t write back")
-                self.write_back = False
-            return self
-
-        @classmethod
-        def from_root(cls, release_chain, function_enable, platform: str = "default", **kwargs):
-            return cls(
-                sign_as=(0, "root", platform, str(shortuuid.uuid()).upper()[:5]),
-                release_chain=release_chain,
-                function_enable=function_enable,
-                **kwargs
-            )
-
-        def pack_loop(
-                self,
-                *,
-                plan_chain_pending: List[TaskBatch],
-                verify_map: dict,
-        ) -> "TaskHeader.Meta":
-            """
-            打包循环信息
-            :return: Meta
-            """
-            if not verify_map:
-                verify_map = self.verify_map
-            if not plan_chain_pending:
-                raise ValueError("plan_chain_pending can't be empty")
-            _new = self.model_copy(deep=True)
-            _new.plan_chain_pending = plan_chain_pending
-            _new.plan_chain_length = len(plan_chain_pending)
-            _new.verify_map = verify_map
-            return _new
-
-        async def work_pending_task(self,
-                                    verify_uuid: str
-                                    ) -> Optional[TaskBatch]:
-            """
-            获取待完成的节点
-            如果有 uuid 则优先在 map 里面获取对应的节点名称，根据名称查找pending.
-            执行完成后，将节点移动到 archive
-            """
-            if not self.plan_chain_pending:
-                self.plan_chain_complete = True
-                return logger.trace("no pending task")
-            if verify_uuid:
-                _task_batch = self.verify_map.get(verify_uuid, None)
-                if _task_batch:
-                    return _task_batch
-            return self.plan_chain_pending[0]
-
-        async def complete_task(self,
-                                task_batch: TaskBatch,
-                                run_result: Union[Exception, dict, str]
-                                ) -> "TaskHeader.Meta":
-            """
-            完成此集群
-            :return: Meta
-            """
-            self.plan_chain_archive.append((task_batch, run_result))
-            if task_batch in self.plan_chain_pending:
-                self.plan_chain_pending.remove(task_batch)
-            if not self.plan_chain_pending:
-                self.plan_chain_complete = True
-            return self
-
-        def get_verify_uuid(self, task_batch: TaskBatch) -> Optional[str]:
-            """
-            从 Map 获取验证UUID
-            """
-            for key, item in self.verify_map.items():
-                if item == task_batch:
-                    return key
-            return None
-
-        def is_complete(self,
-                        if_end_at: "TaskBatch" = None,
-                        num_end: int = 0
-                        ) -> bool:
-            """
-            完成状态,谨慎使用
-            :param if_end_at: 偏移量
-            :param num_end: 偏移量, 优先级高于 if_end_at
-            :return: Meta
-            """
-            if self.plan_chain_complete:
-                return True
-            if not self.plan_chain_pending:
-                self.plan_chain_complete = True
-                return True
-            if len(self.plan_chain_pending) - num_end <= 0:
-                return True
-            if if_end_at:
-                if len(self.plan_chain_pending) == 1:
-                    if self.plan_chain_pending[0] == if_end_at:
-                        return True
-            return False
-
-        def child(self, name) -> "TaskHeader.Meta":
-            """
-            生成副本，仅仅是子节点，继承父节点的功能
-            """
-            self.sign_as = (self.sign_as[0] + 1, "child", name, self.sign_as[3])
-            self.run_step_already += 1
-            return self.model_copy(deep=True)
-
-        def chain(self,
-                  name,
-                  write_back: bool,
-                  release_chain: bool
-                  ) -> "TaskHeader.Meta":
-            """
-            生成副本，重置链条
-            """
-            self.sign_as = (self.sign_as[0] + 1, "chain", name, self.sign_as[3])
-            self.run_step_already += 1
-            self.callback_forward = False
-            self.callback_forward_reprocess = False
-            self.direct_reply = False
-            self.write_back = write_back
-            self.release_chain = release_chain
-            return self.model_copy(deep=True)
-
-        def reply_direct(self,
-                         *,
-                         chain_name: str,
-                         ):
-            """
-            决定路由规则。只通知，不重组函数和初始化任何东西。
-            最稳定的回复方式，不会出现任何问题，但是不会有任何功能。
-            回复消息,其他什么都不做！
-            """
-            _child = self.child(chain_name)
-            _child.callback_forward = False
-            _child.callback_forward_reprocess = False
-            _child.direct_reply = True
-            _child.write_back = False
-            _child.release_chain = False
-            _child.function_enable = False
-            return _child
-
-        def reply_notify(self,
-                         *,
-                         plugin_name: str,
-                         callback: List[Callback],
-                         release_chain: bool,
-                         function_enable: bool = False,
-                         write_back: bool = None
-                         ):
-            """
-            决定路由规则
-            默认回复消息，其他参数自由
-            只通知，不重组函数和初始化任何东西。
-            :param plugin_name: 插件名称
-            :param callback: 元信息
-            :param write_back: 是否写回，写回此通知到消息历史,比如插件运行失败了，要不要写回消息历史让AI看到呢
-            :param release_chain: 是否释放任务链，是否释放任务链，比如插件运行失败，错误消息发送的同时需要释放任务链防止挖坟
-            :param function_enable: 是否开启功能
-            :return: Meta
-            """
-            assert isinstance(callback, list), "callback must be list"
-            _child = self.child(plugin_name)
-            _child.callback = callback
-            _child.callback_forward = True
-            _child.callback_forward_reprocess = False
-            _child.direct_reply = False
-            _child.write_back = write_back
-            _child.release_chain = release_chain
-            _child.function_enable = function_enable
-            return _child
-
-        def reply_raw(self,
-                      *,
-                      plugin_name: str,
-                      callback: List[Callback],
-                      function_enable: bool = True
-                      ):
-            """
-            决定路由规则
-            回写消息，释放任务链，要求再次处理，回复消息
-            :param plugin_name: 插件名称
-            :param callback: 元信息
-            :param function_enable: 是否允许机器人用函数再次处理
-            """
-            assert isinstance(callback, list), "callback must be list"
-            _child = self.child(plugin_name)
-            _child.callback = callback
-            _child.callback_forward = True
-            _child.callback_forward_reprocess = True
-            _child.direct_reply = False
-            _child.write_back = True
-            _child.release_chain = True
-            _child.function_enable = function_enable
-            return _child
-
-        def reply_message(self,
-                          *,
-                          plugin_name: str,
-                          callback: List[Callback],
-                          function_enable: bool = True
-                          ):
-            """
-            决定路由规则
-            回写消息，释放任务链，回复消息
-            :param plugin_name: 插件名称
-            :param callback: 元信息
-            :param function_enable: 是否允许机器人用函数再次处理
-            """
-            assert isinstance(callback, list), "callback must be list"
-            _child = self.child(plugin_name)
-            _child.callback = callback
-            _child.callback_forward = True
-            _child.callback_forward_reprocess = False
-            _child.direct_reply = False
-            _child.write_back = True
-            _child.release_chain = True
-            _child.function_enable = function_enable
-            return _child
-
-    class Location(BaseModel):
-        """
-        Union[str, int]
-        here .... channel
-        """
-        platform: str = Field(None, description="platform")
-        user_id: Union[str, int] = Field(None, description="user id")
-        chat_id: Union[str, int] = Field(None, description="guild id(channel in dm)/Telegram chat id")
-        thread_id: Optional[Union[str, int]] = Field(None, description="channel id/Telegram thread")
-        message_id: Optional[Union[str, int]] = Field(None, description="message id")
-
-        @model_validator(mode="after")
-        def to_string(self):
-            for key in ["user_id", "chat_id", "thread_id", "message_id"]:
-                if isinstance(getattr(self, key), int):
-                    setattr(self, key, str(getattr(self, key)))
-            return self
-
-        @property
-        def uid(self):
-            return f"{self.platform}:{self.user_id}"
-
-    class Plugin(BaseModel):
-        name: str = Field(None, description="插件名称")
-        is_run_out: bool = Field(False, description="是否运行完毕")
-        token_usage: int = Field(0, description="Token 用量")
-
-    task_meta: Meta = Field(Meta(), description="任务元数据")
+    task_sign: Sign = Field(Sign(), description="任务元数据")
     sender: Location = Field(..., description="发信人")
     receiver: Location = Field(..., description="接收人")
-    message: List[RawMessage] = Field(None, description="消息内容")
+    message: List[EventMessage] = Field(None, description="消息内容")
 
     @classmethod
-    def from_telegram(cls,
-                      message: Union[types.Message],
-                      task_meta: Meta,
-                      file: List[File] = None,
-                      reply: bool = True,
-                      hide_file_info: bool = False,
-                      deliver_back_message: List[types.Message] = None,
-                      trace_back_message: List[types.Message] = None
-                      ):
+    def from_telegram(
+        cls,
+        event_messages: List[EventMessage],
+        task_sign: Sign,
+        message_id: str,
+        chat_id: str,
+        user_id: str,
+    ):
         """
         从telegram消息中构建任务
         """
-
-        # none -> []
-        trace_back_message = [] if not trace_back_message else trace_back_message
-        file = [] if not file else file
-        deliver_back_message = [] if not deliver_back_message else deliver_back_message
-
-        def _convert(_message: types.Message) -> Optional[RawMessage]:
-            """
-            消息标准化
-            """
-            if not _message:
-                raise ValueError("Message is empty")
-            if isinstance(_message, types.Message):
-                user_id = _message.from_user.id
-                chat_id = _message.chat.id
-                text = _message.text if _message.text else _message.caption
-                created_at = _message.date
-            else:
-                raise ValueError(f"Unknown message type {type(_message)}")
-            return RawMessage(
-                user_id=user_id,
-                chat_id=chat_id,
-                text=text if text else "(empty message)",
-                created_at=str(created_at)
-            )
-
-        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
-
-        # A
-        _file_name = []
-        for _file in file:
-            _file_name.append(_file.file_prompt)
-        # 转换为标准消息
-        head_message = _convert(message)
-        assert head_message, "HeadMessage is empty"
-        # 附加文件信息
-        head_message.file = file
-        # 追加元信息
-        if not hide_file_info:
-            head_message.text += "\n" + "\n".join(_file_name)
-
-        # 追加回溯消息
-        message_list = []
-        if trace_back_message:
-            for item in trace_back_message:
-                if item:
-                    message_list.append(_convert(item))
-        message_list.extend(deliver_message_list)
-        message_list.append(head_message)
-
-        # 去掉 None
-        message_list = [item for item in message_list if item]
-
         return cls(
-            task_meta=task_meta,
-            sender=cls.Location(
+            task_sign=task_sign,
+            sender=Location(
                 platform="telegram",
-                chat_id=message.chat.id,
-                user_id=message.from_user.id,
-                # dm=message.chat.type == "private",
-                message_id=message.message_id if reply else None
+                chat_id=chat_id,
+                user_id=user_id,
+                message_id=message_id,
             ),
-            receiver=cls.Location(
+            receiver=Location(
                 platform="telegram",
-                chat_id=message.chat.id,
-                user_id=message.from_user.id,
-                message_id=message.message_id if reply else None
+                chat_id=chat_id,
+                user_id=user_id,
+                message_id=message_id,
             ),
-            message=message_list
+            message=event_messages,
         )
 
     @classmethod
-    def from_function(cls,
-                      llm_result: LlmResult,
-                      task_meta: Meta,
-                      receiver: Location,
-                      message: List[RawMessage] = None
-                      ):
+    def from_function(
+        cls,
+        llm_result: OpenAIResult,
+        task_meta: Sign,
+        receiver: Location,
+        message: List[EventMessage] = None,
+    ):
         """
         从 Openai LLM Task中构建任务
         """
         # task_meta = task_meta.child("function") 发送到 function 的消息不需加点，因为此时 接收器算发送者
         task_meta.llm_result = llm_result
-        task_meta.llm_type = llm_result.__repr_name__()
         return cls(
-            task_meta=task_meta,
-            sender=receiver,
-            receiver=receiver,
-            message=message
+            task_meta=task_meta, sender=receiver, receiver=receiver, message=message
         )
 
     @classmethod
-    def from_router(cls, from_, to_, user_id, method, message_text):
-        _meta_arg = {}
-        if method == "task":
-            _meta_arg["function_enable"] = True
-        elif method == "push":
-            _meta_arg["callback_forward"] = True
-        elif method == "chat":
-            _meta_arg["function_enable"] = False
-        task_meta = cls.Meta(
-            **_meta_arg
-        )
-
-        return cls(
-            task_meta=task_meta,
-            sender=cls.Location(
-                platform=from_,
-                chat_id=user_id,
-                user_id=user_id,
-                message_id=None
-            ),
-            receiver=cls.Location(
-                platform=to_,
-                chat_id=user_id,
-                user_id=user_id,
-                message_id=None
-            ),
-            message=[
-                RawMessage(
-                    user_id=user_id,
-                    chat_id=user_id,
-                    text=message_text,
-                    created_at=str(int(time.time()))
-                )
-            ]
-        )
-
-    @classmethod
-    def from_discord_hikari(cls,
-                            message: hikari.Message,
-                            task_meta: Meta,
-                            file: List[File] = None,
-                            reply: bool = True,
-                            hide_file_info: bool = False,
-                            deliver_back_message: List[hikari.Message] = None,
-                            trace_back_message: List[hikari.Message] = None
-                            ):
+    def from_discord_hikari(
+        cls,
+        message: hikari.Message,
+        task_meta: Sign,
+        file: List[File] = None,
+        reply: bool = True,
+        hide_file_info: bool = False,
+        deliver_back_message: List[hikari.Message] = None,
+        trace_back_message: List[hikari.Message] = None,
+    ):
         # none -> []
         trace_back_message = [] if not trace_back_message else trace_back_message
         file = [] if not file else file
         deliver_back_message = [] if not deliver_back_message else deliver_back_message
 
-        def _convert(_message: hikari.Message) -> Optional[RawMessage]:
+        def _convert(_message: hikari.Message) -> Optional[EventMessage]:
             """
             消息标准化
             """
@@ -565,15 +487,17 @@ class TaskHeader(BaseModel):
                 created_at = _message.created_at.timestamp()
             else:
                 raise ValueError(f"Unknown message type {type(_message)}")
-            return RawMessage(
+            return EventMessage(
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
                 text=text if text else "(empty message)",
-                created_at=str(created_at)
+                created_at=str(created_at),
             )
 
-        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+        deliver_message_list: List[EventMessage] = [
+            _convert(msg) for msg in deliver_back_message
+        ]
 
         # A
         _file_name = []
@@ -607,34 +531,35 @@ class TaskHeader(BaseModel):
                 thread_id=message.channel_id,
                 chat_id=message.guild_id if message.guild_id else message.channel_id,
                 user_id=message.author.id,
-                message_id=message.id if reply else None
+                message_id=message.id if reply else None,
             ),
             receiver=cls.Location(
                 platform="discord_hikari",
                 thread_id=message.channel_id,
                 chat_id=message.guild_id if message.guild_id else message.channel_id,
                 user_id=message.author.id,
-                message_id=message.id if reply else None
+                message_id=message.id if reply else None,
             ),
-            message=message_list
+            message=message_list,
         )
 
     @classmethod
-    def from_kook(cls,
-                  message: khl.Message,
-                  deliver_back_message: List[khl.Message],
-                  trace_back_message: List[khl.Message],
-                  task_meta: Meta,
-                  hide_file_info: bool = False,
-                  file: List[File] = None,
-                  reply: bool = True,
-                  ):
+    def from_kook(
+        cls,
+        message: khl.Message,
+        deliver_back_message: List[khl.Message],
+        trace_back_message: List[khl.Message],
+        task_meta: Sign,
+        hide_file_info: bool = False,
+        file: List[File] = None,
+        reply: bool = True,
+    ):
         # none -> []
         trace_back_message = [] if not trace_back_message else trace_back_message
         file = [] if not file else file
         deliver_back_message = [] if not deliver_back_message else deliver_back_message
 
-        def _convert(_message: khl.Message) -> Optional[RawMessage]:
+        def _convert(_message: khl.Message) -> Optional[EventMessage]:
             """
             消息标准化
             """
@@ -642,21 +567,27 @@ class TaskHeader(BaseModel):
                 raise ValueError("Message is empty")
             if isinstance(_message, khl.Message):
                 user_id = message.author_id
-                chat_id = message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id
+                chat_id = (
+                    message.ctx.guild.id
+                    if message.ctx.guild
+                    else message.ctx.channel.id
+                )
                 thread_id = message.ctx.channel.id
                 text = _message.content
                 created_at = _message.msg_timestamp
             else:
                 raise ValueError(f"Unknown message type {type(_message)}")
-            return RawMessage(
+            return EventMessage(
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
                 text=text if text else "(empty message)",
-                created_at=str(created_at)
+                created_at=str(created_at),
             )
 
-        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+        deliver_message_list: List[EventMessage] = [
+            _convert(msg) for msg in deliver_back_message
+        ]
 
         # A
         _file_name = []
@@ -688,36 +619,41 @@ class TaskHeader(BaseModel):
             sender=cls.Location(
                 platform="kook",
                 thread_id=message.ctx.channel.id,
-                chat_id=message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id,
+                chat_id=message.ctx.guild.id
+                if message.ctx.guild
+                else message.ctx.channel.id,
                 user_id=message.author_id,
-                message_id=message.id if reply else None
+                message_id=message.id if reply else None,
             ),
             receiver=cls.Location(
                 platform="kook",
                 thread_id=message.ctx.channel.id,
-                chat_id=message.ctx.guild.id if message.ctx.guild else message.ctx.channel.id,
+                chat_id=message.ctx.guild.id
+                if message.ctx.guild
+                else message.ctx.channel.id,
                 user_id=message.author_id,
-                message_id=message.id if reply else None
+                message_id=message.id if reply else None,
             ),
-            message=message_list
+            message=message_list,
         )
 
     @classmethod
-    def from_slack(cls,
-                   message: "SlackMessageEvent",
-                   deliver_back_message,
-                   task_meta: Meta,
-                   hide_file_info: bool = False,
-                   file: List[File] = None,
-                   reply: bool = True,
-                   ):
+    def from_slack(
+        cls,
+        message: "SlackMessageEvent",
+        deliver_back_message,
+        task_meta: Sign,
+        hide_file_info: bool = False,
+        file: List[File] = None,
+        reply: bool = True,
+    ):
         """
         https://api.slack.com/methods
         """
         # none -> []
         deliver_back_message = [] if not deliver_back_message else deliver_back_message
 
-        def _convert(_message: "SlackMessageEvent") -> Optional[RawMessage]:
+        def _convert(_message: "SlackMessageEvent") -> Optional[EventMessage]:
             """
             消息标准化
             """
@@ -731,15 +667,17 @@ class TaskHeader(BaseModel):
                 created_at = message.event_ts
             else:
                 raise ValueError(f"Unknown message type {type(_message)}")
-            return RawMessage(
+            return EventMessage(
                 user_id=user_id,
                 chat_id=chat_id,
                 thread_id=thread_id,
                 text=text if text else "(empty message)",
-                created_at=str(created_at)
+                created_at=str(created_at),
             )
 
-        deliver_message_list: List[RawMessage] = [_convert(msg) for msg in deliver_back_message]
+        deliver_message_list: List[EventMessage] = [
+            _convert(msg) for msg in deliver_back_message
+        ]
         # A
         _file_prompt = []
         for _file in file:
@@ -766,14 +704,36 @@ class TaskHeader(BaseModel):
                 thread_id=message.channel,
                 chat_id=message.channel,
                 user_id=message.user,
-                message_id=message.thread_ts if reply else None
+                message_id=message.thread_ts if reply else None,
             ),
             receiver=cls.Location(
                 platform="slack",
                 thread_id=message.channel,
                 chat_id=message.channel,
                 user_id=message.user,
-                message_id=message.thread_ts if reply else None
+                message_id=message.thread_ts if reply else None,
             ),
-            message=message_list
+            message=message_list,
         )
+
+
+class Snapshot(BaseModel):
+    """
+    快照
+    """
+
+    snap_uuid: str = Field(
+        default_factory=lambda: str(shortuuid.uuid()).upper()[:5],
+        description="快照UUID",
+    )
+    snapshot_credential: Optional[str] = None
+    snapshot_data: TaskHeader
+    creator: str
+    channel: str
+    expire_at: int
+    created_at: int = Field(default_factory=lambda: int(time.time()))
+    processed_at: Optional[int] = None
+
+    @property
+    def processed(self) -> bool:
+        return self.processed_at is not None
