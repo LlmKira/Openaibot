@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 from loguru import logger
 
-from ..middleware.chain_box import Chain, AuthReloader
-from ..task import Task
+from llmkira.middleware.chain_box import Chain, AuthReloader
+from llmkira.task import Task
 
 
 def parse_command(command: str) -> Tuple[Optional[str], Optional[str]]:

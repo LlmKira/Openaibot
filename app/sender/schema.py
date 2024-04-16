@@ -4,10 +4,12 @@
 # @File    : schema.py
 # @Software: PyCharm
 from abc import abstractmethod, ABC
+from typing import List
 
 from loguru import logger
 
-from llmkira.sdk.openapi.transducer import LoopRunner
+from llmkira.openapi.transducer import LoopRunner
+from llmkira.task.schema import EventMessage
 
 
 class Runner(ABC):
@@ -35,6 +37,9 @@ class Runner(ABC):
 
     @abstractmethod
     async def upload(self, *args, **kwargs):
+        ...
+
+    async def transcribe(self, *args, **kwargs) -> List[EventMessage]:
         ...
 
     @abstractmethod
