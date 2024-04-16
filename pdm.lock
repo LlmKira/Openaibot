@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:06f4d9649c08d8994525461332dab5a6aa1c9058b124824e2b399d665658ca32"
+content_hash = "sha256:afdd387fbf4142e7effc846ca1e78790c2cb8bac9a606aa47e9ffcaa9dfb57f5"
 
 [[package]]
 name = "aio-pika"
@@ -20,6 +20,20 @@ dependencies = [
 files = [
     {file = "aio_pika-9.4.1-py3-none-any.whl", hash = "sha256:2d4cec5a5d32005a71e31faaf5be58ee993fa29b8243a5d04b8f4a73df272fe8"},
     {file = "aio_pika-9.4.1.tar.gz", hash = "sha256:d177404a27aa797a2ac935f6aa2bbb287fe1f0ddf5628ca20a237b7db3ea6324"},
+]
+
+[[package]]
+name = "aiofile"
+version = "3.8.8"
+requires_python = ">=3.7, <4"
+summary = "Asynchronous file operations."
+groups = ["default"]
+dependencies = [
+    "caio~=0.9.0",
+]
+files = [
+    {file = "aiofile-3.8.8-py3-none-any.whl", hash = "sha256:41e8845cce055779cd77713d949a339deb012eab605b857765e8f8e52a5ed811"},
+    {file = "aiofile-3.8.8.tar.gz", hash = "sha256:41f3dc40bd730459d58610476e82e5efb2f84ae6e9fa088a9545385d838b8a43"},
 ]
 
 [[package]]
@@ -327,6 +341,25 @@ files = [
 ]
 
 [[package]]
+name = "caio"
+version = "0.9.13"
+requires_python = ">=3.7, <4"
+summary = "Asynchronous file IO for Linux MacOS or Windows."
+groups = ["default"]
+files = [
+    {file = "caio-0.9.13-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a921c0514ea2bb161d9d9c4940d409a2431cc6bab89abbf20fb16fdc6964f650"},
+    {file = "caio-0.9.13-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:0a04bcac15b0c18057ec57dd9666c4d5c1058958a8db5191b46a1e54931c4a6e"},
+    {file = "caio-0.9.13-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:18307046421f4a8cac85c3d84aa941ab283fbbf0e57f0e5f81a306a057668f43"},
+    {file = "caio-0.9.13-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:789f8b55f4a2b46be14361df3ac8d14b6c8f0a3730badd70cb1b7778fcdc7039"},
+    {file = "caio-0.9.13-cp311-cp311-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a914684bad2a757cf013ae88d785d81659a3add1885bad60cd20bfbd3068bd5a"},
+    {file = "caio-0.9.13-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:b1e4252b783ad25f15eeff6e412f7e9ec9409e7b4a81fd2893dc1ce1819385ff"},
+    {file = "caio-0.9.13-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:a07c9933543d18f98525f34a786700134403f13050a5bd22a642629e2ab410d4"},
+    {file = "caio-0.9.13-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a090ab82f21b310b56fa6afe04b3be92a0d1577a2e57127b61426c9dd6df34be"},
+    {file = "caio-0.9.13-py3-none-any.whl", hash = "sha256:582cbfc6e203d1dedf662ba972a94db6e744fe0b6bb9e02922b0f86803006fc9"},
+    {file = "caio-0.9.13.tar.gz", hash = "sha256:26f1e08a442bef4526a66142ea4e325e22dca8f040800aecb3caf8fae0589e98"},
+]
+
+[[package]]
 name = "certifi"
 version = "2024.2.2"
 requires_python = ">=3.6"
@@ -571,6 +604,20 @@ files = [
 ]
 
 [[package]]
+name = "deprecated"
+version = "1.2.14"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+summary = "Python @deprecated decorator to deprecate old python classes, functions or methods."
+groups = ["default"]
+dependencies = [
+    "wrapt<2,>=1.10",
+]
+files = [
+    {file = "Deprecated-1.2.14-py2.py3-none-any.whl", hash = "sha256:6fac8b097794a90302bdbb17b9b815e732d3c4720583ff1b198499d78470466c"},
+    {file = "Deprecated-1.2.14.tar.gz", hash = "sha256:e5323eb936458dccc2582dc6f9c322c852a775a27065ff2b0c4970b9d53d01b3"},
+]
+
+[[package]]
 name = "dnspython"
 version = "2.6.1"
 requires_python = ">=3.8"
@@ -737,6 +784,16 @@ dependencies = [
 files = [
     {file = "ffmpeg-python-0.2.0.tar.gz", hash = "sha256:65225db34627c578ef0e11c8b1eb528bb35e024752f6f10b78c011f6f64c4127"},
     {file = "ffmpeg_python-0.2.0-py3-none-any.whl", hash = "sha256:ac441a0404e053f8b6a1113a77c0f452f1cfc62f6344a769475ffdc0f56c23c5"},
+]
+
+[[package]]
+name = "file-read-backwards"
+version = "3.0.0"
+summary = "Memory efficient way of reading files line-by-line from the end of file"
+groups = ["default"]
+files = [
+    {file = "file_read_backwards-3.0.0-py2.py3-none-any.whl", hash = "sha256:09fbac8bbf6d72c053c6e789768671002806c572d210fbe6861088a4a8bd0968"},
+    {file = "file_read_backwards-3.0.0.tar.gz", hash = "sha256:512c3e534043527a8fae2a0b7151aa255f2da303e77fd40f7dcf42a1e091cc26"},
 ]
 
 [[package]]
@@ -1418,6 +1475,32 @@ groups = ["default"]
 files = [
     {file = "mistletoe-1.3.0-py3-none-any.whl", hash = "sha256:a0710d0cdb7d2458cef91cf6b9b897db442927f8778dae890cbbfb1853a51700"},
     {file = "mistletoe-1.3.0.tar.gz", hash = "sha256:bd0e788add9b4478d19ec792f6d5fb908a20e70abfe61193f29178c55d3adbe9"},
+]
+
+[[package]]
+name = "montydb"
+version = "2.5.2"
+requires_python = ">=3.7,<3.12"
+summary = "Monty, Mongo tinified. MongoDB implemented in Python !"
+groups = ["default"]
+files = [
+    {file = "montydb-2.5.2-py3-none-any.whl", hash = "sha256:5269528c6a4fa8df1728cc629fd4d9c5deaa22fff96f04bc148bce5b588b2aea"},
+    {file = "montydb-2.5.2.tar.gz", hash = "sha256:b9857e3fec14fedaa48f0fd14004b8b4b9486ff0612cf055f778bfb50a03d774"},
+]
+
+[[package]]
+name = "montydb"
+version = "2.5.2"
+extras = ["lmdb"]
+requires_python = ">=3.7,<3.12"
+summary = "Monty, Mongo tinified. MongoDB implemented in Python !"
+groups = ["default"]
+dependencies = [
+    "montydb==2.5.2",
+]
+files = [
+    {file = "montydb-2.5.2-py3-none-any.whl", hash = "sha256:5269528c6a4fa8df1728cc629fd4d9c5deaa22fff96f04bc148bce5b588b2aea"},
+    {file = "montydb-2.5.2.tar.gz", hash = "sha256:b9857e3fec14fedaa48f0fd14004b8b4b9486ff0612cf055f778bfb50a03d774"},
 ]
 
 [[package]]

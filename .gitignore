@@ -145,3 +145,4 @@ config_dir/*.db
 /jobs.sqlite
 config_dir/*.pem
 config_dir/*.secret/
+/.pdm-python

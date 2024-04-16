@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# @Time    : 2023/10/18 下午10:23
 import getopt
 import os
 import sys
@@ -7,31 +8,35 @@ from dotenv import load_dotenv
 from loguru import logger
 
 load_dotenv()
-
-logger.remove()
-logger.add(sys.stderr,
-           level="INFO" if os.getenv("LLMBOT_LOG_OUTPUT") != "DEBUG" else "DEBUG",
-           colorize=True,
-           enqueue=True
-           )
-
-logger.add(sink='run.log',
-           format="{time} - {level} - {message}",
-           level="INFO",
-           rotation="100 MB",
-           enqueue=True
-           )
+logger.remove(0)
+handler_id = logger.add(
+    sys.stderr,
+    format="<level>[{level}]</level> | <level>{message}</level> | <yellow>@{time}</yellow>",
+    colorize=True,
+    backtrace=True,
+    enqueue=True,
+    level="DEBUG" if os.getenv("DEBUG", None) else "INFO",
+)
+logger.add(
+    sink="receiver.log",
+    format="<level>[{level}]</level> | <level>{message}</level> | <yellow>@{time}</yellow>",
+    level="DEBUG",
+    rotation="100 MB",
+    enqueue=True,
+)
 head = """
-██╗     ██╗     ███╗   ███╗██╗  ██╗██╗██████╗  █████╗ 
+██╗     ██╗     ███╗   ███╗██╗  ██╗██╗██████╗  █████╗
 ██║     ██║     ████╗ ████║██║ ██╔╝██║██╔══██╗██╔══██╗
 ██║     ██║     ██╔████╔██║█████╔╝ ██║██████╔╝███████║
 ██║     ██║     ██║╚██╔╝██║██╔═██╗ ██║██╔══██╗██╔══██║
 ███████╗███████╗██║ ╚═╝ ██║██║  ██╗██║██║  ██║██║  ██║
 ╚══════╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
 """
-logger.opt(record=False, exception=False, capture=False, colors=True).info(f"<cyan>{head}</cyan>")
+logger.opt(record=False, exception=False, capture=False, colors=True).info(
+    f"<cyan>{head}</cyan>"
+)
 
-# 日志系统
+# Log System
 if os.getenv("SENTRY_DSN", None):
     try:
         import sentry_sdk
@@ -46,7 +51,7 @@ if os.getenv("SENTRY_DSN", None):
     else:
         logger.success("🌟 Create Sentry Client Successfully!")
 
-# 教程
+# Tutorial
 SKIP_TUTORIAL = False
 SKIP_EXISTING = True
 opts, args = getopt.getopt(sys.argv[1:], "h", ["no_tutorial", "tutorial"])
@@ -59,11 +64,11 @@ for op, value in opts:
     if op == "--tutorial":
         SKIP_EXISTING = False
 if not SKIP_TUTORIAL:
-    from llmkira.tutorial import show_tutorial
+    from app.tutorial import show_tutorial
 
     show_tutorial(skip_existing=SKIP_EXISTING, pre_step_stop=4, database_key="01")
 
-# 运行主程序
-from llmkira.receiver import app
+# Run Receiver
+from app.receiver import app  # noqa
 
 app.run()
