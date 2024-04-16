@@ -12,24 +12,19 @@ def run():
     import asyncio
     from .aps import aps_start
     from .function import FunctionReceiver
-    from llmkira.sdk.cache import global_cache_runtime, global_mongodb_runtime
+    from llmkira import (
+        load_plugins,
+        load_from_entrypoint,
+        get_entrypoint_plugins,
+    )
+    from app.setting import PlatformSetting
 
-    global_cache_runtime.init_cache(verbose=True)
-    global_mongodb_runtime.init_mongodb(verbose=True)
+    start_setting = PlatformSetting.from_subdir()
     func = [
         aps_start(),
         FunctionReceiver().function(),
     ]
 
-    from llmkira.sdk.func_calling import (
-        load_plugins,
-        load_from_entrypoint,
-        get_entrypoint_plugins,
-    )
-
-    from llmkira.setting import StartSetting
-
-    start_setting = StartSetting.from_subdir()
     if start_setting.telegram:
         from .telegram import TelegramReceiver
 
@@ -51,7 +46,7 @@ def run():
         await asyncio.gather(*_func)
 
     # 导入插件
-    load_plugins("llmkira/extra/plugins")
+    load_plugins("llmkira/plugins")
     load_from_entrypoint("llmkira.extra.plugin")
 
     loaded_message = "\n >>".join(get_entrypoint_plugins())
