@@ -367,7 +367,7 @@ class BaseReceiver(object):
                 data = snap_data.data
                 renew_snap_data = []
                 for task in data:
-                    if not task.snapshot_credential:
+                    if not task.snapshot_credential and not task.processed:
                         try:
                             await Task.create_and_send(
                                 queue_name=task.channel, task=task.snapshot_data
