@@ -15,21 +15,26 @@ class SlackBot(BaseSettings):
     """
     代理设置
     """
-    app_token: Optional[str] = Field(None, validation_alias='SLACK_APP_TOKEN')
+
+    app_token: Optional[str] = Field(None, validation_alias="SLACK_APP_TOKEN")
     # https://api.slack.com/apps
 
-    bot_token: Optional[str] = Field(None, validation_alias='SLACK_BOT_TOKEN')
+    bot_token: Optional[str] = Field(None, validation_alias="SLACK_BOT_TOKEN")
     # https://api.slack.com/apps/XXXX/oauth?
 
-    secret: Optional[str] = Field(None, validation_alias='SLACK_SIGNING_SECRET')
+    secret: Optional[str] = Field(None, validation_alias="SLACK_SIGNING_SECRET")
     # https://api.slack.com/authentication/verifying-requests-from-slack#signing_secrets_admin_page
 
-    proxy_address: Optional[str] = Field(None, validation_alias="SLACK_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
+    proxy_address: Optional[str] = Field(
+        None, validation_alias="SLACK_BOT_PROXY_ADDRESS"
+    )  # "all://127.0.0.1:7890"
     bot_id: Optional[str] = Field(None)
     bot_username: Optional[str] = Field(None)
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def bot_setting_validator(self):
         try:
             if self.app_token is None:

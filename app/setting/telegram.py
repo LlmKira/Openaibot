@@ -15,28 +15,37 @@ class TelegramBot(BaseSettings):
     """
     代理设置
     """
-    token: Optional[str] = Field(None, validation_alias='TELEGRAM_BOT_TOKEN')
-    proxy_address: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
-    bot_link: Optional[str] = Field(None, validation_alias='TELEGRAM_BOT_LINK')
+
+    token: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_TOKEN")
+    proxy_address: Optional[str] = Field(
+        None, validation_alias="TELEGRAM_BOT_PROXY_ADDRESS"
+    )  # "all://127.0.0.1:7890"
+    bot_link: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_LINK")
     bot_id: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_ID")
     bot_username: Optional[str] = Field(None, validation_alias="TELEGRAM_BOT_USERNAME")
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def bot_validator(self):
         if self.proxy_address:
             logger.success(f"TelegramBot proxy was set to {self.proxy_address}")
         if self.token is None:
-            logger.info(f"\n🍀Check:Telegrambot token is empty")
+            logger.info("\n🍀Check:Telegrambot token is empty")
         if self.bot_id is None and self.token:
             try:
                 from telebot import TeleBot
+
                 # 创建 Bot
                 if self.proxy_address is not None:
                     from telebot import apihelper
+
                     if "socks5://" in self.proxy_address:
-                        self.proxy_address = self.proxy_address.replace("socks5://", "socks5h://")
-                    apihelper.proxy = {'https': self.proxy_address}
+                        self.proxy_address = self.proxy_address.replace(
+                            "socks5://", "socks5h://"
+                        )
+                    apihelper.proxy = {"https": self.proxy_address}
                 _bot = TeleBot(token=self.token).get_me()
                 self.bot_id = str(_bot.id)
                 self.bot_username = _bot.username

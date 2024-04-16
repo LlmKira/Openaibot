@@ -15,13 +15,16 @@ class KookBot(BaseSettings):
     """
     代理设置
     """
-    token: Optional[str] = Field(None, validation_alias='KOOK_BOT_TOKEN')
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra="ignore")
 
-    @model_validator(mode='after')
+    token: Optional[str] = Field(None, validation_alias="KOOK_BOT_TOKEN")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    @model_validator(mode="after")
     def bot_setting_validator(self):
         if self.token is None:
-            logger.info(f"🍀Kook Bot Token Not Set")
+            logger.info("🍀Kook Bot Token Not Set")
         return self
 
     @property
