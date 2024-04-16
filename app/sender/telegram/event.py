@@ -4,6 +4,7 @@
 # @File    : event.py
 # @Software: PyCharm
 
+
 def help_message():
     return """
     /help - HELP YOURSELF
@@ -13,7 +14,7 @@ def help_message():
     /tool - 工具列表
     /clear - 删除自己的记录
     /auth - POWER
-    
+
 Private Chat Only:
     /bind - RSS
     /unbind - RSS
