@@ -16,7 +16,7 @@ class DefaultMessageBuilder(Builder):
         platform=re.compile(r".*"),  # 匹配所有
         plugin_name="default",
         agent="receiver",
-        priority=0
+        priority=0,
     )
 
     async def pipe(self, arg) -> Any:
@@ -29,7 +29,7 @@ class DefaultMessageParser(Parser):
         platform=re.compile(r".*"),  # 匹配所有
         plugin_name="default",
         agent="sender",
-        priority=0
+        priority=0,
     )
 
     async def pipe(self, arg) -> Any:

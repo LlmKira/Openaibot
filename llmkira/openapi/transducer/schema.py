@@ -10,6 +10,7 @@ class TransferMata(BaseModel):
     """
     注册标头
     """
+
     platform: re.Pattern
     plugin_name: str
     # 优先级
@@ -30,6 +31,7 @@ class Builder(AbstractTransfer):
     Receiver Parser
     消息对象转媒体文件
     """
+
     sign: TransferMata
 
     @abstractmethod
@@ -46,6 +48,7 @@ class Parser(AbstractTransfer):
     Sender Parser
     媒体文件对象转消息对象
     """
+
     sign: TransferMata
 
     @abstractmethod

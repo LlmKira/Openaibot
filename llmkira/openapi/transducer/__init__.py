@@ -59,13 +59,13 @@ class LoopRunner(object):
         for _exec_ram in __builder__:
             _exec = _exec_ram()
             if not _exec.sign:
-                logger.error(f"receiver_loop metadata None:sign")
+                logger.error("receiver_loop metadata None:sign")
                 continue
             if not _exec.sign.platform:
-                logger.error(f"receiver_loop metadata None:platform")
+                logger.error("receiver_loop metadata None:platform")
                 continue
             if _exec.sign.priority is None:
-                logger.error(f"receiver_loop metadata None:priority")
+                logger.error("receiver_loop metadata None:priority")
                 continue
             if _exec.sign.agent != "receiver":
                 continue
@@ -85,13 +85,13 @@ class LoopRunner(object):
         for _exec_ram in __parser__:
             _exec = _exec_ram()
             if not _exec.sign:
-                logger.error(f"sender_loop metadata None:sign")
+                logger.error("sender_loop metadata None:sign")
                 continue
             if not _exec.sign.platform:
-                logger.error(f"sender_loop metadata None:platform")
+                logger.error("sender_loop metadata None:platform")
                 continue
             if _exec.sign.priority is None:
-                logger.error(f"sender_loop metadata None:priority")
+                logger.error("sender_loop metadata None:priority")
                 continue
             if _exec.sign.agent == "sender":
                 continue
@@ -103,10 +103,15 @@ class LoopRunner(object):
     @property
     def result_pipe_arg(self):
         if not self.pipe_arg:
-            raise ValueError(f"pipe_arg is None")
+            raise ValueError("pipe_arg is None")
         return self.pipe_arg
 
-    async def exec_loop(self, pipe: List[Type[AbstractTransfer]], pipe_arg: dict, validator: Callable = None):
+    async def exec_loop(
+        self,
+        pipe: List[Type[AbstractTransfer]],
+        pipe_arg: dict,
+        validator: Callable = None,
+    ):
         """
         exec loop
         """
@@ -118,12 +123,13 @@ class LoopRunner(object):
                 new_pipe_arg = await loop().pipe(self.pipe_arg)
             except Exception as e:
                 # logger.info(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}")
-                logger.debug(f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}, pipe_arg:{pipe_arg}")
+                logger.debug(
+                    f"{loop.__name__} exec_loop error {e}, for sign:{loop.sign}, pipe_arg:{pipe_arg}"
+                )
                 # 不更新 pipe_arg
             else:
                 # logger.info(f"{loop.__name__} exec_loop success, for sign:{loop.sign}")
-                logger.debug(f"{loop.__name__} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}")
+                logger.debug(
+                    f"{loop.__name__} exec_loop success, for sign:{loop.sign}, new_pipe_arg:{new_pipe_arg}"
+                )
                 self.pipe_arg = new_pipe_arg
-
-
-from .default_factory import DefaultMessageBuilder, DefaultMessageParser

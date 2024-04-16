@@ -64,7 +64,9 @@ def resign_trigger(trigger: Trigger):
             __trigger_phrases__.append(trigger.update_func(func))
             logger.success(f"📦 [Plugin trigger hook] {trigger.__repr__()}")
         else:
-            raise ValueError(f"Resign Trigger Error for func {func} is not async function")
+            raise ValueError(
+                f"Resign Trigger Error for func {func} is not async function"
+            )
 
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -74,6 +76,3 @@ def resign_trigger(trigger: Trigger):
         return wrapper
 
     return decorator
-
-
-from .default_trigger import on_chat_message
