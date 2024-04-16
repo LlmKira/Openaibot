@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING
 from llmkira.kv_manager.file import File
 from llmkira.openai.cell import Tool
 from llmkira.sdk.tools import PluginMetadata
-from llmkira.sdk.tools import _openapi_version_, BaseTool, get_loaded_plugins
-from llmkira.sdk.tools.schema import FuncPair
+from llmkira.sdk.tools import _openapi_version_, get_loaded_plugins
+from llmkira.sdk.tools.schema import FuncPair, BaseTool
 
 if TYPE_CHECKING:
     from ...task.schema import EventMessage
