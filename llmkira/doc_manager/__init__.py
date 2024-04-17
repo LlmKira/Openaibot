@@ -111,11 +111,18 @@ class MongoDb(BaseSettings):
                 self.mongodb_dsn, serverSelectionTimeoutMS=1000
             )  # 设置超时时间
             client.admin.command("ping")
+            # 获取服务器信息
+            client.server_info()
+            # 尝试执行需要管理员权限的命令
+            client.admin.command("listDatabases")
         except ServerSelectionTimeoutError:
             self.available = False
             logger.warning(
                 f"\n🍀MongoDB Connection Error -- timeout when connecting to {self.mongodb_dsn}"
             )
+        except pymongo.errors.OperationFailure:
+            self.available = False
+            logger.warning("\n🍀MongoDB Connection Error -- insufficient permissions")
         except Exception as e:
             self.available = False
             logger.warning(f"\n🍀MongoDB Connection Error -- error {e}")
