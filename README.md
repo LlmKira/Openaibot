@@ -168,6 +168,10 @@ env - Environment variables of the function
 Refer to the example plugins in the `plugins` directory and
 the [🧀 Plugin Development Document](https://llmkira.github.io/Docs/dev/basic) for plugin development documentation.
 
+## 🧀 Sponsor
+
+[![sponsor](./.github/sponsor_ohmygpt.png)](https://www.ohmygpt.com)
+
 ## 📜 Notice
 
 > This project, named OpenAiBot, signifying "Open Artificial Intelligence Robot", is not officially affiliated with
