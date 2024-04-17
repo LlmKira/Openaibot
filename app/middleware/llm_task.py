@@ -12,6 +12,7 @@ from pydantic import SecretStr
 from app.components.credential import Credential
 from app.components.user_manager import record_cost
 from llmkira.kv_manager.instruction import InstructionManager
+from llmkira.kv_manager.time import TimeFeelManager
 from llmkira.kv_manager.tool_call import GLOBAL_TOOLCALL_CACHE_HANDLER
 from llmkira.memory import global_message_runtime
 from llmkira.openai.cell import (
@@ -182,7 +183,16 @@ class OpenaiMiddleware(object):
             logger.warning(f"llm_task:Tool is not unique {self.tools}")
         if isinstance(self.task.task_sign.instruction, str):
             messages.append(SystemMessage(content=self.task.task_sign.instruction))
-        messages.extend(await self.build_message(remember=remember))
+        # Feel time leave
+        time_feel = await TimeFeelManager(self.session_uid).get_leave()
+        if time_feel:
+            await self.remember(
+                message=SystemMessage(
+                    content=f"statu:[After {time_feel} leave, user is back]"
+                )
+            )
+        once_build_message = await self.build_message(remember=remember)
+        messages.extend(once_build_message)
         # TODO:实现消息时序切片
         # 日志
         logger.info(
