@@ -65,8 +65,8 @@ dependencies = [
 ]
 requires-python = ">=3.9,<3.12"
 readme = "README.md"
-license = { text = "GPL3" }
-keywords = ["llmbot", "llmkira", "openai", "chatgpt", "telegram", "bot"]
+license = { text = "Apache-2.0", file = "LICENSE" }
+keywords = ["llmbot", "llmkira", "openai", "chatgpt", "llm"]
 classifiers = ["Programming Language :: Python :: 3", "Programming Language :: Python :: 3.9"]
 
 [project.urls]
