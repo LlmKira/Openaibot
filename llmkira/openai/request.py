@@ -18,6 +18,7 @@ from .cell import (
     ToolCall,
     ToolMessage,
     UserMessage,
+    SystemMessage,
 )
 
 
@@ -98,9 +99,9 @@ class OpenAI(BaseModel):
         type: Literal["json_object", "text"] = "text"
 
     model: str
-    messages: List[Union[Message, AssistantMessage, ToolMessage, UserMessage]] = Field(
-        ..., description="Messages"
-    )
+    messages: List[
+        Union[Message, AssistantMessage, ToolMessage, UserMessage, SystemMessage]
+    ] = Field(..., description="Messages")
 
     @field_validator("messages")
     def check_messages(cls, v):
