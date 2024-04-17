@@ -29,6 +29,7 @@ from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.file import File
 from llmkira.memory import global_message_runtime
+from llmkira.openapi.trigger import get_trigger_loop
 from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Sign, EventMessage
@@ -392,7 +393,7 @@ class SlackBotRunner(Runner):
             if not await validate_join(event_=event_):
                 return None
             _text = event_.text
-            """
+
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
@@ -402,7 +403,7 @@ class SlackBotRunner(Runner):
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(
-                        event_, funtion_enable=trigger.function_enable
+                        event_, disable_tool_action=trigger.function_enable
                     )
                 if trigger.action == "deny":
                     return await bot.client.chat_postMessage(
@@ -410,7 +411,7 @@ class SlackBotRunner(Runner):
                         text=trigger.message,
                         thread_ts=event_.thread_ts,
                     )
-            """
+
             # 默认指令
             if is_command(text=_text, command="!chat"):
                 return await create_task(

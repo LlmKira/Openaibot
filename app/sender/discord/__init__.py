@@ -401,19 +401,21 @@ class DiscordBotRunner(Runner):
                     "discord_hikari:ignore a empty message,do you turn on the MESSAGE_CONTENT setting?"
                 )
                 return
-            """
+
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=event_.content,
-                uid=uid_make(__sender__, event_.message.author.id)
+                uid=uid_make(__sender__, event_.message.author.id),
             )
             if trigger:
                 if trigger.action == "allow":
-                    return await create_task(event_.message, disable_tool_action=trigger.function_enable)
+                    return await create_task(
+                        event_.message, disable_tool_action=trigger.function_enable
+                    )
                 if trigger.action == "deny":
                     return await event_.message.respond(content=trigger.message)
-            """
+
             # 命令
             # Bot may cant read message
             if is_command(text=event_.content, command=f"{BotSetting.prefix}chat"):

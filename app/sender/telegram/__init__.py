@@ -26,6 +26,7 @@ from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.file import File, CacheDatabaseError
 from llmkira.memory import global_message_runtime
+from llmkira.openapi.trigger import get_trigger_loop
 from llmkira.sdk.tools.register import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Sign, EventMessage
@@ -357,7 +358,7 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            """
+
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=message.text,
@@ -373,7 +374,7 @@ class TelegramBotRunner(Runner):
                 return await create_task(
                     message, disable_tool_action=__default_disable_tool_action__
                 )
-            """
+
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, disable_tool_action=True)
             if is_command(text=message.text, command="/ask"):
@@ -393,7 +394,7 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            """
+
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
@@ -407,7 +408,7 @@ class TelegramBotRunner(Runner):
                     )
                 if trigger.action == "deny":
                     return await bot.reply_to(message, text=trigger.message)
-            """
+
             # 响应
             if is_command(
                 text=message.text,

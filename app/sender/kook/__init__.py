@@ -426,19 +426,20 @@ class KookBotRunner(Runner):
             # 追溯回复
 
         async def on_dm_create(msg: PrivateMessage):
-            """
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=msg.content,
-                uid=uid_make(__sender__, msg.author_id)
+                uid=uid_make(__sender__, msg.author_id),
             )
             if trigger:
                 if trigger.action == "allow":
-                    return await create_task(msg, disable_tool_action=trigger.function_enable)
+                    return await create_task(
+                        msg, disable_tool_action=trigger.function_enable
+                    )
                 if trigger.action == "deny":
                     return await msg.reply(content=trigger.message)
-            """
+
             if is_command(text=msg.content, command="/task"):
                 return await create_task(msg, disable_tool_action=False)
             if is_command(text=msg.content, command="/ask"):
