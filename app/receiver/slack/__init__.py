@@ -91,25 +91,30 @@ class SlackSender(BaseSender):
         """
         模型直转发，Message是Openai的类型
         """
-        for item in messages:
-            # raw_message = await self.loop_turn_from_openai(platform_name=__receiver__, message=item, locate=receiver)
-            event_message = EventMessage.from_openai_message(
-                message=item, locate=receiver
-            )
-            await self.file_forward(receiver=receiver, file_list=event_message.files)
-            if not event_message.text:
+        event_message = [
+            EventMessage.from_openai_message(message=item, locate=receiver)
+            for item in messages
+        ]
+        # 转析器
+        _, event_message, receiver = await self.hook(
+            platform_name=__receiver__, messages=event_message, locate=receiver
+        )
+        event_message: list
+        for event in event_message:
+            await self.file_forward(receiver=receiver, file_list=event.files)
+            if not event.text:
                 continue
             _message = (
                 ChatMessageCreator(
                     channel=receiver.chat_id, thread_ts=receiver.message_id
                 )
-                .update_content(message_text=event_message.text)
-                .get_message_payload(message_text=event_message.text)
+                .update_content(message_text=event.text)
+                .get_message_payload(message_text=event.text)
             )
             await self.bot.chat_postMessage(
                 channel=receiver.chat_id,
                 thread_ts=receiver.message_id,
-                text=event_message.text,
+                text=event.text,
             )
         return logger.trace("reply message")
 

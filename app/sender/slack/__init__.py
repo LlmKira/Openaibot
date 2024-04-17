@@ -29,6 +29,7 @@ from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.file import File
 from llmkira.memory import global_message_runtime
+from llmkira.openapi.trigger import get_trigger_loop
 from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Sign, EventMessage
@@ -194,22 +195,20 @@ class SlackBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                """
-                message, _file = await self.loop_turn_only_message(
-                    platform_name=__sender__, message=message, file_list=_file
+                event_message = await self.transcribe(last_message=message, files=_file)
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
                 )
-                """
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
                 # Reply
                 success, logs = await SlackTask.send_task(
                     task=TaskHeader.from_sender(
-                        event_messages=await self.transcribe(
-                            last_message=message, files=_file
-                        ),
-                        task_sign=Sign.from_root(
-                            disable_tool_action=disable_tool_action,
-                            response_snapshot=True,
-                            platform=__sender__,
-                        ),
+                        event_messages=event_message,
+                        task_sign=sign,
                         message_id=message.thread_ts,
                         chat_id=message.channel,
                         user_id=message.user,
@@ -283,7 +282,9 @@ class SlackBotRunner(Runner):
             _arg = command.text
             _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
             try:
-                env_map = _manager.set_env(env_value=_arg, update=True)
+                env_map = await _manager.set_env(
+                    env_value=_arg, update=True, return_all=True
+                )
             except Exception as e:
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.mbold("🧊 Failed")
@@ -392,7 +393,7 @@ class SlackBotRunner(Runner):
             if not await validate_join(event_=event_):
                 return None
             _text = event_.text
-            """
+
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
@@ -402,7 +403,7 @@ class SlackBotRunner(Runner):
             if trigger:
                 if trigger.action == "allow":
                     return await create_task(
-                        event_, funtion_enable=trigger.function_enable
+                        event_, disable_tool_action=trigger.function_enable
                     )
                 if trigger.action == "deny":
                     return await bot.client.chat_postMessage(
@@ -410,7 +411,7 @@ class SlackBotRunner(Runner):
                         text=trigger.message,
                         thread_ts=event_.thread_ts,
                     )
-            """
+
             # 默认指令
             if is_command(text=_text, command="!chat"):
                 return await create_task(

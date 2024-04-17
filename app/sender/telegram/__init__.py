@@ -26,6 +26,7 @@ from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.file import File, CacheDatabaseError
 from llmkira.memory import global_message_runtime
+from llmkira.openapi.trigger import get_trigger_loop
 from llmkira.sdk.tools.register import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Sign, EventMessage
@@ -183,19 +184,24 @@ class TelegramBotRunner(Runner):
                 history_message_list = []
                 if message.reply_to_message:
                     history_message_list.append(message.reply_to_message)
+                event_message = await self.transcribe(
+                    last_message=message,
+                    messages=history_message_list,
+                    files=uploaded_file,
+                )
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
+                )
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
                 # Reply
                 success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_sender(
-                        task_sign=Sign.from_root(
-                            disable_tool_action=disable_tool_action,
-                            response_snapshot=True,
-                            platform=__sender__,
-                        ),
-                        event_messages=await self.transcribe(
-                            last_message=message,
-                            messages=history_message_list,
-                            files=uploaded_file,
-                        ),
+                        task_sign=sign,
+                        event_messages=event_message,
                         chat_id=str(message.chat.id),
                         user_id=str(message.from_user.id),
                         message_id=str(message.message_id),
@@ -264,7 +270,9 @@ class TelegramBotRunner(Runner):
                 return None
             _manager = EnvManager(user_id=uid_make(__sender__, message.from_user.id))
             try:
-                env_map = _manager.set_env(env_value=_arg, update=True)
+                env_map = await _manager.set_env(
+                    env_value=_arg, update=True, return_all=True
+                )
             except Exception as e:
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.format_text(
@@ -357,7 +365,7 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            """
+
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=message.text,
@@ -373,7 +381,7 @@ class TelegramBotRunner(Runner):
                 return await create_task(
                     message, disable_tool_action=__default_disable_tool_action__
                 )
-            """
+
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, disable_tool_action=True)
             if is_command(text=message.text, command="/ask"):
@@ -393,7 +401,7 @@ class TelegramBotRunner(Runner):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            """
+
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
@@ -407,7 +415,7 @@ class TelegramBotRunner(Runner):
                     )
                 if trigger.action == "deny":
                     return await bot.reply_to(message, text=trigger.message)
-            """
+
             # 响应
             if is_command(
                 text=message.text,

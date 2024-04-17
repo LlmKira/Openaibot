@@ -13,9 +13,13 @@
 import inspect
 from functools import wraps
 from typing import Literal, List, Callable
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    pass
 
 
 class Trigger(BaseModel):
@@ -37,7 +41,7 @@ __trigger_phrases__: List[Trigger] = []
 async def get_trigger_loop(platform_name: str, message: str, uid: str = None):
     """
     receiver builder
-    message: "RawMessage"
+    message: Message Content
     :return 如果有触发，则返回触发的action，否则返回None 代表没有操作
     """
     sorted(__trigger_phrases__, key=lambda x: x.priority)

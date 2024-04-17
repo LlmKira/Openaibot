@@ -77,5 +77,5 @@ class RedisChatMessageHistory(BaseMessageStorage):
         self.clear()
         self.append(messages)
 
-    def clear(self) -> None:
+    async def clear(self) -> None:
         self.redis_client.delete(self.key)

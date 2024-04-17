@@ -9,7 +9,9 @@ from time import sleep
 import elara
 from rich.console import Console
 
-elara_client = elara.exe(path=pathlib.Path(__file__).parent / "elara.db", commitdb=True)
+elara_client = elara.exe(
+    path=pathlib.Path(__file__).parent / ".tutorial.db", commitdb=True
+)
 
 tutorial = [
     {

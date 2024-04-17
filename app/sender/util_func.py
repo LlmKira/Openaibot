@@ -100,8 +100,10 @@ async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -
     snap_shot: SnapData = await global_snapshot_storage.read(
         user_id=uid_make(platform, user_id)
     )
-    if not snap_shot.data:
+    if not snap_shot:
         raise LookupError("Auth Task Not Found")
+    if not snap_shot.data:
+        raise LookupError("Auth Task Data Not Found")
     logger.info(f"Snap Auth:{snapshot_credential},by user {user_id}")
     for snap in snap_shot.data:
         if snap.snapshot_credential == snapshot_credential:

@@ -48,7 +48,7 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 |-----------------------------------|
 | ![sticker](./docs/chain_chat.gif) |
 
-## 🍔 Roadmap
+## 🔨 Roadmap
 
 - [x] Removal of legacy code
 - [x] Deletion of metric system
@@ -56,6 +56,10 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 - [x] Implementation of a more robust plugin system
 - [x] Project structure simplification
 - [x] Elimination of the Provider system
+- [x] Hook support.
+- [x] Access to TTS.
+- [ ] Add LLM reference support to the plugin environment. (extract && search in text)
+- [ ] Add standalone support for Openai's new Schema. (vision)
 
 ## 📦 Features
 
@@ -71,9 +75,9 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 
 ### 🍔 Login Modes
 
-- `Login via url`: Use `/login token#https://provider.com` to Login. The program posts the token to the interface to
+- `Login via url`: Use `/login token$https://provider.com` to Login. The program posts the token to the interface to
   retrieve configuration information
-- `Login`: Use `/login https://api.com/v1#key#model` to login
+- `Login`: Use `/login https://api.com/v1$key$model` to login
 
 ### 🧀 Plugin Previews
 
@@ -167,6 +171,19 @@ env - Environment variables of the function
 
 Refer to the example plugins in the `plugins` directory and
 the [🧀 Plugin Development Document](https://llmkira.github.io/Docs/dev/basic) for plugin development documentation.
+
+### Hooks
+
+Hooks control the EventMessage in sender and receiver. For example, we have `voice_hook` in built-in hooks.
+
+you can enable it by setting `VOICE_REPLY_ME=true` in `.env`.
+
+```shell
+/env VOICE_REPLY_ME=true
+/env REECHO_VOICE_KEY=<key in dev.reecho.ai>
+```
+
+check the source code in `llmkira/extra/voice_hook.py`, learn to write your own hooks.
 
 ## 🧀 Sponsor
 

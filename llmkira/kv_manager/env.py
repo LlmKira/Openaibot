@@ -12,14 +12,16 @@ def parse_env_string(env_string) -> Dict[str, str]:
         env_string = env_string + ";"
     pattern = r"(\w+)\s*=\s*(.*?)\s*;"
     matches = re.findall(pattern, env_string, re.MULTILINE)
-    _env_table = {}
+    env_table = {}
     for match in matches:
-        _key = match[0]
-        _value = match[1]
-        _value = _value.strip().strip('"')
-        _key = _key.upper()
-        _env_table[_key] = _value
-    return _env_table
+        env_key = f"{match[0]}"
+        env_value = f"{match[1]}"
+        env_value = env_value.strip().strip('"')
+        env_key = env_key.upper()
+        if env_value.lower() == "none":
+            env_value = None
+        env_table[env_key] = env_value
+    return env_table
 
 
 class EnvManager(KvManager):
@@ -29,11 +31,19 @@ class EnvManager(KvManager):
     def prefix(self, key: str) -> str:
         return f"env:{key}"
 
+    async def get_env(self, env_name, default) -> Optional[str]:
+        result = await self.read_env()
+        if not result:
+            return default
+        return result.get(env_name, default)
+
     async def read_env(self) -> Optional[dict]:
         result = await self.read_data(self.user_id)
         if not result:
             return None
         try:
+            if isinstance(result, dict):
+                return result
             return json.loads(result)
         except Exception as e:
             logger.error(
@@ -42,7 +52,7 @@ class EnvManager(KvManager):
             return None
 
     async def set_env(
-        self, env_value: Union[dict, str], update=False
+        self, env_value: Union[dict, str], update=False, return_all=False
     ) -> Dict[str, str]:
         current_env = {}
         if update:
@@ -57,4 +67,6 @@ class EnvManager(KvManager):
             raise ValueError("Env String Should be dict or str")
         current_env.update(env_map)
         await self.save_data(self.user_id, json.dumps(current_env))
+        if return_all:
+            return current_env
         return env_map

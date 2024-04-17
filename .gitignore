@@ -148,3 +148,4 @@ config_dir/*.secret/
 /.pdm-python
 /.montydb/
 /.snapshot/
+/.tutorial.db

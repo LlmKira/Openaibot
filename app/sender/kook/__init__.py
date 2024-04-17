@@ -206,26 +206,23 @@ class KookBotRunner(Runner):
             )
             # 任务构建
             try:
-                """
-                # 转析器
-                message, _file = await self.loop_turn_only_message(
-                    platform_name=__sender__,
-                    message=message,
-                    file_list=_file
-                )
-                """
-                # Reply
-                messages = await self.transcribe(
+                event_message = await self.transcribe(
                     last_message=message,
                     files=_file,
                 )
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
+                )
+                # 转析器
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
+                # Reply
                 kook_task = TaskHeader.from_sender(
-                    messages,
-                    task_sign=Sign.from_root(
-                        disable_tool_action=disable_tool_action,
-                        response_snapshot=True,
-                        platform=__sender__,
-                    ),
+                    event_message,
+                    task_sign=sign,
                     message_id=None,
                     chat_id=message.ctx.channel.id,
                     user_id=message.author_id,
@@ -377,7 +374,9 @@ class KookBotRunner(Runner):
         async def listen_env_command(msg: Message, env_string: str):
             _manager = EnvManager(user_id=uid_make(__sender__, msg.author_id))
             try:
-                env_map = _manager.set_env(env_value=env_string, update=True)
+                env_map = await _manager.set_env(
+                    env_value=env_string, update=True, return_all=True
+                )
             except Exception as e:
                 logger.exception(f"[1202359]env update failed {e}")
                 text = formatting.format_text(
@@ -426,19 +425,20 @@ class KookBotRunner(Runner):
             # 追溯回复
 
         async def on_dm_create(msg: PrivateMessage):
-            """
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=msg.content,
-                uid=uid_make(__sender__, msg.author_id)
+                uid=uid_make(__sender__, msg.author_id),
             )
             if trigger:
                 if trigger.action == "allow":
-                    return await create_task(msg, disable_tool_action=trigger.function_enable)
+                    return await create_task(
+                        msg, disable_tool_action=trigger.function_enable
+                    )
                 if trigger.action == "deny":
                     return await msg.reply(content=trigger.message)
-            """
+
             if is_command(text=msg.content, command="/task"):
                 return await create_task(msg, disable_tool_action=False)
             if is_command(text=msg.content, command="/ask"):
