@@ -67,16 +67,16 @@ class RedisChatMessageHistory(BaseMessageStorage):
         items = [json.loads(m.decode("utf-8")) for m in _items[::-1]]
         return items
 
-    async def append(self, message: List[BaseModel]):
-        for m in message:
+    async def append(self, messages: List[BaseModel]):
+        for m in messages:
             message_json = m.json()
             await self.redis_client.lpush(self.key, message_json)
             if self.ttl:
                 await self.redis_client.expire(self.key, self.ttl)
 
-    async def write(self, message: List[BaseModel]):
+    async def write(self, messages: List[BaseModel]):
         self.clear()
-        await self.append(message)
+        await self.append(messages)
 
     def clear(self) -> None:
         self.redis_client.delete(self.key)

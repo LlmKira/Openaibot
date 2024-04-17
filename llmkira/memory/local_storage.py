@@ -55,11 +55,11 @@ class LocalStorage(BaseMessageStorage):
                     result.append(line)
             return result
 
-    async def write(self, message: List[BaseModel]):
+    async def write(self, messages: List[BaseModel]):
         async with self.lock:
             async with AIOFile(str(self.path), "w") as afp:
                 writer = Writer(afp)
-                for m in message:
+                for m in messages:
                     _json_line = m.model_dump_json(indent=None)
                     await writer(_json_line + "\n")
                 await afp.fsync()

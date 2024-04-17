@@ -17,13 +17,13 @@ class BaseMessageStorage(object):
         ...
 
     @abstractmethod
-    async def append(self, message: List[BaseModel]):
-        _json_lines = [m.model_dump_json(indent=None) for m in message]
+    async def append(self, messages: List[BaseModel]):
+        _json_lines = [m.model_dump_json(indent=None) for m in messages]
         ...
 
     @abstractmethod
-    async def write(self, message: List[BaseModel]):
-        _json_lines = [m.model_dump_json(indent=None) for m in message]
+    async def write(self, messages: List[BaseModel]):
+        _json_lines = [m.model_dump_json(indent=None) for m in messages]
         ...
 
     @abstractmethod
