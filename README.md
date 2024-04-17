@@ -172,6 +172,19 @@ env - Environment variables of the function
 Refer to the example plugins in the `plugins` directory and
 the [🧀 Plugin Development Document](https://llmkira.github.io/Docs/dev/basic) for plugin development documentation.
 
+### Hooks
+
+Hooks control the EventMessage in sender and receiver. For example, we have `voice_hook` in built-in hooks.
+
+you can enable it by setting `VOICE_REPLY_ME=true` in `.env`.
+
+```shell
+/env VOICE_REPLY_ME=true
+/env REECHO_VOICE_KEY=<key in dev.reecho.ai>
+```
+
+check the source code in `llmkira/extra/voice_hook.py`, learn to write your own hooks.
+
 ## 🧀 Sponsor
 
 [![sponsor](./.github/sponsor_ohmygpt.png)](https://www.ohmygpt.com)
