@@ -105,6 +105,8 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 Refer to the [🧀 Deployment Document](https://llmkira.github.io/Docs/) for more information.
 
 ```shell
+# Install Telegram Voice dependencies
+apt install ffmpeg
 # Install RabbitMQ
 docker pull rabbitmq:3.10-management
 docker run -d -p 5672:5672 -p 15672:15672 \
