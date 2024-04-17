@@ -1,6 +1,9 @@
+import os
 from urllib.parse import urlparse
 
 import requests
+from dotenv import load_dotenv
+from loguru import logger
 from pydantic import BaseModel
 
 
@@ -62,3 +65,16 @@ def split_setting_string(input_string):
     # 其他情况
     else:
         return None
+
+
+load_dotenv()
+
+if os.getenv("GLOBAL_OAI_KEY") and os.getenv("GLOBAL_OAI_ENDPOINT"):
+    logger.warning("\n\n**Using GLOBAL credential**\n\n")
+    global_credential = Credential(
+        api_key=os.getenv("GLOBAL_OAI_KEY"),
+        api_endpoint=os.getenv("GLOBAL_OAI_ENDPOINT"),
+        api_model=os.getenv("GLOBAL_OAI_MODEL", "gpt-3.5-turbo"),
+    )
+else:
+    global_credential = None

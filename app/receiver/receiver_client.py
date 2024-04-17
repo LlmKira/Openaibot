@@ -18,7 +18,7 @@ from deprecated import deprecated
 from loguru import logger
 from telebot import formatting
 
-from app.components.credential import Credential
+from app.components.credential import Credential, global_credential
 from app.components.user_manager import USER_MANAGER
 from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.kv_manager.env import EnvManager
@@ -242,6 +242,8 @@ class BaseReceiver(object):
         try:
             try:
                 credentials = await read_user_credential(user_id=task.receiver.uid)
+                if global_credential:
+                    credentials = global_credential
                 assert credentials, "You need to /login first"
                 llm_result = await llm.request_openai(
                     remember=remember,
