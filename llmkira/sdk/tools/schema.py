@@ -120,10 +120,12 @@ class BaseTool(ABC, BaseModel):
         return "You need to configure ENV to start use this tool"
 
     @abstractmethod
-    def func_message(self, message_text, **kwargs):
+    def func_message(self, message_text, message_raw, address, **kwargs):
         """
         If the message_text contains the keyword, return the function to be executed, otherwise return None
         :param message_text: 消息文本
+        :param message_raw: 消息原始数据 `EventMessage`
+        :param address: 消息地址 `tuple(sender,receiver)`
         :param kwargs :
         message_raw: 消息原始数据 `EventMessage`
         address: 消息地址 `tuple(sender,receiver)`

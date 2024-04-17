@@ -91,15 +91,13 @@ class SearchTool(BaseTool):
             )
         return message
 
-    def func_message(self, message_text, **kwargs):
+    def func_message(self, message_text, message_raw, address, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
-        address = kwargs.get("address")
-        if len(address) == 2:
-            receiver = address[1]
-            if sync(get_env_key(receiver.uid)) is None:
-                return None
+        receiver = address[1]
+        if sync(get_env_key(receiver.uid)) is None:
+            return None
         for i in self.keywords:
             if i in message_text:
                 return self.function
