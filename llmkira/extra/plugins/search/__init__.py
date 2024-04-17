@@ -7,11 +7,8 @@ __package__name__ = "llmkira.extra.plugins.search"
 __plugin_name__ = "search_in_google"
 __openapi_version__ = "20240416"
 
-from llmkira.kv_manager.env import EnvManager
 from llmkira.sdk.tools import verify_openapi_version  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
-
-from llmkira.sdk.utils import sync
 
 verify_openapi_version(__package__name__, __openapi_version__)  # noqa: E402
 from llmkira.openai.cell import Tool, ToolCall, class_tool  # noqa: E402
@@ -32,13 +29,6 @@ class Search(BaseModel):
 async def search_on_serper(search_sentence: str, api_key: str):
     result = await SerperSearchEngine(api_key=api_key).search(search_sentence)
     return build_search_tips(search_items=result)
-
-
-async def get_env_key(uid: str):
-    serper = await EnvManager(uid).get_env("SERPER_API_KEY", None)
-    if serper:
-        return serper
-    return None
 
 
 class Search(BaseModel):
@@ -95,9 +85,6 @@ class SearchTool(BaseTool):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
-        receiver = address[1]
-        if sync(get_env_key(receiver.uid)) is None:
-            return None
         for i in self.keywords:
             if i in message_text:
                 return self.function
