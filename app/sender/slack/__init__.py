@@ -322,21 +322,10 @@ class SlackBotRunner(Runner):
             await ack()
             _tool = ToolRegister().get_plugins_meta
             _paper = [
-                [tool_item.name, tool_item.get_function_string, tool_item.usage]
+                f"# {tool_item.name}\n{tool_item.get_function_string}\n```{tool_item.usage}```"
                 for tool_item in _tool
             ]
-            arg = [
-                formatting.mbold(item[0], escape=False)
-                + "\n"
-                + formatting.mcode(item[1])
-                + "\n"
-                + formatting.mitalic(item[2], escape=False)
-                + "\n"
-                for item in _paper
-            ]
-            reply_message_text = formatting.format_text(
-                formatting.mbold("🔧 Tool List"), *arg, separator="\n"
-            )
+            reply_message_text = convert("\n".join(_paper))
             return await respond(text=reply_message_text)
 
         async def auth_chain(uuid, user_id):
