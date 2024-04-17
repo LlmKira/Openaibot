@@ -10,11 +10,11 @@ from loguru import logger
 from telebot.async_telebot import AsyncTeleBot
 from telegramify_markdown import convert
 
+from app.middleware.llm_task import OpenaiMiddleware
 from app.receiver import function
 from app.receiver.receiver_client import BaseReceiver, BaseSender
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.file import File
-from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.openai.cell import Message
 from llmkira.openai.request import OpenAIResult
 from llmkira.task import Task, TaskHeader
@@ -151,7 +151,8 @@ class TelegramSender(BaseSender):
             reply_to_message_id=receiver.message_id,
             parse_mode="MarkdownV2",
         )
-        return logger.error("send error message")
+
+        return logger.error("send a error message")
 
     async def function(
         self,
@@ -167,25 +168,26 @@ class TelegramSender(BaseSender):
         new_receiver = task.receiver.model_copy()
         new_receiver.platform = __receiver__
         """更新接收者为当前平台，便于创建的函数消息能返回到正确的客户端"""
-        new_meta = task.task_sign.update_tool_calls(
+
+        new_sign = task.task_sign.update_tool_calls(
             tool_calls=tool_calls,
             certify_needed_map=certify_needed_map,
         )
         """克隆元数据为当前平台"""
 
-        await Task(queue=function.__receiver__).send_task(
+        logger.debug(
+            f"Sender.function:Create a new task {function.__receiver__} to {new_receiver} // {new_sign}"
+        )
+        await Task.create_and_send(
+            queue_name=function.__receiver__,
             task=TaskHeader.from_function(
-                llm_result=llm_result,
-                task_meta=new_meta,
+                llm_response=llm_result,
+                task_sign=new_sign,
                 receiver=new_receiver,
                 message=task.message,
-            )
+            ),
         )
         """发送到函数处理接收器"""
-
-        del new_meta
-        del task
-        """清理内存"""
 
 
 __sender__ = TelegramSender()
