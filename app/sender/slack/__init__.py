@@ -41,7 +41,7 @@ __sender__ = "slack"
 from ...components.credential import split_setting_string, Credential, ProviderError
 
 SlackTask = Task(queue=__sender__)
-__default_disable_tool_action__ = True
+__default_disable_tool_action__ = False
 __join_cache__ = {}
 
 

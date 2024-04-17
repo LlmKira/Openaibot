@@ -5,8 +5,10 @@
 # @Software: PyCharm
 import json
 import random
+from typing import List
 
 import aiohttp
+import khl
 from khl import Bot, Message, Cert, MessageTypes, PrivateMessage, PublicMessage
 from loguru import logger
 from telebot import formatting
@@ -18,12 +20,12 @@ from llmkira.kv_manager.file import File
 from llmkira.memory import global_message_runtime
 from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
-from llmkira.task.schema import Sign
+from llmkira.task.schema import Sign, EventMessage
 from .event import help_message, _upload_error_message_template, MappingDefault
 from ..schema import Runner
 
 __sender__ = "kook"
-__default_disable_tool_action__ = True
+__default_disable_tool_action__ = False
 
 from ..util_func import auth_reloader, is_command, is_empty_command, uid_make, login
 from llmkira.openapi.trigger import get_trigger_loop
@@ -89,6 +91,57 @@ class KookBotRunner(Runner):
         except CacheDatabaseError as e:  # noqa
             logger.error(f"Cache upload failed {e} for user {uid}")
             return None
+
+    async def transcribe(
+        self,
+        last_message: khl.Message,
+        messages: List[khl.Message] = None,
+        files: List[File] = None,
+    ) -> List[EventMessage]:
+        """
+        转录消息
+        :param last_message: 最后一条消息
+        :param messages: 消息列表
+        :param files: 文件列表
+        :return: 事件消息列表
+        """
+        files = files if files else []
+        messages = messages if messages else []
+        event_messages = []
+        for index, message in enumerate(messages):
+            event_messages.append(
+                EventMessage(
+                    chat_id=(
+                        message.ctx.guild.id
+                        if message.ctx.guild
+                        else message.ctx.channel.id
+                    ),
+                    user_id=str(message.author_id),
+                    text=f"{message.content}",
+                    created_at=str(message.msg_timestamp),  # timestamp
+                )
+            )
+        file_prompt = ""
+        if files:
+            for file in files:
+                file_prompt += f"\n<appendix name={file.file_name} key={file.file_key}>"
+                # inform to llm
+        event_messages.append(
+            EventMessage(
+                chat_id=(
+                    last_message.ctx.guild.id
+                    if last_message.ctx.guild
+                    else last_message.ctx.channel.id
+                ),
+                user_id=str(last_message.author_id),
+                text=f"{last_message.content} {file_prompt}",
+                created_at=str(last_message.msg_timestamp),  # timestamp
+                files=files,
+            )
+        )
+        # 按照时间戳排序
+        event_messages = sorted(event_messages, key=lambda x: x.created_at)
+        return event_messages
 
     async def run(self):
         if not BotSetting.available:
@@ -162,16 +215,21 @@ class KookBotRunner(Runner):
                 )
                 """
                 # Reply
-                kook_task = TaskHeader.from_kook(
-                    message,
-                    file=_file,
-                    deliver_back_message=[],
+                messages = await self.transcribe(
+                    last_message=message,
+                    files=_file,
+                )
+                kook_task = TaskHeader.from_sender(
+                    messages,
                     task_sign=Sign.from_root(
                         disable_tool_action=disable_tool_action,
                         response_snapshot=True,
                         platform=__sender__,
                     ),
-                    trace_back_message=[],
+                    message_id=None,
+                    chat_id=message.ctx.channel.id,
+                    user_id=message.author_id,
+                    platform=__sender__,
                 )
                 success, logs = await KookTask.send_task(task=kook_task)
                 if not success:
@@ -182,8 +240,8 @@ class KookBotRunner(Runner):
         @bot.command(name="login_via_url")
         async def listen_login_url_command(
             msg: Message,
-            provider_url: str = None,
-            token: str = None,
+            provider_url: str,
+            token: str,
         ):
             try:
                 credential = Credential.from_provider(
@@ -217,9 +275,9 @@ class KookBotRunner(Runner):
         @bot.command(name="login")
         async def listen_login_command(
             msg: Message,
-            openai_endpoint: str = None,
-            openai_key: str = None,
-            openai_model: str = None,
+            openai_endpoint: str,
+            openai_key: str,
+            openai_model: str,
         ):
             try:
                 credential = Credential(
@@ -239,7 +297,7 @@ class KookBotRunner(Runner):
                 )
             except Exception as e:
                 return await msg.reply(
-                    content=f"❌ Set endpoint failed\n`{e}`",
+                    content=f"❌ Set endpoint failed\n`{type(e)}`",
                     is_temp=True,
                     type=MessageTypes.KMD,
                 )
