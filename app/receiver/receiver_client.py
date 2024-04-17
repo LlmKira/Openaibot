@@ -250,6 +250,8 @@ class BaseReceiver(object):
                 logger.debug(f"Assistant:{assistant_message}")
             except OpenaiError as exc:
                 await self.sender.error(receiver=task.receiver, text=exc.message)
+                if os.getenv("DEBUG"):
+                    logger.exception(exc)
                 return exc
             except RuntimeError as exc:
                 logger.exception(exc)
@@ -272,7 +274,7 @@ class BaseReceiver(object):
                     if assistant_message.content:
                         await self.sender.reply(
                             receiver=task.receiver,
-                            message=assistant_message,
+                            messages=[assistant_message],
                             reply_to_message=False,
                         )
                     await self.sender.function(
@@ -383,6 +385,11 @@ class BaseReceiver(object):
                     renew_snap_data = []
                     for task in data:
                         if not task.snapshot_credential and not task.processed:
+                            if task.expire_at < int(time.time()):
+                                logger.info(
+                                    f"🧀 Expire snapshot {task.snap_uuid} at {router}"
+                                )
+                                continue
                             try:
                                 await Task.create_and_send(
                                     queue_name=task.channel, task=task.snapshot_data

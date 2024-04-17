@@ -15,6 +15,7 @@ from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 
 from llmkira.kv_manager.env import EnvManager
+from llmkira.kv_manager.tool_call import GLOBAL_TOOLCALL_CACHE_HANDLER
 from llmkira.openai.cell import ToolCall
 from llmkira.sdk.tools.register import ToolRegister
 from llmkira.task import Task, TaskHeader
@@ -44,7 +45,7 @@ async def append_snapshot(
     )
     snap.data.append(snap_shot)
     await global_snapshot_storage.write(user_id=creator, snapshot=snap)
-    return snap_shot.snap_uuid
+    return snap_shot.snapshot_credential
 
 
 async def create_snapshot(
@@ -58,6 +59,7 @@ async def create_snapshot(
     """
     认证链重发注册
     """
+    logger.debug(f"Create a snapshot for {task.receiver.platform}")
     task_snapshot = task.model_copy()
     meta: Sign = task_snapshot.task_sign.snapshot(
         name=__receiver__,
@@ -68,7 +70,9 @@ async def create_snapshot(
     )
     """添加认证链并重置路由数据"""
 
-    meta.verify_uuid = meta.get_snapshot_credential(tool_calls=tool_calls_pending_now)
+    meta.snapshot_credential = meta.get_snapshot_credential(
+        tool_calls=tool_calls_pending_now
+    )
     """生成验证UUID"""
 
     snap_shot_task = TaskHeader(
@@ -82,9 +86,10 @@ async def create_snapshot(
         snapshot_data=snap_shot_task,
         channel=channel,
         creator=task_snapshot.receiver.uid,
-        expire_at=int(time.time()) + 60 * 60 * 2,
+        expire_at=int(time.time()) + 60 * 2,
     )
-    return task_id
+    logger.debug(f"Create a snapshot {task_id}")
+    return snapshot_credential
 
 
 async def reply_user(platform: str, task: TaskHeader, text: str, receiver: Location):
@@ -143,6 +148,10 @@ class FunctionReceiver(object):
                 text=f"🔭 Sorry function `{pending_task.name}` executor not found...",
             )
             raise ModuleNotFoundError(f"Function {pending_task.name} not found")
+        await GLOBAL_TOOLCALL_CACHE_HANDLER.save_toolcall(
+            tool_call=pending_task, tool_call_id=pending_task.id
+        )
+        logger.debug(f"Save ToolCall {pending_task.id} to Cache Map")
         # Run Function
         _tool_obj = tool_cls()
         if _tool_obj.require_auth:
@@ -168,7 +177,7 @@ class FunctionReceiver(object):
                     f"\ntry `!auth {task_id}` when no slash command",
                 )
                 return logger.info(
-                    f"[Snapshot Create] \n--auth-require {pending_task.name} require."
+                    f"[Snapshot Auth] \n--auth-require {pending_task.name} require."
                 )
         # Get Env
         env_all = await EnvManager(user_id=task.receiver.uid).read_env()
@@ -212,13 +221,14 @@ class FunctionReceiver(object):
         task: TaskHeader = TaskHeader.model_validate_json(
             json_data=message.body.decode("utf-8")
         )
+        logger.debug(f"[552351] Received A Function Call from {task.receiver.platform}")
         # Get Function Call
         pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
             tool_calls_pending_now=task.task_sign.snapshot_credential,
             return_default_if_empty=True,
         )
         if not pending_task:
-            return logger.trace("No Function Call")
+            return logger.debug("But No ToolCall")
         logger.debug("Received A ToolCall")
         try:
             await self.run_pending_task(task=task, pending_task=pending_task)

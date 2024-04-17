@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/17 下午8:38
+import nest_asyncio
 from dotenv import load_dotenv
 from loguru import logger
 
 load_dotenv()
 
 __area__ = "receiver"
+
+nest_asyncio.apply()
 
 
 def run():
@@ -46,7 +49,7 @@ def run():
         await asyncio.gather(*_func)
 
     # 导入插件
-    load_plugins("llmkira/plugins")
+    load_plugins("llmkira/extra/plugins")
     load_from_entrypoint("llmkira.extra.plugin")
 
     loaded_message = "\n >>".join(get_entrypoint_plugins())
