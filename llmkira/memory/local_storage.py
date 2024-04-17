@@ -53,6 +53,8 @@ class LocalStorage(BaseMessageStorage):
                     if i >= lines:
                         break
                     result.append(line)
+            # 逆序
+            result = result[::-1]
             return result
 
     async def write(self, messages: List[BaseModel]):
