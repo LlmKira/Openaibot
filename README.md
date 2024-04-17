@@ -149,6 +149,9 @@ cp .env.exp .env&&nano .env
 docker-compose -f docker-compose.yml up -d
 ```
 
+The Docker configuration file `docker-compose.yml` contains all databases. In fact, Redis and MongoDB are not required.
+You can remove these databases yourself and use the local file system.
+
 Update image using `docker-compose pull`.
 
 Use `docker exec -it llmbot /bin/bash` to view Shell in Docker, enter `exit` to exit.
