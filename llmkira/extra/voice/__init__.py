@@ -73,6 +73,7 @@ async def request_reecho_speech(
         "stability_boost": 50,
         "probability_optimization": 99,
     }
+    audio_bytes = None
     async with aiohttp.ClientSession() as session:
         async with session.post(
             url, headers=headers, data=json.dumps(data)
@@ -81,8 +82,8 @@ async def request_reecho_speech(
                 response_json = await response.json()
                 audio_url = response_json["data"].get("audio", None)
                 audio_bytes = get_audio_bytes_from_data_url(audio_url)
-    if not audio_bytes:
-        return await request_cn_speech(text)
+            if not audio_bytes:
+                return await request_cn_speech(text)
     return audio_bytes
 
 
