@@ -47,22 +47,15 @@ class SearchTool(BaseTool):
     keywords: list = [
         "怎么",
         "Where",
-        "了解",
-        "简述",
+        "Search",
         "How to",
-        "是谁",
+        "为什么",
         "how to",
         "解释",
         "怎样的",
-        "新闻",
         "请教",
         "介绍",
-        "怎样",
-        "评价",
         "搜索",
-        "百度",
-        "谷歌",
-        "上网",
     ]
     env_required: List[str] = ["API_KEY"]
     env_prefix: str = "SERPER_"
@@ -88,6 +81,10 @@ class SearchTool(BaseTool):
         for i in self.keywords:
             if i in message_text:
                 return self.function
+        if message_text.endswith("?"):
+            return self.function
+        if message_text.endswith("？"):
+            return self.function
         # 正则匹配
         if self.pattern:
             match = self.pattern.match(message_text)
