@@ -17,7 +17,7 @@ def help_message():
 
 Private Chat Only:
     /login - login via url or something
-    /env - 配置变量,use as shell
+    /env - 配置变量 split by ; ,  use `/env ENV=NONE` to disable a env.
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
 """

@@ -186,6 +186,8 @@ you can enable it by setting `VOICE_REPLY_ME=true` in `.env`.
 /env REECHO_VOICE_KEY=<key in dev.reecho.ai>
 ```
 
+use `/env VOICE_REPLY_ME=NONE` to disable this env.
+
 check the source code in `llmkira/extra/voice_hook.py`, learn to write your own hooks.
 
 ## 🧀 Sponsor
