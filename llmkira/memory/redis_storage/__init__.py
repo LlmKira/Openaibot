@@ -2,7 +2,6 @@
 # Source: https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/utilities/redis.py
 from __future__ import annotations
 
-import json
 from typing import List
 
 import redis
@@ -64,19 +63,19 @@ class RedisChatMessageHistory(BaseMessageStorage):
 
     async def read(self, lines: int) -> List[str]:
         _items = self.redis_client.lrange(self.key, 0, lines - 1)
-        items = [json.loads(m.decode("utf-8")) for m in _items[::-1]]
+        items = [m.decode("utf-8") for m in _items[::-1]]
         return items
 
-    async def append(self, message: List[BaseModel]):
-        for m in message:
-            message_json = m.json()
-            await self.redis_client.lpush(self.key, message_json)
+    async def append(self, messages: List[BaseModel]):
+        for m in messages:
+            message_json = m.model_dump_json()
+            self.redis_client.lpush(self.key, message_json)
             if self.ttl:
-                await self.redis_client.expire(self.key, self.ttl)
+                self.redis_client.expire(self.key, self.ttl)
 
-    async def write(self, message: List[BaseModel]):
+    async def write(self, messages: List[BaseModel]):
         self.clear()
-        await self.append(message)
+        self.append(messages)
 
     def clear(self) -> None:
         self.redis_client.delete(self.key)

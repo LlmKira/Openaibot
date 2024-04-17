@@ -138,7 +138,7 @@ class OpenaiMiddleware(object):
         if isinstance(system_prompt, str):
             message_run.append(SystemMessage(content=system_prompt))
         history = await self.message_history.read(lines=10)
-        history = reversed(history)
+        logger.trace(f"History message {history}")
         for de_active_message in history:
             try:
                 msg = active_cell_string(de_active_message)
