@@ -56,9 +56,10 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 - [x] Implementation of a more robust plugin system
 - [x] Project structure simplification
 - [x] Elimination of the Provider system
-- [x] Hook support, access to TTS
+- [x] Hook support.
+- [x] Access to TTS.
 - [ ] Add LLM reference support to the plugin environment. (extract && search in text)
-- [ ] Add standalone support for Openai's new Schema.(vision)
+- [ ] Add standalone support for Openai's new Schema. (vision)
 
 ## 📦 Features
 
