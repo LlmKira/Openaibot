@@ -71,9 +71,9 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 
 ### 🍔 Login Modes
 
-- `Login via url`: Use `/login token#https://provider.com` to Login. The program posts the token to the interface to
+- `Login via url`: Use `/login token$https://provider.com` to Login. The program posts the token to the interface to
   retrieve configuration information
-- `Login`: Use `/login https://api.com/v1#key#model` to login
+- `Login`: Use `/login https://api.com/v1$key$model` to login
 
 ### 🧀 Plugin Previews
 
