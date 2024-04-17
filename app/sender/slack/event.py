@@ -23,15 +23,8 @@ def help_message():
 `/tool` - Tool list
 `/clear` - forget...you
 `/auth` - activate a task (my power),but outside the thread
-`/bind` - RssUrl.....
-`/unbind` - RssUrl.....
-`/set_endpoint` - <apikey>#<endpoint> for your own backend
-`/clear_endpoint` - clear endpoint and key
+`/login` - login via url or raw
 `/env` - set environment variable
-`/token` - bind your service provider token
-`/token_clear` - clear your service provider token
-`/func_ban` - ban function
-`/func_unban` - unban function
 
 Make sure you invite me before you call me in channel, wink~
 
@@ -59,6 +52,7 @@ class SlashCommand(BaseModel):
     &trigger_id=13345224609.738474920.8088930838d88f008e0
     &api_app_id=A123456
     """
+
     token: str = None
     team_id: str = None
     team_domain: str = None

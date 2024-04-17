@@ -6,6 +6,7 @@
 import json
 import time
 from ssl import SSLContext
+from typing import List
 
 import aiohttp
 from loguru import logger
@@ -15,27 +16,32 @@ from slack_bolt.context.ack.async_ack import AsyncAck
 from slack_bolt.context.respond.async_respond import AsyncRespond
 from slack_sdk.web.async_client import AsyncWebClient
 from telebot import formatting
-from telebot.formatting import escape_markdown
+from telegramify_markdown import convert
 
-from llmkira.extra.user import UserControl
-from llmkira.middleware.env_virtual import EnvManager
-from llmkira.middleware.router import RouterManager, Router
-from llmkira.sdk.func_calling.register import ToolRegister
-from llmkira.sdk.memory.redis import RedisChatMessageHistory
-from llmkira.sender.util_func import is_command, auth_reloader, parse_command
-from llmkira.setting.slack import BotSetting
+from app.sender.util_func import (
+    is_command,
+    auth_reloader,
+    parse_command,
+    uid_make,
+    login,
+)
+from app.setting.slack import BotSetting
+from llmkira.kv_manager.env import EnvManager
+from llmkira.kv_manager.file import File
+from llmkira.memory import global_message_runtime
+from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
+from llmkira.task.schema import Sign, EventMessage
 from .event import SlashCommand, SlackChannelInfo, help_message
-from .schema import SlackMessageEvent
+from .schema import SlackMessageEvent, SlackFile
 from ..schema import Runner
 
 __sender__ = "slack"
 
-from ...sdk.openapi.trigger import get_trigger_loop
-from ...sdk.schema import File
+from ...components.credential import split_setting_string, Credential, ProviderError
 
 SlackTask = Task(queue=__sender__)
-__default_function_enable__ = True
+__default_disable_tool_action__ = True
 __join_cache__ = {}
 
 
@@ -61,7 +67,7 @@ class SlackBotRunner(Runner):
         self.client = None
         self.bot = None
 
-    async def upload(self, file: SlackMessageEvent.SlackFile, uid: str):
+    async def upload(self, file: SlackFile, uid: str):
         if file.size > 1024 * 1024 * 20:
             return Exception(f"Chat File size too large:{file.size}")
         name = file.name
@@ -76,7 +82,54 @@ class SlackBotRunner(Runner):
             return Exception(
                 f"Download file failed {e},be sure bot have the scope `files.read`"
             )
-        return await File.upload_file(file_name=name, file_data=data, creator_uid=uid)
+        try:
+            return await File.upload_file(creator=uid, file_name=name, file_data=data)
+        except CacheDatabaseError as e:  # noqa
+            logger.error(f"Cache upload failed {e} for user {uid}")
+            return None
+
+    async def transcribe(
+        self,
+        last_message: SlackMessageEvent,
+        messages: List[SlackMessageEvent] = None,
+        files: List[File] = None,
+    ) -> List[EventMessage]:
+        """
+        转录消息
+        :param last_message: 最后一条消息
+        :param messages: 消息列表
+        :param files: 文件列表
+        :return: 事件消息列表
+        """
+        files = files if files else []
+        messages = messages if messages else []
+        event_messages = []
+        for index, message in enumerate(messages):
+            event_messages.append(
+                EventMessage(
+                    chat_id=str(message.channel),
+                    user_id=str(message.user),
+                    text=f"{message.text}",
+                    created_at=str(message.event_ts),  # timestamp
+                )
+            )
+        file_prompt = ""
+        if files:
+            for file in files:
+                file_prompt += f"\n<appendix name={file.file_name} key={file.file_key}>"
+                # inform to llm
+        event_messages.append(
+            EventMessage(
+                chat_id=str(last_message.channel),
+                user_id=str(last_message.user),
+                text=f"{last_message.text} {file_prompt}",
+                created_at=str(last_message.event_ts),  # timestamp
+                files=files,
+            )
+        )
+        # 按照时间戳排序
+        event_messages = sorted(event_messages, key=lambda x: x.created_at)
+        return event_messages
 
     async def run(self):
         if not BotSetting.available:
@@ -98,11 +151,13 @@ class SlackBotRunner(Runner):
         )
         bot = self.bot
 
-        async def create_task(event_: SlackMessageEvent, funtion_enable: bool = False):
+        async def create_task(
+            event_: SlackMessageEvent, disable_tool_action: bool = True
+        ):
             """
             创建任务
             :param event_: SlackMessageEvent
-            :param funtion_enable: 是否启用功能
+            :param disable_tool_action: 是否启用功能
             :return:
             """
             message = event_
@@ -122,7 +177,7 @@ class SlackBotRunner(Runner):
                     _file.append(
                         await self.upload(
                             file=file,
-                            uid=UserControl.uid_make(__sender__, message.user),
+                            uid=uid_make(__sender__, message.user),
                         )
                     )
                 except Exception as e:
@@ -134,25 +189,31 @@ class SlackBotRunner(Runner):
                     )
             message.text = message.text if message.text else ""
             logger.info(
-                f"slack:create task from {message.channel} {message.text[:300]} funtion_enable:{funtion_enable}"
+                f"slack:create task from {message.channel} {message.text[:300]} {disable_tool_action}"
             )
             # 任务构建
             try:
                 # 转析器
+                """
                 message, _file = await self.loop_turn_only_message(
                     platform_name=__sender__, message=message, file_list=_file
                 )
+                """
                 # Reply
                 success, logs = await SlackTask.send_task(
-                    task=TaskHeader.from_slack(
-                        message=message,
-                        file=_file,
-                        deliver_back_message=[],
-                        task_meta=TaskHeader.Meta.from_root(
-                            function_enable=funtion_enable,
-                            release_chain=True,
+                    task=TaskHeader.from_sender(
+                        event_messages=await self.transcribe(
+                            last_message=message, files=_file
+                        ),
+                        task_sign=Sign.from_root(
+                            disable_tool_action=disable_tool_action,
+                            response_snapshot=True,
                             platform=__sender__,
                         ),
+                        message_id=message.thread_ts,
+                        chat_id=message.channel,
+                        user_id=message.user,
+                        platform=__sender__,
                     )
                 )
                 if not success:
@@ -165,240 +226,53 @@ class SlackBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
-        @bot.command(command="/clear_endpoint")
-        async def listen_clear_endpoint_command(
-            ack: AsyncAck, respond: AsyncRespond, command
-        ):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            # _cmd, _arg = parse_command(command=message.text)
-            _tips = "🪄 Done"
-            await UserControl.clear_endpoint(
-                uid=UserControl.uid_make(__sender__, command.user_id)
-            )
-            return await respond(text=_tips)
-
-        @bot.command(command="/set_endpoint")
-        async def listen_set_endpoint_command(
-            ack: AsyncAck, respond: AsyncRespond, command
-        ):
+        @bot.command(command="/login")
+        async def listen_login_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
             if not command.text:
                 return
             _arg = command.text
-            _except = _arg.split("#", maxsplit=2)
-            if len(_except) == 3:
-                openai_key, openai_endpoint, model = _except
-            elif len(_except) == 2:
-                openai_key, openai_endpoint = _except
-                model = None
-            else:
-                openai_key, openai_endpoint = (_arg, None)
-                model = None
-            try:
-                new_driver = await UserControl.set_endpoint(
-                    uid=UserControl.uid_make(__sender__, command.user_id),
-                    api_key=openai_key,
-                    endpoint=openai_endpoint,
-                    model=model,
-                )
-            except Exception as e:
+            settings = split_setting_string(_arg)
+            if not settings:
                 return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(f"🪄 Failed: {e}", escape=False),
-                        formatting.mitalic(
-                            "Format: /set_endpoint <openai_key>#<openai_endpoint>#<llm_model>"
-                        ),
-                        formatting.mitalic(f"Model Name: {UserControl.get_model()}"),
-                        separator="\n",
+                    text=convert(
+                        "🔑 **Incorrect format.**\n"
+                        "You can set it via `https://api.com/v1$key$model` format, "
+                        "or you can log in via URL using `token$https://provider.com`."
+                    ),
+                )
+            if len(settings) == 2:
+                try:
+                    credential = Credential.from_provider(
+                        token=settings[0], provider_url=settings[1]
                     )
+                except ProviderError as e:
+                    return await respond(text=f"Login failed, website return {e}")
+                except Exception as e:
+                    logger.error(f"Login failed {e}")
+                    return await respond(text=f"Login failed, because {type(e)}")
+                else:
+                    await login(
+                        uid=uid_make(__sender__, command.user_id),
+                        credential=credential,
+                    )
+                    return await respond(
+                        text="Login success as provider! Welcome master!"
+                    )
+            elif len(settings) == 3:
+                credential = Credential(
+                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
+                )
+                await login(
+                    uid=uid_make(__sender__, command.user_id),
+                    credential=credential,
+                )
+                return await respond(
+                    text=f"Login success as {settings[2]}! Welcome master! "
                 )
             else:
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold("🪄 Done", escape=False),
-                        new_driver.detail,
-                        separator="\n",
-                    )
-                )
-
-        @bot.command(command="/func_ban")
-        async def listen_func_ban_command(
-            ack: AsyncAck, respond: AsyncRespond, command
-        ):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            try:
-                func_list = await UserControl.block_plugin(
-                    uid=UserControl.uid_make(__sender__, command.user_id),
-                    plugin_name=_arg,
-                )
-            except Exception as e:
-                logger.error(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e), escape=False), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done", escape=False),
-                    formatting.mitalic("Function Ban List"),
-                    *[f"`{escape_markdown(item)}`" for item in func_list],
-                    separator="\n",
-                )
-            )
-
-        @bot.command(command="/func_unban")
-        async def listen_func_unban_command(
-            ack: AsyncAck, respond: AsyncRespond, command
-        ):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            try:
-                func_list = await UserControl.unblock_plugin(
-                    uid=UserControl.uid_make(__sender__, command.user_id),
-                    plugin_name=_arg,
-                )
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e), escape=False), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done", escape=False),
-                    formatting.mitalic("Function Ban List"),
-                    *[f"`{escape_markdown(item)}`" for item in func_list],
-                    separator="\n",
-                )
-            )
-
-        @bot.command(command="/token")
-        async def listen_token_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            try:
-                token = await UserControl.set_token(
-                    uid=UserControl.uid_make(__sender__, command.user_id), token=_arg
-                )
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e), escape=False), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done", escape=False),
-                    formatting.mcode(f"Bind Success {token}", escape=False),
-                    separator="\n",
-                )
-            )
-
-        @bot.command(command="/token_clear")
-        async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            try:
-                token = await UserControl.set_token(
-                    uid=UserControl.uid_make(__sender__, command.user_id), token=None
-                )
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e)), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done"),
-                    formatting.mcode(f"Unbind Success {token}"),
-                    separator="\n",
-                )
-            )
-
-        @bot.command(command="/bind")
-        async def listen_bind_command(ack: AsyncAck, respond: AsyncRespond, command):
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            _manager = RouterManager()
-            try:
-                router = Router.build_from_receiver(
-                    receiver_channel=__sender__, user_id=command.user_id, dsn=_arg
-                )
-                _manager.add_router(router=router)
-                router_list = _manager.get_router_by_user(
-                    user_id=command.user_id, to_=__sender__
-                )
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e), escape=False), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done", escape=False),
-                    *[
-                        f"`{escape_markdown(item.dsn(user_dsn=True))}`"
-                        for item in router_list
-                    ],
-                    separator="\n",
-                )
-            )
-
-        @bot.command(command="/unbind")
-        async def listen_unbind_command(ack: AsyncAck, respond: AsyncRespond, command):  # noqa
-            command: SlashCommand = SlashCommand.model_validate(command)
-            await ack()
-            if not command.text:
-                return
-            _arg = command.text
-            _manager = RouterManager()
-            try:
-                router = Router.build_from_receiver(
-                    receiver_channel=__sender__, user_id=command.user_id, dsn=_arg
-                )
-                _manager.remove_router(router=router)
-                router_list = _manager.get_router_by_user(
-                    user_id=command.user_id, to_=__sender__
-                )
-            except Exception as e:
-                logger.exception(e)
-                return await respond(
-                    text=formatting.format_text(
-                        formatting.mbold(str(e)), separator="\n"
-                    )
-                )
-            return await respond(
-                text=formatting.format_text(
-                    formatting.mbold("🪄 Done"),
-                    *[
-                        f"`{escape_markdown(item.dsn(user_dsn=True))}`"
-                        for item in router_list
-                    ],
-                    separator="\n",
-                )
-            )
+                return logger.trace(f"Login failed {settings}")
 
         @bot.command(command="/env")
         async def listen_env_command(ack: AsyncAck, respond: AsyncRespond, command):
@@ -407,21 +281,16 @@ class SlackBotRunner(Runner):
             if not command.text:
                 return
             _arg = command.text
-            _manager = EnvManager.from_meta(
-                platform=__sender__, user_id=command.user_id
-            )
+            _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
             try:
-                _meta_data = _manager.parse_env(env_string=_arg)
-                updated_env = await _manager.update_env(env=_meta_data)
+                env_map = _manager.set_env(env_value=_arg, update=True)
             except Exception as e:
                 logger.exception(f"[213562]env update failed {e}")
-                text = formatting.format_text(
-                    formatting.mbold("🧊 Failed"), separator="\n"
-                )
+                text = formatting.mbold("🧊 Failed")
             else:
                 text = formatting.format_text(
                     formatting.mbold("🦴 Env Changed"),
-                    formatting.mcode(json.dumps(updated_env, indent=2)),
+                    formatting.mcode(json.dumps(env_map, indent=2)),
                     separator="\n",
                 )
             await respond(text=text)
@@ -430,8 +299,8 @@ class SlackBotRunner(Runner):
         async def listen_clear_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
-            RedisChatMessageHistory(
-                session_id=f"{__sender__}:{command.user_id}", ttl=60 * 60 * 1
+            await global_message_runtime.update_session(
+                session_id=uid_make(__sender__, command.user_id)
             ).clear()
             return await respond(
                 text=formatting.format_text(formatting.mbold("🪄 Done"), separator="\n")
@@ -473,7 +342,9 @@ class SlackBotRunner(Runner):
         async def auth_chain(uuid, user_id):
             try:
                 await auth_reloader(
-                    uuid=uuid, user_id=f"{user_id}", platform=__sender__
+                    snapshot_credential=uuid,
+                    user_id=f"{user_id}",
+                    platform=__sender__,
                 )
             except Exception as e:
                 auth_result = (
@@ -532,11 +403,12 @@ class SlackBotRunner(Runner):
             if not await validate_join(event_=event_):
                 return None
             _text = event_.text
+            """
             # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=_text,
-                uid=UserControl.uid_make(__sender__, event_.user),
+                uid=uid_make(__sender__, event_.user),
             )
             if trigger:
                 if trigger.action == "allow":
@@ -549,15 +421,16 @@ class SlackBotRunner(Runner):
                         text=trigger.message,
                         thread_ts=event_.thread_ts,
                     )
+            """
             # 默认指令
             if is_command(text=_text, command="!chat"):
                 return await create_task(
-                    event_, funtion_enable=__default_function_enable__
+                    event_, disable_tool_action=__default_disable_tool_action__
                 )
             if is_command(text=_text, command="!task"):
-                return await create_task(event_, funtion_enable=True)
+                return await create_task(event_, disable_tool_action=False)
             if is_command(text=_text, command="!ask"):
-                return await create_task(event_, funtion_enable=False)
+                return await create_task(event_, disable_tool_action=True)
             if is_command(text=_text, command="!auth") or is_command(
                 text=_text, command="`!auth"
             ):
@@ -575,7 +448,7 @@ class SlackBotRunner(Runner):
                 f"<@{BotSetting.bot_id}>"
             ):
                 return await create_task(
-                    event_, funtion_enable=__default_function_enable__
+                    event_, disable_tool_action=__default_disable_tool_action__
                 )
 
         @bot.event("message")
