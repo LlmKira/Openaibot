@@ -6,8 +6,8 @@
 <a href="https://hub.docker.com/repository/docker/sudoskys/llmbot/general">
     <img src="https://img.shields.io/docker/pulls/sudoskys/llmbot" alt="docker">
 </a>
-<a href="https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml">
-    <img src="https://github.com/llmkira/openaibot/actions/workflows/docker-ci.yaml/badge.svg" alt="docker workflow">
+<a href="https://badge.fury.io/py/llmkira">
+    <img src="https://badge.fury.io/py/llmkira.svg" alt="docker workflow">
 </a>
 <br />
 <a href="https://t.me/Openai_LLM">
