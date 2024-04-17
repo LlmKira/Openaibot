@@ -370,19 +370,14 @@ class Sign(BaseModel):
 
 class Location(BaseModel):
     """
-    Union[str, int]
     here .... channel
     """
 
     platform: str = Field(None, description="platform")
-    user_id: Union[str, int] = Field(None, description="user id")
-    chat_id: Union[str, int] = Field(
-        None, description="guild id(channel in dm)/Telegram chat id"
-    )
-    thread_id: Optional[Union[str, int]] = Field(
-        None, description="channel id/Telegram thread"
-    )
-    message_id: Optional[Union[str, int]] = Field(None, description="message id")
+    user_id: str = Field(None, description="user id")
+    chat_id: str = Field(None, description="guild id(channel in dm)/Telegram chat id")
+    thread_id: Optional[str] = Field(None, description="channel id/Telegram thread")
+    message_id: Optional[str] = Field(None, description="message id")
 
     @model_validator(mode="after")
     def to_string(self):
@@ -417,7 +412,7 @@ class TaskHeader(BaseModel):
         cls,
         event_messages: List[EventMessage],
         task_sign: Sign,
-        message_id: str,
+        message_id: Optional[str],
         chat_id: str,
         user_id: str,
         platform: str,

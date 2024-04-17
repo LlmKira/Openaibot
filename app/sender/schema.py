@@ -6,6 +6,7 @@
 from abc import abstractmethod, ABC
 from typing import List
 
+from deprecated import deprecated
 from loguru import logger
 
 from llmkira.openapi.transducer import LoopRunner
@@ -14,6 +15,7 @@ from llmkira.task.schema import EventMessage
 
 class Runner(ABC):
     @staticmethod
+    @deprecated(reason="Temporarily Deprecated")
     async def loop_turn_only_message(platform_name, message, file_list) -> tuple:
         """
         将 Openai 消息传入 Loop 进行修饰
