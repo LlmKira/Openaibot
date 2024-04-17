@@ -2,6 +2,8 @@
 # @Time    : 2023/8/18 上午9:37
 # @Author  : sudoskys
 # @File    : llm_task.py
+import os
+from pprint import pprint
 from typing import List, Optional
 
 from loguru import logger
@@ -10,8 +12,16 @@ from pydantic import SecretStr
 from app.components.credential import Credential
 from app.components.user_manager import record_cost
 from llmkira.kv_manager.instruction import InstructionManager
+from llmkira.kv_manager.tool_call import GLOBAL_TOOLCALL_CACHE_HANDLER
 from llmkira.memory import global_message_runtime
-from llmkira.openai.cell import Tool, Message, active_cell_string, SystemMessage
+from llmkira.openai.cell import (
+    Tool,
+    Message,
+    active_cell_string,
+    SystemMessage,
+    ToolMessage,
+    AssistantMessage,
+)
 from llmkira.openai.request import OpenAIResult, OpenAI, OpenAICredential
 from llmkira.task import TaskHeader
 from llmkira.task.schema import EventMessage
@@ -29,6 +39,64 @@ def unique_function(tools: List[Tool]):
     if len(functions) != len(tools):
         logger.warning("llm_task:Tool name is not unique")
     return functions
+
+
+async def validate_mock(messages: List[Message]):
+    """
+    所有的具有 tool_calls 的 AssistantMessage 后面必须有对应的 ToolMessage 响应，其他消息类型按照原顺序
+    """
+    map_cache = {}
+    paired_messages = []
+    # 缓存已经存在的 ToolMessage
+    for message in messages:
+        if isinstance(message, AssistantMessage):
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    map_cache[tool_call.id] = AssistantMessage(
+                        content=message.content, tool_calls=[tool_call]
+                    )
+    # 激活 ToolMessage
+    for message in messages:
+        if isinstance(message, ToolMessage):
+            tool_call_id = message.tool_call_id
+            if tool_call_id in map_cache:
+                paired_assistant_message = map_cache[tool_call_id]
+            else:
+                tool_call_origin = await GLOBAL_TOOLCALL_CACHE_HANDLER.get_toolcall(
+                    tool_call_id
+                )
+                if tool_call_origin:
+                    paired_assistant_message = AssistantMessage(
+                        content=None, tool_calls=[tool_call_origin]
+                    )
+                else:
+                    paired_assistant_message = None
+            if paired_assistant_message:
+                paired_messages.append(paired_assistant_message)
+                paired_messages.append(message)
+            else:
+                logger.error(f"llm_task:ToolCall not found {tool_call_id}, skip")
+        else:
+            paired_messages.append(message)
+
+    # 删除没有被响应的 AssistantMessage
+    def pair_check(_messages):
+        new_list = []
+        for i in range(len(_messages) - 1):
+            if isinstance(_messages[i], AssistantMessage) and _messages[i].tool_calls:
+                if isinstance(_messages[i + 1], ToolMessage):
+                    new_list.append(_messages[i])
+            else:
+                new_list.append(_messages[i])
+        new_list.append(_messages[-1])
+        return new_list
+
+    final_messages = pair_check(paired_messages)
+    if len(final_messages) != len(messages):
+        # 获取被删除的 AssistantMessage
+        diff = [msg for msg in messages if msg not in final_messages]
+        logger.debug(f"llm_task:validate_mock cache, delete:{diff}")
+    return final_messages
 
 
 class OpenaiMiddleware(object):
@@ -70,6 +138,7 @@ class OpenaiMiddleware(object):
         if isinstance(system_prompt, str):
             message_run.append(SystemMessage(content=system_prompt))
         history = await self.message_history.read(lines=10)
+        history = reversed(history)
         for de_active_message in history:
             try:
                 msg = active_cell_string(de_active_message)
@@ -125,15 +194,23 @@ class OpenaiMiddleware(object):
             tools = None
         # 根据模型选择不同的驱动a
         assert messages, RuntimeError("llm_task:message cant be none...")
+        messages = await validate_mock(messages)
         endpoint: OpenAI = OpenAI(
             messages=messages, tools=tools, model=credential.api_model
         )
         # 调用Openai
-        result: OpenAIResult = await endpoint.request(
-            session=OpenAICredential(
-                api_key=SecretStr(credential.api_key), base_url=credential.api_endpoint
+        try:
+            result: OpenAIResult = await endpoint.request(
+                session=OpenAICredential(
+                    api_key=SecretStr(credential.api_key),
+                    base_url=credential.api_endpoint,
+                )
             )
-        )
+        except Exception as e:
+            if os.getenv("DEBUG"):
+                pprint(messages)
+            logger.error(f"llm_task:Openai request error {e}")
+            raise e
         _message = result.default_message
         _usage = result.usage.total_tokens
         await record_cost(
