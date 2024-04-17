@@ -118,17 +118,23 @@ class TelegramSender(BaseSender):
         :param messages: OPENAI Format Message
         :param reply_to_message: 是否回复消息
         """
-        for message in messages:
-            event_message = EventMessage.from_openai_message(
-                message=message, locate=receiver
-            )
-            await self.file_forward(receiver=receiver, file_list=event_message.files)
-            if not event_message.text:
+        event_message = [
+            EventMessage.from_openai_message(message=item, locate=receiver)
+            for item in messages
+        ]
+        # 转析器
+        _, event_message, receiver = await self.hook(
+            platform_name=__receiver__, messages=event_message, locate=receiver
+        )
+        event_message: list
+        for event in event_message:
+            await self.file_forward(receiver=receiver, file_list=event.files)
+            if not event.text:
                 continue
             try:
                 await self.bot.send_message(
                     chat_id=receiver.chat_id,
-                    text=convert(event_message.text),
+                    text=convert(event.text),
                     reply_to_message_id=receiver.message_id
                     if reply_to_message
                     else None,
@@ -137,7 +143,7 @@ class TelegramSender(BaseSender):
             except telebot.apihelper.ApiTelegramException as e:
                 if "message to reply not found" in str(e):
                     await self.bot.send_message(
-                        chat_id=receiver.chat_id, text=convert(event_message.text)
+                        chat_id=receiver.chat_id, text=convert(event.text)
                     )
                 else:
                     logger.error(f"User {receiver.user_id} send message error")

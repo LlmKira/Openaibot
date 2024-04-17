@@ -118,20 +118,25 @@ class KookSender(BaseSender):
         """
         模型直转发，Message是Openai的类型
         """
-        for item in messages:
-            # raw_message = await self.loop_turn_from_openai(platform_name=__receiver__, message=item, locate=receiver)
-            event_message = EventMessage.from_openai_message(
-                message=item, locate=receiver
-            )
-            await self.file_forward(receiver=receiver, file_list=event_message.files)
-            if not event_message.text:
+        event_message = [
+            EventMessage.from_openai_message(message=item, locate=receiver)
+            for item in messages
+        ]
+        # 转析器
+        _, event_message, receiver = await self.hook(
+            platform_name=__receiver__, messages=event_message, locate=receiver
+        )
+        event_message: list
+        for event in event_message:
+            await self.file_forward(receiver=receiver, file_list=event.files)
+            if not event.text:
                 continue
             await self.send_message(
                 channel_id=receiver.thread_id,
                 user_id=receiver.user_id,
                 dm=receiver.thread_id == receiver.chat_id,
                 message_type=MessageTypes.KMD,
-                content=event_message.text,
+                content=event.text,
             )
         return logger.trace("reply message")
 

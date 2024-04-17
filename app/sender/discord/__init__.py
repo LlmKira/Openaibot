@@ -197,24 +197,21 @@ class DiscordBotRunner(Runner):
             )
             # 任务构建
             try:
-                """
-                # 转析器
-                message, _file = await self.loop_turn_only_message(
-                    platform_name=__sender__,
-                    message=message,
-                    file_list=_file
+                event_message = await self.transcribe(last_message=message, files=_file)
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
                 )
-                """
+                # 转析器
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
                 # Reply
-                messages = await self.transcribe(last_message=message, files=_file)
                 success, logs = await DiscordTask.send_task(
                     task=TaskHeader.from_sender(
-                        messages,
-                        task_sign=Sign.from_root(
-                            disable_tool_action=disable_tool_action,
-                            response_snapshot=True,
-                            platform=__sender__,
-                        ),
+                        event_message,
+                        task_sign=sign,
                         chat_id=str(
                             message.guild_id if message.guild_id else message.channel_id
                         ),

@@ -206,26 +206,23 @@ class KookBotRunner(Runner):
             )
             # 任务构建
             try:
-                """
-                # 转析器
-                message, _file = await self.loop_turn_only_message(
-                    platform_name=__sender__,
-                    message=message,
-                    file_list=_file
-                )
-                """
-                # Reply
-                messages = await self.transcribe(
+                event_message = await self.transcribe(
                     last_message=message,
                     files=_file,
                 )
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
+                )
+                # 转析器
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
+                # Reply
                 kook_task = TaskHeader.from_sender(
-                    messages,
-                    task_sign=Sign.from_root(
-                        disable_tool_action=disable_tool_action,
-                        response_snapshot=True,
-                        platform=__sender__,
-                    ),
+                    event_message,
+                    task_sign=sign,
                     message_id=None,
                     chat_id=message.ctx.channel.id,
                     user_id=message.author_id,

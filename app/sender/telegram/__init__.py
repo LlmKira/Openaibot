@@ -184,19 +184,24 @@ class TelegramBotRunner(Runner):
                 history_message_list = []
                 if message.reply_to_message:
                     history_message_list.append(message.reply_to_message)
+                event_message = await self.transcribe(
+                    last_message=message,
+                    messages=history_message_list,
+                    files=uploaded_file,
+                )
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
+                )
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
                 # Reply
                 success, logs = await TelegramTask.send_task(
                     task=TaskHeader.from_sender(
-                        task_sign=Sign.from_root(
-                            disable_tool_action=disable_tool_action,
-                            response_snapshot=True,
-                            platform=__sender__,
-                        ),
-                        event_messages=await self.transcribe(
-                            last_message=message,
-                            messages=history_message_list,
-                            files=uploaded_file,
-                        ),
+                        task_sign=sign,
+                        event_messages=event_message,
                         chat_id=str(message.chat.id),
                         user_id=str(message.from_user.id),
                         message_id=str(message.message_id),

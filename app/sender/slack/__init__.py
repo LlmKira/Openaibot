@@ -195,22 +195,20 @@ class SlackBotRunner(Runner):
             # 任务构建
             try:
                 # 转析器
-                """
-                message, _file = await self.loop_turn_only_message(
-                    platform_name=__sender__, message=message, file_list=_file
+                event_message = await self.transcribe(last_message=message, files=_file)
+                sign = Sign.from_root(
+                    disable_tool_action=disable_tool_action,
+                    response_snapshot=True,
+                    platform=__sender__,
                 )
-                """
+                _, event_message, sign = await self.hook(
+                    platform=__sender__, messages=event_message, sign=sign
+                )
                 # Reply
                 success, logs = await SlackTask.send_task(
                     task=TaskHeader.from_sender(
-                        event_messages=await self.transcribe(
-                            last_message=message, files=_file
-                        ),
-                        task_sign=Sign.from_root(
-                            disable_tool_action=disable_tool_action,
-                            response_snapshot=True,
-                            platform=__sender__,
-                        ),
+                        event_messages=event_message,
+                        task_sign=sign,
                         message_id=message.thread_ts,
                         chat_id=message.channel,
                         user_id=message.user,

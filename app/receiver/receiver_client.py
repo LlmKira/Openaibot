@@ -14,7 +14,6 @@ from typing import Optional, Tuple, List, Dict
 
 import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
-from deprecated import deprecated
 from loguru import logger
 from telebot import formatting
 
@@ -26,7 +25,7 @@ from llmkira.openai import OpenaiError
 from llmkira.openai.cell import ToolCall, Message, Tool
 from llmkira.openai.request import OpenAIResult
 from llmkira.openapi.fuse import get_error_plugin
-from llmkira.openapi.transducer import LoopRunner
+from llmkira.openapi.hook import run_hook, Trigger
 from llmkira.sdk.tools import ToolRegister
 from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import Location, EventMessage, Router
@@ -116,30 +115,23 @@ async def reorganize_tools(task: TaskHeader, error_times_limit: int = 10) -> Lis
 
 class BaseSender(object, metaclass=ABCMeta):
     @staticmethod
-    @deprecated(reason="use another function")
-    async def loop_turn_from_openai(platform_name, message, locate):
+    async def hook(platform_name, messages: List[EventMessage], locate: Location):
         """
-        # FIXME 删除这个函数
-        将 Openai 消息传入 Receiver Loop 进行修饰
-        此过程将忽略掉其他属性。只留下 content
+        :param platform_name: 平台名称
+        :param messages: 消息
+        :param locate: 位置
+        :return: 平台名称，消息，位置
         """
-        loop_runner = LoopRunner()
-        trans_loop = loop_runner.get_receiver_loop(platform_name=platform_name)
-        _raw_message = EventMessage.from_openai_message(message=message, locate=locate)
-        await loop_runner.exec_loop(
-            pipe=trans_loop,
-            pipe_arg={
-                "message": _raw_message,
-            },
+        arg, kwarg = await run_hook(
+            Trigger.RECEIVER,
+            platform=platform_name,
+            messages=messages,
+            locate=locate,
         )
-        arg: dict = loop_runner.result_pipe_arg
-        if not arg.get("message"):
-            logger.error("Message Loop Lose Message")
-        raw_message: EventMessage = arg.get("message", _raw_message)
-        assert isinstance(
-            raw_message, EventMessage
-        ), f"message type error {type(raw_message)}"
-        return raw_message
+        platform_name = kwarg.get("platform", platform_name)
+        messages = kwarg.get("messages", messages)
+        locate = kwarg.get("locate", locate)
+        return platform_name, messages, locate
 
     @abstractmethod
     async def file_forward(self, receiver: Location, file_list: list):
