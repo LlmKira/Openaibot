@@ -88,7 +88,7 @@ def is_empty_command(text: str) -> bool:
 
 async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -> None:
     """
-    :param uuid: verify id
+    :param snapshot_credential: verify id
     :param platform: message channel
     :param user_id: raw user id
     :raise LookupError Not Found

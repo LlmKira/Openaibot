@@ -19,7 +19,7 @@ from llmkira.openai.cell import UserMessage, ToolMessage, ToolCall, Message
 from llmkira.openai.request import OpenAIResult
 
 if TYPE_CHECKING:
-    from app.sender.slack.schema import SlackMessageEvent
+    pass
 
 
 class EventMessage(BaseModel):
@@ -413,13 +413,14 @@ class TaskHeader(BaseModel):
     message: List[EventMessage] = Field(None, description="消息内容")
 
     @classmethod
-    def from_telegram(
+    def from_sender(
         cls,
         event_messages: List[EventMessage],
         task_sign: Sign,
         message_id: str,
         chat_id: str,
         user_id: str,
+        platform: str,
     ):
         """
         从telegram消息中构建任务
@@ -427,13 +428,13 @@ class TaskHeader(BaseModel):
         return cls(
             task_sign=task_sign,
             sender=Location(
-                platform="telegram",
+                platform=platform,
                 chat_id=chat_id,
                 user_id=user_id,
                 message_id=message_id,
             ),
             receiver=Location(
-                platform="telegram",
+                platform=platform,
                 chat_id=chat_id,
                 user_id=user_id,
                 message_id=message_id,
@@ -634,85 +635,6 @@ class TaskHeader(BaseModel):
                 else message.ctx.channel.id,
                 user_id=message.author_id,
                 message_id=message.id if reply else None,
-            ),
-            message=message_list,
-        )
-
-    @classmethod
-    def from_slack(
-        cls,
-        message: "SlackMessageEvent",
-        deliver_back_message,
-        task_sign: Sign,
-        hide_file_info: bool = False,
-        file: List[File] = None,
-        reply: bool = True,
-    ):
-        """
-        https://api.slack.com/methods
-        """
-        # none -> []
-        deliver_back_message = [] if not deliver_back_message else deliver_back_message
-
-        def _convert(_message: "SlackMessageEvent") -> Optional[EventMessage]:
-            """
-            消息标准化
-            """
-            if not _message:
-                raise ValueError("Message is empty")
-            if _message.__repr_name__() == "SlackMessageEvent":
-                user_id = message.user
-                chat_id = message.channel
-                thread_id = message.channel
-                text = _message.text
-                created_at = message.event_ts
-            else:
-                raise ValueError(f"Unknown message type {type(_message)}")
-            return EventMessage(
-                user_id=user_id,
-                chat_id=chat_id,
-                thread_id=thread_id,
-                text=text if text else "(empty message)",
-                created_at=str(created_at),
-            )
-
-        deliver_message_list: List[EventMessage] = [
-            _convert(msg) for msg in deliver_back_message
-        ]
-        # A
-        _file_prompt = []
-        for _file in file:
-            _file_prompt.append(_file.file_prompt)
-        # 转换为标准消息
-        now_message = _convert(message)
-        assert now_message, "HeadMessage is empty"
-        # 附加文件信息
-        now_message.file = file
-        # 追加文件元信息
-        if not hide_file_info:
-            now_message.text += "\n" + "\n".join(_file_prompt)
-
-        message_list = []
-        message_list.extend(deliver_message_list)
-        message_list.append(now_message)
-        # 去掉 None
-        message_list = [item for item in message_list if item]
-
-        return cls(
-            task_sign=task_sign,
-            sender=cls.Location(
-                platform="slack",
-                thread_id=message.channel,
-                chat_id=message.channel,
-                user_id=message.user,
-                message_id=message.thread_ts if reply else None,
-            ),
-            receiver=cls.Location(
-                platform="slack",
-                thread_id=message.channel,
-                chat_id=message.channel,
-                user_id=message.user,
-                message_id=message.thread_ts if reply else None,
             ),
             message=message_list,
         )

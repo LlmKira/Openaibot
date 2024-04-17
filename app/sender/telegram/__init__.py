@@ -185,7 +185,7 @@ class TelegramBotRunner(Runner):
                     history_message_list.append(message.reply_to_message)
                 # Reply
                 success, logs = await TelegramTask.send_task(
-                    task=TaskHeader.from_telegram(
+                    task=TaskHeader.from_sender(
                         task_sign=Sign.from_root(
                             disable_tool_action=disable_tool_action,
                             response_snapshot=True,
@@ -199,6 +199,7 @@ class TelegramBotRunner(Runner):
                         chat_id=str(message.chat.id),
                         user_id=str(message.from_user.id),
                         message_id=str(message.message_id),
+                        platform=__sender__,
                     )
                 )
                 if not success:
@@ -282,7 +283,7 @@ class TelegramBotRunner(Runner):
         )
         async def listen_clear_command(message: types.Message):
             await global_message_runtime.update_session(
-                session_id=f"{__sender__}:{message.from_user.id}"
+                session_id=uid_make(__sender__, message.from_user.id)
             ).clear()
             return await bot.reply_to(
                 message,

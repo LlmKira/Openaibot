@@ -16,15 +16,8 @@ def help_message():
     /auth - POWER
 
 Private Chat Only:
-    /bind - RSS
-    /unbind - RSS
-    /set_endpoint - <apikey>#<endpoint>
-    /clear_endpoint - Clear endpoint and key
+    /login - login via url or something
     /env - 配置变量,use as shell
-    /token - bind your token
-    /token_clear - clear your token
-    /func_ban - ban function
-    /func_unban - unban function
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
 """
