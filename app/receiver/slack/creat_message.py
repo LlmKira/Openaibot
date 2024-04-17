@@ -38,12 +38,12 @@ class ChatMessageCreator(object):
     }
     DIVIDER_BLOCK = {"type": "divider"}
 
-    def __init__(self,
-                 channel,
-                 user_name: str = None,
-                 thread_ts: str = None,
-
-                 ):
+    def __init__(
+        self,
+        channel,
+        user_name: str = None,
+        thread_ts: str = None,
+    ):
         self.channel = channel
         self.username = user_name if user_name else "OAIbot"
         self.icon_emoji = ":robot_face:"

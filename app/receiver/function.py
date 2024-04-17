@@ -181,6 +181,8 @@ class FunctionReceiver(object):
                 )
         # Get Env
         env_all = await EnvManager(user_id=task.receiver.uid).read_env()
+        if not env_all:
+            env_all = {}
         env_map = {}
         for require in _tool_obj.env_list:
             env_map[require] = env_all.get(require, None)

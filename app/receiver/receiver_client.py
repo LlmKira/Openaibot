@@ -186,6 +186,8 @@ class BaseSender(object, metaclass=ABCMeta):
         total_silent = True
         assert isinstance(tool_calls, list), f"task batch type error {type(tool_calls)}"
         secrets = await EnvManager(user_id=receiver.uid).read_env()
+        if not secrets:
+            secrets = {}
         # EnvManager 读取用户环境变量
         for tool_call in tool_calls:
             tool_map, message, silent = await generate_authorization(
