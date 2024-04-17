@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:8ef08bc1d045b284301385f49975839084a4a4a36a870b896695a1ddaa1e13c0"
+content_hash = "sha256:c425b7765cfad8ef9d05993e7bb48f321af2602ba1033bb6ad08e6181e7fea12"
 
 [[package]]
 name = "aio-pika"
@@ -20,6 +20,20 @@ dependencies = [
 files = [
     {file = "aio_pika-9.4.1-py3-none-any.whl", hash = "sha256:2d4cec5a5d32005a71e31faaf5be58ee993fa29b8243a5d04b8f4a73df272fe8"},
     {file = "aio_pika-9.4.1.tar.gz", hash = "sha256:d177404a27aa797a2ac935f6aa2bbb287fe1f0ddf5628ca20a237b7db3ea6324"},
+]
+
+[[package]]
+name = "aiofile"
+version = "3.8.8"
+requires_python = ">=3.7, <4"
+summary = "Asynchronous file operations."
+groups = ["default"]
+dependencies = [
+    "caio~=0.9.0",
+]
+files = [
+    {file = "aiofile-3.8.8-py3-none-any.whl", hash = "sha256:41e8845cce055779cd77713d949a339deb012eab605b857765e8f8e52a5ed811"},
+    {file = "aiofile-3.8.8.tar.gz", hash = "sha256:41f3dc40bd730459d58610476e82e5efb2f84ae6e9fa088a9545385d838b8a43"},
 ]
 
 [[package]]
@@ -327,6 +341,25 @@ files = [
 ]
 
 [[package]]
+name = "caio"
+version = "0.9.13"
+requires_python = ">=3.7, <4"
+summary = "Asynchronous file IO for Linux MacOS or Windows."
+groups = ["default"]
+files = [
+    {file = "caio-0.9.13-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:a921c0514ea2bb161d9d9c4940d409a2431cc6bab89abbf20fb16fdc6964f650"},
+    {file = "caio-0.9.13-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:0a04bcac15b0c18057ec57dd9666c4d5c1058958a8db5191b46a1e54931c4a6e"},
+    {file = "caio-0.9.13-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:18307046421f4a8cac85c3d84aa941ab283fbbf0e57f0e5f81a306a057668f43"},
+    {file = "caio-0.9.13-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:789f8b55f4a2b46be14361df3ac8d14b6c8f0a3730badd70cb1b7778fcdc7039"},
+    {file = "caio-0.9.13-cp311-cp311-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a914684bad2a757cf013ae88d785d81659a3add1885bad60cd20bfbd3068bd5a"},
+    {file = "caio-0.9.13-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:b1e4252b783ad25f15eeff6e412f7e9ec9409e7b4a81fd2893dc1ce1819385ff"},
+    {file = "caio-0.9.13-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:a07c9933543d18f98525f34a786700134403f13050a5bd22a642629e2ab410d4"},
+    {file = "caio-0.9.13-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a090ab82f21b310b56fa6afe04b3be92a0d1577a2e57127b61426c9dd6df34be"},
+    {file = "caio-0.9.13-py3-none-any.whl", hash = "sha256:582cbfc6e203d1dedf662ba972a94db6e744fe0b6bb9e02922b0f86803006fc9"},
+    {file = "caio-0.9.13.tar.gz", hash = "sha256:26f1e08a442bef4526a66142ea4e325e22dca8f040800aecb3caf8fae0589e98"},
+]
+
+[[package]]
 name = "certifi"
 version = "2024.2.2"
 requires_python = ">=3.6"
@@ -551,6 +584,40 @@ files = [
 ]
 
 [[package]]
+name = "curl-cffi"
+version = "0.6.2"
+requires_python = ">=3.8"
+summary = "libcurl ffi bindings for Python, with impersonation support"
+groups = ["default"]
+dependencies = [
+    "certifi",
+    "cffi>=1.12.0",
+]
+files = [
+    {file = "curl_cffi-0.6.2-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:23b8a2872b160718c04b06b1f8aa4fb1a2f4f94bce7040493515e081a27cad19"},
+    {file = "curl_cffi-0.6.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:ad3c1cf5360810825ec4bc3da425f26ee4098878a615dab9d309a99afd883ba9"},
+    {file = "curl_cffi-0.6.2-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3d01de6ed737ad1924aaa0198195b9020c38e77ce90ea3d72b9eacf4938c7adf"},
+    {file = "curl_cffi-0.6.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:37e513cc149d024a2d625e202f2cc9d4423d2937343ea2e06f797d99779e62dc"},
+    {file = "curl_cffi-0.6.2-cp38-abi3-win32.whl", hash = "sha256:12e829af97cbf7c1d5afef177e786f6f404ddf163b08897a1ed087cadbeb4837"},
+    {file = "curl_cffi-0.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:3791b7a9ae4cb1298165300f2dc2d60a86779f055570ae83163fc2d8a74bf714"},
+    {file = "curl_cffi-0.6.2.tar.gz", hash = "sha256:9ee519e960b5fc6e0bbf13d0ecba9ce5f6306cb929354504bf03cc30f59a8f63"},
+]
+
+[[package]]
+name = "deprecated"
+version = "1.2.14"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+summary = "Python @deprecated decorator to deprecate old python classes, functions or methods."
+groups = ["default"]
+dependencies = [
+    "wrapt<2,>=1.10",
+]
+files = [
+    {file = "Deprecated-1.2.14-py2.py3-none-any.whl", hash = "sha256:6fac8b097794a90302bdbb17b9b815e732d3c4720583ff1b198499d78470466c"},
+    {file = "Deprecated-1.2.14.tar.gz", hash = "sha256:e5323eb936458dccc2582dc6f9c322c852a775a27065ff2b0c4970b9d53d01b3"},
+]
+
+[[package]]
 name = "dnspython"
 version = "2.6.1"
 requires_python = ">=3.8"
@@ -717,6 +784,16 @@ dependencies = [
 files = [
     {file = "ffmpeg-python-0.2.0.tar.gz", hash = "sha256:65225db34627c578ef0e11c8b1eb528bb35e024752f6f10b78c011f6f64c4127"},
     {file = "ffmpeg_python-0.2.0-py3-none-any.whl", hash = "sha256:ac441a0404e053f8b6a1113a77c0f452f1cfc62f6344a769475ffdc0f56c23c5"},
+]
+
+[[package]]
+name = "file-read-backwards"
+version = "3.0.0"
+summary = "Memory efficient way of reading files line-by-line from the end of file"
+groups = ["default"]
+files = [
+    {file = "file_read_backwards-3.0.0-py2.py3-none-any.whl", hash = "sha256:09fbac8bbf6d72c053c6e789768671002806c572d210fbe6861088a4a8bd0968"},
+    {file = "file_read_backwards-3.0.0.tar.gz", hash = "sha256:512c3e534043527a8fae2a0b7151aa255f2da303e77fd40f7dcf42a1e091cc26"},
 ]
 
 [[package]]
@@ -1173,6 +1250,17 @@ files = [
 ]
 
 [[package]]
+name = "json-repair"
+version = "0.13.0"
+requires_python = ">=3.7"
+summary = "A package to repair broken json strings"
+groups = ["default"]
+files = [
+    {file = "json_repair-0.13.0-py3-none-any.whl", hash = "sha256:8ac65f8d4bacc565775b7afa3129ac9bc43ff9ea2c08220c8b4fac798a0b9d84"},
+    {file = "json_repair-0.13.0.tar.gz", hash = "sha256:37b95e47a9ded4e9c20a749c4296f1ddada3bea1589133f1af2d9a19ba0952e6"},
+]
+
+[[package]]
 name = "khl-py"
 version = "0.3.17"
 requires_python = ">=3.6"
@@ -1379,17 +1467,40 @@ files = [
 ]
 
 [[package]]
-name = "motor"
-version = "3.4.0"
-requires_python = ">=3.7"
-summary = "Non-blocking MongoDB driver for Tornado or asyncio"
+name = "mistletoe"
+version = "1.3.0"
+requires_python = "~=3.5"
+summary = "A fast, extensible Markdown parser in pure Python."
+groups = ["default"]
+files = [
+    {file = "mistletoe-1.3.0-py3-none-any.whl", hash = "sha256:a0710d0cdb7d2458cef91cf6b9b897db442927f8778dae890cbbfb1853a51700"},
+    {file = "mistletoe-1.3.0.tar.gz", hash = "sha256:bd0e788add9b4478d19ec792f6d5fb908a20e70abfe61193f29178c55d3adbe9"},
+]
+
+[[package]]
+name = "montydb"
+version = "2.5.2"
+requires_python = ">=3.7,<3.12"
+summary = "Monty, Mongo tinified. MongoDB implemented in Python !"
+groups = ["default"]
+files = [
+    {file = "montydb-2.5.2-py3-none-any.whl", hash = "sha256:5269528c6a4fa8df1728cc629fd4d9c5deaa22fff96f04bc148bce5b588b2aea"},
+    {file = "montydb-2.5.2.tar.gz", hash = "sha256:b9857e3fec14fedaa48f0fd14004b8b4b9486ff0612cf055f778bfb50a03d774"},
+]
+
+[[package]]
+name = "montydb"
+version = "2.5.2"
+extras = ["lmdb"]
+requires_python = ">=3.7,<3.12"
+summary = "Monty, Mongo tinified. MongoDB implemented in Python !"
 groups = ["default"]
 dependencies = [
-    "pymongo<5,>=4.5",
+    "montydb==2.5.2",
 ]
 files = [
-    {file = "motor-3.4.0-py3-none-any.whl", hash = "sha256:4b1e1a0cc5116ff73be2c080a72da078f2bb719b53bc7a6bb9e9a2f7dcd421ed"},
-    {file = "motor-3.4.0.tar.gz", hash = "sha256:c89b4e4eb2e711345e91c7c9b122cb68cce0e5e869ed0387dd0acb10775e3131"},
+    {file = "montydb-2.5.2-py3-none-any.whl", hash = "sha256:5269528c6a4fa8df1728cc629fd4d9c5deaa22fff96f04bc148bce5b588b2aea"},
+    {file = "montydb-2.5.2.tar.gz", hash = "sha256:b9857e3fec14fedaa48f0fd14004b8b4b9486ff0612cf055f778bfb50a03d774"},
 ]
 
 [[package]]
@@ -2397,6 +2508,22 @@ files = [
     {file = "tarina-0.4.4-cp39-cp39-win_amd64.whl", hash = "sha256:c392456d23594be690a6d1124cb550ae7387694369518c5c5b1aa5354b542ead"},
     {file = "tarina-0.4.4-py3-none-any.whl", hash = "sha256:1c2a10a993119c4a857d721a3b1d6ad0f28193cbcab14b0887abef5940fe0e38"},
     {file = "tarina-0.4.4.tar.gz", hash = "sha256:a72d1f45ebce420199ba2bfb41a1c8269b3cc71fb89f9d5526fd3481b25f8350"},
+]
+
+[[package]]
+name = "telegramify-markdown"
+version = "0.1.2"
+requires_python = ">=3.8"
+summary = "Convert Markdown to a format usable by Telegram."
+groups = ["default"]
+dependencies = [
+    "emoji>=2.10.1",
+    "mistletoe>=1.3.0",
+    "pytelegrambotapi>=4.16.1",
+]
+files = [
+    {file = "telegramify_markdown-0.1.2-py3-none-any.whl", hash = "sha256:0ea42ec0d7f15a42fa674d63c682c4cedf22a844ac9ee592f6ceec41d01e5714"},
+    {file = "telegramify_markdown-0.1.2.tar.gz", hash = "sha256:1305ed2f72892a52d7fc6b9bc67958eb4fd593ee0f5255c29e4bbee55afde373"},
 ]
 
 [[package]]

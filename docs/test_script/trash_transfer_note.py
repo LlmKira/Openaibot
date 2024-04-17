@@ -6,7 +6,7 @@
 from typing import List, Any
 
 from llmkira.sdk.schema import File
-from llmkira.sdk.openapi.transducer import resign_transfer, Builder, Parser
+from llmkira.openapi.transducer import resign_transfer, Builder, Parser
 
 __receiver_name__ = "discord"
 

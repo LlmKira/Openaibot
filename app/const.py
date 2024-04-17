@@ -1,0 +1,1 @@
+DBNAME = "openai_bot:"

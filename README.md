@@ -26,198 +26,152 @@
 </p>
 
 <p align="center">
-  <a href="https://llmkira.github.io/Docs/">🍩 部署文档</a>
+  <a href="https://llmkira.github.io/Docs/">🍩 Deploy Docs</a>
   &
-  <a href="https://llmkira.github.io/Docs/dev/basic">🧀 开发文档</a>
+  <a href="https://llmkira.github.io/Docs/dev/basic">🧀 Dev Docs</a>
   &
-  <a href="README_EN.md">📝 English Readme</a>
-  &
-  <a href=".github/CONTRIBUTING.md">🤝 贡献必看</a>
+  <a href=".github/CONTRIBUTING.md">🤝 Contribute</a>
 </p>
 
+> Don't hesitate to Star ⭐️, Issue 📝, and PR 🛠️
 
-> **Look for English README? Click [here](README_EN.md). We also have English
-documentation [here](https://llmkira.github.io/Docs/en).**
+> Python>=3.9
 
-> 部署遇到问题？提交 Issue 帮助我们提升可用性
+This project uses the ToolCall feature.
 
-此项目为自部署，实用可扩展的机器人核心，以 `FunctionCall` `ToolCall` 为核心，支持多种消息平台。
+It integrates a message queuing and snapshot system, offering plugin mechanisms and authentication prior to plugin
+execution.
 
-采用消息队列，很好处理函数请求，支持繁杂的插件和功能设计。良好支持文件系统。
-
-支持多种模型源，支持跨平台消息转发。
+The model adheres to the Openai Schema, other models are not supported. Please adapt using gateways independently.
 
 | Demo                              |
 |-----------------------------------|
 | ![sticker](./docs/chain_chat.gif) |
 
-与之前的项目不同的是，此项目尝试基于消息平台复刻 ChatGpt 的插件系统，实现部分或更进一步的功能。
-
-> 因为 func call 为 feature,所以只支持 Openai 类型的 api, 不打算支持没有 func call 的 LLM
-
 ## 🍔 Roadmap
 
-- [ ] 去除历史遗留代码
-- [ ] 删除计量系统
-- [ ] 删除模型选择系统，统一为 OpenAI Schema
-- [ ] 使用更好的插件系统
-- [ ] 简化项目结构
-- [ ] 尝试用本地化方案替代 RabbitMQ
-- [ ] 去除 Provider 体系
+- [x] Removal of legacy code
+- [x] Deletion of metric system
+- [x] Deletion of model selection system, unified to OpenAI Schema
+- [x] Implementation of a more robust plugin system
+- [x] Project structure simplification
+- [x] Elimination of the Provider system
 
-## 📦 Feature
+## 📦 Features
 
-- 🍪 完善的插件开发生态，采用经典设计，通过 `pip` 安装即可使用
-- 📝 消息系统，不限时间，不限发送端，定义发送接收者，逻辑完全解耦
-- 📎 路由消息，自定义消息路由，以路由决定运作方式
-- 📬 公共开放限额/私人自配置后端/代理Token认证，提供灵活可扩展的鉴权开发方案
-- 🍾 支持中间件拦截开发，开发扩展即可操作流程前后数据
-- 🎵 细化的统计系统，轻松统计使用情况
-- 🍰 支持插件人在回路验证，可鉴权，可设置插件黑名单
-- 📦 完善标准的文件交互支持，上传/下载文件
-- 🍖 支持个人单独配置环境密钥，为插件提供个人的私有环境变量
-- 🍟 支持大语言模型增量支持，支持多平台扩展，继承标准类即可适配
-- 🍔 同时支持 `FunctionCall` `ToolCall` 特性，根据模型动态构建需要的函数类
+- 🍪 A comprehensive plugin development ecosystem, adopting a classic design, and seamless integration with plugins
+  through `pip` installation
+- 📝 Message system with no time or sender constraints, offering fully decoupled logics
+- 📬 Offers Login via a URL mechanism, providing a flexible and expandable authentication development solution
+- 🍰 Empowers users to authorize plugin execution. Users can configure plugin environment variables at their discretion
+- 📦 Support for plugins to access files
+- 🍟 Multi-platform support – extend new platforms by inheriting the base class
+- 🍔 Plugins can determine their appearance in new sessions dynamically, preventing performance degradation despite large
+  amounts of plugins
 
-### 🧀 部分插件预览
+### 🍔 Login Modes
 
-| Sticker Converter                   | Timer Func                      | Translate Func                               |
+- `Login via url`: Use `/login token#https://provider.com` to Login. The program posts the token to the interface to
+  retrieve configuration information
+- `Login`: Use `/login https://api.com/v1#key#model` to login
+
+### 🧀 Plugin Previews
+
+| Sticker Converter                   | Timer Function                  | Translate Function                           |
 |-------------------------------------|---------------------------------|----------------------------------------------|
 | ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
 
-### 🧀 认证系统介绍
+### 🎬 Platform Support
 
-我们采用的认证系统称为 `Service Provider`，即服务提供商，它的作用是为每个发送者分配 Endpoint/Key/Model ，用于鉴权。
-拥有一个 `token` 作为绑定的 OpenKey。程序会调用设定的 `Service Provider` 读取私有 Key/配置 Token 来获取鉴权信息。
+| Platform | Support | File System | Remarks                                |
+|----------|---------|-------------|----------------------------------------|
+| Telegram | ✅       | ✅           |                                        |
+| Discord  | ✅       | ✅           |                                        |
+| Kook     | ✅       | ✅           | Does not support `triggering by reply` |
+| Slack    | ✅       | ✅           | Does not support `triggering by reply` |
+| QQ       | ❌       |             |                                        |
+| Wechat   | ❌       |             |                                        |
+| Twitter  | ❌       |             |                                        |
+| Matrix   | ❌       |             |                                        |
+| IRC      | ❌       |             |                                        |
+| ...      |         |             | Create Issue/PR                        |
 
-![auth](./docs/SeriveProvider.svg)
+## 📦 Quick Start
 
-认证组件和后端均需要自行实现。
+Refer to the [🧀 Deployment Document](https://llmkira.github.io/Docs/) for more information.
 
-### 🎬 平台支持
-
-| 平台       | 支持情况 | 文件系统 | 备注          |
-|----------|------|------|-------------|
-| Telegram | ✅    | ✅    |             |
-| Discord  | ✅    | ✅    |             |
-| Kook     | ✅    | ✅    | 不支持 `被回复启动` |
-| Slack    | ✅    | ✅    | 不支持 `被回复启动` |
-| QQ       | ❌    |      |             |
-| Wechat   | ❌    |      |             |
-| Twitter  | ❌    |      |             |
-| Matrix   | ❌    |      |             |
-| IRC      | ❌    |      |             |
-| ...      |      |      | 创建Issue/PR  |
-
-## 📦 快速开始
-
-阅读 [🧀 部署文档](https://llmkira.github.io/Docs/) 获得更多信息。
-
-请提前用 `pdm run python3 start_sender.py`  `pdm run python3 start_receiver.py` 测试是否能正常运行。
-
-#### 性能指标测试(Until 2023/11/1)
-
-注意，不包括pm2，redis，rabbitmq，mongodb，docker等服务的内存占用。
-
-| 进程         | 内存均值      | 测算命令                                             | client   |
-|------------|-----------|--------------------------------------------------|----------|
-| `receiver` | 120.202MB | `python3 -m memray run --live start_receiver.py` | telegram |
-| `sender`   | 83.375MB  | `python3 -m memray run --live start_sender.py`   | telegram |
+```shell
+# Install RabbitMQ
+docker pull rabbitmq:3.10-management
+docker run -d -p 5672:5672 -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=admin \
+  -e RABBITMQ_DEFAULT_PASS=8a8a8a \
+  --hostname myRabbit \
+  --name rabbitmq \
+  rabbitmq:3.10-management
+docker ps -l
+# Install Project
+pip install pdm
+pdm install -G bot
+cp .env.exp .env && nano .env
+# Test
+pdm run python3 start_sender.py
+pdm run python3 start_receiver.py
+# Host
+pdm start pm2.json
+```
 
 ### 🥣 Docker
 
 Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
 
-#### 自动 Docker/Docker-compose安装
+#### Automatic Docker/Docker-compose Installation
 
-如果你在使用一台崭新的服务器，你可以使用下面的Shell来尝试自动安装本项目。
+If you are using a brand new server, you can use the following shell to automatically install this project.
 
-此脚本会自动使用 Docker 方法安装所需服务并映射端口，如果您已经部署了 `redis` ，`rabbitmq` ，`mongodb` 。
-
-请自行修改 `docker-compose.yml` 文件。
+This script automatically installs the required services and maps ports using Docker methods. If you have
+deployed `redis`, `rabbitmq`, `mongodb`, please modify the `docker-compose.yml` file accordingly.
 
 ```shell
-
 curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
 ```
 
-#### 手动 Docker-compose安装
+#### Manual Docker-compose Installation
 
 ```shell
 git clone https://github.com/LlmKira/Openaibot.git
 cd Openaibot
 cp .env.exp .env&&nano .env
 docker-compose -f docker-compose.yml up -d
-
 ```
 
-更新镜像使用 `docker-compose pull`。
+Update image using `docker-compose pull`.
 
-在 docker 中查看 Shell，使用 `docker exec -it llmbot /bin/bash`，输入 `exit` 退出。
+Use `docker exec -it llmbot /bin/bash` to view Shell in Docker, enter `exit` to exit.
 
-### 🍔 Shell
-
-人工使用Pm2启动，需要自行安装 `redis` ，`rabbitmq` ，`mongodb` 。
+## 🍪 Slash Commands
 
 ```shell
-git clone https://github.com/LlmKira/Openaibot.git
-pip install pdm
-cd Openaibot
-pdm install -G bot
-cp .env.exp .env && nano .env
-apt install npm -y && npm install pm2 && pm2 start pm2.json
-pm2 monit
-
+clear - Deletes chat records
+help - Displays documentation
+chat - Conversation
+task - Use a function to converse
+ask - Disable function-based conversations
+tool - Lists all functions
+login - Login
+auth - Authorize a function
+env - Environment variables of the function
 ```
 
-重启程序使用 `pm2 restart pm2.json` 。
+## 💻 How to Develop Plugins?
 
-> 推荐使用 `pdm` 进行依赖管理，因为我们使用了 `pydantic^1.9.0`，为了防止出现版本冲突，我们使用了 `pdm` 进行依赖管理。
+Refer to the example plugins in the `plugins` directory and
+the [🧀 Plugin Development Document](https://llmkira.github.io/Docs/dev/basic) for plugin development documentation.
 
-## 🍪 Slash Command
+## 📜 Notice
 
-```shell
-clear - 删除聊天记录
-help - 显示文档
-chat - 对话
-task - 启用函数以对话
-ask - 禁止函数以对话
-tool - 列出所有函数
-set_endpoint - 设置私有 key 和 endpoint
-clear_endpoint - 清除私有 key 和 endpoint
-auth - 授权一个函数
-env - 函数环境变量
-token - 绑定令牌
-token_clear - 清除令牌绑定
-func_ban - 禁用一个函数
-func_unban - 解禁一个函数
-bind - 绑定消息源
-unbind - 解绑消息源
-```
+> This project, named OpenAiBot, signifying "Open Artificial Intelligence Robot", is not officially affiliated with
+> OpenAI.
 
-## 💻 如何开发插件？
-
-插件开发文档请参考 `plugins` 目录下的示例插件和 [🧀 插件开发文档](https://llmkira.github.io/Docs/dev/basic)
-
-## 🤝 We need your help!
-
-This is a long term project and we started the development of the LLM APP very early!
-
-We applied a plugin-like system and search online before GPT3 OpenaiApi was released(davinci-003)
-
-After many iterations, we have worked hard to make this project more standardized, generic, and open.
-
-We can't do it on our own at the moment:
-
-- [ ] We need help with the documentation
-- [ ] Web UI
-
-Feel free to submit a Pull Request or discuss, we'd love to receive your contribution!
-
-## 📜 告知
-
-> 此项目与 Openai 官方无关，全称为 OpenAiBot，表示开放人工智能机器人，并不表示为 Openai 所属机器人。
-
-> 如果您所在辖区禁止使用 Openai 服务，请勿使用此项目。
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsudoskys%2FOpenaibot?ref=badge_small)

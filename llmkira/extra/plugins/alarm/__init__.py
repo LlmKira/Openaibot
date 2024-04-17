@@ -1,53 +1,33 @@
 # -*- coding: utf-8 -*-
-
-
 __package__name__ = "llmkira.extra.plugins.alarm"
 __plugin_name__ = "set_alarm_reminder"
-__openapi_version__ = "20231111"
-
-from llmkira.sdk.func_calling import verify_openapi_version
-
-verify_openapi_version(__package__name__, __openapi_version__)
-
-from pydantic import field_validator, ConfigDict
-
-from llmkira.sdk.schema import Function
+__openapi_version__ = "20240416"
 
 import datetime
 import re
+from typing import Optional, Union, Type
 
-from loguru import logger
-from pydantic import BaseModel
+from llmkira.openai.cell import Tool, ToolCall, class_tool
+from llmkira.sdk.tools import verify_openapi_version
+from llmkira.sdk.utils import sync
+from llmkira.task.schema import Location, EventMessage, Sign, ToolResponse
 
-from llmkira.receiver.aps import SCHEDULER
-from llmkira.schema import RawMessage
-from llmkira.sdk.func_calling import PluginMetadata, BaseTool
-from llmkira.sdk.func_calling.schema import FuncPair
-from llmkira.task import Task, TaskHeader
+verify_openapi_version(__package__name__, __openapi_version__)  # noqa
+from llmkira.sdk.tools import PluginMetadata  # noqa
+from llmkira.sdk.tools.schema import FuncPair, BaseTool  # noqa
+from loguru import logger  # noqa
+from pydantic import BaseModel, Field  # noqa
+from pydantic import field_validator, ConfigDict  # noqa
 
-from typing import TYPE_CHECKING, Optional
+from app.receiver.aps import SCHEDULER  # noqa
 
-if TYPE_CHECKING:
-    from llmkira.sdk.schema import TaskBatch
-
-alarm = Function(name=__plugin_name__, description="Set a timed reminder (only for minutes)")
-alarm.add_property(
-    property_name="delay",
-    property_description="The delay time, in minutes",
-    property_type="integer",
-    required=True
-)
-alarm.add_property(
-    property_name="content",
-    property_description="reminder content",
-    property_type="string",
-    required=True
-)
+from llmkira.task import Task, TaskHeader  # noqa
+from pytz import utc  # noqa
 
 
-class Alarm(BaseModel):
-    delay: int
-    content: str
+class SetAlarm(BaseModel):
+    delay: int = Field(description="The delay time, in minutes")
+    content: str = Field(description="reminder content")
     model_config = ConfigDict(extra="allow")
 
     @field_validator("delay")
@@ -57,19 +37,20 @@ class Alarm(BaseModel):
         return v
 
 
-async def send_notify(_platform, _meta, _sender: dict, _receiver: dict, _user, _chat, _content: str):
-    await Task(queue=_platform).send_task(
-        task=TaskHeader(
-            sender=TaskHeader.Location.model_validate(_sender),  # 继承发送者
-            receiver=TaskHeader.Location.model_validate(_receiver),  # 因为可能有转发，所以可以单配
-            task_meta=TaskHeader.Meta.model_validate(_meta),
-            message=[
-                RawMessage(
-                    user_id=_user,
-                    chat_id=_chat,
-                    text=_content
-                )
-            ]
+def send_notify(
+    _platform, _meta, _sender: dict, _receiver: dict, _user, _chat, _content: str
+):
+    sync(
+        Task.create_and_send(
+            queue_name=_platform,
+            task=TaskHeader(
+                sender=Location.model_validate(_sender),  # 继承发送者
+                receiver=Location.model_validate(
+                    _receiver
+                ),  # 因为可能有转发，所以可以单配
+                task_sign=Sign.model_validate(_meta),
+                message=[EventMessage(user_id=_user, chat_id=_chat, text=_content)],
+            ),
         )
     )
 
@@ -78,16 +59,16 @@ class AlarmTool(BaseTool):
     """
     搜索工具
     """
+
     silent: bool = False
-    function: Function = alarm
-    keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
-    pattern: Optional[re.Pattern] = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
+    function: Union[Tool, Type[BaseModel]] = SetAlarm
+    keywords: list = ["闹钟", "提醒", "定时", "到点", "分钟", "小时"]
+    pattern: Optional[re.Pattern] = re.compile(
+        r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)"
+    )
     require_auth: bool = True
 
     # env_required: list = ["SCHEDULER", "TIMEZONE"]
-
-    def pre_check(self):
-        return True
 
     def func_message(self, message_text, **kwargs):
         """
@@ -103,93 +84,118 @@ class AlarmTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self,
-                     task: "TaskHeader", receiver: "TaskHeader.Location",
-                     exception,
-                     env: dict,
-                     arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
-                     **kwargs
-                     ):
-        _meta = task.task_meta.reply_notify(
+    async def failed(
+        self,
+        task: "TaskHeader",
+        receiver: "Location",
+        exception,
+        env: dict,
+        arg: dict,
+        pending_task: "ToolCall",
+        refer_llm_result: dict = None,
+        **kwargs,
+    ):
+        _meta = task.task_sign.notify(
             plugin_name=__plugin_name__,
-            callback=[TaskHeader.Meta.Callback.create(
-                name=__plugin_name__,
-                function_response=f"Timer Run Failed: {exception}",
-                tool_call_id=pending_task.get_batch_id()
-            )],
-            write_back=True,
-            release_chain=True
+            tool_response=[
+                ToolResponse(
+                    name=__plugin_name__,
+                    function_response=f"Timer Run Failed: {exception}",
+                    tool_call_id=pending_task.id,
+                    tool_call=pending_task,
+                )
+            ],
+            memory_able=True,
+            response_snapshot=True,
         )
-        await Task(queue=receiver.platform).send_task(
+        await Task.create_and_send(
+            queue_name=receiver.platform,
             task=TaskHeader(
                 sender=task.sender,
                 receiver=receiver,
-                task_meta=_meta,
+                task_sign=_meta,
                 message=[
-                    RawMessage(
+                    EventMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=f"{__plugin_name__} Run failed {exception}"
+                        text=f"{__plugin_name__} Run failed {exception}",
                     )
-                ]
-            )
+                ],
+            ),
         )
 
-    async def callback(self,
-                       task: "TaskHeader", receiver: "TaskHeader.Location",
-                       env: dict,
-                       arg: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
-                       **kwargs
-                       ):
+    async def callback(
+        self,
+        task: "TaskHeader",
+        receiver: "Location",
+        env: dict,
+        arg: dict,
+        pending_task: "ToolCall",
+        refer_llm_result: dict = None,
+        **kwargs,
+    ):
         return None
 
-    async def run(self,
-                  task: "TaskHeader", receiver: "TaskHeader.Location",
-                  arg: dict, env: dict, pending_task: "TaskBatch", refer_llm_result: dict = None,
-                  ):
+    async def run(
+        self,
+        task: "TaskHeader",
+        receiver: "Location",
+        arg: dict,
+        env: dict,
+        pending_task: "ToolCall",
+        refer_llm_result: dict = None,
+    ):
         """
         处理message，返回message
         """
-        _set = Alarm.model_validate(arg)
-        _meta = task.task_meta.reply_message(
+        argument = SetAlarm.model_validate(arg)
+        _meta = task.task_sign.reply(
             plugin_name=__plugin_name__,
-            callback=[
-                TaskHeader.Meta.Callback.create(
+            tool_response=[
+                ToolResponse(
                     name=__plugin_name__,
                     function_response="Timer Run Success",
-                    tool_call_id=pending_task.get_batch_id()
+                    tool_call_id=pending_task.id,
+                    tool_call=pending_task,
                 )
-            ]
+            ],
         )
 
-        logger.debug("Plugin --set_alarm {} minutes".format(_set.delay))
+        logger.debug("Plugin --set_alarm {} minutes".format(argument.delay))
+        # 这里假设您的任务应该在UTC时间下执行，如果需要在其他时区执行，根据实际情况更改tz变量
+        tz = utc
+        run_time = datetime.datetime.now() + datetime.timedelta(minutes=argument.delay)
+        # 将本地时间转换为设定的时区
+        run_time = tz.localize(run_time)
         SCHEDULER.add_job(
             func=send_notify,
             id=receiver.uid,
             trigger="date",
             replace_existing=True,
             misfire_grace_time=1000,
-            run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
+            run_date=run_time,
             args=[
                 task.receiver.platform,
                 _meta.model_dump(),
-                task.sender.model_dump(), receiver.model_dump(),
-                receiver.user_id, receiver.chat_id,
-                _set.content
-            ]
+                task.sender.model_dump(),
+                receiver.model_dump(),
+                receiver.user_id,
+                receiver.chat_id,
+                argument.content,
+            ],
         )
         await Task(queue=receiver.platform).send_task(
             task=TaskHeader(
                 sender=task.sender,  # 继承发送者
                 receiver=receiver,  # 因为可能有转发，所以可以单配
-                task_meta=_meta,
+                task_sign=_meta,
                 message=[
-                    RawMessage(
+                    EventMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=f"🍖 The alarm is now set,just wait for {_set.delay} min"
+                        text=f"🍖 The alarm is now set,just wait for {argument.delay} min",
                     )
-                ]
+                ],
             )
         )
 
@@ -199,8 +205,6 @@ __plugin_meta__ = PluginMetadata(
     description="Set a timed reminder (only for minutes)",
     usage="直接说，以分钟为单位，如：10分钟后提醒我吃饭",
     openapi_version=__openapi_version__,
-    function={
-        FuncPair(function=alarm, tool=AlarmTool)
-    },
-    homepage="https://github.com/LlmKira"
+    function={FuncPair(function=class_tool(SetAlarm), tool=AlarmTool)},
+    homepage="https://github.com/LlmKira",
 )
