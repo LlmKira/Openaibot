@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 下午9:42
 import os
+import pathlib
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -27,8 +28,9 @@ class ElaraRuntime(BaseRuntime):
 
     def check_client(self):
         if self.dsn is None:
-            self.dsn = os.getenv("ELARA_DSN", "elara.db")
-        self.client = ElaraClientAsyncWrapper(self.dsn)
+            pathlib.Path().cwd().joinpath(".cache").mkdir(exist_ok=True)
+            self.dsn = pathlib.Path().cwd().joinpath(".cache") / "elara.db"
+        self.client = ElaraClientAsyncWrapper(str(self.dsn))
         logger.debug(f"🍩 ElaraClientWrapper Loaded --dsn {self.dsn}")
         return True
 

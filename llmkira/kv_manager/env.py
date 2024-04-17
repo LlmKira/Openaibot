@@ -47,6 +47,8 @@ class EnvManager(KvManager):
         current_env = {}
         if update:
             current_env = await self.read_env()
+            if not current_env:
+                current_env = {}
         if isinstance(env_value, str):
             env_map = parse_env_string(env_value)
         elif isinstance(env_value, dict):

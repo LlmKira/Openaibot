@@ -43,6 +43,7 @@ class SearchTool(BaseTool):
 
     silent: bool = False
     function: Union[Tool, Type[BaseModel]] = Search
+    require_auth: bool = True
     keywords: list = [
         "怎么",
         "How",
@@ -189,7 +190,7 @@ class SearchTool(BaseTool):
         """
 
         _set = Search.model_validate(arg)
-        _search_result = search_on_serper(
+        _search_result = await search_on_serper(
             search_sentence=_set.keywords,
             api_key=env.get("serper_api_key"),
         )
