@@ -9,6 +9,7 @@ from typing import Optional, Union, Type
 
 from llmkira.openai.cell import Tool, ToolCall, class_tool
 from llmkira.sdk.tools import verify_openapi_version
+from llmkira.sdk.utils import sync
 from llmkira.task.schema import Location, EventMessage, Sign, ToolResponse
 
 verify_openapi_version(__package__name__, __openapi_version__)  # noqa
@@ -36,17 +37,21 @@ class SetAlarm(BaseModel):
         return v
 
 
-async def send_notify(
+def send_notify(
     _platform, _meta, _sender: dict, _receiver: dict, _user, _chat, _content: str
 ):
-    await Task.create_and_send(
-        queue_name=_platform,
-        task=TaskHeader(
-            sender=Location.model_validate(_sender),  # 继承发送者
-            receiver=Location.model_validate(_receiver),  # 因为可能有转发，所以可以单配
-            task_sign=Sign.model_validate(_meta),
-            message=[EventMessage(user_id=_user, chat_id=_chat, text=_content)],
-        ),
+    sync(
+        Task.create_and_send(
+            queue_name=_platform,
+            task=TaskHeader(
+                sender=Location.model_validate(_sender),  # 继承发送者
+                receiver=Location.model_validate(
+                    _receiver
+                ),  # 因为可能有转发，所以可以单配
+                task_sign=Sign.model_validate(_meta),
+                message=[EventMessage(user_id=_user, chat_id=_chat, text=_content)],
+            ),
+        )
     )
 
 

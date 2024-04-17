@@ -125,17 +125,18 @@ class Tool(ToolChoice):
 
 class FunctionCalled(BaseModel):
     name: str
-    arguments: Union[dict, str] = None
+    arguments: Union[str] = None
 
-    @model_validator(mode="after")
-    def check_arguments(self):
+    @property
+    def json_arguments(self):
+        arguments = self.arguments
         if isinstance(self.arguments, str):
             json_repaired = repair_json(self.arguments, return_objects=True)
             if not json_repaired:
-                self.arguments = {}
+                arguments = {}
             else:
-                self.arguments = json_repaired
-        return self
+                arguments = json_repaired
+        return arguments
 
 
 class ToolCall(BaseModel):
@@ -149,12 +150,14 @@ class ToolCall(BaseModel):
 
     @property
     def arguments(self):
-        return self.function.arguments
+        return self.function.json_arguments
 
 
 class Message(BaseModel, ABC):
     role: Literal["user", "assistant"] = "user"
     content: str
+
+    model_config = ConfigDict(extra="allow")
 
 
 class SystemMessage(Message):
@@ -179,13 +182,10 @@ class AssistantMessage(Message):
     def check_tool_calls(self):
         if self.content is None and self.tool_calls is None:
             raise ValueError("content and tool_calls cannot be both None")
+        if self.tool_calls is None:
+            if self.content is None:
+                self.content = ""
         return self
-
-    @field_validator("content")
-    def check_content(cls, v):
-        if v is None:
-            return ""
-        return v
 
 
 class ToolMessage(Message):

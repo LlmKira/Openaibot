@@ -18,6 +18,7 @@ def _make_json_file(location: str):
 
 
 class FileSnapshotStorage(BaseSnapshotStorage):
+    # TODO:删除过期的快照防止数据过多
     async def read(self, user_id: str) -> Optional[SnapData]:
         location_file = _make_json_file(user_id)
         if not location_file.exists():

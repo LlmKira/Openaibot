@@ -9,7 +9,16 @@ from pydantic import SecretStr
 from tenacity import retry, stop_after_attempt
 
 from llmkira.openai._excption import raise_error, NetworkError, UnexpectedFormatError
-from .cell import Tool, ToolChoice, Message, AssistantMessage, CommonTool, ToolCall
+from .cell import (
+    Tool,
+    ToolChoice,
+    Message,
+    AssistantMessage,
+    CommonTool,
+    ToolCall,
+    ToolMessage,
+    UserMessage,
+)
 
 
 class OpenAICredential(BaseModel):
@@ -89,7 +98,9 @@ class OpenAI(BaseModel):
         type: Literal["json_object", "text"] = "text"
 
     model: str
-    messages: List[Message]
+    messages: List[Union[Message, AssistantMessage, ToolMessage, UserMessage]] = Field(
+        ..., description="Messages"
+    )
 
     @field_validator("messages")
     def check_messages(cls, v):
@@ -162,9 +173,7 @@ class OpenAI(BaseModel):
         client: AsyncSession
         model = session.model if session.model else self.model
         # Build request
-        kwargs = self.model_dump(
-            exclude_none=True,
-        )
+        kwargs = self.model_dump(exclude_none=True)
         kwargs["model"] = model
         try:
             response = await client.post(
