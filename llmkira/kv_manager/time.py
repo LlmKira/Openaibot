@@ -32,9 +32,10 @@ class TimeFeelManager(KvManager):
         now_timestamp = int(datetime.datetime.now().timestamp())
         try:
             hours = await self.read_data(self.user_id)
-            assert isinstance(hours, str)
+            if not hours:
+                raise LookupError("No data")
             last_timestamp = int(hours)
-        except ValueError:
+        except LookupError:
             last_timestamp = now_timestamp
         finally:
             # 存储当前时间戳

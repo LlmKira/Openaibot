@@ -126,10 +126,9 @@ class OpenaiMiddleware(object):
         if message:
             await self.message_history.append(messages=[message])
 
-    async def build_message(self, remember=True):
+    async def build_history_messages(self):
         """
         从任务会话和历史消息中构建消息
-        :param remember: 是否写入历史消息
         :return: None
         """
         system_prompt = await InstructionManager(
@@ -148,6 +147,15 @@ class OpenaiMiddleware(object):
                 continue
             else:
                 message_run.append(msg)
+        return message_run
+
+    async def build_task_messages(self, remember=True):
+        """
+        从任务会话和历史消息中构建消息
+        :param remember: 是否写入历史消息
+        :return: None
+        """
+        message_run = []
         # 处理 人类 发送的消息
         task_message = self.task.message
         task_message: List[EventMessage]
@@ -172,7 +180,14 @@ class OpenaiMiddleware(object):
         :param disable_tool: 禁用函数
         :param credential: 凭证
         :return: OpenaiResult 返回结果
-        :raise RuntimeError: 无法处理消息
+        :raise RuntimeError:        # Feel time leave
+        time_feel = await TimeFeelManager(self.session_uid).get_leave()
+        if time_feel:
+            await self.remember(
+                message=SystemMessage(
+                    content=f"statu:[After {time_feel} leave, user is back]"
+                )
+            ) 无法处理消息
         :raise AssertionError: 无法处理消息
         :raise OpenaiError: Openai错误
         """
@@ -183,16 +198,24 @@ class OpenaiMiddleware(object):
             logger.warning(f"llm_task:Tool is not unique {self.tools}")
         if isinstance(self.task.task_sign.instruction, str):
             messages.append(SystemMessage(content=self.task.task_sign.instruction))
-        # Feel time leave
+        # 先读取历史消息才能操作
+        message_head = await self.build_history_messages()
+        messages.extend(message_head)  # 历史消息
+        # 操作先写入一个状态
         time_feel = await TimeFeelManager(self.session_uid).get_leave()
         if time_feel:
+            messages.append(
+                SystemMessage(content=f"statu:[After {time_feel} leave, user is back]")
+            )  # 插入消息
             await self.remember(
                 message=SystemMessage(
                     content=f"statu:[After {time_feel} leave, user is back]"
                 )
             )
-        once_build_message = await self.build_message(remember=remember)
-        messages.extend(once_build_message)
+        # 同步状态到历史消息
+        message_body = await self.build_task_messages(remember=remember)
+        messages.extend(message_body)
+
         # TODO:实现消息时序切片
         # 日志
         logger.info(

@@ -257,7 +257,10 @@ class BaseReceiver(object):
                 )
                 return exc
             except AssertionError as exc:
-                await self.sender.error(receiver=task.receiver, text=str(exc))
+                logger.exception(exc)
+                await self.sender.error(
+                    receiver=task.receiver, text=f"Assert {str(exc)}"
+                )
                 return exc
             except Exception as exc:
                 logger.exception(exc)

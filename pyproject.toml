@@ -1,6 +1,6 @@
 [project]
 name = "llmkira"
-version = "1.0.0"
+version = "1.0.1"
 description = "A chain message bot based on OpenAI"
 authors = [
     { name = "sudoskys", email = "me@dianas.cyou" },
@@ -62,10 +62,11 @@ dependencies = [
     "apscheduler>=3.10.4",
     "montydb[lmdb]>=2.5.2",
     "pymongo>=4.6.3",
+    "fast-langdetect>=0.1.0",
 ]
 requires-python = ">=3.9,<3.12"
 readme = "README.md"
-license = { text = "Apache-2.0", file = "LICENSE" }
+license = { text = "Apache-2.0" }
 keywords = ["llmbot", "llmkira", "openai", "chatgpt", "llm"]
 classifiers = ["Programming Language :: Python :: 3", "Programming Language :: Python :: 3.9"]
 

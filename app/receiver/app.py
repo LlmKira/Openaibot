@@ -51,6 +51,7 @@ def run():
     # 导入插件
     load_plugins("llmkira/extra/plugins")
     load_from_entrypoint("llmkira.extra.plugin")
+    import llmkira.extra.voice_hook  # noqa
 
     loaded_message = "\n >>".join(get_entrypoint_plugins())
     logger.success(

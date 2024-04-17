@@ -49,7 +49,7 @@ class File(BaseModel):
     creator: str = Field(description="创建用户")
     file_name: str = Field(description="文件名")
     file_key: str = Field(description="文件 Key")
-    caption: Optional[str] = Field(description="文件描述")
+    caption: Optional[str] = Field(default=None, description="文件描述")
 
     async def download_file(self) -> Optional[bytes]:
         """

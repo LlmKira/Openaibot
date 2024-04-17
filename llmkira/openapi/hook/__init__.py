@@ -51,5 +51,8 @@ async def run_hook(trigger: Trigger, *args: T, **kwargs) -> T:
     for hook_instance in sorted_hook_instances:
         if hook_instance.trigger == trigger:
             if await hook_instance.trigger_hook(*args, **kwargs):
-                args, kwargs = await hook_instance.hook_run(*args, **kwargs)
+                try:
+                    args, kwargs = await hook_instance.hook_run(*args, **kwargs)
+                except Exception as ex:
+                    logger.exception(f"Hook Run Error {ex}")
     return args, kwargs

@@ -374,7 +374,9 @@ class KookBotRunner(Runner):
         async def listen_env_command(msg: Message, env_string: str):
             _manager = EnvManager(user_id=uid_make(__sender__, msg.author_id))
             try:
-                env_map = _manager.set_env(env_value=env_string, update=True)
+                env_map = await _manager.set_env(
+                    env_value=env_string, update=True, return_all=True
+                )
             except Exception as e:
                 logger.exception(f"[1202359]env update failed {e}")
                 text = formatting.format_text(

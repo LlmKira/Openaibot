@@ -282,7 +282,9 @@ class SlackBotRunner(Runner):
             _arg = command.text
             _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
             try:
-                env_map = _manager.set_env(env_value=_arg, update=True)
+                env_map = await _manager.set_env(
+                    env_value=_arg, update=True, return_all=True
+                )
             except Exception as e:
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.mbold("🧊 Failed")
