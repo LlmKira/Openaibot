@@ -329,7 +329,7 @@ class BaseReceiver(object):
                 task=task_head,
                 intercept_function=True,
                 disable_tool=True,
-                remember=False,
+                remember=True,
             )
             return (
                 task_head,
