@@ -88,7 +88,8 @@ async def create_snapshot(
         creator=task_snapshot.receiver.uid,
         expire_at=int(time.time()) + 60 * 2,
     )
-    logger.debug(f"Create a snapshot {task_id}")
+    if snapshot_credential:
+        logger.debug(f"Create a snapshot {task_id}")
     return snapshot_credential
 
 
@@ -190,13 +191,17 @@ class FunctionReceiver(object):
         # Resign Chain
         if len(task.task_sign.tool_calls_pending) == 1:
             logger.debug("ToolCall run out, resign a new request to request stop sign.")
+            # NOTE:因为 ToolCall 破坏了递归的链式调用，所以这里不再继续调用
+            """
             await create_snapshot(
                 task=task,
                 tool_calls_pending_now=pending_task,
                 memory_able=True,
                 channel=task.receiver.platform,
             )
-        # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+            """
+            pass
+            # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(
             task=task,
             receiver=task.receiver,

@@ -18,9 +18,8 @@ def parse_env_string(env_string) -> Dict[str, str]:
         env_value = f"{match[1]}"
         env_value = env_value.strip().strip('"')
         env_key = env_key.upper()
-        if env_value.lower() == "none":
+        if env_value.upper() == "NONE":
             env_value = None
-            continue
         env_table[env_key] = env_value
     return env_table
 
@@ -67,6 +66,8 @@ class EnvManager(KvManager):
         else:
             raise ValueError("Env String Should be dict or str")
         current_env.update(env_map)
+        # 去除 None
+        current_env = {k: v for k, v in current_env.items() if v is not None}
         await self.save_data(self.user_id, json.dumps(current_env))
         if return_all:
             return current_env

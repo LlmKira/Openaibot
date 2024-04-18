@@ -6,7 +6,6 @@
 #####
 # This file is not a top-level schematic file!
 #####
-
 import os
 import time
 from abc import ABCMeta, abstractmethod
@@ -295,10 +294,11 @@ class BaseReceiver(object):
         :param message: 消息
         :return: 任务，中间件，路由类型，是否释放函数快照
         """
-        logger.debug("Received MQ Message")
+        logger.debug(f"Received MQ Message 📩{message.message_id}")
         task_head: TaskHeader = TaskHeader.model_validate_json(
             json_data=message.body.decode("utf-8")
         )
+        logger.debug(f"Received Task:{task_head.model_dump_json(indent=2)}")
         router = task_head.task_sign.router
         # Deliver 直接转发
         if router == Router.DELIVER:
@@ -329,7 +329,7 @@ class BaseReceiver(object):
                 task=task_head,
                 intercept_function=True,
                 disable_tool=True,
-                remember=False,
+                remember=True,
             )
             return (
                 task_head,
@@ -348,8 +348,8 @@ class BaseReceiver(object):
             await self._flash(
                 task=task_head,
                 llm=llm_middleware,
-                remember=True,
                 intercept_function=True,
+                remember=True,
             )
             return (
                 task_head,
@@ -395,6 +395,10 @@ class BaseReceiver(object):
                             # 没有被处理
                             if not task.processed:
                                 try:
+                                    # await asyncio.sleep(10)
+                                    logger.debug(
+                                        f"🧀 Send snapshot {task.snap_uuid} at {router}"
+                                    )
                                     await Task.create_and_send(
                                         queue_name=task.channel, task=task.snapshot_data
                                     )
