@@ -19,13 +19,12 @@ RUN apt update && \
     apt install -y ffmpeg && \
     pip install pdm
 
-VOLUME ["/redis", "/rabbitmq", "/mongodb", "/run.log", "/config_dir"]
+VOLUME ["/redis", "/rabbitmq", "/mongodb", "/run.log", ".cache",".montydb",".snapshot"]
 
 WORKDIR /app
 COPY --from=builder /project/.venv /app/.venv
 
 COPY pm2.json ./
-COPY config_dir ./config_dir
 COPY . /app
 
 CMD [ "pm2-runtime", "pm2.json" ]
