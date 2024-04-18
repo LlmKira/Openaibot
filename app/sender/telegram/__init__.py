@@ -226,6 +226,7 @@ class TelegramBotRunner(Runner):
                         "You can set it via `https://api.com/v1$key$model` format, "
                         "or you can log in via URL using `token$https://provider.com`."
                     ),
+                    parse_mode="MarkdownV2",
                 )
             if len(settings) == 2:
                 try:

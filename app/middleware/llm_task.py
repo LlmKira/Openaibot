@@ -42,6 +42,16 @@ def unique_function(tools: List[Tool]):
     return functions
 
 
+def mock_tool_message(assistant_message: AssistantMessage, mock_content: str):
+    _tool_message = []
+    if assistant_message.tool_calls:
+        for tool_call in assistant_message.tool_calls:
+            _tool_message.append(
+                ToolMessage(content=mock_content, tool_call_id=tool_call.id)
+            )
+    return _tool_message
+
+
 async def validate_mock(messages: List[Message]):
     """
     所有的具有 tool_calls 的 AssistantMessage 后面必须有对应的 ToolMessage 响应，其他消息类型按照原顺序
@@ -90,6 +100,8 @@ async def validate_mock(messages: List[Message]):
             else:
                 new_list.append(_messages[i])
         new_list.append(_messages[-1])
+        if isinstance(_messages[-1], AssistantMessage) and _messages[-1].tool_calls:
+            new_list.extend(mock_tool_message(_messages[-1], "[On Queue]"))
         return new_list
 
     final_messages = pair_check(paired_messages)

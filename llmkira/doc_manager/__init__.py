@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 import pymongo
 from dotenv import load_dotenv
 from loguru import logger
-from montydb import errors as monty_errors, MontyClient
+from montydb import errors as monty_errors, MontyClient, set_storage
 from pydantic import model_validator, Field
 from pydantic_settings import BaseSettings
 from pymongo import MongoClient
@@ -39,6 +39,9 @@ class DatabaseClient(ABC):
 class MontyDatabaseClient(DatabaseClient):
     def __init__(self, db_name=None, collection_name=None):
         local_repo = ".montydb"
+        set_storage(
+            local_repo, storage="lightning"
+        )  # required, to set lightning as engine
         self.client = MontyClient(local_repo)
         self.update_db_collection(db_name, collection_name)
 

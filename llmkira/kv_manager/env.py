@@ -65,7 +65,8 @@ class EnvManager(KvManager):
             env_map = env_value
         else:
             raise ValueError("Env String Should be dict or str")
-        current_env.update(env_map)
+        # 更新
+        current_env = {**current_env, **env_map}
         # 去除 None
         current_env = {k: v for k, v in current_env.items() if v is not None}
         await self.save_data(self.user_id, json.dumps(current_env))

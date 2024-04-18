@@ -61,6 +61,9 @@ class TelegramSender(BaseSender):
                     sticker=file_downloaded,
                 )
             elif file_obj.file_name.endswith(".ogg"):
+                await self.bot.send_chat_action(
+                    chat_id=receiver.chat_id, action="record_voice"
+                )
                 try:
                     await self.bot.send_voice(
                         chat_id=receiver.chat_id,
@@ -78,6 +81,9 @@ class TelegramSender(BaseSender):
                     else:
                         raise e
             else:
+                await self.bot.send_chat_action(
+                    chat_id=receiver.chat_id, action="upload_document"
+                )
                 await self.bot.send_document(
                     chat_id=receiver.chat_id,
                     document=file_downloaded,
@@ -118,6 +124,8 @@ class TelegramSender(BaseSender):
         :param messages: OPENAI Format Message
         :param reply_to_message: 是否回复消息
         """
+        if receiver.chat_id is not None:
+            await self.bot.send_chat_action(chat_id=receiver.chat_id, action="typing")
         event_message = [
             EventMessage.from_openai_message(message=item, locate=receiver)
             for item in messages
