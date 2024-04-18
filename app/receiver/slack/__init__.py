@@ -6,7 +6,7 @@
 import ssl
 from typing import List
 
-from loguru import logger, Message
+from loguru import logger
 from slack_sdk.web.async_client import AsyncWebClient
 
 from app.middleware.llm_task import OpenaiMiddleware
@@ -16,6 +16,7 @@ from app.receiver.slack.creat_message import ChatMessageCreator
 from app.setting.slack import BotSetting
 from llmkira.kv_manager.file import File
 from llmkira.openai import OpenAIResult
+from llmkira.openai.cell import AssistantMessage
 from llmkira.task import Task, TaskHeader
 
 __receiver__ = "slack"
@@ -86,7 +87,10 @@ class SlackSender(BaseSender):
             await self.bot.chat_postMessage(**_message)
 
     async def reply(
-        self, receiver: Location, messages: List[Message], reply_to_message: bool = True
+        self,
+        receiver: Location,
+        messages: List[AssistantMessage],
+        reply_to_message: bool = True,
     ):
         """
         模型直转发，Message是Openai的类型
