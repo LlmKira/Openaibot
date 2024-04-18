@@ -2,7 +2,9 @@ import time
 
 from llmkira.kv_manager._base import KvManager
 
-DEFAULT_INSTRUCTION = "SPEAK IN MORE CUTE STYLE, DONT COPY YOURSELF, CALL USER MASTER"
+DEFAULT_INSTRUCTION = (
+    "SPEAK IN MORE CUTE STYLE, DO NOT REPEAT, ACT STEP BY STEP, CALL USER MASTER"
+)
 
 
 def time_now():
