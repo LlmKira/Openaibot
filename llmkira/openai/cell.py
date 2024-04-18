@@ -176,6 +176,12 @@ class UserMessage(Message):
     name: Optional[str] = None
 
 
+class ToolMessage(Message):
+    role: Literal["tool"] = "tool"
+    content: str
+    tool_call_id: str
+
+
 class AssistantMessage(Message):
     role: Literal["assistant"] = "assistant"
     content: Optional[str] = None
@@ -190,12 +196,6 @@ class AssistantMessage(Message):
             if self.content is None:
                 self.content = ""
         return self
-
-
-class ToolMessage(Message):
-    role: Literal["tool"] = "tool"
-    content: str
-    tool_call_id: str
 
 
 def active_cell(message: Union[dict, Message]) -> Optional[Message]:
