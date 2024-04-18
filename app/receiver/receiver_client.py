@@ -384,7 +384,7 @@ class BaseReceiver(object):
                     data = snap_data.data
                     renew_snap_data = []
                     for task in data:
-                        if not task.snapshot_credential and not task.processed:
+                        if not task.snapshot_credential or not task.processed:
                             if task.expire_at < int(time.time()):
                                 logger.info(
                                     f"🧀 Expire snapshot {task.snap_uuid} at {router}"
@@ -402,7 +402,7 @@ class BaseReceiver(object):
                                 )
                             finally:
                                 task.processed_at = int(time.time())
-                                renew_snap_data.append(task)
+                                # renew_snap_data.append(task)
                         else:
                             task.processed_at = None
                             renew_snap_data.append(task)
