@@ -6,10 +6,10 @@
 #####
 # This file is not a top-level schematic file!
 #####
+import asyncio
 import os
 import time
 from abc import ABCMeta, abstractmethod
-from threading import Lock
 from typing import Optional, Tuple, List, Dict
 
 import shortuuid
@@ -35,12 +35,12 @@ from llmkira.task.snapshot import global_snapshot_storage
 class UserLocks:
     def __init__(self):
         self.locks = {}
-        self.locks_lock = Lock()
+        self.locks_lock = asyncio.Lock()
 
-    def get(self, user_id):
-        with self.locks_lock:
+    async def get(self, user_id):
+        async with self.locks_lock:
             if user_id not in self.locks:
-                self.locks[user_id] = Lock()
+                self.locks[user_id] = asyncio.Lock()
             return self.locks[user_id]
 
 
@@ -384,17 +384,17 @@ class BaseReceiver(object):
     async def on_message(self, message: AbstractIncomingMessage):
         if not self.task or not self.sender:
             raise ValueError("receiver not set core")
+        if os.getenv("STOP_REPLY"):
+            logger.warning("🚫 STOP_REPLY is set in env, stop reply message")
+            return None
+        logger.debug(f"Received MQ Message 📩{message.message_id}")
         try:
-            if os.getenv("STOP_REPLY"):
-                logger.warning("🚫 STOP_REPLY is set in env, stop reply message")
-                return None
-            logger.debug(f"Received MQ Message 📩{message.message_id}")
             task_head: TaskHeader = TaskHeader.model_validate_json(
                 json_data=message.body.decode("utf-8")
             )
             logger.debug(f"Received Task:{task_head.model_dump_json(indent=2)}")
             # 处理消息
-            with user_locks.get(task_head.receiver.uid):
+            async with await user_locks.get(task_head.receiver.uid):
                 task_head, llm, router, response_snapshot = await self.deal_message(
                     task_head=task_head
                 )
