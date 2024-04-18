@@ -41,11 +41,6 @@ pip install pdm
 pdm install -G bot
 cp .env.exp .env && nano .env
 
-# Test
-echo "Testing setup..."
-pdm run python3 start_sender.py &
-pdm run python3 start_receiver.py &
-
 # Install or update pm2
 if ! [ -x "$(command -v pm2)" ]; then
   echo "Installing npm and pm2..."
