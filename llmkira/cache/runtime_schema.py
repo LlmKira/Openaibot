@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 下午9:43
 from abc import abstractmethod, ABC
-from typing import Any
+from typing import Any, Union
 
 PREFIX = "oai_bot:"
 
@@ -46,7 +46,9 @@ class AbstractDataClass(ABC):
         pass
 
     @abstractmethod
-    async def set_data(self, key: str, value: Any, timeout: int = None) -> Any:
+    async def set_data(
+        self, key: str, value: Union[dict, str, bytes], timeout: int = None
+    ) -> Any:
         pass
 
     @abstractmethod

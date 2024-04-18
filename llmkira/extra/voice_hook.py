@@ -3,7 +3,7 @@ from typing import List
 from fast_langdetect import parse_sentence
 from loguru import logger
 
-from llmkira.extra.voice import request_en_speech, request_reecho_speech
+from llmkira.extra.voice import request_cn, request_en
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.file import File
 from llmkira.openapi.hook import resign_hook, Hook, Trigger
@@ -45,7 +45,9 @@ class VoiceHook(Hook):
         for message in messages:
             if not check_string(message.text):
                 return False
-        if await EnvManager(locate.uid).get_env("VOICE_REPLY_ME", None):
+        have_env = await EnvManager(locate.uid).get_env("VOICE_REPLY_ME", None)
+        # logger.warning(f"Voice Hook {have_env}")
+        if have_env is not None:
             return True
         return False
 
@@ -67,9 +69,9 @@ class VoiceHook(Hook):
                 "REECHO_VOICE_KEY", None
             )
             if (len(set(lang_kinds)) == 1) and (lang_kinds[0] in ["EN"]):
-                voice_data = await request_en_speech(message.text)
+                voice_data = await request_en(message.text)
             else:
-                voice_data = await request_reecho_speech(
+                voice_data = await request_cn(
                     message.text, reecho_api_key=reecho_api_key
                 )
             if voice_data is not None:

@@ -8,8 +8,54 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from .elara_runtime import ElaraClientAsyncWrapper
+from .lmdb_runtime import LMDBClientAsyncWrapper
 from .redis_runtime import RedisClientWrapper
 from .runtime_schema import singleton, BaseRuntime
+
+
+@singleton
+class LMDBRuntime(BaseRuntime):
+    client: Optional["LMDBClientAsyncWrapper"] = None
+    init_already = False
+    dsn = None
+
+    @staticmethod
+    def check_client_dsn(dsn):
+        """
+        :raise ValueError: Please Use Local Path
+        """
+        if "://" in dsn:
+            raise ValueError("Please Use Local Path")
+
+    def check_client(self):
+        if self.dsn is None:
+            pathlib.Path().cwd().joinpath(".cache").mkdir(exist_ok=True)
+            self.dsn = pathlib.Path().cwd().joinpath(".cache") / "lmdb_dir"
+        self.client = LMDBClientAsyncWrapper(str(self.dsn))
+        logger.debug(f"🍩 LMDBClientAsyncWrapper Loaded --folder {self.dsn}")
+        return True
+
+    def init_client(self, verbose=False):
+        if verbose:
+            logger.info("Try To Connect To LMDBClientAsyncWrapper")
+        self.check_client()
+        self.init_already = True
+        assert isinstance(
+            self.client, LMDBClientAsyncWrapper
+        ), f"LMDBClientAsyncWrapper type error {type(self.client)}"
+        return self.client
+
+    def get_client(self) -> "LMDBClientAsyncWrapper":
+        if not self.init_already:
+            self.init_client()
+            assert isinstance(
+                self.client, LMDBClientAsyncWrapper
+            ), f"LMDBClientAsyncWrapper error {type(self.client)}"
+        else:
+            assert isinstance(
+                self.client, LMDBClientAsyncWrapper
+            ), f"Inited LMDBClientAsyncWrapper error {type(self.client)}"
+        return self.client
 
 
 @singleton
@@ -115,4 +161,4 @@ class RedisRuntime(BaseRuntime):
 if RedisRuntime().check_client():
     global_cache_runtime: BaseRuntime = RedisRuntime()
 else:
-    global_cache_runtime: BaseRuntime = ElaraRuntime()
+    global_cache_runtime: BaseRuntime = LMDBRuntime()
