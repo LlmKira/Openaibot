@@ -57,9 +57,9 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
 - [x] Implementation of a more robust plugin system
 - [x] Project structure simplification
 - [x] Elimination of the Provider system
-- [x] Hook support.
-- [x] Access to TTS.
-- [x] Add standalone support for gpt-4-turbo and vision.
+- [x] Hook support
+- [x] Access to TTS
+- [x] Add standalone support for gpt-4-turbo and vision
 - [ ] Add LLM reference support to the plugin environment. (extract && search in text)
 
 ## 📦 Features
