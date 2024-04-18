@@ -15,7 +15,7 @@ from loguru import logger
 from pydantic import model_validator, ConfigDict, Field, BaseModel
 
 from llmkira.kv_manager.file import File
-from llmkira.openai.cell import UserMessage, ToolMessage, ToolCall, Message
+from llmkira.openai.cell import UserMessage, ToolMessage, ToolCall, Message, Tool
 from llmkira.openai.request import OpenAIResult
 
 if TYPE_CHECKING:
@@ -106,7 +106,7 @@ class Sign(BaseModel):
     disable_tool_action: bool = False
     """Toolcall 是否被禁用"""
 
-    tool_response: List["ToolResponse"] = Field(
+    tool_response: List[ToolResponse] = Field(
         default=[], description="用于回写，插件返回的消息头，标识 function 的名字"
     )
     """工具响应"""
@@ -119,6 +119,9 @@ class Sign(BaseModel):
 
     response_snapshot: bool = Field(False, description="是否响应函数快照")
     """接收器是否响应函数快照"""
+
+    tools_ghost: List[Tool] = Field([], description="工具集")
+    """工具集"""
 
     # resign_next_step: bool = Field(False, description="函数集群是否可以继续拉起其他函数集群")
     tool_calls_counter: int = Field(0, description="函数集群计数器")
@@ -154,6 +157,14 @@ class Sign(BaseModel):
     @property
     def task_uuid(self):
         return self.sign_as[3]
+
+    @property
+    def layer(self):
+        return self.sign_as[0]
+
+    @property
+    def tools(self):
+        return self.tools_ghost
 
     @model_validator(mode="after")
     def validate_param(self):
@@ -233,6 +244,7 @@ class Sign(BaseModel):
         response_snapshot: bool = None,
         tool_calls: List[ToolCall] = None,
         tool_response: List[ToolResponse] = None,
+        tools_ghost: List[Tool] = None,
     ) -> "Sign":
         """
         更新状态，用于统一管理状态
@@ -251,6 +263,8 @@ class Sign(BaseModel):
             self.tool_calls_pending = tool_calls
         if tool_response:
             self.tool_response = tool_response
+        if tools_ghost:
+            self.tools_ghost = tools_ghost
         return self
 
     def notify(
