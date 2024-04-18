@@ -383,10 +383,11 @@ class TelegramBotRunner(Runner):
             自动响应私聊消息
             """
             message.text = message.text if message.text else message.caption
-            logger.debug(f"Private message from {len(message.photo)}")
+
             # Support for GPT Vision
             if not message.text:
                 if message.photo:
+                    logger.debug("Add a spc image")
                     FileWindow.add_object(
                         user_id=message.from_user.id, obj=message.photo[-1]
                     )
