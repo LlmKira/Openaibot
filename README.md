@@ -42,11 +42,12 @@ This project uses the ToolCall feature.
 It integrates a message queuing and snapshot system, offering plugin mechanisms and authentication prior to plugin
 execution.
 
-The model adheres to the Openai Schema, other models are not supported. Please adapt using gateways independently.
+The model adheres to the Openai Format Schema. Please adapt using [gateway](https://github.com/Portkey-AI/gateway)
+or [one-api](https://github.com/songquanpeng/one-api) independently.
 
-| Demo                              |
-|-----------------------------------|
-| ![sticker](./docs/chain_chat.gif) |
+| Demo                              | Vision With Voice            |
+|-----------------------------------|------------------------------|
+| ![sticker](./docs/chain_chat.gif) | ![vision](./docs/vision.gif) |
 
 ## 🔨 Roadmap
 
@@ -58,8 +59,8 @@ The model adheres to the Openai Schema, other models are not supported. Please a
 - [x] Elimination of the Provider system
 - [x] Hook support.
 - [x] Access to TTS.
+- [x] Add standalone support for gpt-4-turbo and vision.
 - [ ] Add LLM reference support to the plugin environment. (extract && search in text)
-- [ ] Add standalone support for Openai's new Schema. (vision)
 
 ## 📦 Features
 
