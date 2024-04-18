@@ -8,14 +8,19 @@ from enum import Enum
 from typing import TYPE_CHECKING, Dict
 from typing import Tuple, List, Union, Optional
 
-import hikari
-import khl
 import shortuuid
 from loguru import logger
 from pydantic import model_validator, ConfigDict, Field, BaseModel
 
 from llmkira.kv_manager.file import File
-from llmkira.openai.cell import UserMessage, ToolMessage, ToolCall, Message, Tool
+from llmkira.openai.cell import (
+    UserMessage,
+    ToolMessage,
+    ToolCall,
+    Tool,
+    ContentPart,
+    AssistantMessage,
+)
 from llmkira.openai.request import OpenAIResult
 
 if TYPE_CHECKING:
@@ -44,17 +49,23 @@ class EventMessage(BaseModel):
     # sign_loop_end: bool = Field(default=False, description="要求其他链条不处理此消息，用于拦截器开发")
     # sign_fold_docs: bool = Field(default=False, description="是否获取元数据")
 
-    def format_user_message(self, name: str = None) -> UserMessage:
+    async def format_user_message(self, name: str = None) -> UserMessage:
         """Format message to UserMessage"""
+        content_list = [ContentPart.create_text(self.text)]
+        if self.files:
+            for file in self.files:
+                if file.file_name.endswith((".jpg", ".jpeg", ".png")):
+                    file_bytes = await file.download_file()
+                    content_list.append(ContentPart.create_image(file_bytes))
         return UserMessage(
             role="user",
             name=name,
-            content=self.text,
+            content=content_list,
         )
 
     @classmethod
     def from_openai_message(
-        cls, message: Message, locate: "Location"
+        cls, message: AssistantMessage, locate: "Location"
     ) -> "EventMessage":
         """
         用于 OpenAI 消息转换回复给用户
@@ -466,186 +477,6 @@ class TaskHeader(BaseModel):
         task_sign.llm_response = llm_response
         return cls(
             task_sign=task_sign, sender=receiver, receiver=receiver, message=message
-        )
-
-    @classmethod
-    def from_discord_hikari(
-        cls,
-        message: hikari.Message,
-        task_sign: Sign,
-        file: List[File] = None,
-        reply: bool = True,
-        hide_file_info: bool = False,
-        deliver_back_message: List[hikari.Message] = None,
-        trace_back_message: List[hikari.Message] = None,
-    ):
-        # none -> []
-        trace_back_message = [] if not trace_back_message else trace_back_message
-        file = [] if not file else file
-        deliver_back_message = [] if not deliver_back_message else deliver_back_message
-
-        def _convert(_message: hikari.Message) -> Optional[EventMessage]:
-            """
-            消息标准化
-            """
-            if not _message:
-                raise ValueError("Message is empty")
-            if isinstance(_message, hikari.Message):
-                user_id = message.author.id
-                chat_id = message.guild_id if message.guild_id else message.channel_id
-                thread_id = message.channel_id
-                text = _message.content
-                created_at = _message.created_at.timestamp()
-            else:
-                raise ValueError(f"Unknown message type {type(_message)}")
-            return EventMessage(
-                user_id=user_id,
-                chat_id=chat_id,
-                thread_id=thread_id,
-                text=text if text else "(empty message)",
-                created_at=str(created_at),
-            )
-
-        deliver_message_list: List[EventMessage] = [
-            _convert(msg) for msg in deliver_back_message
-        ]
-
-        # A
-        _file_name = []
-        for _file in file:
-            _file_name.append(_file.file_prompt)
-        # 转换为标准消息
-        head_message = _convert(message)
-        assert head_message, "HeadMessage is empty"
-        # 附加文件信息
-        head_message.file = file
-        # 追加元信息
-        if not hide_file_info:
-            head_message.text += "\n" + "\n".join(_file_name)
-
-        # 追加回溯消息
-        message_list = []
-        if trace_back_message:
-            for item in trace_back_message:
-                if item:
-                    message_list.append(_convert(item))
-        message_list.extend(deliver_message_list)
-        message_list.append(head_message)
-
-        # 去掉 None
-        message_list = [item for item in message_list if item]
-
-        return cls(
-            task_sign=task_sign,
-            sender=cls.Location(
-                platform="discord_hikari",
-                thread_id=message.channel_id,
-                chat_id=message.guild_id if message.guild_id else message.channel_id,
-                user_id=message.author.id,
-                message_id=message.id if reply else None,
-            ),
-            receiver=cls.Location(
-                platform="discord_hikari",
-                thread_id=message.channel_id,
-                chat_id=message.guild_id if message.guild_id else message.channel_id,
-                user_id=message.author.id,
-                message_id=message.id if reply else None,
-            ),
-            message=message_list,
-        )
-
-    @classmethod
-    def from_kook(
-        cls,
-        message: khl.Message,
-        deliver_back_message: List[khl.Message],
-        trace_back_message: List[khl.Message],
-        task_sign: Sign,
-        hide_file_info: bool = False,
-        file: List[File] = None,
-        reply: bool = True,
-    ):
-        # none -> []
-        trace_back_message = [] if not trace_back_message else trace_back_message
-        file = [] if not file else file
-        deliver_back_message = [] if not deliver_back_message else deliver_back_message
-
-        def _convert(_message: khl.Message) -> Optional[EventMessage]:
-            """
-            消息标准化
-            """
-            if not _message:
-                raise ValueError("Message is empty")
-            if isinstance(_message, khl.Message):
-                user_id = message.author_id
-                chat_id = (
-                    message.ctx.guild.id
-                    if message.ctx.guild
-                    else message.ctx.channel.id
-                )
-                thread_id = message.ctx.channel.id
-                text = _message.content
-                created_at = _message.msg_timestamp
-            else:
-                raise ValueError(f"Unknown message type {type(_message)}")
-            return EventMessage(
-                user_id=user_id,
-                chat_id=chat_id,
-                thread_id=thread_id,
-                text=text if text else "(empty message)",
-                created_at=str(created_at),
-            )
-
-        deliver_message_list: List[EventMessage] = [
-            _convert(msg) for msg in deliver_back_message
-        ]
-
-        # A
-        _file_name = []
-        for _file in file:
-            _file_name.append(_file.file_prompt)
-        # 转换为标准消息
-        head_message = _convert(message)
-        assert head_message, "HeadMessage is empty"
-        # 附加文件信息
-        head_message.file = file
-        # 追加元信息
-        if not hide_file_info:
-            head_message.text += "\n" + "\n".join(_file_name)
-
-        # 追加回溯消息
-        message_list = []
-        if trace_back_message:
-            for item in trace_back_message:
-                if item:
-                    message_list.append(_convert(item))
-        message_list.extend(deliver_message_list)
-        message_list.append(head_message)
-
-        # 去掉 None
-        message_list = [item for item in message_list if item]
-
-        return cls(
-            task_sign=task_sign,
-            sender=cls.Location(
-                platform="kook",
-                thread_id=message.ctx.channel.id,
-                chat_id=message.ctx.guild.id
-                if message.ctx.guild
-                else message.ctx.channel.id,
-                user_id=message.author_id,
-                message_id=message.id if reply else None,
-            ),
-            receiver=cls.Location(
-                platform="kook",
-                thread_id=message.ctx.channel.id,
-                chat_id=message.ctx.guild.id
-                if message.ctx.guild
-                else message.ctx.channel.id,
-                user_id=message.author_id,
-                message_id=message.id if reply else None,
-            ),
-            message=message_list,
         )
 
 
