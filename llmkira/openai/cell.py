@@ -163,7 +163,7 @@ class Message(BaseModel, ABC):
 class SystemMessage(Message):
     role: Literal["system"] = "system"
     content: str
-    name: str = None
+    name: Optional[str] = None
 
 
 class UserMessage(Message):
