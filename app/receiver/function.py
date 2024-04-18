@@ -191,16 +191,12 @@ class FunctionReceiver(object):
         # Resign Chain
         if len(task.task_sign.tool_calls_pending) == 1:
             logger.debug("ToolCall run out, resign a new request to request stop sign.")
-            # NOTE:因为 ToolCall 破坏了递归的链式调用，所以这里不再继续调用
-            """
             await create_snapshot(
                 task=task,
                 tool_calls_pending_now=pending_task,
                 memory_able=True,
                 channel=task.receiver.platform,
             )
-            """
-            pass
             # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(
             task=task,
@@ -225,10 +221,10 @@ class FunctionReceiver(object):
         if os.getenv("STOP_REPLY"):
             logger.warning("🚫 STOP_REPLY is set in env, stop reply message")
             return None
-        task: TaskHeader = TaskHeader.model_validate_json(
-            json_data=message.body.decode("utf-8")
+        logger.debug(
+            f"[552351] Received A Function Call from {message.body.decode('utf-8')}"
         )
-        logger.debug(f"[552351] Received A Function Call from {task.receiver.platform}")
+        task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
         # Get Function Call
         pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
             tool_calls_pending_now=task.task_sign.snapshot_credential,
@@ -257,7 +253,7 @@ class FunctionReceiver(object):
         try:
             await self.process_function_call(message=message)
         except Exception as e:
-            logger.exception(f"Function Receiver Error {e}")
+            logger.exception(f"Function Receiver Error:{e}")
             await message.reject(requeue=False)
             raise e
         else:
