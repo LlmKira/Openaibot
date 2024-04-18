@@ -48,7 +48,7 @@ def get_audio_bytes_from_data_url(data_url):
 
 
 async def request_reecho_speech(
-    text: str, reecho_api_key: str, voiceId="eb5d7f8c-eea1-483f-b718-1f28d6649339"
+    text: str, reecho_api_key: str, voiceId="8c581931-94a8-4d0b-a76f-a35ddd7b5ec3"
 ):
     """
     Call the Reecho endpoint to generate synthesized voice.
@@ -65,7 +65,15 @@ async def request_reecho_speech(
         "Content-Type": "application/json",
         "Authorization": f"Bearer {reecho_api_key}",  # Replace {token} with your Reecho API token
     }
-    data = {"voiceId": voiceId, "text": text, "origin_audio": True}
+    data = {
+        "voiceId": voiceId,
+        "text": text,
+        "origin_audio": True,
+        "randomness": 97,
+        "stability_boost": 50,
+        "probability_optimization": 99,
+    }
+    audio_bytes = None
     async with aiohttp.ClientSession() as session:
         async with session.post(
             url, headers=headers, data=json.dumps(data)
@@ -74,8 +82,8 @@ async def request_reecho_speech(
                 response_json = await response.json()
                 audio_url = response_json["data"].get("audio", None)
                 audio_bytes = get_audio_bytes_from_data_url(audio_url)
-    if not audio_bytes:
-        return await request_cn_speech(text)
+            if not audio_bytes:
+                return await request_cn_speech(text)
     return audio_bytes
 
 

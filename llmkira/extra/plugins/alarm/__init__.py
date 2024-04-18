@@ -66,9 +66,11 @@ class AlarmTool(BaseTool):
     pattern: Optional[re.Pattern] = re.compile(
         r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)"
     )
-    require_auth: bool = True
 
     # env_required: list = ["SCHEDULER", "TIMEZONE"]
+
+    def require_auth(self, env_map: dict) -> bool:
+        return True
 
     def func_message(self, message_text, **kwargs):
         """

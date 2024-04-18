@@ -24,7 +24,7 @@ def help_message():
 `/clear` - forget...you
 `/auth` - activate a task (my power),but outside the thread
 `/login` - login via url or raw
-`/env` - set environment variable
+`/env` - set environment variable, split by ; ,  use `/env ENV=NONE` to disable a env.
 
 Make sure you invite me before you call me in channel, wink~
 

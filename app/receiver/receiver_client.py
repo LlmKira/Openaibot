@@ -6,7 +6,6 @@
 #####
 # This file is not a top-level schematic file!
 #####
-
 import os
 import time
 from abc import ABCMeta, abstractmethod
@@ -59,8 +58,8 @@ async def generate_authorization(
 
     tool = tool_object()  # 实例化
     icon = "🌟"
-
-    if tool.require_auth:
+    env_map = {name: secrets.get(name, None) for name in tool.env_list}
+    if tool.require_auth(env_map):
         icon = "🔐"
         auth_key = str(shortuuid.uuid()[0:5].upper())
         authorization_map[auth_key] = tool_invocation
@@ -78,7 +77,8 @@ async def generate_authorization(
         escaped_env_vars = [
             f"`{formatting.escape_markdown(name)}`" for name in missing_env_vars
         ]
-        function_tips.append(f"🦴 Env required:  {','.join(escaped_env_vars)} ")
+        if escaped_env_vars:
+            function_tips.append(f"🦴 Env required:  {','.join(escaped_env_vars)} ")
         help_docs = tool.env_help_docs(missing_env_vars)
         if help_docs:
             function_tips.append(help_docs)
@@ -294,10 +294,11 @@ class BaseReceiver(object):
         :param message: 消息
         :return: 任务，中间件，路由类型，是否释放函数快照
         """
-        logger.debug("Received MQ Message")
+        logger.debug(f"Received MQ Message 📩{message.message_id}")
         task_head: TaskHeader = TaskHeader.model_validate_json(
             json_data=message.body.decode("utf-8")
         )
+        logger.debug(f"Received Task:{task_head.model_dump_json(indent=2)}")
         router = task_head.task_sign.router
         # Deliver 直接转发
         if router == Router.DELIVER:
@@ -328,7 +329,7 @@ class BaseReceiver(object):
                 task=task_head,
                 intercept_function=True,
                 disable_tool=True,
-                remember=False,
+                remember=True,
             )
             return (
                 task_head,
@@ -347,8 +348,8 @@ class BaseReceiver(object):
             await self._flash(
                 task=task_head,
                 llm=llm_middleware,
-                remember=True,
                 intercept_function=True,
+                remember=True,
             )
             return (
                 task_head,
@@ -383,27 +384,38 @@ class BaseReceiver(object):
                     data = snap_data.data
                     renew_snap_data = []
                     for task in data:
-                        if not task.snapshot_credential and not task.processed:
-                            if task.expire_at < int(time.time()):
-                                logger.info(
-                                    f"🧀 Expire snapshot {task.snap_uuid} at {router}"
-                                )
-                                continue
-                            try:
-                                await Task.create_and_send(
-                                    queue_name=task.channel, task=task.snapshot_data
-                                )
-                            except Exception as e:
-                                logger.exception(f"Response to snapshot error {e}")
+                        if task.expire_at < int(time.time()):
+                            logger.info(
+                                f"🧀 Expire snapshot {task.snap_uuid} at {router}"
+                            )
+                            # 跳过过期的任何任务
+                            continue
+                        # 不是认证任务
+                        if not task.snapshot_credential:
+                            # 没有被处理
+                            if not task.processed:
+                                try:
+                                    # await asyncio.sleep(10)
+                                    logger.debug(
+                                        f"🧀 Send snapshot {task.snap_uuid} at {router}"
+                                    )
+                                    await Task.create_and_send(
+                                        queue_name=task.channel, task=task.snapshot_data
+                                    )
+                                except Exception as e:
+                                    logger.exception(f"Response to snapshot error {e}")
+                                else:
+                                    logger.info(
+                                        f"🧀 Response to snapshot {task.snap_uuid} at {router}"
+                                    )
+                                finally:
+                                    task.processed_at = int(time.time())
+                                    # renew_snap_data.append(task)
                             else:
-                                logger.info(
-                                    f"🧀 Response to snapshot {task.snap_uuid} at {router}"
-                                )
-                            finally:
-                                task.processed_at = int(time.time())
-                                renew_snap_data.append(task)
+                                # 被处理过的任务。不再处理
+                                pass
                         else:
-                            task.processed_at = None
+                            # 认证任务
                             renew_snap_data.append(task)
                     snap_data.data = renew_snap_data
                     await global_snapshot_storage.write(

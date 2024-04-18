@@ -37,7 +37,7 @@ def help_message():
     `/auth` - activate a task (my power)
     `/login` - login openai
     `/login_via_url` - login via provider url
-    `/env` - set environment variable
+    `/env` - set environment variable, split by ; ,  use `/env ENV=NONE` to disable a env.
 
 **Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.**
 """.format(prefix=BotSetting.prefix)

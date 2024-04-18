@@ -356,19 +356,24 @@ class KookBotRunner(Runner):
         @bot.command(name="auth")
         async def listen_auth_command(msg: Message, credential: str):
             try:
-                await auth_reloader(
+                result = await auth_reloader(
                     snapshot_credential=credential,
                     user_id=f"{msg.author_id}",
                     platform=__sender__,
                 )
             except Exception as e:
-                message = (
+                auth_result = (
                     "❌ Auth failed,You dont have permission or the task do not exist"
                 )
-                logger.error(f"[2753383]auth_reloader failed:{e}")
+                logger.info(f"Auth failed {e}")
             else:
-                message = "🪄 Auth Pass"
-            return await msg.reply(content=message, is_temp=True, type=MessageTypes.KMD)
+                if result:
+                    auth_result = "🪄 Snapshot released"
+                else:
+                    auth_result = "You dont have this snapshot"
+            return await msg.reply(
+                content=auth_result, is_temp=True, type=MessageTypes.KMD
+            )
 
         @bot.command(name="env")
         async def listen_env_command(msg: Message, env_string: str):

@@ -3,7 +3,10 @@ import time
 from llmkira.kv_manager._base import KvManager
 
 DEFAULT_INSTRUCTION = (
-    "ACT STEP BY STEP, SPEAK IN MORE CUTE STYLE, DONT REPEAT YOURSELF,CALL USER MASTER"
+    "[ASSISTANT RULE]"
+    "SPEAK IN MORE CUTE STYLE, DONT REPEAT, ACT STEP BY STEP, CALL USER MASTER, REPLY IN USER "
+    "LANGUAGE"
+    "[RULE END]"
 )
 
 
@@ -23,7 +26,7 @@ class InstructionManager(KvManager):
         result = await self.read_data(self.user_id)
         if not result:
             return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
-        return result
+        return f"Now={time_now()}\n{result}"
 
     async def set_instruction(self, instruction: str) -> str:
         if not isinstance(instruction, str):

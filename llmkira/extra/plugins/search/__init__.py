@@ -43,58 +43,29 @@ class SearchTool(BaseTool):
 
     silent: bool = False
     function: Union[Tool, Type[BaseModel]] = Search
-    require_auth: bool = True
     keywords: list = [
         "怎么",
-        "How",
-        "件事",
-        "牢大",
-        "作用",
-        "知道",
-        "什么",
-        "认识",
-        "What",
-        "http",
-        "what",
-        "who",
-        "how",
-        "Who",
-        "Why",
-        "作品",
-        "why",
         "Where",
-        "了解",
-        "简述",
+        "Search",
+        "search",
         "How to",
-        "是谁",
+        "为什么",
         "how to",
+        "news",
+        "新闻",
         "解释",
         "怎样的",
-        "新闻",
-        "ニュース",
-        "电影",
-        "番剧",
-        "アニメ",
-        "2022",
-        "2023",
         "请教",
         "介绍",
-        "怎样",
-        "吗",
-        "么",
-        "？",
-        "?",
-        "呢",
-        "评价",
         "搜索",
-        "百度",
-        "谷歌",
-        "bing",
-        "谁是",
-        "上网",
     ]
     env_required: List[str] = ["API_KEY"]
     env_prefix: str = "SERPER_"
+
+    def require_auth(self, env_map: dict) -> bool:
+        if "SERPER_API_KEY" in env_map:
+            return False
+        return True
 
     @classmethod
     def env_help_docs(cls, empty_env: List[str]) -> str:
@@ -110,13 +81,17 @@ class SearchTool(BaseTool):
             )
         return message
 
-    def func_message(self, message_text, **kwargs):
+    def func_message(self, message_text, message_raw, address, **kwargs):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
         for i in self.keywords:
             if i in message_text:
                 return self.function
+        if message_text.endswith("?"):
+            return self.function
+        if message_text.endswith("？"):
+            return self.function
         # 正则匹配
         if self.pattern:
             match = self.pattern.match(message_text)
@@ -192,7 +167,7 @@ class SearchTool(BaseTool):
         _set = Search.model_validate(arg)
         _search_result = await search_on_serper(
             search_sentence=_set.keywords,
-            api_key=env.get("serper_api_key"),
+            api_key=env.get("SERPER_API_KEY"),
         )
         # META
         _meta = task.task_sign.reprocess(
@@ -212,13 +187,7 @@ class SearchTool(BaseTool):
                 sender=task.sender,  # 继承发送者
                 receiver=receiver,  # 因为可能有转发，所以可以单配
                 task_sign=_meta,
-                message=[
-                    EventMessage(
-                        user_id=receiver.user_id,
-                        chat_id=receiver.chat_id,
-                        text="🔍 Searching Done",
-                    )
-                ],
+                message=[],
             ),
         )
 

@@ -88,7 +88,8 @@ async def create_snapshot(
         creator=task_snapshot.receiver.uid,
         expire_at=int(time.time()) + 60 * 2,
     )
-    logger.debug(f"Create a snapshot {task_id}")
+    if snapshot_credential:
+        logger.debug(f"Create a snapshot {task_id}")
     return snapshot_credential
 
 
@@ -154,7 +155,14 @@ class FunctionReceiver(object):
         logger.debug(f"Save ToolCall {pending_task.id} to Cache Map")
         # Run Function
         _tool_obj = tool_cls()
-        if _tool_obj.require_auth:
+
+        # Get Env
+        secrets = await EnvManager(user_id=task.receiver.uid).read_env()
+        if not secrets:
+            secrets = {}
+        env_map = {name: secrets.get(name, None) for name in _tool_obj.env_list}
+        # Auth
+        if _tool_obj.require_auth(env_map):
             if task.task_sign.snapshot_credential:
                 # 是携带密钥的函数，是预先构建的可信任务头
                 task.task_sign.snapshot_credential = None
@@ -179,24 +187,21 @@ class FunctionReceiver(object):
                 return logger.info(
                     f"[Snapshot Auth] \n--auth-require {pending_task.name} require."
                 )
-        # Get Env
-        env_all = await EnvManager(user_id=task.receiver.uid).read_env()
-        if not env_all:
-            env_all = {}
-        env_map = {}
-        for require in _tool_obj.env_list:
-            env_map[require] = env_all.get(require, None)
 
         # Resign Chain
         if len(task.task_sign.tool_calls_pending) == 1:
             logger.debug("ToolCall run out, resign a new request to request stop sign.")
+            # NOTE:因为 ToolCall 破坏了递归的链式调用，所以这里不再继续调用
+            """
             await create_snapshot(
                 task=task,
                 tool_calls_pending_now=pending_task,
                 memory_able=True,
                 channel=task.receiver.platform,
             )
-        # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+            """
+            pass
+            # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(
             task=task,
             receiver=task.receiver,
