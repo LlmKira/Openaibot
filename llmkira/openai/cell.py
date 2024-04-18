@@ -1,9 +1,12 @@
+import base64
 from abc import ABC
 from typing import Optional, Union, List, Literal, Type, Any
 
 from docstring_parser import parse
 from json_repair import repair_json
 from pydantic import ConfigDict, BaseModel, Field, field_validator, model_validator
+
+from llmkira.openai.utils import resize_openai_image
 
 
 class FunctionChoice(BaseModel):
@@ -170,10 +173,90 @@ class SystemMessage(Message):
     name: Optional[str] = None
 
 
+class ImageContent(BaseModel):
+    url: str
+    detail: Optional[str] = "auto"
+
+
+class ContentPart(BaseModel):
+    type: Union[str, Literal["text", "image_url"]]
+    text: Optional[str] = None
+    image_url: Optional[ImageContent] = None
+
+    @model_validator(mode="after")
+    def check_model(self):
+        if self.type == "image_url":
+            if self.image_url is None:
+                raise ValueError("image_url cannot be None")
+        if self.type == "text":
+            if self.text is None:
+                raise ValueError("text cannot be None")
+        return self
+
+    @classmethod
+    def create_text(cls, text: str):
+        """
+        Create a text content part
+        :param text: text
+        :return: ContentPart
+        """
+        assert isinstance(text, str), ValueError("text must be a string")
+        return cls(type="text", text=text)
+
+    @classmethod
+    def create_image(
+        cls, url: Union[str, bytes], detail: Literal["low", "high", "auto"] = "auto"
+    ):
+        """
+        Create an image content part
+        :param url: image url or image bytes
+        :param detail: image detail
+        :return: ContentPart
+        """
+        assert detail in ("low", "high", "auto"), ValueError(
+            "detail must be low, high or auto"
+        )
+        if isinstance(url, bytes):
+            url = resize_openai_image(url, mode=detail)
+            base64_image = base64.b64encode(url).decode("utf-8")
+            url = f"data:image/jpeg;base64,{base64_image}"
+        elif isinstance(url, str):
+            if not url.startswith("http") or not url.startswith(
+                "data:image/jpeg;base64,"
+            ):
+                raise ValueError(
+                    "url must be a http url or `data:image/jpeg;base64,` as base64 image"
+                )
+        else:
+            raise ValueError("url must be a http url or bytes")
+        return cls(type="image_url", image_url=ImageContent(url=url, detail=detail))
+
+
 class UserMessage(Message):
     role: Literal["user"] = "user"
-    content: str
+    content: Union[str, List[ContentPart]]
     name: Optional[str] = None
+
+    @field_validator("content")
+    def check_content(cls, v):
+        if isinstance(v, str):
+            return [ContentPart.create_text(text=v)]
+        elif isinstance(v, list):
+            return v
+        else:
+            raise ValueError("content must be a string or a list of ContentPart")
+
+    def add_text(self, text: str):
+        self.content.append(ContentPart.create_text(text=text))
+        return self
+
+    def add_image(
+        self,
+        image_url: Union[str, bytes],
+        detail: Literal["low", "high", "auto"] = "auto",
+    ):
+        self.content.append(ContentPart.create_image(url=image_url, detail=detail))
+        return self
 
 
 class ToolMessage(Message):

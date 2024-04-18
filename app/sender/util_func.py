@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : util_func.py
 # @Software: PyCharm
+import time
 from typing import Tuple, Optional, Union
 from urllib.parse import urlparse
 
@@ -111,3 +112,40 @@ async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -
                 queue_name=snap.channel,
                 task=snap.snapshot_data,
             )
+
+
+class TimerObjectContainer:
+    def __init__(self):
+        self.users = {}
+
+    def add_object(self, user_id, obj):
+        if user_id not in self.users:
+            self.users[user_id] = {}
+        self.users[user_id][obj] = time.time()
+
+    def get_objects(self, user_id, second=1200) -> list:  # 20 minutes = 1200 seconds
+        """
+        获取特定用户的对象列表，并自动删除在指定时间内添加的对象
+        :param user_id: 用户ID
+        :param second: 时间（秒）
+        """
+        if user_id not in self.users:
+            return []
+
+        user_objs = self.users[user_id]
+        valid_objects = {
+            obj: add_time
+            for obj, add_time in user_objs.items()
+            if time.time() - add_time < second
+        }
+
+        self.users[user_id] = valid_objects
+        return list(valid_objects.keys())
+
+    def clear_objects(self, user_id):
+        """
+        清空特定用户的对象
+        :param user_id: 用户ID
+        """
+        if user_id in self.users:
+            self.users[user_id] = {}
