@@ -49,7 +49,8 @@ def get_audio_bytes_from_data_url(data_url):
         audio_base64 = data_url.split(",")[1]
         audio_bytes = base64.b64decode(audio_base64)
         return audio_bytes
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to extract audio bytes: {e}")
         return None
 
 
@@ -156,6 +157,7 @@ async def request_cn(text, reecho_api_key: str = None):
         stt = await request_reecho_speech(text, reecho_api_key)
         if not stt:
             return await request_dui_speech(text)
+        return stt
 
 
 async def request_en(text):
