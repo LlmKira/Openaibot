@@ -20,6 +20,7 @@ def parse_env_string(env_string) -> Dict[str, str]:
         env_key = env_key.upper()
         if env_value.lower() == "none":
             env_value = None
+            continue
         env_table[env_key] = env_value
     return env_table
 
