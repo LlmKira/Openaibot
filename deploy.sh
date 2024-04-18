@@ -1,87 +1,59 @@
 #!/bin/bash
+echo "Beginning the setup process..."
 
-# Check if the Openaibot directory exists
-echo "$(tput setaf 6)Checking the Openaibot directory...$(tput sgr0)"
-if [ -d "Openaibot" ]; then
-  # shellcheck disable=SC2164
-  pip uninstall llmkira
-  cd Openaibot && git pull && echo "$(tput setaf 6)Update successfully...$(tput sgr0)"
-  docker-compose -f docker-compose.yml down
-  docker-compose -f docker-compose.yml pull
-  docker-compose -f docker-compose.yml up -d
-  # Update the Openaibot project
-  exit 0
+# Install Voice dependencies
+echo "Installing Voice dependencies..."
+apt install ffmpeg
+
+# Pull RabbitMQ
+echo "Pulling RabbitMQ..."
+docker pull rabbitmq:3.10-management
+
+# Check if RabbitMQ container exists
+if [ "$(docker ps -a -f name=rabbitmq | grep rabbitmq | wc -l)" -eq 0 ]; then
+  # Run the RabbitMQ if not exist
+  echo "Running RabbitMQ..."
+  docker run -d -p 5672:5672 -p 15672:15672 \
+    -e RABBITMQ_DEFAULT_USER=admin \
+    -e RABBITMQ_DEFAULT_PASS=8a8a8a \
+    --hostname myRabbit \
+    --name rabbitmq \
+    rabbitmq:3.10-management
 else
-  # Clone the project if not already cloned
-  git clone https://github.com/LlmKira/Openaibot.git
+  echo "RabbitMQ already exists. Using it..."
 fi
 
-echo "$(tput setaf 2)Openaibot directory check complete.$(tput sgr0)"
-echo "$(tput setaf 6)Type yes will install Docker and the Openaibot project. Do you want to proceed? (y/n):$(tput sgr0) "
-read -r choice
-if [[ $choice =~ ^([yY][eE][sS]|[yY])$ ]]; then
-  sleep 1s
+docker ps -l
+
+# Clone or update the project
+if [ ! -d "Openaibot" ] ; then
+  echo "Cloning Openaibot..."
+  git clone https://github.com/LlmKira/Openaibot/
+  cd Openaibot || exit
 else
-  echo "$(tput setaf 1)Installation cancelled.$(tput sgr0)"
-  exit 0
+  echo "Updating Openaibot..."
+  cd Openaibot || exit
+  git pull
 fi
 
-# Function to handle errors and exit
-handle_error() {
-  echo "$(tput setaf 1)Error occurred during installation. Exiting...$(tput sgr0)"
-  exit 1
-}
+echo "Setting up Python dependencies..."
+pip install pdm
+pdm install -G bot
+cp .env.exp .env && nano .env
 
-# Set error trap
-trap 'handle_error' ERR
+# Test
+echo "Testing setup..."
+pdm run python3 start_sender.py &
+pdm run python3 start_receiver.py &
 
-# Check if Docker is installed
-if ! [ -x "$(command -v docker)" ]; then
-  # Install Docker
-  echo "$(tput setaf 6)Installing Docker...$(tput sgr0)"
-  curl -fsSL https://get.docker.com | bash -s docker
-else
-  echo "$(tput setaf 2)Docker already installed.$(tput sgr0)"
+# Install or update pm2
+if ! [ -x "$(command -v pm2)" ]; then
+  echo "Installing npm and pm2..."
+  apt install npm
+  npm install pm2 -g
 fi
 
-# Run Docker Compose
-echo "$(tput setaf 6)Running Docker Compose...$(tput sgr0)"
-# 检查是否安装docker-compose
-if ! [ -x "$(command -v docker-compose)" ]; then
-  # Install Docker
-  echo "$(tput setaf 6)Installing docker-compose...$(tput sgr0)"
-  curl -L "https://github.com/docker/compose/releases/download/v2.14.0/docker-compose-linux-$(uname -m)" >/usr/local/bin/docker-compose
-  chmod +x /usr/local/bin/docker-compose
-else
-  echo "$(tput setaf 2)docker-compose already installed.$(tput sgr0)"
-fi
-# Change directory to the project
-cd Openaibot || echo "DO NOT Exist Openaibot Dir" && exit
+echo "Starting application with pm2..."
+pm2 start pm2.json
 
-# Install project dependencies
-echo "$(tput setaf 6)Installing project dependencies...$(tput sgr0)"
-python3 -m pip install poetry
-poetry config virtualenvs.in-project true &&
-  poetry install --all-extras
-python3 -m pip install rich loguru && python3 start_tutorial.py
-echo "$(tput setaf 2)Project dependencies installation complete.$(tput sgr0)"
-
-# Copy .env.exp to .env if .env doesn't exist
-if [ ! -f ".env" ]; then
-  echo "$(tput setaf 6)Copying .env.example to .env...$(tput sgr0)"
-  cp .env.exp .env
-  nano .env
-  echo "$(tput setaf 2).env file copy complete.$(tput sgr0)"
-fi
-
-if [ ! -f "docker-compose.yml" ]; then
-  echo "$(tput setaf 6)Run docker-compose.yml...$(tput sgr0)"
-  docker-compose -f docker-compose.yml up -d
-fi
-
-echo "$(tput setaf 2)Docker Compose completed with:docker-compose -f docker-compose.yml up -d$(tput sgr0)"
-
-# Remove the error trap
-trap - ERR
-
-echo "$(tput setaf 2)Installation completed successfully.$(tput sgr0)"
+echo "Setup complete!"
