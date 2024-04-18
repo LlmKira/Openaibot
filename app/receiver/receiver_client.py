@@ -78,7 +78,8 @@ async def generate_authorization(
         escaped_env_vars = [
             f"`{formatting.escape_markdown(name)}`" for name in missing_env_vars
         ]
-        function_tips.append(f"🦴 Env required:  {','.join(escaped_env_vars)} ")
+        if escaped_env_vars:
+            function_tips.append(f"🦴 Env required:  {','.join(escaped_env_vars)} ")
         help_docs = tool.env_help_docs(missing_env_vars)
         if help_docs:
             function_tips.append(help_docs)
