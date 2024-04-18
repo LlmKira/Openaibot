@@ -1,6 +1,7 @@
 import base64
 import json
 from io import BytesIO
+from typing import Optional
 
 import aiohttp
 import edge_tts
@@ -144,7 +145,7 @@ async def request_novelai_speech(text):
         return None
 
 
-async def request_cn(text, reecho_api_key: str = None):
+async def request_cn(text, reecho_api_key: str = None) -> Optional[bytes]:
     """
     Call the Reecho endpoint to generate synthesized voice.
     :param text: The text to synthesize
@@ -160,7 +161,7 @@ async def request_cn(text, reecho_api_key: str = None):
         return stt
 
 
-async def request_en(text):
+async def request_en(text) -> Optional[bytes]:
     """
     Call the Reecho endpoint to generate synthesized voice.
     :param text: The text to synthesize
