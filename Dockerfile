@@ -4,7 +4,8 @@ FROM python:3.9-buster as builder
 RUN apt update && \
     apt install -y build-essential && \
     pip install -U pip setuptools wheel && \
-    pip install pdm
+    pip install pdm && \
+    apt install -y ffmpeg
 
 COPY pyproject.toml pdm.lock README.md /project/
 WORKDIR /project

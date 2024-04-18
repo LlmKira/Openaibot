@@ -204,7 +204,7 @@ class FunctionReceiver(object):
         # Resign Chain
         # 时序实现，防止过度注册
         if len(task.task_sign.tool_calls_pending) == 1:
-            if has_been_called_recently(userid=task.receiver.uid, n_seconds=5):
+            if not has_been_called_recently(userid=task.receiver.uid, n_seconds=5):
                 logger.debug(
                     "ToolCall run out, resign a new request to request stop sign."
                 )

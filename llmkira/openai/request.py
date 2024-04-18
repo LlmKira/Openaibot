@@ -4,7 +4,7 @@ from typing import Optional
 
 from curl_cffi.requests import AsyncSession
 from loguru import logger
-from pydantic import ConfigDict, BaseModel, Field, field_validator
+from pydantic import ConfigDict, BaseModel, Field, field_validator, model_validator
 from pydantic import SecretStr
 from tenacity import retry, stop_after_attempt
 
@@ -161,6 +161,23 @@ class OpenAI(BaseModel):
     @staticmethod
     def make_url(base_url: str):
         return base_url.strip().rstrip("/") + "/chat/completions"
+
+    @model_validator(mode="after")
+    def check_vision(self):
+        if not self.model.startswith(("gpt-4-vision", "gpt-4-turbo", "claude-3")):
+            logger.info(
+                "Remove the image content part from the messages, because the model is not supported."
+            )
+            for message in self.messages:
+                if isinstance(message, UserMessage) and isinstance(
+                    message.content, list
+                ):
+                    message.content = [
+                        content
+                        for content in message.content
+                        if content.type != "image_url"
+                    ]
+        return self
 
     @retry(stop=stop_after_attempt(3), reraise=True)
     async def request(self, session: OpenAICredential) -> OpenAIResult:
