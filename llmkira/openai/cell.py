@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, Union, List, Literal, Type
+from typing import Optional, Union, List, Literal, Type, Any
 
 from docstring_parser import parse
 from json_repair import repair_json
@@ -28,16 +28,17 @@ class FunctionChoice(BaseModel):
         )
 
 
-class Function(FunctionChoice):
-    class Parameters(BaseModel):
-        type: str = "object"
-        properties: dict = {}
-        required: List[str] = Field(default=[], description="必填参数")
-        model_config = ConfigDict(extra="ignore")
+class FunctionParameters(BaseModel):
+    type: str = "object"
+    properties: dict = {}
+    required: List[str] = Field(default=[], description="必填参数")
+    model_config = ConfigDict(extra="ignore")
 
+
+class Function(FunctionChoice):
     name: str
     description: Optional[str]
-    parameters: Parameters = None
+    parameters: FunctionParameters = None
 
     @classmethod
     def parse(
@@ -107,7 +108,10 @@ class ToolChoice(CommonTool):
 
 class Tool(ToolChoice):
     type: Literal["function"] = "function"
-    function: Union[Function, Type[BaseModel]]
+    function: Union[Function, Any]
+
+    # NOTE:Type[BaseModel] 会导致
+    # Cannot check issubclass when validating from json, use a JsonOrPython validator instead.
 
     @field_validator("function")
     def check_function(cls, v):
