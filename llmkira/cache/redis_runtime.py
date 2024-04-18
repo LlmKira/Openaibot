@@ -29,7 +29,7 @@ class RedisClientWrapper(AbstractDataClass):
         self._redis = Redis(connection_pool=self.connection_pool)
         return True
 
-    async def set_data(self, key, value, timeout=None):
+    async def set_data(self, key, value: Union[dict, str, bytes], timeout=None):
         if isinstance(value, (dict, list)):
             value = json.dumps(value)
         return await self._redis.set(

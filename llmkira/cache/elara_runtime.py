@@ -2,6 +2,7 @@
 # @Time    : 2023/7/10 下午9:44
 import asyncio
 import json
+from typing import Union
 
 import elara
 from loguru import logger
@@ -38,7 +39,7 @@ class ElaraClientAsyncWrapper(AbstractDataClass):
                 logger.trace(ex)
         return data
 
-    async def set_data(self, key, value, timeout: int = None):
+    async def set_data(self, key, value: Union[dict, str, bytes], timeout: int = None):
         """
         Set data to elara
         :param key:

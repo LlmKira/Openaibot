@@ -63,6 +63,8 @@ dependencies = [
     "montydb[lmdb]>=2.5.2",
     "pymongo>=4.6.3",
     "fast-langdetect>=0.1.0",
+    "lmdb>=1.4.1",
+    "edge-tts>=6.1.10",
 ]
 requires-python = ">=3.9,<3.12"
 readme = "README.md"

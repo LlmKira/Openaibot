@@ -226,6 +226,7 @@ class TelegramBotRunner(Runner):
                         "You can set it via `https://api.com/v1$key$model` format, "
                         "or you can log in via URL using `token$https://provider.com`."
                     ),
+                    parse_mode="MarkdownV2",
                 )
             if len(settings) == 2:
                 try:
@@ -341,7 +342,7 @@ class TelegramBotRunner(Runner):
             if not _arg:
                 return None
             try:
-                await auth_reloader(
+                result = await auth_reloader(
                     snapshot_credential=_arg,
                     user_id=f"{message.from_user.id}",
                     platform=__sender__,
@@ -352,7 +353,10 @@ class TelegramBotRunner(Runner):
                 )
                 logger.info(f"Auth failed {e}")
             else:
-                auth_result = "🪄 Snapshot released"
+                if result:
+                    auth_result = "🪄 Snapshot released"
+                else:
+                    auth_result = "You dont have this snapshot"
             return await bot.reply_to(message, text=convert(auth_result))
 
         @bot.message_handler(
