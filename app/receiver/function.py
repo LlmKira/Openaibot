@@ -154,7 +154,14 @@ class FunctionReceiver(object):
         logger.debug(f"Save ToolCall {pending_task.id} to Cache Map")
         # Run Function
         _tool_obj = tool_cls()
-        if _tool_obj.require_auth:
+
+        # Get Env
+        secrets = await EnvManager(user_id=task.receiver.uid).read_env()
+        if not secrets:
+            secrets = {}
+        env_map = {name: secrets.get(name, None) for name in _tool_obj.env_list}
+        # Auth
+        if _tool_obj.require_auth(env_map):
             if task.task_sign.snapshot_credential:
                 # 是携带密钥的函数，是预先构建的可信任务头
                 task.task_sign.snapshot_credential = None
@@ -179,13 +186,6 @@ class FunctionReceiver(object):
                 return logger.info(
                     f"[Snapshot Auth] \n--auth-require {pending_task.name} require."
                 )
-        # Get Env
-        env_all = await EnvManager(user_id=task.receiver.uid).read_env()
-        if not env_all:
-            env_all = {}
-        env_map = {}
-        for require in _tool_obj.env_list:
-            env_map[require] = env_all.get(require, None)
 
         # Resign Chain
         if len(task.task_sign.tool_calls_pending) == 1:

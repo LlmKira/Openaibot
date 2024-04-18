@@ -55,9 +55,6 @@ class BaseTool(ABC, BaseModel):
     pattern: Optional[re.Pattern] = None
     """The pattern to be matched to load tools in session"""
 
-    require_auth: bool = False
-    """Is user authentication required"""
-
     env_required: List[str] = Field([], description="环境变量要求,ALSO NEED env_prefix")
     """Pre-required environment variables, you should provide env_prefix"""
 
@@ -68,6 +65,12 @@ class BaseTool(ABC, BaseModel):
         None, description="re.compile 文件名正则"
     )
     """File name regular expression to use the tool, exp: re.compile(r"file_id=([a-z0-9]{8})")"""
+
+    def require_auth(self, env_map: dict) -> bool:
+        """
+        Check if authentication is required
+        """
+        return False
 
     @final
     def get_os_env(self, env_name):

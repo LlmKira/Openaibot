@@ -59,8 +59,8 @@ async def generate_authorization(
 
     tool = tool_object()  # 实例化
     icon = "🌟"
-
-    if tool.require_auth:
+    env_map = {name: secrets.get(name, None) for name in tool.env_list}
+    if tool.require_auth(env_map):
         icon = "🔐"
         auth_key = str(shortuuid.uuid()[0:5].upper())
         authorization_map[auth_key] = tool_invocation

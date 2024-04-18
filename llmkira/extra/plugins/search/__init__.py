@@ -43,7 +43,6 @@ class SearchTool(BaseTool):
 
     silent: bool = False
     function: Union[Tool, Type[BaseModel]] = Search
-    require_auth: bool = True
     keywords: list = [
         "怎么",
         "Where",
@@ -62,6 +61,11 @@ class SearchTool(BaseTool):
     ]
     env_required: List[str] = ["API_KEY"]
     env_prefix: str = "SERPER_"
+
+    def require_auth(self, env_map: dict) -> bool:
+        if "SERPER_API_KEY" in env_map:
+            return False
+        return True
 
     @classmethod
     def env_help_docs(cls, empty_env: List[str]) -> str:
@@ -183,13 +187,7 @@ class SearchTool(BaseTool):
                 sender=task.sender,  # 继承发送者
                 receiver=receiver,  # 因为可能有转发，所以可以单配
                 task_sign=_meta,
-                message=[
-                    EventMessage(
-                        user_id=receiver.user_id,
-                        chat_id=receiver.chat_id,
-                        text="🔍 Searching Done",
-                    )
-                ],
+                message=[],
             ),
         )
 
