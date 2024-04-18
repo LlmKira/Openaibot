@@ -22,6 +22,7 @@ from llmkira.openai.cell import (
     SystemMessage,
     ToolMessage,
     AssistantMessage,
+    UserMessage,
 )
 from llmkira.openai.request import OpenAIResult, OpenAI, OpenAICredential
 from llmkira.task import TaskHeader
@@ -174,7 +175,7 @@ class OpenaiMiddleware(object):
         for i, message in enumerate(task_message):
             message: EventMessage
             # message format
-            user_message = message.format_user_message()
+            user_message = await message.format_user_message()
             message_run.append(user_message)
             if remember:
                 await self.message_history.append(messages=[user_message])
@@ -192,14 +193,7 @@ class OpenaiMiddleware(object):
         :param disable_tool: 禁用函数
         :param credential: 凭证
         :return: OpenaiResult 返回结果
-        :raise RuntimeError:        # Feel time leave
-        time_feel = await TimeFeelManager(self.session_uid).get_leave()
-        if time_feel:
-            await self.remember(
-                message=SystemMessage(
-                    content=f"statu:[After {time_feel} leave, user is back]"
-                )
-            ) 无法处理消息
+        :raise RuntimeError: 消息为空
         :raise AssertionError: 无法处理消息
         :raise OpenaiError: Openai错误
         """
@@ -231,13 +225,21 @@ class OpenaiMiddleware(object):
         # TODO:实现消息时序切片
         # 日志
         logger.info(
-            f"[x] Openai request" f"\n--message {messages} " f"\n--tools {tools}"
+            f"[x] Openai request" f"\n--message {len(messages)} " f"\n--tools {tools}"
         )
+        for msg in messages:
+            if isinstance(msg, UserMessage):
+                if len(str(msg)) < 100:
+                    logger.debug(f"Message: {msg}")
+                else:
+                    logger.debug("Message: UserMessage")
+            else:
+                logger.debug(f"Message:{msg}")
         # 必须校验
         if disable_tool or not tools:
-            logger.debug("llm_task:Tool not enable")
+            logger.debug("llm_task:no tool loaded")
             tools = None
-        # 根据模型选择不同的驱动a
+        # 根据模型选择不同的驱动
         assert messages, RuntimeError("llm_task:message cant be none...")
         messages = await validate_mock(messages)
         endpoint: OpenAI = OpenAI(
