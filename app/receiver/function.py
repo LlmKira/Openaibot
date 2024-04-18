@@ -22,6 +22,19 @@ from llmkira.task import Task, TaskHeader
 from llmkira.task.schema import EventMessage, Location, Sign, Snapshot
 from llmkira.task.snapshot import global_snapshot_storage, SnapData
 
+# 记录上次调用时间的字典
+TOOL_CALL_LAST_TIME = {}
+
+
+def has_been_called_recently(userid, n_seconds):
+    current_time = time.time()
+    if userid in TOOL_CALL_LAST_TIME:
+        last_call_time = TOOL_CALL_LAST_TIME[userid]
+        if current_time - last_call_time <= n_seconds:
+            return True
+    TOOL_CALL_LAST_TIME[userid] = current_time
+    return False
+
 
 async def append_snapshot(
     snapshot_credential: Optional[str],
@@ -189,15 +202,19 @@ class FunctionReceiver(object):
                 )
 
         # Resign Chain
+        # 时序实现，防止过度注册
         if len(task.task_sign.tool_calls_pending) == 1:
-            logger.debug("ToolCall run out, resign a new request to request stop sign.")
-            await create_snapshot(
-                task=task,
-                tool_calls_pending_now=pending_task,
-                memory_able=True,
-                channel=task.receiver.platform,
-            )
-            # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+            if has_been_called_recently(userid=task.receiver.uid, n_seconds=5):
+                logger.debug(
+                    "ToolCall run out, resign a new request to request stop sign."
+                )
+                await create_snapshot(
+                    task=task,
+                    tool_calls_pending_now=pending_task,
+                    memory_able=True,
+                    channel=task.receiver.platform,
+                )
+                # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
         run_result = await _tool_obj.load(
             task=task,
             receiver=task.receiver,
@@ -225,24 +242,27 @@ class FunctionReceiver(object):
             f"[552351] Received A Function Call from {message.body.decode('utf-8')}"
         )
         task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
-        # Get Function Call
-        pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
-            tool_calls_pending_now=task.task_sign.snapshot_credential,
-            return_default_if_empty=True,
-        )
-        if not pending_task:
-            return logger.debug("But No ToolCall")
-        logger.debug("Received A ToolCall")
-        try:
-            await self.run_pending_task(task=task, pending_task=pending_task)
-        except Exception as e:
-            await task.task_sign.complete_task(
-                tool_calls=pending_task, success_or_not=False, run_result=str(e)
+        RUN_LIMIT = 6
+        while task.task_sign.tool_calls_pending and RUN_LIMIT > 0:
+            RUN_LIMIT -= 1
+            # Get Function Call
+            pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
+                tool_calls_pending_now=task.task_sign.snapshot_credential,
+                return_default_if_empty=True,
             )
-            logger.error(f"Function Call Error {e}")
-            raise e
-        finally:
-            logger.trace("Function Call Finished")
+            if not pending_task:
+                return logger.debug("But No ToolCall")
+            logger.debug("Received A ToolCall")
+            try:
+                await self.run_pending_task(task=task, pending_task=pending_task)
+            except Exception as e:
+                await task.task_sign.complete_task(
+                    tool_calls=pending_task, success_or_not=False, run_result=str(e)
+                )
+                logger.error(f"Function Call Error {e}")
+                raise e
+            finally:
+                logger.trace("Function Call Finished")
 
     async def on_message(self, message: AbstractIncomingMessage):
         """
