@@ -21,6 +21,7 @@ from app.sender.util_func import (
     auth_reloader,
     uid_make,
     login,
+    TimerObjectContainer,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -38,7 +39,7 @@ __default_disable_tool_action__ = False
 from app.components.credential import split_setting_string, Credential, ProviderError
 
 StepCache = StateMemoryStorage()
-
+FileWindow = TimerObjectContainer()
 TelegramTask = Task(queue=__sender__)
 
 
@@ -67,6 +68,7 @@ class TelegramBotRunner(Runner):
         files = files if files else []
         messages = messages if messages else []
         event_messages = []
+        files = [file for file in files if file]  # No None
         for index, message in enumerate(messages):
             message_text = getattr(message, "text", "empty")
             event_messages.append(
@@ -144,6 +146,19 @@ class TelegramBotRunner(Runner):
                 message.text = message.text
             if not message.text:
                 return None
+            __used_file_id = []
+            photos: List[types.PhotoSize] = FileWindow.get_objects(
+                user_id=message.from_user.id
+            )
+            FileWindow.clear_objects(user_id=message.from_user.id)
+            for photo in photos:
+                __used_file_id.append(photo.file_id)
+                uploaded_file.append(
+                    await self.upload(
+                        file=photo,
+                        uid=uid_make(__sender__, message.from_user.id),
+                    )
+                )
             if message.photo:
                 uploaded_file.append(
                     await self.upload(
@@ -161,12 +176,13 @@ class TelegramBotRunner(Runner):
                     )
             if message.reply_to_message:
                 if message.reply_to_message.photo:
-                    uploaded_file.append(
-                        await self.upload(
-                            message.reply_to_message.photo[-1],
-                            uid=uid_make(__sender__, message.from_user.id),
+                    if message.reply_to_message.photo[-1].file_id not in __used_file_id:
+                        uploaded_file.append(
+                            await self.upload(
+                                message.reply_to_message.photo[-1],
+                                uid=uid_make(__sender__, message.from_user.id),
+                            )
                         )
-                    )
                 if message.reply_to_message.document:
                     if message.reply_to_message.document.file_size < 1024 * 1024 * 10:
                         uploaded_file.append(
@@ -367,9 +383,15 @@ class TelegramBotRunner(Runner):
             自动响应私聊消息
             """
             message.text = message.text if message.text else message.caption
+            logger.debug(f"Private message from {len(message.photo)}")
+            # Support for GPT Vision
             if not message.text:
+                if message.photo:
+                    FileWindow.add_object(
+                        user_id=message.from_user.id, obj=message.photo[-1]
+                    )
                 return None
-
+            # 扳机
             trigger = await get_trigger_loop(
                 platform_name=__sender__,
                 message=message.text,
