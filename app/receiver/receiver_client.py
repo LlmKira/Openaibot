@@ -329,7 +329,7 @@ class BaseReceiver(object):
                 task=task_head,
                 intercept_function=True,
                 disable_tool=True,
-                remember=True,
+                remember=False,
             )
             return (
                 task_head,
@@ -384,27 +384,34 @@ class BaseReceiver(object):
                     data = snap_data.data
                     renew_snap_data = []
                     for task in data:
-                        if not task.snapshot_credential or not task.processed:
-                            if task.expire_at < int(time.time()):
-                                logger.info(
-                                    f"🧀 Expire snapshot {task.snap_uuid} at {router}"
-                                )
-                                continue
-                            try:
-                                await Task.create_and_send(
-                                    queue_name=task.channel, task=task.snapshot_data
-                                )
-                            except Exception as e:
-                                logger.exception(f"Response to snapshot error {e}")
+                        if task.expire_at < int(time.time()):
+                            logger.info(
+                                f"🧀 Expire snapshot {task.snap_uuid} at {router}"
+                            )
+                            # 跳过过期的任何任务
+                            continue
+                        # 不是认证任务
+                        if not task.snapshot_credential:
+                            # 没有被处理
+                            if not task.processed:
+                                try:
+                                    await Task.create_and_send(
+                                        queue_name=task.channel, task=task.snapshot_data
+                                    )
+                                except Exception as e:
+                                    logger.exception(f"Response to snapshot error {e}")
+                                else:
+                                    logger.info(
+                                        f"🧀 Response to snapshot {task.snap_uuid} at {router}"
+                                    )
+                                finally:
+                                    task.processed_at = int(time.time())
+                                    # renew_snap_data.append(task)
                             else:
-                                logger.info(
-                                    f"🧀 Response to snapshot {task.snap_uuid} at {router}"
-                                )
-                            finally:
-                                task.processed_at = int(time.time())
-                                # renew_snap_data.append(task)
+                                # 被处理过的任务。不再处理
+                                pass
                         else:
-                            task.processed_at = None
+                            # 认证任务
                             renew_snap_data.append(task)
                     snap_data.data = renew_snap_data
                     await global_snapshot_storage.write(
