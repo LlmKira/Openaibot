@@ -40,11 +40,12 @@ jobs:
             sudoskys/llmbot
           tags: |
             # set latest tag for default branch
+            type=raw,value=latest
             type=ref,event=branch
 
           flavors: |
             latest=false
-            suffix=-dev,onlatest=false
+            suffix=-dev,onlatest=true
 
       - name: echo
         run: echo ${{ steps.meta.outputs.json }}
