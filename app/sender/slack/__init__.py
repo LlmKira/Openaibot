@@ -331,7 +331,7 @@ class SlackBotRunner(Runner):
 
         async def auth_chain(uuid, user_id):
             try:
-                await auth_reloader(
+                result = await auth_reloader(
                     snapshot_credential=uuid,
                     user_id=f"{user_id}",
                     platform=__sender__,
@@ -340,9 +340,12 @@ class SlackBotRunner(Runner):
                 auth_result = (
                     "❌ Auth failed,You dont have permission or the task do not exist"
                 )
-                logger.info(f"[3031]auth_reloader failed {e}")
+                logger.info(f"Auth failed {e}")
             else:
-                auth_result = "🪄 Auth Pass"
+                if result:
+                    auth_result = "🪄 Snapshot released"
+                else:
+                    auth_result = "You dont have this snapshot"
             return auth_result
 
         @bot.command(command="/auth")

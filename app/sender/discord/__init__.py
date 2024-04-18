@@ -336,7 +336,7 @@ class DiscordBotRunner(Runner):
         @crescent.command(dm_enabled=True, name="auth", description="auth [credential]")
         async def listen_auth_command(ctx: crescent.Context, credential: str):
             try:
-                await auth_reloader(
+                result = await auth_reloader(
                     snapshot_credential=credential,
                     user_id=f"{ctx.user.id}",
                     platform=__sender__,
@@ -347,7 +347,10 @@ class DiscordBotRunner(Runner):
                 )
                 logger.error(f"[270563]auth_reloader failed {exc}")
             else:
-                message = "🪄 Auth Pass"
+                if result:
+                    message = "🪄 Auth Pass"
+                else:
+                    message = "You dont have this snapshot"
             return await ctx.respond(content=message, ephemeral=True)
 
         @client.include
