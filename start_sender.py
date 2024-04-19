@@ -11,7 +11,8 @@ load_dotenv()
 logger.remove(0)
 handler_id = logger.add(
     sys.stderr,
-    format="<level>[{level}]</level> | <level>{message}</level> | <yellow>@{time}</yellow>",
+    format="<level>[{level}]</level> | <level>{message}</level> | "
+    "<cyan>{name}:{function}:{line}</cyan> <yellow>@{time}</yellow>",
     colorize=True,
     backtrace=True,
     enqueue=True,
@@ -19,7 +20,8 @@ handler_id = logger.add(
 )
 logger.add(
     sink="sender.log",
-    format="<level>[{level}]</level> | <level>{message}</level> | <yellow>@{time}</yellow>",
+    format="<level>[{level}]</level> | <level>{message}</level> | "
+    "<cyan>{name}:{function}:{line}</cyan> <yellow>@{time}</yellow>",
     level="DEBUG",
     rotation="100 MB",
     enqueue=True,
