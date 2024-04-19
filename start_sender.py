@@ -37,7 +37,8 @@ head = """
 logger.opt(record=False, exception=False, capture=False, colors=True).info(
     f"<cyan>{head}</cyan>"
 )
-
+if os.getenv("DEBUG", None):
+    logger.warning("DEBUG MODE IS OPEN")
 # Log System
 if os.getenv("SENTRY_DSN", None):
     try:
