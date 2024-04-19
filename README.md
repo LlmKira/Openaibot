@@ -42,7 +42,7 @@ This project uses the ToolCall feature.
 It integrates a message queuing and snapshot system, offering plugin mechanisms and authentication prior to plugin
 execution.
 
-The model adheres to the Openai Format Schema. Please adapt using [gateway](https://github.com/Portkey-AI/gateway)
+The bot adheres to the **Openai Format Schema**. Please adapt using [gateway](https://github.com/Portkey-AI/gateway)
 or [one-api](https://github.com/songquanpeng/one-api) independently.
 
 | Demo                              | Vision With Voice            |

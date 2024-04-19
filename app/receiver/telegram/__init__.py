@@ -110,6 +110,7 @@ class TelegramSender(BaseSender):
                 text=convert(item.text),
                 reply_to_message_id=receiver.message_id,
                 parse_mode="MarkdownV2",
+                disable_web_page_preview=True,
             )
         return logger.trace("forward message")
 
@@ -127,6 +128,7 @@ class TelegramSender(BaseSender):
         if receiver.chat_id is not None:
             await self.bot.send_chat_action(chat_id=receiver.chat_id, action="typing")
         event_message = [
+            # FIXME:TYPEHint
             EventMessage.from_openai_message(message=item, locate=receiver)
             for item in messages
         ]
@@ -147,6 +149,7 @@ class TelegramSender(BaseSender):
                     if reply_to_message
                     else None,
                     parse_mode="MarkdownV2",
+                    disable_web_page_preview=True,
                 )
             except telebot.apihelper.ApiTelegramException as e:
                 if "message to reply not found" in str(e):
