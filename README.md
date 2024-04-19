@@ -77,7 +77,8 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
 ### 🍔 Login Modes
 
 - `Login via url`: Use `/login token$https://provider.com` to Login. The program posts the token to the interface to
-  retrieve configuration information
+  retrieve configuration
+  information, [how to develop this](https://github.com/LlmKira/Openaibot/blob/81eddbff0f136697d5ad6e13ee1a7477b26624ed/app/components/credential.py#L20).
 - `Login`: Use `/login https://api.com/v1$key$model` to login
 
 ### 🧀 Plugin Previews
@@ -105,8 +106,18 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
 
 Refer to the [🧀 Deployment Document](https://llmkira.github.io/Docs/) for more information.
 
+### 📦 One-click Deployment
+
+If you are using a brand-new server, you can use the following shell to automatically install this project.
+
 ```shell
-# Install Telegram Voice dependencies
+curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
+```
+
+### 📦 Manual Installation
+
+```shell
+# Install Voice dependencies
 apt install ffmpeg
 # Install RabbitMQ
 docker pull rabbitmq:3.10-management
@@ -118,6 +129,8 @@ docker run -d -p 5672:5672 -p 15672:15672 \
   rabbitmq:3.10-management
 docker ps -l
 # Install Project
+git clone https://github.com/LlmKira/Openaibot/
+cd Openaibot
 pip install pdm
 pdm install -G bot
 cp .env.exp .env && nano .env
@@ -125,23 +138,17 @@ cp .env.exp .env && nano .env
 pdm run python3 start_sender.py
 pdm run python3 start_receiver.py
 # Host
-pdm start pm2.json
+apt install npm
+npm install pm2 -g
+pm2 start pm2.json
 ```
 
 ### 🥣 Docker
 
 Build Hub: [sudoskys/llmbot](https://hub.docker.com/repository/docker/sudoskys/llmbot/general)
 
-#### Automatic Docker/Docker-compose Installation
-
-If you are using a brand new server, you can use the following shell to automatically install this project.
-
-This script automatically installs the required services and maps ports using Docker methods. If you have
-deployed `redis`, `rabbitmq`, `mongodb`, please modify the `docker-compose.yml` file accordingly.
-
-```shell
-curl -sSL https://raw.githubusercontent.com/LLMKira/Openaibot/main/deploy.sh | bash
-```
+> Note that if you run this project using Docker, you will start Redis, MongoDB, and RabbitMQ. But if you're running
+> locally, just RabbitMQ
 
 #### Manual Docker-compose Installation
 
@@ -185,8 +192,11 @@ Hooks control the EventMessage in sender and receiver. For example, we have `voi
 you can enable it by setting `VOICE_REPLY_ME=true` in `.env`.
 
 ```shell
-/env VOICE_REPLY_ME=true
+/env VOICE_REPLY_ME=yes
+# must
+
 /env REECHO_VOICE_KEY=<key in dev.reecho.ai>
+# not must
 ```
 
 use `/env VOICE_REPLY_ME=NONE` to disable this env.

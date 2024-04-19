@@ -247,6 +247,11 @@ class UserMessage(Message):
             raise ValueError("content must be a string or a list of ContentPart")
 
     def add_text(self, text: str):
+        """
+        Add a text to the message
+        :param text: text
+        :return: self
+        """
         self.content.append(ContentPart.create_text(text=text))
         return self
 
@@ -255,6 +260,14 @@ class UserMessage(Message):
         image_url: Union[str, bytes],
         detail: Literal["low", "high", "auto"] = "auto",
     ):
+        """
+        Add an image to the message
+        :param image_url: image url or image bytes
+        :param detail: image detail
+        :return: self
+        :raises ValueError: detail must be low, high or auto
+        :raises ValueError: url must be a http url or `data:image/jpeg;base64,` as base64 image
+        """
         self.content.append(ContentPart.create_image(url=image_url, detail=detail))
         return self
 

@@ -56,7 +56,10 @@ class EventMessage(BaseModel):
             for file in self.files:
                 if file.file_name.endswith((".jpg", ".jpeg", ".png")):
                     file_bytes = await file.download_file()
-                    content_list.append(ContentPart.create_image(file_bytes))
+                    try:
+                        content_list.append(ContentPart.create_image(file_bytes))
+                    except Exception as e:
+                        logger.error(f"Error when create image: {e}")
         return UserMessage(
             role="user",
             name=name,

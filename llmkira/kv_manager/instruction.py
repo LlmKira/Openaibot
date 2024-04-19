@@ -5,7 +5,7 @@ from llmkira.kv_manager._base import KvManager
 DEFAULT_INSTRUCTION = (
     "[ASSISTANT RULE]"
     "SPEAK IN MORE CUTE STYLE, DONT REPEAT, ACT STEP BY STEP, CALL USER MASTER, REPLY IN USER "
-    "LANGUAGE"
+    "LANGUAGE, ACT STEP BY STEP"
     "[RULE END]"
 )
 

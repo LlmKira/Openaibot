@@ -232,6 +232,7 @@ class FunctionReceiver(object):
     async def process_function_call(self, message: AbstractIncomingMessage):
         """
         定位，解析，运行函数。要求认证，或申请结束/继续指标。
+        Receive credential, or a list of function calls, attention, message may queue itself for auth.
         :param message: message from queue
         :return: None
         """
@@ -242,27 +243,39 @@ class FunctionReceiver(object):
             f"[552351] Received A Function Call from {message.body.decode('utf-8')}"
         )
         task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
-        RUN_LIMIT = 6
-        while task.task_sign.tool_calls_pending and RUN_LIMIT > 0:
-            RUN_LIMIT -= 1
-            # Get Function Call
-            pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
-                tool_calls_pending_now=task.task_sign.snapshot_credential,
-                return_default_if_empty=True,
+        # Get Function Call
+        pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
+            tool_calls_pending_now=task.task_sign.snapshot_credential,
+            return_default_if_empty=False,
+        )
+        if pending_task:
+            await self.run_task(task=task, pending_task=pending_task)
+        if task.task_sign.snapshot_credential:
+            return logger.debug(
+                f"Received A Credential {task.task_sign.snapshot_credential}, End Run Function Call Loop!"
             )
-            if not pending_task:
-                return logger.debug("But No ToolCall")
-            logger.debug("Received A ToolCall")
-            try:
-                await self.run_pending_task(task=task, pending_task=pending_task)
-            except Exception as e:
-                await task.task_sign.complete_task(
-                    tool_calls=pending_task, success_or_not=False, run_result=str(e)
-                )
-                logger.error(f"Function Call Error {e}")
-                raise e
-            finally:
-                logger.trace("Function Call Finished")
+        RUN_LIMIT = 4
+        for pending_task in task.task_sign.tool_calls_pending:
+            RUN_LIMIT -= 1
+            if RUN_LIMIT <= 0:
+                logger.error("Limit Run Times, Stop Run Function Call Loop!")
+                break
+            logger.debug(
+                f"Received A ToolCall {RUN_LIMIT} {len(task.task_sign.tool_calls_pending)}"
+            )
+            await self.run_task(task=task, pending_task=pending_task)
+
+    async def run_task(self, task, pending_task):
+        try:
+            await self.run_pending_task(task=task, pending_task=pending_task)
+        except Exception as e:
+            await task.task_sign.complete_task(
+                tool_calls=pending_task, success_or_not=False, run_result=str(e)
+            )
+            logger.error(f"Function Call Error {e}")
+            raise e
+        finally:
+            logger.trace("Function Call Finished")
 
     async def on_message(self, message: AbstractIncomingMessage):
         """

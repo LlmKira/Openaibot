@@ -63,9 +63,9 @@ class SearchTool(BaseTool):
     env_prefix: str = "SERPER_"
 
     def require_auth(self, env_map: dict) -> bool:
-        if "SERPER_API_KEY" in env_map:
-            return False
-        return True
+        if env_map.get("SERPER_API_KEY", None) is None:
+            return True
+        return False
 
     @classmethod
     def env_help_docs(cls, empty_env: List[str]) -> str:
