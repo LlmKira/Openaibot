@@ -70,7 +70,7 @@ class BaseTool(ABC, BaseModel):
         """
         Check if authentication is required
         """
-        return False
+        return True
 
     @final
     def get_os_env(self, env_name):

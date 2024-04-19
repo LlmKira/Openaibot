@@ -166,7 +166,7 @@ class OpenAI(BaseModel):
     def check_vision(self):
         if not self.model.startswith(("gpt-4-vision", "gpt-4-turbo", "claude-3")):
             logger.info(
-                "Remove the image content part from the messages, because the model is not supported."
+                "Try to remove the image content part from the messages, because the model is not supported."
             )
             for message in self.messages:
                 if isinstance(message, UserMessage) and isinstance(

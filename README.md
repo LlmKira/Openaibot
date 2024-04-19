@@ -192,8 +192,11 @@ Hooks control the EventMessage in sender and receiver. For example, we have `voi
 you can enable it by setting `VOICE_REPLY_ME=true` in `.env`.
 
 ```shell
-/env VOICE_REPLY_ME=true
+/env VOICE_REPLY_ME=yes
+# must
+
 /env REECHO_VOICE_KEY=<key in dev.reecho.ai>
+# not must
 ```
 
 use `/env VOICE_REPLY_ME=NONE` to disable this env.
