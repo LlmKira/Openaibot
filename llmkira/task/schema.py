@@ -355,7 +355,7 @@ class Sign(BaseModel):
         )
 
     async def get_pending_tool_call(
-        self, tool_calls_pending_now: str, return_default_if_empty: bool = False
+        self, credential: str, return_default_if_empty: bool = False
     ) -> Optional[ToolCall]:
         """
         获取当前待处理的函数
@@ -363,8 +363,8 @@ class Sign(BaseModel):
         if not self.tool_calls_pending:
             logger.debug("tool_calls is empty")
             return None
-        if tool_calls_pending_now in self.certify_needed_map:
-            return self.certify_needed_map[tool_calls_pending_now]
+        if credential in self.certify_needed_map:
+            return self.certify_needed_map[credential]
         if return_default_if_empty:
             return self.tool_calls_pending[0]
         return None

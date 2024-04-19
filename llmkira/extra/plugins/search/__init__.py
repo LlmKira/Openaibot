@@ -128,7 +128,7 @@ class SearchTool(BaseTool):
                     EventMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=f"🍖{__plugin_name__} Run Failed：{exception}",
+                        text=f"🍖{__plugin_name__} Run Failed：{exception},report it to user.",
                     )
                 ],
             ),
