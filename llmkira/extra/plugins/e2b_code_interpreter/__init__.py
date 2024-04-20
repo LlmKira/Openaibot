@@ -36,38 +36,22 @@ class exec_python(BaseModel):
 
 def parse_e2b_jupyter_output(results: List[E2BResult]):
     file_list = []
+    format_suffix_map = {
+        "html": "html", "markdown": "md", "svg": "svg", "png": "png",
+        "jpeg": "jpeg", "pdf": "pdf", "latex": "latex", "json": "json",
+        "javascript": "js", "txt": "txt"
+    }
     for exc in results:
-        formats = exc.formats()
-        for fort in formats:
+        for fort in exc.formats():
             logger.debug(f"e2b return format: {fort}")
-            if getattr(exc, fort):
-                # example how to show the image / prove it works
-                file_ = base64.b64decode(getattr(exc, fort))
+            content = getattr(exc, fort, None)
+            if content:
+                file_ = base64.b64decode(content)
                 file_io = io.BytesIO(file_)
-                if fort == "html":
-                    file_suffix = "html"
-                elif fort == "markdown":
-                    file_suffix = "md"
-                elif fort == "svg":
-                    file_suffix = "svg"
-                elif fort == "png":
-                    file_suffix = "png"
-                elif fort == "jpeg":
-                    file_suffix = "jpeg"
-                elif fort == "pdf":
-                    file_suffix = "pdf"
-                elif fort == "latex":
-                    file_suffix = "latex"
-                elif fort == "json":
-                    file_suffix = "json"
-                elif fort == "javascript":
-                    file_suffix = "js"
-                else:
-                    file_suffix = "txt"
+                file_suffix = format_suffix_map.get(fort, "txt")
                 file_name = f"e2b_{fort}.{file_suffix}"
                 logger.debug(f"e2b return format: {file_name}")
-                file_pair = (file_name, file_io)
-                file_list.append(file_pair)
+                file_list.append((file_name, file_io))
     return file_list
 
 
