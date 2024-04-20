@@ -25,10 +25,10 @@ class RabbitMQ(BaseSettings):
 
     @model_validator(mode="after")
     def is_connect(self):
-        import aio_pika
+        from aio_pika import connect_robust
 
         try:
-            sync(aio_pika.connect_robust(self.amqp_dsn))
+            sync(connect_robust(url=self.amqp_dsn))
         except Exception as e:
             logger.exception(
                 f"\n⚠️ RabbitMQ DISCONNECT, pls set AMQP_DSN in .env\n--error {e} \n--dsn {self.amqp_dsn}"

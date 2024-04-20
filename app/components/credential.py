@@ -1,5 +1,4 @@
 import os
-from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
@@ -15,6 +14,7 @@ class Credential(BaseModel):
     api_key: str
     api_endpoint: str
     api_model: str
+    api_tool_model: str = "gpt-3.5-turbo"
 
     @classmethod
     def from_provider(cls, token, provider_url):
@@ -36,35 +36,8 @@ class Credential(BaseModel):
             api_key=user_data["api_key"],
             api_endpoint=user_data["api_endpoint"],
             api_model=user_data["api_model"],
+            api_tool_model=user_data.get("api_tool_model", "gpt-3.5-turbo"),
         )
-
-
-def split_setting_string(input_string):
-    if not isinstance(input_string, str):
-        return None
-    segments = input_string.split("$")
-
-    # 检查链接的有效性
-    def is_valid_url(url):
-        try:
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except ValueError:
-            return False
-
-    # 开头为链接的情况
-    if is_valid_url(segments[0]) and len(segments) >= 3:
-        return segments[:3]
-    # 第二个元素为链接，第一个元素为字符串的情况
-    elif (
-        len(segments) == 2
-        and not is_valid_url(segments[0])
-        and is_valid_url(segments[1])
-    ):
-        return segments
-    # 其他情况
-    else:
-        return None
 
 
 load_dotenv()

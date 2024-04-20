@@ -39,8 +39,6 @@ from ..schema import Runner
 
 __sender__ = "slack"
 
-from ...components.credential import split_setting_string, Credential, ProviderError
-
 SlackTask = Task(queue=__sender__)
 __default_disable_tool_action__ = False
 __join_cache__ = {}
@@ -232,46 +230,10 @@ class SlackBotRunner(Runner):
             if not command.text:
                 return
             _arg = command.text
-            settings = split_setting_string(_arg)
-            if not settings:
-                return await respond(
-                    text=convert(
-                        "🔑 **Incorrect format.**\n"
-                        "You can set it via `https://api.com/v1$key$model` format, "
-                        "or you can log in via URL using `token$https://provider.com`."
-                    ),
-                )
-            if len(settings) == 2:
-                try:
-                    credential = Credential.from_provider(
-                        token=settings[0], provider_url=settings[1]
-                    )
-                except ProviderError as e:
-                    return await respond(text=f"Login failed, website return {e}")
-                except Exception as e:
-                    logger.error(f"Login failed {e}")
-                    return await respond(text=f"Login failed, because {type(e)}")
-                else:
-                    await login(
-                        uid=uid_make(__sender__, command.user_id),
-                        credential=credential,
-                    )
-                    return await respond(
-                        text="Login success as provider! Welcome master!"
-                    )
-            elif len(settings) == 3:
-                credential = Credential(
-                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
-                )
-                await login(
-                    uid=uid_make(__sender__, command.user_id),
-                    credential=credential,
-                )
-                return await respond(
-                    text=f"Login success as {settings[2]}! Welcome master! "
-                )
-            else:
-                return logger.trace(f"Login failed {settings}")
+            reply = await login(
+                uid=uid_make(__sender__, command.user_id), arg_string=_arg
+            )
+            return await respond(text=reply)
 
         @bot.command(command="/env")
         async def listen_env_command(ack: AsyncAck, respond: AsyncRespond, command):

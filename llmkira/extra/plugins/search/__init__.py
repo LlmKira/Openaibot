@@ -105,7 +105,7 @@ class SearchTool(BaseTool):
         refer_llm_result: dict = None,
         **kwargs,
     ):
-        meta = task.task_sign.notify(
+        meta = task.task_sign.reply(
             plugin_name=__plugin_name__,
             tool_response=[
                 ToolResponse(
@@ -115,8 +115,6 @@ class SearchTool(BaseTool):
                     tool_call=pending_task,
                 )
             ],
-            memory_able=True,
-            response_snapshot=True,
         )
         await Task.create_and_send(
             queue_name=receiver.platform,

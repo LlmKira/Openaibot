@@ -78,10 +78,10 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
 
 ### 🍔 Login Modes
 
-- `Login via url`: Use `/login token$https://provider.com` to Login. The program posts the token to the interface to
+- `Login via url`: Use `/login <a token>$<something like https://provider.com/login>` to Login. The program posts the token to the interface to
   retrieve configuration
   information, [how to develop this](https://github.com/LlmKira/Openaibot/blob/81eddbff0f136697d5ad6e13ee1a7477b26624ed/app/components/credential.py#L20).
-- `Login`: Use `/login https://api.com/v1$key$model` to login
+- `Login`: Use `/login https://<api endpoint>/v1$<api key>$<the model>` to login
 
 ### 🧀 Plugin Can Do More
 
@@ -144,6 +144,9 @@ apt install npm
 npm install pm2 -g
 pm2 start pm2.json
 ```
+
+> **Be sure to change the default password for the command, or disable open ports to prevent the database from being
+scanned and attacked.**
 
 ### 🥣 Docker
 
