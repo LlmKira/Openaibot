@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from typing import Union, Type, List
+import base64
+import io
+from typing import Union, Type, List, Tuple
 
-import e2b
+from e2b_code_interpreter import CodeInterpreter, Result as E2BResult
 from loguru import logger
 from pydantic import ConfigDict
 
@@ -9,6 +11,7 @@ __package__name__ = "llmkira.extra.plugins.e2b_code_interpreter"
 __plugin_name__ = "exec_code"
 __openapi_version__ = "20240416"
 
+from llmkira.kv_manager.file import File
 from llmkira.sdk.tools import verify_openapi_version  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
@@ -20,35 +23,94 @@ from llmkira.task import Task, TaskHeader  # noqa: E402
 from llmkira.task.schema import Location, ToolResponse, EventMessage  # noqa: E402
 
 
-class exec_code(BaseModel):
+class exec_python(BaseModel):
     """
-    Executes the passed JavaScript code using Nodejs and returns the stdout and stderr.
+    Executes the passed Python code in Jupyter Notebook and returns the stdout.
     """
 
-    code: str = Field(description="The JavaScript code to be executed.")
+    cells: List[str] = Field(
+        description="The Python code cells to execute. such as !pip install matplotlib"
+    )
     model_config = ConfigDict(extra="allow")
 
 
+def parse_e2b_jupyter_output(results: List[E2BResult]):
+    file_list = []
+    for exc in results:
+        formats = exc.formats()
+        for fort in formats:
+            logger.debug(f"e2b return format: {fort}")
+            if getattr(exc, fort):
+                # example how to show the image / prove it works
+                file_ = base64.b64decode(getattr(exc, fort))
+                file_io = io.BytesIO(file_)
+                if fort == "html":
+                    file_suffix = "html"
+                elif fort == "markdown":
+                    file_suffix = "md"
+                elif fort == "svg":
+                    file_suffix = "svg"
+                elif fort == "png":
+                    file_suffix = "png"
+                elif fort == "jpeg":
+                    file_suffix = "jpeg"
+                elif fort == "pdf":
+                    file_suffix = "pdf"
+                elif fort == "latex":
+                    file_suffix = "latex"
+                elif fort == "json":
+                    file_suffix = "json"
+                elif fort == "javascript":
+                    file_suffix = "js"
+                else:
+                    file_suffix = "txt"
+                file_name = f"e2b_{fort}.{file_suffix}"
+                logger.debug(f"e2b return format: {file_name}")
+                file_pair = (file_name, file_io)
+                file_list.append(file_pair)
+    return file_list
+
+
 # @resign_plugin_executor(tool=exec_code)
-async def exec_code_by_e2b(code: str, api_key: str = None):
+async def exec_code_by_e2b(
+    cells: List[str], api_key: str = None
+) -> Tuple[str, List[Tuple[str, io.BytesIO]]]:
     if not api_key:
         raise ValueError("api key from https://e2b.dev/ is required")
-    stdout, stderr = e2b.run_code("Node16", code, api_key=api_key)
-    logger.debug(f"E2b:stdout: {stdout}\nstderr: {stderr}")
-    return f"stdout: {stdout}\nstderr: {stderr}"
+    logger.debug(f"E2b:cells: {cells}")
+    try:
+        with CodeInterpreter(api_key=api_key) as sandbox:
+            # 执行除了最后一个cell之外的所有cell
+            for cell in cells[:-1]:
+                sandbox.notebook.exec_cell(cell)
+            # 执行最后一个cell
+            execution = sandbox.notebook.exec_cell(cells[-1])
+    except Exception as e:
+        logger.error(f"E2b:Error: {e}")
+        return f"Error: {e}", []
+    file_list = parse_e2b_jupyter_output(execution.results)
+    logger.debug(f"E2b:result: {execution.text}\n error: {execution.error}")
+    return f"Result: {execution.text}\n Error: {execution.error}", file_list
 
 
-class CodeInterpreter(BaseTool):
+class CodeInterpreterTool(BaseTool):
     """
     搜索工具
     """
 
     silent: bool = False
-    function: Union[Tool, Type[BaseModel]] = exec_code
+    function: Union[Tool, Type[BaseModel]] = exec_python
     keywords: list = [
         "exec ",
         "code ",
         "python ",
+        "Python",
+        "函数",
+        "绘制",
+        "Jupyter",
+        "JavaScript",
+        "Help me",
+        "Draw",
         "javascript ",
         "nodejs ",
         "代码",
@@ -159,13 +221,13 @@ class CodeInterpreter(BaseTool):
         处理message，返回message
         """
 
-        code_arg = exec_code.model_validate(arg)
-        exec_result = await exec_code_by_e2b(
-            code=code_arg.code,
+        code_arg = exec_python.model_validate(arg)
+        exec_result, files_result = await exec_code_by_e2b(
+            cells=code_arg.cells,
             api_key=env.get("CODE_E2B_KEY", None),
         )
         # META
-        _meta = task.task_sign.reprocess(
+        _meta = task.task_sign.reply(
             plugin_name=__plugin_name__,
             tool_response=[
                 ToolResponse(
@@ -176,13 +238,29 @@ class CodeInterpreter(BaseTool):
                 )
             ],
         )
+        return_files = []
+        for file in files_result:
+            logger.debug(f"Upload file: {file[0]}")
+            _files = await File.upload_file(
+                creator=receiver.uid,
+                file_name=file[0],
+                file_data=file[1],
+            )
+            return_files.append(_files)
         await Task.create_and_send(
             queue_name=receiver.platform,
             task=TaskHeader(
                 sender=task.sender,  # 继承发送者
                 receiver=receiver,  # 因为可能有转发，所以可以单配
                 task_sign=_meta,
-                message=[],
+                message=[
+                    EventMessage(
+                        user_id=receiver.user_id,
+                        chat_id=receiver.chat_id,
+                        text="",
+                        files=return_files,
+                    )
+                ],
             ),
         )
 
@@ -192,5 +270,5 @@ __plugin_meta__ = PluginMetadata(
     description="Executes the passed JavaScript code using Nodejs and returns the stdout and stderr.",
     usage="nodejs <code>",
     openapi_version=__openapi_version__,
-    function={FuncPair(function=class_tool(exec_code), tool=CodeInterpreter)},
+    function={FuncPair(function=class_tool(exec_python), tool=CodeInterpreterTool)},
 )
