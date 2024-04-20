@@ -168,7 +168,6 @@ class TelegramSender(BaseSender):
             reply_to_message_id=receiver.message_id,
             parse_mode="MarkdownV2",
         )
-
         return logger.error("send a error message")
 
     async def function(

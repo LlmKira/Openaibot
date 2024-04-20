@@ -14,11 +14,12 @@ from urllib.parse import urlparse
 
 import aiohttp
 import ffmpeg
-import nest_asyncio
 import shortuuid
 from loguru import logger
 
-nest_asyncio.apply()
+
+# import nest_asyncio
+# nest_asyncio.apply()
 
 
 def is_valid_url(url):

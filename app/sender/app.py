@@ -4,7 +4,6 @@
 # @File    : app.py
 # @Software: PyCharm
 
-import nest_asyncio
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -13,7 +12,8 @@ from llmkira import load_from_entrypoint, get_entrypoint_plugins
 load_dotenv()
 __area__ = "sender"
 
-nest_asyncio.apply()
+# import nest_asyncio
+# nest_asyncio.apply()
 
 
 def run():

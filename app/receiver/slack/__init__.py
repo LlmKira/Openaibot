@@ -21,12 +21,11 @@ from llmkira.task import Task, TaskHeader
 
 __receiver__ = "slack"
 
-# 魔法
-import nest_asyncio
-
 from llmkira.task.schema import Location, EventMessage
 
-nest_asyncio.apply()
+
+# import nest_asyncio
+# nest_asyncio.apply()
 
 
 class SlackSender(BaseSender):
