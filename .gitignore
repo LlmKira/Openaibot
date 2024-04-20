@@ -149,3 +149,4 @@ config_dir/*.secret/
 /.montydb/
 /.snapshot/
 /.tutorial.db
+app/.tutorial.db
