@@ -17,8 +17,8 @@ from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 from telebot import formatting
 
-from app.components.credential import Credential, global_credential
-from app.components.user_manager import USER_MANAGER
+from app.components import read_user_credential
+from app.components.credential import global_credential
 from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.kv_manager.env import EnvManager
 from llmkira.openai import OpenaiError
@@ -46,11 +46,6 @@ class UserLocks:
 
 # UserLocks 的实例
 user_locks = UserLocks()
-
-
-async def read_user_credential(user_id: str) -> Optional[Credential]:
-    user = await USER_MANAGER.read(user_id=user_id)
-    return user.credential
 
 
 async def generate_authorization(

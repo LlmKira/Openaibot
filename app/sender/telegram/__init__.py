@@ -36,8 +36,6 @@ from ..schema import Runner
 __sender__ = "telegram"
 __default_disable_tool_action__ = False
 
-from app.components.credential import split_setting_string, Credential, ProviderError
-
 StepCache = StateMemoryStorage()
 FileWindow = TimerObjectContainer()
 TelegramTask = Task(queue=__sender__)
@@ -233,52 +231,10 @@ class TelegramBotRunner(Runner):
         async def listen_login_command(message: types.Message):
             logger.debug("Debug:login command")
             _cmd, _arg = parse_command(command=message.text)
-            settings = split_setting_string(_arg)
-            if not settings:
-                return await bot.reply_to(
-                    message,
-                    text=convert(
-                        "🔑 **Incorrect format.**\n"
-                        "You can set it via `https://api.com/v1$key$model` format, "
-                        "or you can log in via URL using `token$https://provider.com`."
-                    ),
-                    parse_mode="MarkdownV2",
-                )
-            if len(settings) == 2:
-                try:
-                    credential = Credential.from_provider(
-                        token=settings[0], provider_url=settings[1]
-                    )
-                except ProviderError as e:
-                    return await bot.reply_to(
-                        message, text=f"Login failed, website return {e}"
-                    )
-                except Exception as e:
-                    logger.error(f"Login failed {e}")
-                    return await bot.reply_to(
-                        message, text=f"Login failed, because {type(e)}"
-                    )
-                else:
-                    await login(
-                        uid=uid_make(__sender__, message.from_user.id),
-                        credential=credential,
-                    )
-                    return await bot.reply_to(
-                        message, text="Login success as provider! Welcome master!"
-                    )
-            elif len(settings) == 3:
-                credential = Credential(
-                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
-                )
-                await login(
-                    uid=uid_make(__sender__, message.from_user.id),
-                    credential=credential,
-                )
-                return await bot.reply_to(
-                    message, text=f"Login success as {settings[2]}! Welcome master! "
-                )
-            else:
-                return logger.trace(f"Login failed {settings}")
+            reply = await login(
+                uid=uid_make(__sender__, message.from_user.id), arg_string=_arg
+            )
+            await bot.reply_to(message, text=reply)
 
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):

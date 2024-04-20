@@ -27,7 +27,13 @@ from ..schema import Runner
 __sender__ = "kook"
 __default_disable_tool_action__ = False
 
-from ..util_func import auth_reloader, is_command, is_empty_command, uid_make, login
+from ..util_func import (
+    auth_reloader,
+    is_command,
+    is_empty_command,
+    uid_make,
+    save_credential,
+)
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import ProviderError, Credential
 
@@ -244,7 +250,7 @@ class KookBotRunner(Runner):
                 credential = Credential.from_provider(
                     token=token, provider_url=provider_url
                 )
-                await login(
+                await save_credential(
                     uid=uid_make(__sender__, msg.author_id),
                     credential=credential,
                 )
@@ -272,17 +278,19 @@ class KookBotRunner(Runner):
         @bot.command(name="login")
         async def listen_login_command(
             msg: Message,
-            openai_endpoint: str,
-            openai_key: str,
-            openai_model: str,
+            api_endpoint: str,
+            api_key: str,
+            api_model: str = "gpt-3.5-turbo",
+            api_tool_model: str = "gpt-3.5-turbo",
         ):
             try:
                 credential = Credential(
-                    api_endpoint=openai_endpoint,
-                    api_key=openai_key,
-                    api_model=openai_model,
+                    api_endpoint=api_endpoint,
+                    api_key=api_key,
+                    api_model=api_model,
+                    api_tool_model=api_tool_model,
                 )
-                await login(
+                await save_credential(
                     uid=uid_make(__sender__, msg.author_id),
                     credential=credential,
                 )
