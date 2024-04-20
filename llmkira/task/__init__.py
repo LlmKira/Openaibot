@@ -68,7 +68,7 @@ class Task(object):
             # Sending the message
             try:
                 confirmation = await channel.default_exchange.publish(
-                    message, routing_key=self.queue_name, timeout=10
+                    message, routing_key=self.queue_name, timeout=20
                 )
             except DeliveryError as e:
                 logger.error(

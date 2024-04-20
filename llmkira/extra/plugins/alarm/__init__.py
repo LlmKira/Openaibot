@@ -22,7 +22,8 @@ from pydantic import field_validator, ConfigDict  # noqa
 from app.receiver.aps import SCHEDULER  # noqa
 
 from llmkira.task import Task, TaskHeader  # noqa
-from pytz import utc  # noqa
+import pytz  # noqa
+from tzlocal import get_localzone
 
 
 class SetAlarm(BaseModel):
@@ -165,10 +166,12 @@ class AlarmTool(BaseTool):
 
         logger.debug("Plugin --set_alarm {} minutes".format(argument.delay))
         # 这里假设您的任务应该在UTC时间下执行，如果需要在其他时区执行，根据实际情况更改tz变量
-        tz = utc
+        tz = pytz.timezone(get_localzone().key)
         run_time = datetime.datetime.now() + datetime.timedelta(minutes=argument.delay)
+        logger.debug(run_time)
         # 将本地时间转换为设定的时区
         run_time = tz.localize(run_time)
+        logger.debug(run_time)
         SCHEDULER.add_job(
             func=send_notify,
             id=receiver.uid,

@@ -31,11 +31,6 @@ async def search_on_serper(search_sentence: str, api_key: str):
     return build_search_tips(search_items=result)
 
 
-class Search(BaseModel):
-    keywords: str
-    model_config = ConfigDict(extra="allow")
-
-
 class SearchTool(BaseTool):
     """
     搜索工具
@@ -133,7 +128,7 @@ class SearchTool(BaseTool):
                     EventMessage(
                         user_id=receiver.user_id,
                         chat_id=receiver.chat_id,
-                        text=f"🍖{__plugin_name__} Run Failed：{exception}",
+                        text=f"🍖{__plugin_name__} Run Failed：{exception},report it to user.",
                     )
                 ],
             ),

@@ -42,14 +42,16 @@ This project uses the ToolCall feature.
 It integrates a message queuing and snapshot system, offering plugin mechanisms and authentication prior to plugin
 execution.
 
-The model adheres to the Openai Format Schema. Please adapt using [gateway](https://github.com/Portkey-AI/gateway)
+The bot adheres to the **Openai Format Schema**. Please adapt using [gateway](https://github.com/Portkey-AI/gateway)
 or [one-api](https://github.com/songquanpeng/one-api) independently.
 
-| Demo                              | Vision With Voice            |
-|-----------------------------------|------------------------------|
-| ![sticker](./docs/chain_chat.gif) | ![vision](./docs/vision.gif) |
+| Demo                                                                          | Vision With Voice                                                        | Code Interpreter                                                                      |
+|-------------------------------------------------------------------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------|
+| ![sticker](https://github.com/LlmKira/Openaibot/raw/main/docs/chain_chat.gif) | ![vision](https://github.com/LlmKira/Openaibot/raw/main/docs/vision.gif) | ![code](https://github.com/LlmKira/Openaibot/raw/main/docs/code_interpreter_func.gif) |
 
 ## 🔨 Roadmap
+
+> The program has iterated to its fourth generation.
 
 - [x] Removal of legacy code
 - [x] Deletion of metric system
@@ -81,11 +83,11 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
   information, [how to develop this](https://github.com/LlmKira/Openaibot/blob/81eddbff0f136697d5ad6e13ee1a7477b26624ed/app/components/credential.py#L20).
 - `Login`: Use `/login https://api.com/v1$key$model` to login
 
-### 🧀 Plugin Previews
+### 🧀 Plugin Can Do More
 
-| Sticker Converter                   | Timer Function                  | Translate Function                           |
-|-------------------------------------|---------------------------------|----------------------------------------------|
-| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) | ![translate](./docs/translate_file_func.gif) |
+| Sticker Converter                   | Timer Function(built-in)        |
+|-------------------------------------|---------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) |
 
 ### 🎬 Platform Support
 

@@ -106,6 +106,41 @@ async def create_snapshot(
     return snapshot_credential
 
 
+async def create_child_snapshot(
+    *,
+    task: TaskHeader,
+    memory_able: bool,
+    channel: str,
+):
+    """
+    认证链重发注册
+    """
+    logger.debug(f"Create a snapshot for {task.receiver.platform}")
+    task_snapshot = task.model_copy()
+    meta: Sign = task_snapshot.task_sign.snapshot(
+        name=__receiver__,
+        memory_able=memory_able,
+        # 不需要记忆
+        response_snapshot=True,
+        # 要求释放快照
+    )
+    """添加认证链并重置路由数据"""
+    snap_shot_task = TaskHeader(
+        sender=task_snapshot.sender,
+        receiver=task_snapshot.receiver,
+        task_sign=meta,
+        message=[],
+    )
+    task_id = await append_snapshot(
+        snapshot_credential=None,  # 不注册为认证快照，因为只是递归启动
+        snapshot_data=snap_shot_task,
+        channel=channel,
+        creator=task_snapshot.receiver.uid,
+        expire_at=int(time.time()) + 60 * 2,
+    )
+    logger.debug(f"Create a snapshot {task_id}")
+
+
 async def reply_user(platform: str, task: TaskHeader, text: str, receiver: Location):
     """
     仅仅只是通知到用户，不需要LLM处理或组装
@@ -208,9 +243,8 @@ class FunctionReceiver(object):
                 logger.debug(
                     "ToolCall run out, resign a new request to request stop sign."
                 )
-                await create_snapshot(
+                await create_child_snapshot(
                     task=task,
-                    tool_calls_pending_now=pending_task,
                     memory_able=True,
                     channel=task.receiver.platform,
                 )
@@ -245,14 +279,18 @@ class FunctionReceiver(object):
         task: TaskHeader = TaskHeader.model_validate_json(message.body.decode("utf-8"))
         # Get Function Call
         pending_task: ToolCall = await task.task_sign.get_pending_tool_call(
-            tool_calls_pending_now=task.task_sign.snapshot_credential,
+            credential=task.task_sign.snapshot_credential,
             return_default_if_empty=False,
         )
         if pending_task:
             await self.run_task(task=task, pending_task=pending_task)
         if task.task_sign.snapshot_credential:
+            if not pending_task:
+                logger.warning(
+                    f"Received A Credential {task.task_sign.snapshot_credential}, But No Pending Task!"
+                )
             return logger.debug(
-                f"Received A Credential {task.task_sign.snapshot_credential}, End Run Function Call Loop!"
+                f"Received A Credential {task.task_sign.snapshot_credential}, End Snapshot!"
             )
         RUN_LIMIT = 4
         for pending_task in task.task_sign.tool_calls_pending:
