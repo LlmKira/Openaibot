@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/17 下午8:38
-import nest_asyncio
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -8,7 +7,9 @@ load_dotenv()
 
 __area__ = "receiver"
 
-nest_asyncio.apply()
+
+# import nest_asyncio
+# nest_asyncio.apply()
 
 
 def run():

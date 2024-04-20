@@ -132,7 +132,7 @@ class Tool(ToolChoice):
 
 class FunctionCalled(BaseModel):
     name: str
-    arguments: Union[str] = None
+    arguments: Union[str, dict] = None
 
     @property
     def json_arguments(self):
