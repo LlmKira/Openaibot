@@ -97,6 +97,7 @@ or [one-api](https://github.com/songquanpeng/one-api) independently.
 | Discord  | ✅       | ✅           |                                        |
 | Kook     | ✅       | ✅           | Does not support `triggering by reply` |
 | Slack    | ✅       | ✅           | Does not support `triggering by reply` |
+| Line     | ❌       |             |                                        |
 | QQ       | ❌       |             |                                        |
 | Wechat   | ❌       |             |                                        |
 | Twitter  | ❌       |             |                                        |
