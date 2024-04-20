@@ -34,6 +34,8 @@ class ToolCallCache(KvManager):
         result = await self.read_data(tool_call_id)
         if result is None:
             return None
+        if isinstance(result, dict):
+            return ToolCall.model_validate(result)
         return ToolCall.model_validate_json(result)
 
 
