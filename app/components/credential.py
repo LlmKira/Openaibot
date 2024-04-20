@@ -48,6 +48,7 @@ if os.getenv("GLOBAL_OAI_KEY") and os.getenv("GLOBAL_OAI_ENDPOINT"):
         api_key=os.getenv("GLOBAL_OAI_KEY"),
         api_endpoint=os.getenv("GLOBAL_OAI_ENDPOINT"),
         api_model=os.getenv("GLOBAL_OAI_MODEL", "gpt-3.5-turbo"),
+        api_tool_model=os.getenv("GLOBAL_OAI_TOOL_MODEL", "gpt-3.5-turbo"),
     )
 else:
     global_credential = None
