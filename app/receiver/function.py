@@ -273,10 +273,10 @@ class FunctionReceiver(object):
                 logger.debug(f"Read History:{history}")
                 continue_ = await logic.llm_continue(
                     context=f"History:{history},ToolCallResult:{run_status}",
-                    condition="Would you like to continue a chat?",
+                    condition="If there is still any action that needs to be performed",
                     default=False,
                 )
-                if continue_.continue_it:
+                if continue_.boolean:
                     logger.debug(
                         "ToolCall run out, resign a new request to request stop sign."
                     )

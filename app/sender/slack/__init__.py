@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 import time
 from ssl import SSLContext
 from typing import List
@@ -24,6 +23,7 @@ from app.sender.util_func import (
     parse_command,
     uid_make,
     login,
+    dict2markdown,
 )
 from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -239,10 +239,12 @@ class SlackBotRunner(Runner):
         async def listen_env_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
-            if not command.text:
-                return
-            _arg = command.text
             _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
+            if not command.text:
+                env_map = await _manager.read_env()
+                text = convert(dict2markdown(env_map))
+                return await respond(text=text)
+            _arg = command.text
             try:
                 env_map = await _manager.set_env(
                     env_value=_arg, update=True, return_all=True
@@ -251,11 +253,7 @@ class SlackBotRunner(Runner):
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.mbold("🧊 Failed")
             else:
-                text = formatting.format_text(
-                    formatting.mbold("🦴 Env Changed"),
-                    formatting.mcode(json.dumps(env_map, indent=2)),
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await respond(text=text)
 
         @bot.command(command="/clear")
