@@ -223,3 +223,10 @@ class TimerObjectContainer:
         """
         if user_id in self.users:
             self.users[user_id] = {}
+
+
+def dict2markdown(maps: dict):
+    content = "**🦴 Env**\n"
+    for key, value in maps.items():
+        content += f"- **`{key}`**: `{value}`\n"
+    return content

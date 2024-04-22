@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Type
 
 from loguru import logger
 from pydantic import BaseModel, Field, SecretStr
@@ -14,8 +14,12 @@ class whether(BaseModel):
 
     yes_no: bool = Field(description="Whether the condition is true or false")
     comment_to_user: Optional[str] = Field(
-        default="", description="Comment on the decision"
+        default="", description="Comment on the decision in user language"
     )
+
+    @property
+    def boolean(self):
+        return self.yes_no
 
 
 class continue_act(BaseModel):
@@ -25,8 +29,12 @@ class continue_act(BaseModel):
 
     continue_it: bool = Field(description="Whether to continue execution")
     comment_to_user: Optional[str] = Field(
-        default="", description="Comment on the decision"
+        default="", description="Comment on the decision in user language"
     )
+
+    @property
+    def boolean(self):
+        return self.continue_it
 
 
 class LLMLogic(object):
@@ -77,3 +85,47 @@ class LLMLogic(object):
         except Exception as e:
             logger.error(f"llm_continue error: {e}")
             return continue_act(continue_it=default)
+
+    async def deserialization(
+        self, context: str, model: Type[BaseModel]
+    ) -> Optional[BaseModel]:
+        """
+        Serialize the string to model
+        """
+        try:
+            result = await OpenAI(
+                model=self.api_model,
+                messages=[UserMessage(content=context)],
+            ).extract(
+                response_model=model,
+                session=OpenAICredential(
+                    api_key=SecretStr(self.api_key),
+                    base_url=self.api_endpoint,
+                    model=self.api_model,
+                ),
+            )
+            return result
+        except Exception as e:
+            logger.error(f"logic:serialization error: {e}")
+            return None
+
+    async def serialization(self, model: BaseModel) -> Optional[UserMessage]:
+        """
+        Serialize the model to string
+        """
+        try:
+            result = await OpenAI(
+                model=self.api_model,
+                messages=[UserMessage(content=model.model_dump_json())],
+            ).extract(
+                response_model=UserMessage,
+                session=OpenAICredential(
+                    api_key=SecretStr(self.api_key),
+                    base_url=self.api_endpoint,
+                    model=self.api_model,
+                ),
+            )
+            return result
+        except Exception as e:
+            logger.error(f"logic:serialization error: {e}")
+            return None

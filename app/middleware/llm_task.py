@@ -102,6 +102,7 @@ async def validate_mock(messages: List[Message]):
                 new_list.append(_messages[i])
         new_list.append(_messages[-1])
         if isinstance(_messages[-1], AssistantMessage) and _messages[-1].tool_calls:
+            logger.warning("llm_task:the last AssistantMessage not paired, be careful")
             new_list.extend(mock_tool_message(_messages[-1], "[On Queue]"))
         return new_list
 

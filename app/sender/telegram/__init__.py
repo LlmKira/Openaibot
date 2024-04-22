@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 from typing import Optional, Union, List
 
 from loguru import logger
@@ -22,6 +21,7 @@ from app.sender.util_func import (
     uid_make,
     login,
     TimerObjectContainer,
+    dict2markdown,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -239,9 +239,14 @@ class TelegramBotRunner(Runner):
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
-            if not _arg:
-                return None
             _manager = EnvManager(user_id=uid_make(__sender__, message.from_user.id))
+            if not _arg:
+                env_map = await _manager.read_env()
+                return await bot.reply_to(
+                    message,
+                    text=convert(dict2markdown(env_map)),
+                    parse_mode="MarkdownV2",
+                )
             try:
                 env_map = await _manager.set_env(
                     env_value=_arg, update=True, return_all=True
@@ -252,11 +257,7 @@ class TelegramBotRunner(Runner):
                     formatting.mbold("🧊 Failed"), separator="\n"
                 )
             else:
-                text = formatting.format_text(
-                    formatting.mbold("🦴 Env Changed"),
-                    formatting.mcode(json.dumps(env_map, indent=2)),
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await bot.reply_to(message, text=text, parse_mode="MarkdownV2")
 
         @bot.message_handler(

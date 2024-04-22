@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 import random
 from typing import List
 
@@ -33,6 +32,7 @@ from ..util_func import (
     is_empty_command,
     uid_make,
     save_credential,
+    dict2markdown,
 )
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import ProviderError, Credential
@@ -396,10 +396,7 @@ class KookBotRunner(Runner):
                     "**🧊 Env parse failed...O_o**\n", separator="\n"
                 )
             else:
-                text = formatting.format_text(
-                    f"**🧊 Updated**\n" f"```json\n{json.dumps(env_map, indent=2)}```",
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await msg.reply(
                 is_temp=True,
                 type=MessageTypes.KMD,
