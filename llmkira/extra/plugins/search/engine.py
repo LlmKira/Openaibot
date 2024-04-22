@@ -2,6 +2,7 @@ import json
 from typing import List
 
 import requests
+from duckduckgo_search import AsyncDDGS
 from loguru import logger
 from pydantic import BaseModel
 
@@ -44,6 +45,28 @@ class SerperSearchEngine(SearchEngine):
             )
         _result = _result[:4]
         return _result
+
+
+async def search_in_duckduckgo(search_sentence: str):
+    try:
+        search_result = await AsyncDDGS().text(
+            search_sentence, safesearch="off", timelimit="y", max_results=10
+        )
+    except Exception as e:
+        raise ValueError(
+            f"Search Failed: DuckDuckGo Error now not available: {type(e)}"
+        )
+    else:
+        _build_result = []
+        for result in search_result:
+            _build_result.append(
+                SearchEngineResult(
+                    title=result.get("title", "Undefined"),
+                    link=result.get("Href", "Undefined"),
+                    snippet=result.get("body", "Undefined"),
+                )
+            )
+        return _build_result
 
 
 def build_search_tips(search_items: List[SearchEngineResult], limit=5):

@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Optional
 
 import aiohttp
-import edge_tts
+from gtts import gTTS
 from loguru import logger
 
 
@@ -99,17 +99,15 @@ async def request_reecho_speech(
         return None
 
 
-async def request_edge_speech(text: str, voice: str = "en-GB-SoniaNeural"):
+async def request_google_speech(text: str):
     try:
-        communicate = edge_tts.Communicate(text, voice)
         byte_io = BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                byte_io.write(chunk["data"])
+        tts = gTTS(text)
+        tts.write_to_fp(byte_io)
         byte_io.seek(0)
         return byte_io.getvalue()
     except Exception as e:
-        logger.warning(f"Edge TTS Error: {e}")
+        logger.warning(f"google TTS Error: {e}")
         return None
 
 
@@ -170,4 +168,4 @@ async def request_en(text) -> Optional[bytes]:
     if nai:
         return nai
     else:
-        return await request_edge_speech(text)
+        return await request_google_speech(text)
