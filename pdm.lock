@@ -5,7 +5,7 @@
 groups = ["default", "bot", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:076e43f5f23c32d77e4d0478c2c60de5f4d1adc0cc5ec73a4e1c1fa5f700e3fb"
+content_hash = "sha256:c4197f21d9e7dc6867d7db4a1a017bf671fdb67b359a384fdf2fbb76d0145dd4"
 
 [[package]]
 name = "aenum"
@@ -44,17 +44,6 @@ dependencies = [
 files = [
     {file = "aiofile-3.8.8-py3-none-any.whl", hash = "sha256:41e8845cce055779cd77713d949a339deb012eab605b857765e8f8e52a5ed811"},
     {file = "aiofile-3.8.8.tar.gz", hash = "sha256:41f3dc40bd730459d58610476e82e5efb2f84ae6e9fa088a9545385d838b8a43"},
-]
-
-[[package]]
-name = "aiofiles"
-version = "23.2.1"
-requires_python = ">=3.7"
-summary = "File support for asyncio."
-groups = ["default"]
-files = [
-    {file = "aiofiles-23.2.1-py3-none-any.whl", hash = "sha256:19297512c647d4b27a2cf7c34caa7e405c0d60b5560618a29a9fe027b18b0107"},
-    {file = "aiofiles-23.2.1.tar.gz", hash = "sha256:84ec2218d8419404abcb9f0c02df3f34c6e0a68ed41072acfb1cef5cbc29051a"},
 ]
 
 [[package]]
@@ -262,92 +251,6 @@ groups = ["default"]
 files = [
     {file = "boltons-23.1.1-py2.py3-none-any.whl", hash = "sha256:80a8cd930ff21fbf03545b9863e5799d0c3e7e0e3b2546bdaf2efccd7b3708cc"},
     {file = "boltons-23.1.1.tar.gz", hash = "sha256:d2cb2fa83cf2ebe791be1e284183e8a43a1031355156a968f8e0a333ad2448fc"},
-]
-
-[[package]]
-name = "brotli"
-version = "1.1.0"
-summary = "Python bindings for the Brotli compression library"
-groups = ["default"]
-marker = "platform_python_implementation == \"CPython\""
-files = [
-    {file = "Brotli-1.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e1140c64812cb9b06c922e77f1c26a75ec5e3f0fb2bf92cc8c58720dec276752"},
-    {file = "Brotli-1.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c8fd5270e906eef71d4a8d19b7c6a43760c6abcfcc10c9101d14eb2357418de9"},
-    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1ae56aca0402a0f9a3431cddda62ad71666ca9d4dc3a10a142b9dce2e3c0cda3"},
-    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:43ce1b9935bfa1ede40028054d7f48b5469cd02733a365eec8a329ffd342915d"},
-    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7c4855522edb2e6ae7fdb58e07c3ba9111e7621a8956f481c68d5d979c93032e"},
-    {file = "Brotli-1.1.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:38025d9f30cf4634f8309c6874ef871b841eb3c347e90b0851f63d1ded5212da"},
-    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:e6a904cb26bfefc2f0a6f240bdf5233be78cd2488900a2f846f3c3ac8489ab80"},
-    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:a37b8f0391212d29b3a91a799c8e4a2855e0576911cdfb2515487e30e322253d"},
-    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_ppc64le.whl", hash = "sha256:e84799f09591700a4154154cab9787452925578841a94321d5ee8fb9a9a328f0"},
-    {file = "Brotli-1.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:f66b5337fa213f1da0d9000bc8dc0cb5b896b726eefd9c6046f699b169c41b9e"},
-    {file = "Brotli-1.1.0-cp310-cp310-win32.whl", hash = "sha256:be36e3d172dc816333f33520154d708a2657ea63762ec16b62ece02ab5e4daf2"},
-    {file = "Brotli-1.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:0c6244521dda65ea562d5a69b9a26120769b7a9fb3db2fe9545935ed6735b128"},
-    {file = "Brotli-1.1.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:a3daabb76a78f829cafc365531c972016e4aa8d5b4bf60660ad8ecee19df7ccc"},
-    {file = "Brotli-1.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c8146669223164fc87a7e3de9f81e9423c67a79d6b3447994dfb9c95da16e2d6"},
-    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:30924eb4c57903d5a7526b08ef4a584acc22ab1ffa085faceb521521d2de32dd"},
-    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ceb64bbc6eac5a140ca649003756940f8d6a7c444a68af170b3187623b43bebf"},
-    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a469274ad18dc0e4d316eefa616d1d0c2ff9da369af19fa6f3daa4f09671fd61"},
-    {file = "Brotli-1.1.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:524f35912131cc2cabb00edfd8d573b07f2d9f21fa824bd3fb19725a9cf06327"},
-    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:5b3cc074004d968722f51e550b41a27be656ec48f8afaeeb45ebf65b561481dd"},
-    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:19c116e796420b0cee3da1ccec3b764ed2952ccfcc298b55a10e5610ad7885f9"},
-    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_ppc64le.whl", hash = "sha256:510b5b1bfbe20e1a7b3baf5fed9e9451873559a976c1a78eebaa3b86c57b4265"},
-    {file = "Brotli-1.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:a1fd8a29719ccce974d523580987b7f8229aeace506952fa9ce1d53a033873c8"},
-    {file = "Brotli-1.1.0-cp311-cp311-win32.whl", hash = "sha256:39da8adedf6942d76dc3e46653e52df937a3c4d6d18fdc94a7c29d263b1f5b50"},
-    {file = "Brotli-1.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:aac0411d20e345dc0920bdec5548e438e999ff68d77564d5e9463a7ca9d3e7b1"},
-    {file = "Brotli-1.1.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:5fb2ce4b8045c78ebbc7b8f3c15062e435d47e7393cc57c25115cfd49883747a"},
-    {file = "Brotli-1.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:7905193081db9bfa73b1219140b3d315831cbff0d8941f22da695832f0dd188f"},
-    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a77def80806c421b4b0af06f45d65a136e7ac0bdca3c09d9e2ea4e515367c7e9"},
-    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:8dadd1314583ec0bf2d1379f7008ad627cd6336625d6679cf2f8e67081b83acf"},
-    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:901032ff242d479a0efa956d853d16875d42157f98951c0230f69e69f9c09bac"},
-    {file = "Brotli-1.1.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:22fc2a8549ffe699bfba2256ab2ed0421a7b8fadff114a3d201794e45a9ff578"},
-    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:ae15b066e5ad21366600ebec29a7ccbc86812ed267e4b28e860b8ca16a2bc474"},
-    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:949f3b7c29912693cee0afcf09acd6ebc04c57af949d9bf77d6101ebb61e388c"},
-    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_ppc64le.whl", hash = "sha256:89f4988c7203739d48c6f806f1e87a1d96e0806d44f0fba61dba81392c9e474d"},
-    {file = "Brotli-1.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:de6551e370ef19f8de1807d0a9aa2cdfdce2e85ce88b122fe9f6b2b076837e59"},
-    {file = "Brotli-1.1.0-cp39-cp39-win32.whl", hash = "sha256:f0d8a7a6b5983c2496e364b969f0e526647a06b075d034f3297dc66f3b360c64"},
-    {file = "Brotli-1.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:cdad5b9014d83ca68c25d2e9444e28e967ef16e80f6b436918c700c117a85467"},
-    {file = "Brotli-1.1.0.tar.gz", hash = "sha256:81de08ac11bcb85841e440c13611c00b67d3bf82698314928d0b676362546724"},
-]
-
-[[package]]
-name = "brotlicffi"
-version = "1.1.0.0"
-requires_python = ">=3.7"
-summary = "Python CFFI bindings to the Brotli library"
-groups = ["default"]
-marker = "platform_python_implementation != \"CPython\""
-dependencies = [
-    "cffi>=1.0.0",
-]
-files = [
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:9b7ae6bd1a3f0df532b6d67ff674099a96d22bc0948955cb338488c31bfb8851"},
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:19ffc919fa4fc6ace69286e0a23b3789b4219058313cf9b45625016bf7ff996b"},
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9feb210d932ffe7798ee62e6145d3a757eb6233aa9a4e7db78dd3690d7755814"},
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:84763dbdef5dd5c24b75597a77e1b30c66604725707565188ba54bab4f114820"},
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-win32.whl", hash = "sha256:1b12b50e07c3911e1efa3a8971543e7648100713d4e0971b13631cce22c587eb"},
-    {file = "brotlicffi-1.1.0.0-cp37-abi3-win_amd64.whl", hash = "sha256:994a4f0681bb6c6c3b0925530a1926b7a189d878e6e5e38fae8efa47c5d9c613"},
-    {file = "brotlicffi-1.1.0.0-pp310-pypy310_pp73-macosx_10_9_x86_64.whl", hash = "sha256:2e4aeb0bd2540cb91b069dbdd54d458da8c4334ceaf2d25df2f4af576d6766ca"},
-    {file = "brotlicffi-1.1.0.0-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4b7b0033b0d37bb33009fb2fef73310e432e76f688af76c156b3594389d81391"},
-    {file = "brotlicffi-1.1.0.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:54a07bb2374a1eba8ebb52b6fafffa2afd3c4df85ddd38fcc0511f2bb387c2a8"},
-    {file = "brotlicffi-1.1.0.0-pp310-pypy310_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7901a7dc4b88f1c1475de59ae9be59799db1007b7d059817948d8e4f12e24e35"},
-    {file = "brotlicffi-1.1.0.0-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:ce01c7316aebc7fce59da734286148b1d1b9455f89cf2c8a4dfce7d41db55c2d"},
-    {file = "brotlicffi-1.1.0.0-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:246f1d1a90279bb6069de3de8d75a8856e073b8ff0b09dcca18ccc14cec85979"},
-    {file = "brotlicffi-1.1.0.0-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cc4bc5d82bc56ebd8b514fb8350cfac4627d6b0743382e46d033976a5f80fab6"},
-    {file = "brotlicffi-1.1.0.0-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:37c26ecb14386a44b118ce36e546ce307f4810bc9598a6e6cb4f7fca725ae7e6"},
-    {file = "brotlicffi-1.1.0.0-pp37-pypy37_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ca72968ae4eaf6470498d5c2887073f7efe3b1e7d7ec8be11a06a79cc810e990"},
-    {file = "brotlicffi-1.1.0.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:add0de5b9ad9e9aa293c3aa4e9deb2b61e99ad6c1634e01d01d98c03e6a354cc"},
-    {file = "brotlicffi-1.1.0.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:9b6068e0f3769992d6b622a1cd2e7835eae3cf8d9da123d7f51ca9c1e9c333e5"},
-    {file = "brotlicffi-1.1.0.0-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8557a8559509b61e65083f8782329188a250102372576093c88930c875a69838"},
-    {file = "brotlicffi-1.1.0.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2a7ae37e5d79c5bdfb5b4b99f2715a6035e6c5bf538c3746abc8e26694f92f33"},
-    {file = "brotlicffi-1.1.0.0-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:391151ec86bb1c683835980f4816272a87eaddc46bb91cbf44f62228b84d8cca"},
-    {file = "brotlicffi-1.1.0.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:2f3711be9290f0453de8eed5275d93d286abe26b08ab4a35d7452caa1fef532f"},
-    {file = "brotlicffi-1.1.0.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:1a807d760763e398bbf2c6394ae9da5815901aa93ee0a37bca5efe78d4ee3171"},
-    {file = "brotlicffi-1.1.0.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fa8ca0623b26c94fccc3a1fdd895be1743b838f3917300506d04aa3346fd2a14"},
-    {file = "brotlicffi-1.1.0.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3de0cf28a53a3238b252aca9fed1593e9d36c1d116748013339f0949bfc84112"},
-    {file = "brotlicffi-1.1.0.0-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6be5ec0e88a4925c91f3dea2bb0013b3a2accda6f77238f76a34a1ea532a1cb0"},
-    {file = "brotlicffi-1.1.0.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:d9eb71bb1085d996244439154387266fd23d6ad37161f6f52f1cd41dd95a3808"},
-    {file = "brotlicffi-1.1.0.0.tar.gz", hash = "sha256:b77827a689905143f87915310b93b273ab17888fd43ef350d4832c4a71083c13"},
 ]
 
 [[package]]
@@ -651,19 +554,18 @@ files = [
 
 [[package]]
 name = "duckduckgo-search"
-version = "3.9.11"
+version = "5.3.0"
 requires_python = ">=3.8"
 summary = "Search for words, documents, images, news, maps and text translation using the DuckDuckGo.com search engine."
 groups = ["default"]
 dependencies = [
-    "aiofiles>=23.2.1",
     "click>=8.1.7",
-    "httpx[brotli,http2,socks]>=0.25.1",
-    "lxml>=4.9.3",
+    "curl-cffi>=0.6.2",
+    "orjson>=3.10.0",
 ]
 files = [
-    {file = "duckduckgo_search-3.9.11-py3-none-any.whl", hash = "sha256:3636df4c5eec383c1c02f89c9693b6c5bbaeda38952e467a2fa930132f632ed4"},
-    {file = "duckduckgo_search-3.9.11.tar.gz", hash = "sha256:4d07a02647da58f1e46e35f11719265f0ce06eed60e2c9c2b00b1105b9084d07"},
+    {file = "duckduckgo_search-5.3.0-py3-none-any.whl", hash = "sha256:c6a6ddc3cdefc6bb7736c49fa9bdbd0a7a6bdf7ace50260cf06f8300341c9441"},
+    {file = "duckduckgo_search-5.3.0.tar.gz", hash = "sha256:da6328f977295077d1095625474060b688980ae14bc196cee05f13a74f801e9a"},
 ]
 
 [[package]]
@@ -713,21 +615,6 @@ dependencies = [
 files = [
     {file = "e2b_code_interpreter-0.0.3-py3-none-any.whl", hash = "sha256:477f6eacb299b5abb6b5523638430b1955ae3b07034dd02428ec6bf067b8368f"},
     {file = "e2b_code_interpreter-0.0.3.tar.gz", hash = "sha256:547698dfe15e316fa09c3d5e6baab2c3e80afef2d7c5c4f6b12581350448e31f"},
-]
-
-[[package]]
-name = "edge-tts"
-version = "6.1.10"
-requires_python = ">=3.7"
-summary = "Microsoft Edge's TTS"
-groups = ["default"]
-dependencies = [
-    "aiohttp>=3.8.0",
-    "certifi>=2023.11.17",
-]
-files = [
-    {file = "edge-tts-6.1.10.tar.gz", hash = "sha256:70a49f32ed766ea405b8d2a44ef124805349d296c1a56a220b0aff1e202f8891"},
-    {file = "edge_tts-6.1.10-py3-none-any.whl", hash = "sha256:e7a4bceea8f797498b9be1216a1448a0ce1c2ba832991a16ced4e5e7399e3e0a"},
 ]
 
 [[package]]
@@ -1067,6 +954,21 @@ files = [
 ]
 
 [[package]]
+name = "gtts"
+version = "2.5.1"
+requires_python = ">=3.7"
+summary = "gTTS (Google Text-to-Speech), a Python library and CLI tool to interface with Google Translate text-to-speech API"
+groups = ["default"]
+dependencies = [
+    "click<8.2,>=7.1",
+    "requests<3,>=2.27",
+]
+files = [
+    {file = "gTTS-2.5.1-py3-none-any.whl", hash = "sha256:273ec8a5077b25e60ca5a266ed254b54d1f14032b0af3ba00092d14966148664"},
+    {file = "gTTS-2.5.1.tar.gz", hash = "sha256:02d0a9874f945dee9cd5092991c60bc88d4b7767b8cd81144b6fb49dc3de6897"},
+]
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 requires_python = ">=3.7"
@@ -1075,21 +977,6 @@ groups = ["default"]
 files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
-]
-
-[[package]]
-name = "h2"
-version = "4.1.0"
-requires_python = ">=3.6.1"
-summary = "HTTP/2 State-Machine based protocol implementation"
-groups = ["default"]
-dependencies = [
-    "hpack<5,>=4.0",
-    "hyperframe<7,>=6.0",
-]
-files = [
-    {file = "h2-4.1.0-py3-none-any.whl", hash = "sha256:03a46bcf682256c95b5fd9e9a99c1323584c3eec6440d379b9903d709476bc6d"},
-    {file = "h2-4.1.0.tar.gz", hash = "sha256:a83aca08fbe7aacb79fec788c9c0bac936343560ed9ec18b82a13a12c28d2abb"},
 ]
 
 [[package]]
@@ -1125,17 +1012,6 @@ files = [
 ]
 
 [[package]]
-name = "hpack"
-version = "4.0.0"
-requires_python = ">=3.6.1"
-summary = "Pure-Python HPACK header compression"
-groups = ["default"]
-files = [
-    {file = "hpack-4.0.0-py3-none-any.whl", hash = "sha256:84a076fad3dc9a9f8063ccb8041ef100867b1878b25ef0ee63847a5d53818a6c"},
-    {file = "hpack-4.0.0.tar.gz", hash = "sha256:fc41de0c63e687ebffde81187a948221294896f6bdc0ae2312708df339430095"},
-]
-
-[[package]]
 name = "httpcore"
 version = "1.0.5"
 requires_python = ">=3.8"
@@ -1166,36 +1042,6 @@ dependencies = [
 files = [
     {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
     {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
-]
-
-[[package]]
-name = "httpx"
-version = "0.27.0"
-extras = ["brotli", "http2", "socks"]
-requires_python = ">=3.8"
-summary = "The next generation HTTP client."
-groups = ["default"]
-dependencies = [
-    "brotli; platform_python_implementation == \"CPython\"",
-    "brotlicffi; platform_python_implementation != \"CPython\"",
-    "h2<5,>=3",
-    "httpx==0.27.0",
-    "socksio==1.*",
-]
-files = [
-    {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
-    {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
-]
-
-[[package]]
-name = "hyperframe"
-version = "6.0.1"
-requires_python = ">=3.6.1"
-summary = "HTTP/2 framing layer for Python"
-groups = ["default"]
-files = [
-    {file = "hyperframe-6.0.1-py3-none-any.whl", hash = "sha256:0ec6bafd80d8ad2195c4f03aacba3a8265e57bc4cff261e802bf39970ed02a15"},
-    {file = "hyperframe-6.0.1.tar.gz", hash = "sha256:ae510046231dc8e9ecb1a6586f63d2347bf4c8905914aa84ba585ae85f28a914"},
 ]
 
 [[package]]
