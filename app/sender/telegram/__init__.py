@@ -22,6 +22,7 @@ from app.sender.util_func import (
     login,
     TimerObjectContainer,
     dict2markdown,
+    learn_instruction,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -226,6 +227,15 @@ class TelegramBotRunner(Runner):
                     await bot.reply_to(message, text=logs)
             except Exception as e:
                 logger.exception(e)
+
+        @bot.message_handler(commands="learn", chat_types=["private"])
+        async def listen_learn_command(message: types.Message):
+            logger.debug("Debug:learn command")
+            _cmd, _arg = parse_command(command=message.text)
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, message.from_user.id), instruction=_arg
+            )
+            await bot.reply_to(message, text=reply)
 
         @bot.message_handler(commands="login", chat_types=["private"])
         async def listen_login_command(message: types.Message):

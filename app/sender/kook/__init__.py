@@ -33,6 +33,7 @@ from ..util_func import (
     uid_make,
     save_credential,
     dict2markdown,
+    learn_instruction,
 )
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import ProviderError, Credential
@@ -274,6 +275,21 @@ class KookBotRunner(Runner):
                     is_temp=True,
                     type=MessageTypes.KMD,
                 )
+
+        @bot.command(name="learn")
+        async def listen_learn_command(
+            msg: Message,
+            instruction: str,
+        ):
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, msg.author_id),
+                instruction=instruction,
+            )
+            return await msg.reply(
+                content=convert(reply),
+                is_temp=True,
+                type=MessageTypes.KMD,
+            )
 
         @bot.command(name="login")
         async def listen_login_command(

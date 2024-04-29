@@ -23,10 +23,13 @@ class InstructionManager(KvManager):
         return f"instruction:{key}"
 
     async def read_instruction(self) -> str:
+        """
+        读取指令，如果没有指令则返回默认指令，指令长度大于5，否则返回默认指令
+        """
         result = await self.read_data(self.user_id)
-        if not result:
-            return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
-        return f"Now={time_now()}\n{result}"
+        if isinstance(result, str) and len(result) > 5:
+            return f"Now={time_now()}\n{result}"
+        return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
 
     async def set_instruction(self, instruction: str) -> str:
         if not isinstance(instruction, str):

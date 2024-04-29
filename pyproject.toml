@@ -1,6 +1,6 @@
 [project]
 name = "llmkira"
-version = "1.0.4"
+version = "1.0.5"
 description = "A chain message bot based on OpenAI"
 authors = [
     { name = "sudoskys", email = "me@dianas.cyou" },

@@ -19,6 +19,7 @@ def help_message():
     `/login` - login
     `/login_via_url` - login via url
     `/env` - set environment variable, split by ; ,  use `/env ENV=NONE` to disable a env.
+    `/learn` - set your system prompt, reset by `/learn reset`
 
 **Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.**
 """.format(prefix=BotSetting.prefix)
