@@ -21,7 +21,7 @@ from app.components import read_user_credential
 from app.components.credential import global_credential
 from app.middleware.llm_task import OpenaiMiddleware
 from llmkira.kv_manager.env import EnvManager
-from llmkira.openai import OpenaiError
+from llmkira.openai import OpenaiError, NetworkError
 from llmkira.openai.cell import ToolCall, Message, Tool
 from llmkira.openai.request import OpenAIResult
 from llmkira.openapi.fuse import get_error_plugin
@@ -256,6 +256,11 @@ class BaseReceiver(object):
                 )
                 assistant_message = llm_result.default_message
                 logger.debug(f"Assistant:{assistant_message}")
+            except NetworkError as exc:
+                await self.sender.error(receiver=task.receiver, text=str(exc))
+                if os.getenv("DEBUG"):
+                    logger.exception(exc)
+                return exc
             except OpenaiError as exc:
                 await self.sender.error(receiver=task.receiver, text=exc.message)
                 if os.getenv("DEBUG"):
