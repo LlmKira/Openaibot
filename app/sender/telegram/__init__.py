@@ -142,7 +142,6 @@ class TelegramBotRunner(Runner):
                     message.text = message.text[5:]
                 if message.text.startswith("/ask"):
                     message.text = message.text[4:]
-                message.text = message.text
             if not message.text:
                 return None
             __used_file_id = []
