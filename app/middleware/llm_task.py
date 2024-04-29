@@ -151,7 +151,7 @@ class OpenaiMiddleware(object):
         message_run = []
         if isinstance(system_prompt, str):
             message_run.append(SystemMessage(content=system_prompt))
-        history = await self.message_history.read(lines=10)
+        history = await self.message_history.read(lines=8)
         logger.trace(f"History message {history}")
         for de_active_message in history:
             try:

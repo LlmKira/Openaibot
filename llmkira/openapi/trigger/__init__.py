@@ -44,10 +44,10 @@ async def get_trigger_loop(platform_name: str, message: str, uid: str = None):
     message: Message Content
     :return 如果有触发，则返回触发的action，否则返回None 代表没有操作
     """
-    sorted(__trigger_phrases__, key=lambda x: x.priority)
+    trigger_sorted = sorted(__trigger_phrases__, key=lambda x: x.priority)
     if not message:
         message = ""
-    for trigger in __trigger_phrases__:
+    for trigger in trigger_sorted:
         if trigger.on_platform == platform_name:
             try:
                 if await trigger.on_func(message, uid):

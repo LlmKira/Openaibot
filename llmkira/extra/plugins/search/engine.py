@@ -62,7 +62,7 @@ async def search_in_duckduckgo(search_sentence: str):
             _build_result.append(
                 SearchEngineResult(
                     title=result.get("title", "Undefined"),
-                    link=result.get("Href", "Undefined"),
+                    link=result.get("href", "Undefined"),
                     snippet=result.get("body", "Undefined"),
                 )
             )

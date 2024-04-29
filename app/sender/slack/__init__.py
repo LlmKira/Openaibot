@@ -24,6 +24,7 @@ from app.sender.util_func import (
     uid_make,
     login,
     dict2markdown,
+    learn_instruction,
 )
 from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -222,6 +223,18 @@ class SlackBotRunner(Runner):
                     )
             except Exception as e:
                 logger.exception(e)
+
+        @bot.command(command="/learn")
+        async def listen_learn_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.model_validate(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, command.user_id), instruction=_arg
+            )
+            return await respond(text=reply)
 
         @bot.command(command="/login")
         async def listen_login_command(ack: AsyncAck, respond: AsyncRespond, command):

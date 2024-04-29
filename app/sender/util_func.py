@@ -12,6 +12,7 @@ from loguru import logger
 
 from app.components.credential import Credential, ProviderError
 from app.components.user_manager import USER_MANAGER
+from llmkira.kv_manager.instruction import InstructionManager
 from llmkira.task import Task
 from llmkira.task.snapshot import SnapData, global_snapshot_storage
 
@@ -110,6 +111,11 @@ async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -
 
 
 def split_setting_string(input_string):
+    """
+    Split setting string
+    :param input_string: input string
+    :return: list or None
+    """
     if not isinstance(input_string, str):
         return None
     segments = input_string.split("$")
@@ -135,7 +141,32 @@ async def save_credential(uid, credential: Credential):
     await USER_MANAGER.save(user_model=user)
 
 
+async def learn_instruction(uid: str, instruction: str) -> str:
+    """
+    Set instruction text
+    :param uid: uid_make
+    :param instruction: instruction text
+    :return: str message
+    """
+    if len(instruction) > 1500:
+        return "your instruction text length should be less than 1500"
+    manager = InstructionManager(user_id=uid)
+    if len(instruction) < 7:
+        instruction = ""
+        await manager.set_instruction(instruction)
+        return "I already reset your instruction to default..."
+    else:
+        await manager.set_instruction(instruction)
+        return "I keep it in my mind!"
+
+
 async def login(uid: str, arg_string) -> str:
+    """
+    Login as provider or model
+    :param uid: uid_make
+    :param arg_string: input string
+    :return: str message
+    """
     error = telegramify_markdown.convert(
         "🔑 **Incorrect format.**\n"
         "You can set it via `https://<something api.openai.com>/v1$<api key>"

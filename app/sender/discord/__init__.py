@@ -36,6 +36,7 @@ from ..util_func import (
     uid_make,
     save_credential,
     dict2markdown,
+    learn_instruction,
 )
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import Credential, ProviderError
@@ -261,6 +262,18 @@ class DiscordBotRunner(Runner):
                     content="\nLogin success as provider! Welcome master!",
                     ephemeral=True,
                 )
+
+        @client.include
+        @crescent.command(
+            dm_enabled=True,
+            name="learn",
+            description="Set instruction text",
+        )
+        async def listen_learn_command(ctx: crescent.Context, instruction: str):
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, ctx.user.id), instruction=instruction
+            )
+            return await ctx.respond(content=convert(reply), ephemeral=True)
 
         @client.include
         @crescent.command(
