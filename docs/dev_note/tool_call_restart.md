@@ -137,20 +137,20 @@
       },
       "object": "chat.completion",
       "created": 1713435840,
-      "system_fingerprint": "fp_d9767fc5b9"
+      "system_fingerprint": "fp_1265751211"
     }
   },
   "sender": {
     "platform": "telegram",
-    "user_id": "5275155445",
-    "chat_id": "5275155445",
+    "user_id": "1265751211",
+    "chat_id": "1265751211",
     "thread_id": null,
     "message_id": "3403"
   },
   "receiver": {
     "platform": "telegram",
-    "user_id": "5275155445",
-    "chat_id": "5275155445",
+    "user_id": "1265751211",
+    "chat_id": "1265751211",
     "thread_id": null,
     "message_id": "3403"
   },
