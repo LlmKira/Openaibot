@@ -227,7 +227,9 @@ class TelegramBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
-        @bot.message_handler(commands="learn", chat_types=["private"])
+        @bot.message_handler(
+            commands="learn", chat_types=["private", "supergroup", "group"]
+        )
         async def listen_learn_command(message: types.Message):
             logger.debug("Debug:learn command")
             _cmd, _arg = parse_command(command=message.text)

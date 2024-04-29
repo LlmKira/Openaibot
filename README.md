@@ -176,14 +176,15 @@ Use `docker exec -it llmbot /bin/bash` to view Shell in Docker, enter `exit` to 
 
 ```shell
 clear - Deletes chat records
+login - Login to the bot
 help - Displays documentation
 chat - Conversation
 task - Use a function to converse
 ask - Disable function-based conversations
 tool - Lists all functions
-login - Login
 auth - Authorize a function
 env - Environment variables of the function
+learn - Learn your instructions, /learn reset to clear
 ```
 
 ## 💻 How to Develop Plugins?
