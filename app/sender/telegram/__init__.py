@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 from typing import Optional, Union, List
 
 from loguru import logger
@@ -22,6 +21,8 @@ from app.sender.util_func import (
     uid_make,
     login,
     TimerObjectContainer,
+    dict2markdown,
+    learn_instruction,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -35,8 +36,6 @@ from ..schema import Runner
 
 __sender__ = "telegram"
 __default_disable_tool_action__ = False
-
-from app.components.credential import split_setting_string, Credential, ProviderError
 
 StepCache = StateMemoryStorage()
 FileWindow = TimerObjectContainer()
@@ -143,7 +142,6 @@ class TelegramBotRunner(Runner):
                     message.text = message.text[5:]
                 if message.text.startswith("/ask"):
                     message.text = message.text[4:]
-                message.text = message.text
             if not message.text:
                 return None
             __used_file_id = []
@@ -229,63 +227,35 @@ class TelegramBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
+        @bot.message_handler(commands="learn", chat_types=["private"])
+        async def listen_learn_command(message: types.Message):
+            logger.debug("Debug:learn command")
+            _cmd, _arg = parse_command(command=message.text)
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, message.from_user.id), instruction=_arg
+            )
+            await bot.reply_to(message, text=reply)
+
         @bot.message_handler(commands="login", chat_types=["private"])
         async def listen_login_command(message: types.Message):
             logger.debug("Debug:login command")
             _cmd, _arg = parse_command(command=message.text)
-            settings = split_setting_string(_arg)
-            if not settings:
-                return await bot.reply_to(
-                    message,
-                    text=convert(
-                        "🔑 **Incorrect format.**\n"
-                        "You can set it via `https://api.com/v1$key$model` format, "
-                        "or you can log in via URL using `token$https://provider.com`."
-                    ),
-                    parse_mode="MarkdownV2",
-                )
-            if len(settings) == 2:
-                try:
-                    credential = Credential.from_provider(
-                        token=settings[0], provider_url=settings[1]
-                    )
-                except ProviderError as e:
-                    return await bot.reply_to(
-                        message, text=f"Login failed, website return {e}"
-                    )
-                except Exception as e:
-                    logger.error(f"Login failed {e}")
-                    return await bot.reply_to(
-                        message, text=f"Login failed, because {type(e)}"
-                    )
-                else:
-                    await login(
-                        uid=uid_make(__sender__, message.from_user.id),
-                        credential=credential,
-                    )
-                    return await bot.reply_to(
-                        message, text="Login success as provider! Welcome master!"
-                    )
-            elif len(settings) == 3:
-                credential = Credential(
-                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
-                )
-                await login(
-                    uid=uid_make(__sender__, message.from_user.id),
-                    credential=credential,
-                )
-                return await bot.reply_to(
-                    message, text=f"Login success as {settings[2]}! Welcome master! "
-                )
-            else:
-                return logger.trace(f"Login failed {settings}")
+            reply = await login(
+                uid=uid_make(__sender__, message.from_user.id), arg_string=_arg
+            )
+            await bot.reply_to(message, text=reply)
 
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
-            if not _arg:
-                return None
             _manager = EnvManager(user_id=uid_make(__sender__, message.from_user.id))
+            if not _arg:
+                env_map = await _manager.read_env()
+                return await bot.reply_to(
+                    message,
+                    text=convert(dict2markdown(env_map)),
+                    parse_mode="MarkdownV2",
+                )
             try:
                 env_map = await _manager.set_env(
                     env_value=_arg, update=True, return_all=True
@@ -296,11 +266,7 @@ class TelegramBotRunner(Runner):
                     formatting.mbold("🧊 Failed"), separator="\n"
                 )
             else:
-                text = formatting.format_text(
-                    formatting.mbold("🦴 Env Changed"),
-                    formatting.mcode(json.dumps(env_map, indent=2)),
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await bot.reply_to(message, text=text, parse_mode="MarkdownV2")
 
         @bot.message_handler(

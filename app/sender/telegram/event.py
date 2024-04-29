@@ -7,17 +7,18 @@
 
 def help_message():
     return """
-    /help - HELP YOURSELF
-    /chat - Chat with me :)
-    /task - Function enable
-    /ask - Chat with func_disable, 禁止函数
-    /tool - 工具列表
-    /clear - 删除自己的记录
-    /auth - POWER
+    /help - show help message
+    /chat - just want to chat with me
+    /task - chat with function_enable
+    /ask - chat with function_disable
+    /tool - check all useful tools
+    /clear - clear the chat history
+    /auth - auth the tool_call
+    /learn - set your system prompt, reset by `/learn reset`
 
 Private Chat Only:
     /login - login via url or something
-    /env - 配置变量 split by ; ,  use `/env ENV=NONE` to disable a env.
+    /env - set v-env split by ; ,  use `/env ENV=NONE` to disable a env.
 
 !Please confirm that that bot instance is secure, some plugins may be dangerous on unsafe instance.
 """

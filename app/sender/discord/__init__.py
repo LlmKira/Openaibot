@@ -5,7 +5,6 @@
 # @Software: PyCharm
 import base64
 import binascii
-import json
 import random
 from typing import List
 
@@ -30,7 +29,15 @@ from ..schema import Runner
 __sender__ = "discord_hikari"
 __default_disable_tool_action__ = False
 
-from ..util_func import auth_reloader, is_command, is_empty_command, uid_make, login
+from ..util_func import (
+    auth_reloader,
+    is_command,
+    is_empty_command,
+    uid_make,
+    save_credential,
+    dict2markdown,
+    learn_instruction,
+)
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import Credential, ProviderError
 
@@ -238,7 +245,7 @@ class DiscordBotRunner(Runner):
                 credential = Credential.from_provider(
                     token=token, provider_url=provider_url
                 )
-                await login(
+                await save_credential(
                     uid=uid_make(__sender__, ctx.user.id),
                     credential=credential,
                 )
@@ -259,22 +266,36 @@ class DiscordBotRunner(Runner):
         @client.include
         @crescent.command(
             dm_enabled=True,
+            name="learn",
+            description="Set instruction text",
+        )
+        async def listen_learn_command(ctx: crescent.Context, instruction: str):
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, ctx.user.id), instruction=instruction
+            )
+            return await ctx.respond(content=convert(reply), ephemeral=True)
+
+        @client.include
+        @crescent.command(
+            dm_enabled=True,
             name="login",
             description="set openai endpoint for yourself",
         )
         async def listen_endpoint_command(
             ctx: crescent.Context,
-            openai_endpoint: str,
-            openai_key: str,
-            openai_model: str,
+            api_endpoint: str,
+            api_key: str,
+            api_model: str,
+            api_tool_model: str = "gpt-3.5-turbo",
         ):
             try:
                 credential = Credential(
-                    api_endpoint=openai_endpoint,
-                    api_key=openai_key,
-                    api_model=openai_model,
+                    api_endpoint=api_endpoint,
+                    api_key=api_key,
+                    api_model=api_model,
+                    api_tool_model=api_tool_model,
                 )
-                await login(
+                await save_credential(
                     uid=uid_make(__sender__, ctx.user.id),
                     credential=credential,
                 )
@@ -383,10 +404,7 @@ class DiscordBotRunner(Runner):
                     "**🧊 Env parse failed...O_o**\n", separator="\n"
                 )
             else:
-                text = formatting.format_text(
-                    f"**🧊 Updated**\n" f"```json\n{json.dumps(env_map, indent=2)}```",
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await ctx.respond(
                 ephemeral=True,
                 content=text,

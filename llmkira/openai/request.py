@@ -225,17 +225,25 @@ class OpenAI(BaseModel):
 
     @retry(stop=stop_after_attempt(3), reraise=True)
     async def extract(
-        self, response_model: Union[Type[BaseModel], Tool], session: OpenAICredential
+        self, response_model: Union[Type[BaseModel]], session: OpenAICredential
     ):
+        """
+        Extract the result from the response
+        :param response_model: BaseModel
+        :param session: OpenAICredential
+        :return: BaseModel
+        :raises NetworkError, UnexpectedFormatError, RuntimeError: The response model is not matched with the result
+        """
         self.n = 1
         self.response_format = None
-        if not isinstance(response_model, Tool):
-            response_model = Tool(function=response_model)
-        self.tools = [response_model]
-        self.tool_choice = ToolChoice(function=response_model.function)
+        tool = Tool(function=response_model)
+        self.tools = [tool]
+        self.tool_choice = ToolChoice(function=tool.function)
         result = await self.request(session)
         try:
             tool_call = ToolCall.model_validate(result.choices[0].message.tool_calls[0])
-            return response_model.model_validate(tool_call.function.arguments)
-        except Exception:
+            logger.debug(f"Extracted: {tool_call}")
+            return response_model.model_validate(tool_call.function.json_arguments)
+        except Exception as exc:
+            logger.error(f"extract:{exc}")
             raise RuntimeError("The response model is not matched with the result")

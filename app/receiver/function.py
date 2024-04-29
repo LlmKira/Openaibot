@@ -14,8 +14,12 @@ import shortuuid
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 
+from app.components import read_user_credential
+from app.components.credential import global_credential
 from llmkira.kv_manager.env import EnvManager
 from llmkira.kv_manager.tool_call import GLOBAL_TOOLCALL_CACHE_HANDLER
+from llmkira.logic import LLMLogic
+from llmkira.memory import global_message_runtime
 from llmkira.openai.cell import ToolCall
 from llmkira.sdk.tools.register import ToolRegister
 from llmkira.task import Task, TaskHeader
@@ -235,20 +239,7 @@ class FunctionReceiver(object):
                 return logger.info(
                     f"[Snapshot Auth] \n--auth-require {pending_task.name} require."
                 )
-
-        # Resign Chain
-        # 时序实现，防止过度注册
-        if len(task.task_sign.tool_calls_pending) == 1:
-            if not has_been_called_recently(userid=task.receiver.uid, n_seconds=5):
-                logger.debug(
-                    "ToolCall run out, resign a new request to request stop sign."
-                )
-                await create_child_snapshot(
-                    task=task,
-                    memory_able=True,
-                    channel=task.receiver.platform,
-                )
-                # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+        # Run Function
         run_result = await _tool_obj.load(
             task=task,
             receiver=task.receiver,
@@ -257,11 +248,72 @@ class FunctionReceiver(object):
             pending_task=pending_task,
             refer_llm_result=task.task_sign.llm_response,
         )
+        run_status = True
         # 更新任务状态
+        if run_result.get("exception"):
+            run_status = False
         await task.task_sign.complete_task(
             tool_calls=pending_task, success_or_not=True, run_result=run_result
         )
-        return run_result
+        # Resign Chain
+        # 时序实现，防止过度注册
+        if len(task.task_sign.tool_calls_pending) == 0:
+            if not has_been_called_recently(userid=task.receiver.uid, n_seconds=3):
+                credentials = await read_user_credential(user_id=task.receiver.uid)
+                if global_credential:
+                    credentials = global_credential
+                logic = LLMLogic(
+                    api_key=credentials.api_key,
+                    api_endpoint=credentials.api_endpoint,
+                    api_model=credentials.api_tool_model,
+                )
+                history = await global_message_runtime.update_session(
+                    session_id=task.receiver.uid,
+                ).read(lines=3)
+                logger.debug(f"Read History:{history}")
+                continue_ = await logic.llm_continue(
+                    context=f"History:{history},ToolCallResult:{run_status}",
+                    condition="If there is still any action that needs to be performed",
+                    default=False,
+                )
+                if continue_.boolean:
+                    logger.debug(
+                        "ToolCall run out, resign a new request to request stop sign."
+                    )
+                    await create_child_snapshot(
+                        task=task,
+                        memory_able=True,
+                        channel=task.receiver.platform,
+                    )
+                    # 运行函数, 传递模型的信息，以及上一条的结果的openai raw信息
+                    await Task.create_and_send(
+                        queue_name=task.receiver.platform,
+                        task=TaskHeader(
+                            sender=task.sender,
+                            receiver=task.receiver,
+                            task_sign=task.task_sign.notify(
+                                plugin_name=__receiver__,
+                                response_snapshot=True,
+                                memory_able=False,
+                            ),
+                            message=[
+                                EventMessage(
+                                    user_id=task.receiver.user_id,
+                                    chat_id=task.receiver.chat_id,
+                                    text=continue_.comment_to_user,
+                                )
+                            ],
+                        ),
+                    )
+                else:
+                    if continue_.comment_to_user:
+                        await reply_user(
+                            platform=task.receiver.platform,
+                            receiver=task.receiver,
+                            task=task,
+                            text=continue_.comment_to_user,
+                        )
+        return run_status
 
     async def process_function_call(self, message: AbstractIncomingMessage):
         """
@@ -307,9 +359,6 @@ class FunctionReceiver(object):
         try:
             await self.run_pending_task(task=task, pending_task=pending_task)
         except Exception as e:
-            await task.task_sign.complete_task(
-                tool_calls=pending_task, success_or_not=False, run_result=str(e)
-            )
             logger.error(f"Function Call Error {e}")
             raise e
         finally:

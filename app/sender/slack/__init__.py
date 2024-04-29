@@ -3,7 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
-import json
 import time
 from ssl import SSLContext
 from typing import List
@@ -24,6 +23,8 @@ from app.sender.util_func import (
     parse_command,
     uid_make,
     login,
+    dict2markdown,
+    learn_instruction,
 )
 from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -38,8 +39,6 @@ from .schema import SlackMessageEvent, SlackFile
 from ..schema import Runner
 
 __sender__ = "slack"
-
-from ...components.credential import split_setting_string, Credential, ProviderError
 
 SlackTask = Task(queue=__sender__)
 __default_disable_tool_action__ = False
@@ -225,6 +224,18 @@ class SlackBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
+        @bot.command(command="/learn")
+        async def listen_learn_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.model_validate(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            reply = await learn_instruction(
+                uid=uid_make(__sender__, command.user_id), instruction=_arg
+            )
+            return await respond(text=reply)
+
         @bot.command(command="/login")
         async def listen_login_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
@@ -232,55 +243,21 @@ class SlackBotRunner(Runner):
             if not command.text:
                 return
             _arg = command.text
-            settings = split_setting_string(_arg)
-            if not settings:
-                return await respond(
-                    text=convert(
-                        "🔑 **Incorrect format.**\n"
-                        "You can set it via `https://api.com/v1$key$model` format, "
-                        "or you can log in via URL using `token$https://provider.com`."
-                    ),
-                )
-            if len(settings) == 2:
-                try:
-                    credential = Credential.from_provider(
-                        token=settings[0], provider_url=settings[1]
-                    )
-                except ProviderError as e:
-                    return await respond(text=f"Login failed, website return {e}")
-                except Exception as e:
-                    logger.error(f"Login failed {e}")
-                    return await respond(text=f"Login failed, because {type(e)}")
-                else:
-                    await login(
-                        uid=uid_make(__sender__, command.user_id),
-                        credential=credential,
-                    )
-                    return await respond(
-                        text="Login success as provider! Welcome master!"
-                    )
-            elif len(settings) == 3:
-                credential = Credential(
-                    api_endpoint=settings[0], api_key=settings[1], api_model=settings[2]
-                )
-                await login(
-                    uid=uid_make(__sender__, command.user_id),
-                    credential=credential,
-                )
-                return await respond(
-                    text=f"Login success as {settings[2]}! Welcome master! "
-                )
-            else:
-                return logger.trace(f"Login failed {settings}")
+            reply = await login(
+                uid=uid_make(__sender__, command.user_id), arg_string=_arg
+            )
+            return await respond(text=reply)
 
         @bot.command(command="/env")
         async def listen_env_command(ack: AsyncAck, respond: AsyncRespond, command):
             command: SlashCommand = SlashCommand.model_validate(command)
             await ack()
-            if not command.text:
-                return
-            _arg = command.text
             _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
+            if not command.text:
+                env_map = await _manager.read_env()
+                text = convert(dict2markdown(env_map))
+                return await respond(text=text)
+            _arg = command.text
             try:
                 env_map = await _manager.set_env(
                     env_value=_arg, update=True, return_all=True
@@ -289,11 +266,7 @@ class SlackBotRunner(Runner):
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.mbold("🧊 Failed")
             else:
-                text = formatting.format_text(
-                    formatting.mbold("🦴 Env Changed"),
-                    formatting.mcode(json.dumps(env_map, indent=2)),
-                    separator="\n",
-                )
+                text = convert(dict2markdown(env_map))
             await respond(text=text)
 
         @bot.command(command="/clear")

@@ -7,22 +7,18 @@ import time
 from typing import Tuple, Optional, Union
 from urllib.parse import urlparse
 
+import telegramify_markdown
 from loguru import logger
 
-from app.components.credential import Credential
+from app.components.credential import Credential, ProviderError
 from app.components.user_manager import USER_MANAGER
+from llmkira.kv_manager.instruction import InstructionManager
 from llmkira.task import Task
 from llmkira.task.snapshot import SnapData, global_snapshot_storage
 
 
 def uid_make(platform: str, user_id: Union[int, str]):
     return f"{platform}:{user_id}"
-
-
-async def login(uid, credential: Credential):
-    user = await USER_MANAGER.read(user_id=uid)
-    user.credential = credential
-    await USER_MANAGER.save(user_model=user)
 
 
 def parse_command(command: str) -> Tuple[Optional[str], Optional[str]]:
@@ -114,6 +110,115 @@ async def auth_reloader(snapshot_credential: str, platform: str, user_id: str) -
             )
 
 
+def split_setting_string(input_string):
+    """
+    Split setting string
+    :param input_string: input string
+    :return: list or None
+    """
+    if not isinstance(input_string, str):
+        return None
+    segments = input_string.split("$")
+
+    # 开头为链接的情况
+    if is_valid_url(segments[0]) and len(segments) >= 3:
+        return segments[:3]
+    # 第二个元素为链接，第一个元素为字符串的情况
+    elif (
+        len(segments) == 2
+        and not is_valid_url(segments[0])
+        and is_valid_url(segments[1])
+    ):
+        return segments
+    # 其他情况
+    else:
+        return None
+
+
+async def save_credential(uid, credential: Credential):
+    user = await USER_MANAGER.read(user_id=uid)
+    user.credential = credential
+    await USER_MANAGER.save(user_model=user)
+
+
+async def learn_instruction(uid: str, instruction: str) -> str:
+    """
+    Set instruction text
+    :param uid: uid_make
+    :param instruction: instruction text
+    :return: str message
+    """
+    if len(instruction) > 1500:
+        return "your instruction text length should be less than 1500"
+    manager = InstructionManager(user_id=uid)
+    if len(instruction) < 7:
+        instruction = ""
+        await manager.set_instruction(instruction)
+        return "I already reset your instruction to default..."
+    else:
+        await manager.set_instruction(instruction)
+        return "I keep it in my mind!"
+
+
+async def login(uid: str, arg_string) -> str:
+    """
+    Login as provider or model
+    :param uid: uid_make
+    :param arg_string: input string
+    :return: str message
+    """
+    error = telegramify_markdown.convert(
+        "🔑 **Incorrect format.**\n"
+        "You can set it via `https://<something api.openai.com>/v1$<api key>"
+        "$<model such as gpt-4-turbo>$<tool_model such as gpt-3.5-turbo>` format, "
+        "or you can log in via URL using `token$https://provider.com`."
+    )
+    settings = split_setting_string(arg_string)
+    if not settings:
+        return error
+    if len(settings) == 2:
+        try:
+            credential = Credential.from_provider(
+                token=settings[0], provider_url=settings[1]
+            )
+        except ProviderError as e:
+            return telegramify_markdown.convert(f"Login failed, website return {e}")
+        except Exception as e:
+            logger.error(f"Login failed {e}")
+            return telegramify_markdown.convert(f"Login failed, because {type(e)}")
+        else:
+            await save_credential(
+                uid=uid,
+                credential=credential,
+            )
+            return telegramify_markdown.convert(
+                "Login success as provider! Welcome master!"
+            )
+    elif len(settings) == 3 or len(settings) == 4:
+        api_endpoint = settings[0]
+        api_key = settings[1]
+        api_model = settings[2]
+        if len(settings) == 4:
+            api_tool_model = settings[3]
+        else:
+            api_tool_model = "gpt-3.5-turbo"
+        credential = Credential(
+            api_endpoint=api_endpoint,
+            api_key=api_key,
+            api_model=api_model,
+            api_tool_model=api_tool_model,
+        )
+        await save_credential(
+            uid=uid,
+            credential=credential,
+        )
+        return telegramify_markdown.convert(
+            f"Login success as {settings[2]}! Welcome master!"
+        )
+    else:
+        return error
+
+
 class TimerObjectContainer:
     def __init__(self):
         self.users = {}
@@ -149,3 +254,10 @@ class TimerObjectContainer:
         """
         if user_id in self.users:
             self.users[user_id] = {}
+
+
+def dict2markdown(maps: dict):
+    content = "**🦴 Env**\n"
+    for key, value in maps.items():
+        content += f"- **`{key}`**: `{value}`\n"
+    return content

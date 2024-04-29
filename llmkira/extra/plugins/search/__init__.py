@@ -17,7 +17,7 @@ from llmkira.sdk.tools import PluginMetadata  # noqa: E402
 from llmkira.sdk.tools.schema import FuncPair, BaseTool  # noqa: E402
 from llmkira.task import Task, TaskHeader  # noqa: E402
 from llmkira.task.schema import Location, ToolResponse, EventMessage  # noqa: E402
-from .engine import SerperSearchEngine, build_search_tips  # noqa: E402
+from .engine import SerperSearchEngine, build_search_tips, search_in_duckduckgo  # noqa: E402
 
 
 class Search(BaseModel):
@@ -26,7 +26,9 @@ class Search(BaseModel):
 
 
 @resign_plugin_executor(tool=Search)
-async def search_on_serper(search_sentence: str, api_key: str):
+async def search_on_serper(search_sentence: str, api_key: str = None):
+    if not api_key:
+        return search_in_duckduckgo(search_sentence)
     result = await SerperSearchEngine(api_key=api_key).search(search_sentence)
     return build_search_tips(search_items=result)
 
@@ -105,7 +107,7 @@ class SearchTool(BaseTool):
         refer_llm_result: dict = None,
         **kwargs,
     ):
-        meta = task.task_sign.notify(
+        meta = task.task_sign.reply(
             plugin_name=__plugin_name__,
             tool_response=[
                 ToolResponse(
@@ -115,8 +117,6 @@ class SearchTool(BaseTool):
                     tool_call=pending_task,
                 )
             ],
-            memory_able=True,
-            response_snapshot=True,
         )
         await Task.create_and_send(
             queue_name=receiver.platform,
@@ -162,7 +162,7 @@ class SearchTool(BaseTool):
         _set = Search.model_validate(arg)
         _search_result = await search_on_serper(
             search_sentence=_set.keywords,
-            api_key=env.get("SERPER_API_KEY"),
+            api_key=env.get("SERPER_API_KEY", None),
         )
         # META
         _meta = task.task_sign.reprocess(
@@ -170,7 +170,7 @@ class SearchTool(BaseTool):
             tool_response=[
                 ToolResponse(
                     name=__plugin_name__,
-                    function_response=str(_search_result),
+                    function_response=f"SearchData: {_search_result},Please give reference link when use it.",
                     tool_call_id=pending_task.id,
                     tool_call=pending_task,
                 )
