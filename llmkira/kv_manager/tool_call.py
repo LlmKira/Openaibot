@@ -32,6 +32,8 @@ class ToolCallCache(KvManager):
         """
         logger.debug(f"Get tool call {tool_call_id}")
         result = await self.read_data(tool_call_id)
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
         if result is None:
             return None
         if isinstance(result, dict):
