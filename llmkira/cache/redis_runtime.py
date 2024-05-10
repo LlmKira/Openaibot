@@ -38,6 +38,9 @@ class RedisClientWrapper(AbstractDataClass):
 
     async def read_data(self, key) -> Optional[Union[str, dict, int]]:
         data = await self._redis.get(self.prefix + str(key))
+        # 如果是字节型数据，解码后返回
+        if isinstance(data, bytes):
+            data = data.decode("utf-8")
         if data is not None:
             try:
                 data = json.loads(data)
