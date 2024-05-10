@@ -32,6 +32,8 @@ class TimeFeelManager(KvManager):
         now_timestamp = int(datetime.datetime.now().timestamp())
         try:
             hours = await self.read_data(self.user_id)
+            if isinstance(hours, bytes):
+                hours = hours.decode("utf-8")
             if not hours:
                 raise LookupError("No data")
             last_timestamp = int(hours)
