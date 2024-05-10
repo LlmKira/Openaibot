@@ -29,6 +29,8 @@ class InstructionManager(KvManager):
         """
         result = await self.read_data(self.user_id)
         # Probably result is Int, so we cant use isinstance(result, str)
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
         if result is not None and len(result) > 5:
             return f"Now={time_now()}\n{result}"
         return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
