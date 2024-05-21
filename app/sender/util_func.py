@@ -169,9 +169,9 @@ async def login(uid: str, arg_string) -> str:
     """
     error = telegramify_markdown.convert(
         "🔑 **Incorrect format.**\n"
-        "You can set it via `https://<something api.openai.com>/v1$<api key>"
+        "You can set it via `/login https://<something api.openai.com>/v1$<api key>"
         "$<model such as gpt-4-turbo>$<tool_model such as gpt-3.5-turbo>` format, "
-        "or you can log in via URL using `token$https://provider.com`."
+        "or you can log in via URL using `/login token$https://provider.com`."
     )
     settings = split_setting_string(arg_string)
     if not settings:
