@@ -260,7 +260,7 @@ class FunctionReceiver(object):
         if len(task.task_sign.tool_calls_pending) == 0:
             if not has_been_called_recently(userid=task.receiver.uid, n_seconds=3):
                 credentials = await read_user_credential(user_id=task.receiver.uid)
-                if global_credential:
+                if global_credential and not credentials:
                     credentials = global_credential
                 logic = LLMLogic(
                     api_key=credentials.api_key,

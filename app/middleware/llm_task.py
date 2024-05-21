@@ -226,7 +226,10 @@ class OpenaiMiddleware(object):
         # TODO:实现消息时序切片
         # 日志
         logger.info(
-            f"[x] Openai request" f"\n--message {len(messages)} " f"\n--tools {tools}"
+            f"Request Details:"
+            f"\n--message {len(messages)} "
+            f"\n--tools {tools} "
+            f"\n--model {credential.api_model}"
         )
         for msg in messages:
             if isinstance(msg, UserMessage):
