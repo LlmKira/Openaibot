@@ -17,10 +17,8 @@ dependencies = [
     "aio-pika<10.0.0,>=9.3.0",
     "arclet-alconna<2.0.0,>=1.7.26",
     "shortuuid<2.0.0,>=1.0.11",
-    "tiktoken<1.0.0,>=0.5.1",
     "contextvars<3.0,>=2.4",
     "pytz<2024.0.0,>=2023.3.post1",
-    "numpy<2.0.0,>=1.24.0",
     "fasttext-wheel<1.0.0,>=0.9.2",
     "tenacity<9.0.0,>=8.2.3",
     "pysocks<2.0.0,>=1.7.1",
@@ -39,19 +37,13 @@ dependencies = [
     "polling<1.0.0,>=0.3.2",
     "elara<1.0.0,>=0.5.5",
     "tzlocal<6.0,>=5.2",
-    "nltk<4.0.0,>=3.8.1",
-    "jieba<1.0.0,>=0.42.1",
-    "scikit-learn<2.0.0,>=1.3.2",
-    "cjieba<1.0.0,>=0.4.4",
     "requests[socks]<3.0.0,>=2.31.0",
-    "feedparser<7.0.0,>=6.0.10",
     "pillow<11.0.0,>=10.1.0",
     "inscriptis<3.0.0,>=2.3.2",
     "aiohttp<4.0.0,>=3.8.6",
     "pytelegrambotapi<5.0.0,>=4.14.0",
     "ffmpeg-python<1.0.0,>=0.2.0",
     "duckduckgo-search>=5.3.0",
-    "flask<4.0.0,>=3.0.0",
     "telegramify-markdown>=0.1.2",
     "json-repair>=0.13.0",
     "curl-cffi>=0.6.2",
@@ -61,13 +53,13 @@ dependencies = [
     "apscheduler>=3.10.4",
     "montydb[lmdb]>=2.5.2",
     "pymongo>=4.6.3",
-    "fast-langdetect>=0.1.0",
+    "fast-langdetect>=0.1.1",
     "lmdb>=1.4.1",
     "e2b>=0.14.14",
     "e2b-code-interpreter>=0.0.3",
     "gTTS>=2.5.1",
 ]
-requires-python = ">=3.9,<3.12"
+requires-python = "<3.12,>=3.9"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 keywords = ["llmbot", "llmkira", "openai", "chatgpt", "llm"]
@@ -80,9 +72,9 @@ repository = "https://github.com/LlmKira/Openaibot"
 
 [project.optional-dependencies]
 bot = [
-    "hikari==2.0.0.dev121",
+    "hikari>=2.0.0.dev121",
     # FIXME code not compatible with hikari 2.0.0.dev121
-    "hikari-crescent<1.0.0,>=0.6.4",
+    "hikari-crescent>=0.6.5",
     "khl-py<1.0.0,>=0.3.17",
     "slack-bolt<2.0.0,>=1.18.0"
 ]

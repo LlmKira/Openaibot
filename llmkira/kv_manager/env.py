@@ -39,6 +39,8 @@ class EnvManager(KvManager):
 
     async def read_env(self) -> Optional[dict]:
         result = await self.read_data(self.user_id)
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
         if not result:
             return None
         try:

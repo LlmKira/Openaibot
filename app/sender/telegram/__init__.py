@@ -227,7 +227,9 @@ class TelegramBotRunner(Runner):
             except Exception as e:
                 logger.exception(e)
 
-        @bot.message_handler(commands="learn", chat_types=["private"])
+        @bot.message_handler(
+            commands="learn", chat_types=["private", "supergroup", "group"]
+        )
         async def listen_learn_command(message: types.Message):
             logger.debug("Debug:learn command")
             _cmd, _arg = parse_command(command=message.text)
@@ -243,7 +245,11 @@ class TelegramBotRunner(Runner):
             reply = await login(
                 uid=uid_make(__sender__, message.from_user.id), arg_string=_arg
             )
-            await bot.reply_to(message, text=reply)
+            await bot.reply_to(
+                message,
+                text=reply,
+                parse_mode="MarkdownV2",
+            )
 
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):

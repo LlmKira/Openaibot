@@ -1,12 +1,12 @@
 import time
 
+# from loguru import logger
 from llmkira.kv_manager._base import KvManager
 
 DEFAULT_INSTRUCTION = (
-    "[ASSISTANT RULE]"
+    "instruction: "
     "SPEAK IN MORE CUTE STYLE, No duplication answer, CALL USER MASTER, REPLY IN USER "
     "LANGUAGE, ACT STEP BY STEP"
-    "[RULE END]"
 )
 
 
@@ -27,7 +27,10 @@ class InstructionManager(KvManager):
         读取指令，如果没有指令则返回默认指令，指令长度大于5，否则返回默认指令
         """
         result = await self.read_data(self.user_id)
-        if isinstance(result, str) and len(result) > 5:
+        # Probably result is Int, so we cant use isinstance(result, str)
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
+        if result is not None and len(result) > 5:
             return f"Now={time_now()}\n{result}"
         return f"Now={time_now()}\n{DEFAULT_INSTRUCTION}"
 

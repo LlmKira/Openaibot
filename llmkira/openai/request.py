@@ -21,6 +21,8 @@ from .cell import (
     SystemMessage,
 )
 
+VISION = ("gpt-4-vision", "gpt-4-turbo", "claude-3", "gpt-4o")
+
 
 class OpenAICredential(BaseModel):
     api_key: SecretStr
@@ -164,9 +166,9 @@ class OpenAI(BaseModel):
 
     @model_validator(mode="after")
     def check_vision(self):
-        if not self.model.startswith(("gpt-4-vision", "gpt-4-turbo", "claude-3")):
+        if not self.model.startswith(VISION):
             logger.info(
-                "Try to remove the image content part from the messages, because the model is not supported."
+                f"Try to remove the image content part from the messages, because the model is not supported {self.model}"
             )
             for message in self.messages:
                 if isinstance(message, UserMessage) and isinstance(
