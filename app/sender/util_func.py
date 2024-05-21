@@ -171,7 +171,8 @@ async def login(uid: str, arg_string) -> str:
         "🔑 **Incorrect format.**\n"
         "You can set it via `/login https://<something api.openai.com>/v1$<api key>"
         "$<model such as gpt-4-turbo>$<tool_model such as gpt-3.5-turbo>` format, "
-        "or you can log in via URL using `/login token$https://provider.com`."
+        "or you can log in via URL using `/login token$https://provider.com`.\n"
+        "Use $ to separate the parameters."
     )
     settings = split_setting_string(arg_string)
     if not settings:
