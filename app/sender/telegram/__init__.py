@@ -245,7 +245,11 @@ class TelegramBotRunner(Runner):
             reply = await login(
                 uid=uid_make(__sender__, message.from_user.id), arg_string=_arg
             )
-            await bot.reply_to(message, text=reply)
+            await bot.reply_to(
+                message,
+                text=reply,
+                parse_mode="MarkdownV2",
+            )
 
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):
