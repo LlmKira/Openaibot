@@ -4,10 +4,9 @@ import time
 from llmkira.kv_manager._base import KvManager
 
 DEFAULT_INSTRUCTION = (
-    "[ASSISTANT RULE]"
+    "instruction: "
     "SPEAK IN MORE CUTE STYLE, No duplication answer, CALL USER MASTER, REPLY IN USER "
     "LANGUAGE, ACT STEP BY STEP"
-    "[RULE END]"
 )
 
 
