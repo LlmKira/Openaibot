@@ -246,7 +246,7 @@ class BaseReceiver(object):
         try:
             try:
                 credentials = await read_user_credential(user_id=task.receiver.uid)
-                if global_credential:
+                if global_credential and not credentials:
                     credentials = global_credential
                 assert credentials, "You need to /login first"
                 llm_result = await llm.request_openai(
