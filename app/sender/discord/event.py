@@ -16,7 +16,8 @@ def help_message():
     `/tool` - Check all useful tools
     `/clear` - wipe memory of your chat
     `/auth` - activate a task (my power)
-    `/login` - login
+    `/login` - set credential
+    `/logout` - clear credential
     `/login_via_url` - login via url
     `/env` - set environment variable, split by ; ,  use `/env ENV=NONE` to disable a env.
     `/learn` - set your system prompt, reset by `/learn reset`

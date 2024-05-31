@@ -25,6 +25,7 @@ from app.sender.util_func import (
     login,
     dict2markdown,
     learn_instruction,
+    logout,
 )
 from app.setting.slack import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -246,6 +247,16 @@ class SlackBotRunner(Runner):
             reply = await login(
                 uid=uid_make(__sender__, command.user_id), arg_string=_arg
             )
+            return await respond(text=reply)
+
+        @bot.command(command="/logout")
+        async def listen_logout_command(ack: AsyncAck, respond: AsyncRespond, command):
+            command: SlashCommand = SlashCommand.model_validate(command)
+            await ack()
+            if not command.text:
+                return
+            _arg = command.text
+            reply = await logout(uid=uid_make(__sender__, command.user_id))
             return await respond(text=reply)
 
         @bot.command(command="/env")

@@ -37,6 +37,7 @@ from ..util_func import (
     save_credential,
     dict2markdown,
     learn_instruction,
+    logout,
 )
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import Credential, ProviderError
@@ -318,6 +319,19 @@ class DiscordBotRunner(Runner):
                     ),
                     ephemeral=True,
                 )
+
+        @client.include
+        @crescent.command(
+            dm_enabled=True, name="logout", description="clear your credential"
+        )
+        async def listen_logout_command(ctx: crescent.Context):
+            reply = await logout(
+                uid=uid_make(__sender__, ctx.user.id),
+            )
+            return await ctx.respond(
+                ephemeral=True,
+                content=reply,
+            )
 
         @client.include
         @crescent.command(
