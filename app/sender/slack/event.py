@@ -24,6 +24,7 @@ def help_message():
 `/clear` - forget...you
 `/auth` - activate a task (my power),but outside the thread
 `/login` - login via url or raw
+`/logout` - clear credential
 `/env` - set environment variable, split by ; ,  use `/env ENV=NONE` to disable a env.
 `/learn` - set your system prompt, reset by `/learn reset`
 
