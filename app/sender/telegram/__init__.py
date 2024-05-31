@@ -5,12 +5,12 @@
 # @Software: PyCharm
 from typing import Optional, Union, List
 
+import telegramify_markdown
 from loguru import logger
 from telebot import formatting, util
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
-from telebot.formatting import escape_markdown
 from telegramify_markdown import convert
 
 from app.sender.util_func import (
@@ -23,6 +23,7 @@ from app.sender.util_func import (
     TimerObjectContainer,
     dict2markdown,
     learn_instruction,
+    logout,
 )
 from app.setting.telegram import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -251,6 +252,17 @@ class TelegramBotRunner(Runner):
                 parse_mode="MarkdownV2",
             )
 
+        @bot.message_handler(commands="logout", chat_types=["private"])
+        async def listen_logout_command(message: types.Message):
+            logger.debug("Debug:logout command")
+            _cmd, _arg = parse_command(command=message.text)
+            reply = await logout(uid=uid_make(__sender__, message.from_user.id))
+            await bot.reply_to(
+                message,
+                text=reply,
+                parse_mode="MarkdownV2",
+            )
+
         @bot.message_handler(commands="env", chat_types=["private"])
         async def listen_env_command(message: types.Message):
             _cmd, _arg = parse_command(command=message.text)
@@ -299,8 +311,7 @@ class TelegramBotRunner(Runner):
             _message = await bot.reply_to(
                 message,
                 text=formatting.format_text(
-                    formatting.mbold("🥕 Help"),
-                    escape_markdown(help_message()),
+                    telegramify_markdown.convert(help_message()),
                     separator="\n",
                 ),
                 parse_mode="MarkdownV2",
