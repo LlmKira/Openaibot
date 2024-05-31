@@ -34,6 +34,7 @@ from ..util_func import (
     save_credential,
     dict2markdown,
     learn_instruction,
+    logout,
 )
 from llmkira.openapi.trigger import get_trigger_loop
 from ...components.credential import ProviderError, Credential
@@ -330,6 +331,15 @@ class KookBotRunner(Runner):
                     is_temp=True,
                     type=MessageTypes.KMD,
                 )
+
+        @bot.command(name="logout")
+        async def listen_logout_command(msg: Message):
+            reply = await logout(uid=uid_make(__sender__, msg.author_id))
+            return await msg.reply(
+                content=convert(reply),
+                is_temp=True,
+                type=MessageTypes.KMD,
+            )
 
         @bot.command(name="clear")
         async def listen_clear_command(msg: Message):
