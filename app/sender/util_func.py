@@ -220,6 +220,18 @@ async def login(uid: str, arg_string) -> str:
         return error
 
 
+async def logout(uid: str) -> str:
+    """
+    Logout
+    :param uid: uid_make
+    :return: str message
+    """
+    user = await USER_MANAGER.read(user_id=uid)
+    user.credential = None
+    await USER_MANAGER.save(user_model=user)
+    return telegramify_markdown.convert("Logout success! Welcome back master!")
+
+
 class TimerObjectContainer:
     def __init__(self):
         self.users = {}
