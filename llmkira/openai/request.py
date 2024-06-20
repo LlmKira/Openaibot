@@ -229,7 +229,11 @@ class OpenAI(BaseModel):
             logger.exception(exc)
             raise UnexpectedFormatError("Unexpected response format")
 
-    @retry(stop=stop_after_attempt(3), reraise=True)
+    @retry(
+        stop=stop_after_attempt(3),
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+    )
     async def extract(
         self, response_model: Union[Type[BaseModel]], session: OpenAICredential
     ):
