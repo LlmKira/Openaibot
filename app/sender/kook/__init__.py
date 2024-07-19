@@ -297,8 +297,8 @@ class KookBotRunner(Runner):
             msg: Message,
             api_endpoint: str,
             api_key: str,
-            api_model: str = "gpt-3.5-turbo",
-            api_tool_model: str = "gpt-3.5-turbo",
+            api_model: str = "gpt-4o-mini",
+            api_tool_model: str = "gpt-4o-mini",
         ):
             try:
                 credential = Credential(

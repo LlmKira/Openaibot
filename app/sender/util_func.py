@@ -170,7 +170,7 @@ async def login(uid: str, arg_string) -> str:
     error = telegramify_markdown.convert(
         "🔑 **Incorrect format.**\n"
         "You can set it via `/login https://<something api.openai.com>/v1$<api key>"
-        "$<model such as gpt-4-turbo>$<tool_model such as gpt-3.5-turbo>` format, "
+        "$<model such as gpt-4-turbo>$<tool_model such as gpt-4o-mini>` format, "
         "or you can log in via URL using `/login token$https://provider.com`.\n"
         "Use $ to separate the parameters."
     )
@@ -202,7 +202,7 @@ async def login(uid: str, arg_string) -> str:
         if len(settings) == 4:
             api_tool_model = settings[3]
         else:
-            api_tool_model = "gpt-3.5-turbo"
+            api_tool_model = "gpt-4o-mini"
         credential = Credential(
             api_endpoint=api_endpoint,
             api_key=api_key,
