@@ -70,7 +70,15 @@ class TelegramBotRunner(Runner):
         event_messages = []
         files = [file for file in files if file]  # No None
         for index, message in enumerate(messages):
-            message_text = getattr(message, "text", "empty")
+            message_text = (
+                (
+                    getattr(message, "text", None)
+                    or getattr(message, "caption", None)
+                    or "empty"
+                )
+                if message is not None
+                else "empty"
+            )
             event_messages.append(
                 EventMessage(
                     chat_id=str(message.chat.id),
