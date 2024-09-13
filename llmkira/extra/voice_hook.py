@@ -11,18 +11,32 @@ from llmkira.sdk.utils import Ffmpeg
 from llmkira.task.schema import EventMessage, Location
 
 
+def detect_text(text: str) -> list:
+    """
+    检测文本的语言
+    :param text: 文本
+    :return: 语言
+    """
+    text = text.replace("\n", "")
+    text = text[:200]
+    parsed_text = detect_multilingual(text)
+    if not parsed_text:
+        return []
+    lang_kinds = []
+    for lang in parsed_text:
+        lang_ = lang.get("lang", None)
+        if lang_:
+            lang_kinds.append(lang_)
+    return lang_kinds
+
+
 def check_string(text):
     """
     检查字符串是否 TTS 可以处理
     :param text: 字符串
     :return: 是否符合要求
     """
-    parsed_text = detect_multilingual(text)
-    if not parsed_text:
-        return False
-    lang_kinds = []
-    for lang in parsed_text:
-        lang_kinds.append(lang.get("lang", "ru"))
+    lang_kinds = detect_text(text)
     limit = 200
     if len(set(lang_kinds)) == 1:
         if lang_kinds[0] in ["en"]:
@@ -57,12 +71,7 @@ class VoiceHook(Hook):
         for message in messages:
             if not check_string(message.text):
                 return args, kwargs
-            parsed_text = detect_multilingual(message.text)
-            if not parsed_text:
-                return args, kwargs
-            lang_kinds = []
-            for lang in parsed_text:
-                lang_kinds.append(lang.get("lang"))
+            lang_kinds = detect_text(message.text)
             reecho_api_key = await EnvManager(locate.uid).get_env(
                 "REECHO_VOICE_KEY", None
             )
