@@ -42,7 +42,7 @@ dependencies = [
     "aiohttp<4.0.0,>=3.8.6",
     "pytelegrambotapi<5.0.0,>=4.14.0",
     "ffmpeg-python<1.0.0,>=0.2.0",
-    "duckduckgo-search>=5.3.0",
+    "duckduckgo-search>=6.2.0",
     "telegramify-markdown>=0.1.2",
     "json-repair>=0.13.0",
     "curl-cffi>=0.6.2",
@@ -57,6 +57,7 @@ dependencies = [
     "e2b>=0.14.14",
     "e2b-code-interpreter>=0.0.3",
     "gTTS>=2.5.1",
+    "matplotlib>=3.9.2",
 ]
 requires-python = "<3.12,>=3.9"
 readme = "README.md"
