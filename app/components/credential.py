@@ -14,7 +14,7 @@ class Credential(BaseModel):
     api_key: str
     api_endpoint: str
     api_model: str
-    api_tool_model: str = "gpt-3.5-turbo"
+    api_tool_model: str = "gpt-4o-mini"
 
     @classmethod
     def from_provider(cls, token, provider_url):
@@ -36,7 +36,7 @@ class Credential(BaseModel):
             api_key=user_data["api_key"],
             api_endpoint=user_data["api_endpoint"],
             api_model=user_data["api_model"],
-            api_tool_model=user_data.get("api_tool_model", "gpt-3.5-turbo"),
+            api_tool_model=user_data.get("api_tool_model", "gpt-4o-mini"),
         )
 
 
@@ -47,8 +47,8 @@ if os.getenv("GLOBAL_OAI_KEY") and os.getenv("GLOBAL_OAI_ENDPOINT"):
     global_credential = Credential(
         api_key=os.getenv("GLOBAL_OAI_KEY"),
         api_endpoint=os.getenv("GLOBAL_OAI_ENDPOINT"),
-        api_model=os.getenv("GLOBAL_OAI_MODEL", "gpt-3.5-turbo"),
-        api_tool_model=os.getenv("GLOBAL_OAI_TOOL_MODEL", "gpt-3.5-turbo"),
+        api_model=os.getenv("GLOBAL_OAI_MODEL", "gpt-4o-mini"),
+        api_tool_model=os.getenv("GLOBAL_OAI_TOOL_MODEL", "gpt-4o-mini"),
     )
 else:
     global_credential = None

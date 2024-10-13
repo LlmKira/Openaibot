@@ -1,0 +1,12 @@
+contributor = "b4e0cd99-289b-4586-992c-6f159c436101"
+# https://github.com/LlmKira/contributor/blob/main/.nerve.toml
+
+language = "English"
+issue_auto_label = true
+# Whether to automatically label issues
+issue_title_format = true
+# Whether to use the default issue title format
+issue_body_format = false
+# Whether to use the default issue body format
+issue_close_with_report = true
+# Whether to close the issue with a report

@@ -1,6 +1,6 @@
 from typing import List
 
-from fast_langdetect import parse_sentence
+from fast_langdetect import detect_multilingual
 from loguru import logger
 
 from llmkira.extra.voice import request_cn, request_en
@@ -11,23 +11,35 @@ from llmkira.sdk.utils import Ffmpeg
 from llmkira.task.schema import EventMessage, Location
 
 
+def detect_text(text: str) -> list:
+    """
+    检测文本的语言
+    :param text: 文本
+    :return: 语言
+    """
+    text = text.replace("\n", "")
+    text = text[:200]
+    parsed_text = detect_multilingual(text)
+    if not parsed_text:
+        return []
+    lang_kinds = []
+    for lang in parsed_text:
+        lang_ = lang.get("lang", None)
+        if lang_:
+            lang_kinds.append(lang_)
+    return lang_kinds
+
+
 def check_string(text):
     """
-    检查字符串是否符合要求
+    检查字符串是否 TTS 可以处理
     :param text: 字符串
     :return: 是否符合要求
     """
-    parsed_text = parse_sentence(text)
-    if not parsed_text:
-        return False
-    lang_kinds = []
-    for lang in parsed_text:
-        if lang.get("lang", "RU") not in ["ZH", "EN"]:
-            return False
-        lang_kinds.append(lang.get("lang"))
+    lang_kinds = detect_text(text)
     limit = 200
     if len(set(lang_kinds)) == 1:
-        if lang_kinds[0] in ["EN"]:
+        if lang_kinds[0] in ["en"]:
             limit = 500
     if "\n\n" in text or text.count("\n") > 3 or len(text) > limit or "```" in text:
         return False
@@ -59,16 +71,11 @@ class VoiceHook(Hook):
         for message in messages:
             if not check_string(message.text):
                 return args, kwargs
-            parsed_text = parse_sentence(message.text)
-            if not parsed_text:
-                return args, kwargs
-            lang_kinds = []
-            for lang in parsed_text:
-                lang_kinds.append(lang.get("lang"))
+            lang_kinds = detect_text(message.text)
             reecho_api_key = await EnvManager(locate.uid).get_env(
                 "REECHO_VOICE_KEY", None
             )
-            if (len(set(lang_kinds)) == 1) and (lang_kinds[0] in ["EN"]):
+            if (len(set(lang_kinds)) == 1) and (lang_kinds[0] in ["en"]):
                 voice_data = await request_en(message.text)
             else:
                 voice_data = await request_cn(

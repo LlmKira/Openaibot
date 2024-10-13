@@ -6,7 +6,7 @@ from curl_cffi.requests import AsyncSession
 from loguru import logger
 from pydantic import ConfigDict, BaseModel, Field, field_validator, model_validator
 from pydantic import SecretStr
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from llmkira.openai._excption import raise_error, NetworkError, UnexpectedFormatError
 from .cell import (
@@ -181,7 +181,11 @@ class OpenAI(BaseModel):
                     ]
         return self
 
-    @retry(stop=stop_after_attempt(3), reraise=True)
+    @retry(
+        stop=stop_after_attempt(3),
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+    )
     async def request(self, session: OpenAICredential) -> OpenAIResult:
         """
         :param session: Credential
@@ -225,7 +229,11 @@ class OpenAI(BaseModel):
             logger.exception(exc)
             raise UnexpectedFormatError("Unexpected response format")
 
-    @retry(stop=stop_after_attempt(3), reraise=True)
+    @retry(
+        stop=stop_after_attempt(3),
+        reraise=True,
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+    )
     async def extract(
         self, response_model: Union[Type[BaseModel]], session: OpenAICredential
     ):
