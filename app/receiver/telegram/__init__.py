@@ -8,7 +8,7 @@ from typing import List
 import telebot
 from loguru import logger
 from telebot.async_telebot import AsyncTeleBot
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify, customize
 
 from app.middleware.llm_task import OpenaiMiddleware
 from app.receiver import function
@@ -22,6 +22,8 @@ from llmkira.task import Task, TaskHeader
 __receiver__ = "telegram"
 
 from llmkira.task.schema import Location, EventMessage
+
+customize.latex_escape = True
 
 
 class TelegramSender(BaseSender):
@@ -107,7 +109,7 @@ class TelegramSender(BaseSender):
                 continue
             await self.bot.send_message(
                 chat_id=receiver.chat_id,
-                text=convert(item.text),
+                text=markdownify(item.text),
                 reply_to_message_id=receiver.message_id,
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
@@ -144,7 +146,7 @@ class TelegramSender(BaseSender):
             try:
                 await self.bot.send_message(
                     chat_id=receiver.chat_id,
-                    text=convert(event.text),
+                    text=markdownify(event.text),
                     reply_to_message_id=receiver.message_id
                     if reply_to_message
                     else None,
@@ -154,7 +156,7 @@ class TelegramSender(BaseSender):
             except telebot.apihelper.ApiTelegramException as e:
                 if "message to reply not found" in str(e):
                     await self.bot.send_message(
-                        chat_id=receiver.chat_id, text=convert(event.text)
+                        chat_id=receiver.chat_id, text=markdownify(event.text)
                     )
                 else:
                     logger.error(f"User {receiver.user_id} send message error")
@@ -164,7 +166,7 @@ class TelegramSender(BaseSender):
     async def error(self, receiver: Location, text):
         await self.bot.send_message(
             chat_id=receiver.chat_id,
-            text=convert(text),
+            text=markdownify(text),
             reply_to_message_id=receiver.message_id,
             parse_mode="MarkdownV2",
         )

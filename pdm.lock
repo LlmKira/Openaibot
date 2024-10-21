@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:38513f3520600d537e8acd43c94c5c708f110cdb32aca86a25c5b67ff2234777"
+content_hash = "sha256:65ba942f1ec3449c49d088c4d9af123bdf4289ba5b13bbd82d8888f386e2b4f8"
 
 [[metadata.targets]]
 requires_python = ">=3.9,<3.12"
@@ -2353,7 +2353,7 @@ files = [
 
 [[package]]
 name = "telegramify-markdown"
-version = "0.1.13"
+version = "0.1.14"
 requires_python = ">=3.8"
 summary = "Convert Markdown to a format usable by Telegram."
 groups = ["default"]
@@ -2362,8 +2362,8 @@ dependencies = [
     "pytelegrambotapi>=4.22.0",
 ]
 files = [
-    {file = "telegramify_markdown-0.1.13-py3-none-any.whl", hash = "sha256:398a083101145e60eb926c351ee4e4be249ed0311999f8e732f21993bfd064ee"},
-    {file = "telegramify_markdown-0.1.13.tar.gz", hash = "sha256:60ce24260ae91b7b99db26ea2fd4f2b297b15c33614757538fcf98bb2d5701b4"},
+    {file = "telegramify_markdown-0.1.14-py3-none-any.whl", hash = "sha256:7378819a195a41cc627bc22efcf22722d217fa58141b06ab83b9dc674dc9d693"},
+    {file = "telegramify_markdown-0.1.14.tar.gz", hash = "sha256:d88c77f8d193817dc07fa7f8acbd30384b7548398e142ddbc81c1f0f178ee0ed"},
 ]
 
 [[package]]
