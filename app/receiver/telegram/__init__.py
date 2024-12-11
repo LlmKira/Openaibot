@@ -3,12 +3,14 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import asyncio
 from typing import List
 
 import telebot
+import telegramify_markdown
 from loguru import logger
 from telebot.async_telebot import AsyncTeleBot
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify, customize
 
 from app.middleware.llm_task import OpenaiMiddleware
 from app.receiver import function
@@ -22,6 +24,8 @@ from llmkira.task import Task, TaskHeader
 __receiver__ = "telegram"
 
 from llmkira.task.schema import Location, EventMessage
+
+customize.latex_escape = True
 
 
 class TelegramSender(BaseSender):
@@ -107,7 +111,7 @@ class TelegramSender(BaseSender):
                 continue
             await self.bot.send_message(
                 chat_id=receiver.chat_id,
-                text=convert(item.text),
+                text=markdownify(item.text),
                 reply_to_message_id=receiver.message_id,
                 parse_mode="MarkdownV2",
                 disable_web_page_preview=True,
@@ -142,19 +146,44 @@ class TelegramSender(BaseSender):
             if not event.text:
                 continue
             try:
-                await self.bot.send_message(
-                    chat_id=receiver.chat_id,
-                    text=convert(event.text),
-                    reply_to_message_id=receiver.message_id
-                    if reply_to_message
-                    else None,
-                    parse_mode="MarkdownV2",
-                    disable_web_page_preview=True,
+                cell_stack = telegramify_markdown.telegramify(
+                    content=event.text, max_word_count=4050
                 )
+                for cell in cell_stack:
+                    if cell.content_type == telegramify_markdown.ContentTypes.TEXT:
+                        await self.bot.send_message(
+                            chat_id=receiver.chat_id,
+                            text=cell.content,
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                            parse_mode="MarkdownV2",
+                            disable_web_page_preview=True,
+                        )
+                    elif cell.content_type == telegramify_markdown.ContentTypes.PHOTO:
+                        await self.bot.send_photo(
+                            chat_id=receiver.chat_id,
+                            photo=(cell.file_name, cell.file_data),
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                            caption=cell.caption,
+                        )
+                    elif cell.content_type == telegramify_markdown.ContentTypes.FILE:
+                        await self.bot.send_document(
+                            chat_id=receiver.chat_id,
+                            document=(cell.file_name, cell.file_data),
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                        )
+                    else:
+                        raise ValueError(f"Unknown content type {cell.content_type}")
+                    await asyncio.sleep(3)
             except telebot.apihelper.ApiTelegramException as e:
                 if "message to reply not found" in str(e):
                     await self.bot.send_message(
-                        chat_id=receiver.chat_id, text=convert(event.text)
+                        chat_id=receiver.chat_id, text=markdownify(event.text)
                     )
                 else:
                     logger.error(f"User {receiver.user_id} send message error")
@@ -164,7 +193,7 @@ class TelegramSender(BaseSender):
     async def error(self, receiver: Location, text):
         await self.bot.send_message(
             chat_id=receiver.chat_id,
-            text=convert(text),
+            text=markdownify(text),
             reply_to_message_id=receiver.message_id,
             parse_mode="MarkdownV2",
         )

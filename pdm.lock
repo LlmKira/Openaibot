@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:38513f3520600d537e8acd43c94c5c708f110cdb32aca86a25c5b67ff2234777"
+content_hash = "sha256:8b81b487af9ae5e032d6219fab2b6bea7be289a7ae0324f15b1d1e075afd7a33"
 
 [[metadata.targets]]
 requires_python = ">=3.9,<3.12"
@@ -613,6 +613,17 @@ groups = ["default"]
 files = [
     {file = "docstring_parser-0.16-py3-none-any.whl", hash = "sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637"},
     {file = "docstring_parser-0.16.tar.gz", hash = "sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e"},
+]
+
+[[package]]
+name = "docutils"
+version = "0.21.2"
+requires_python = ">=3.9"
+summary = "Docutils -- Python Documentation Utilities"
+groups = ["default"]
+files = [
+    {file = "docutils-0.21.2-py3-none-any.whl", hash = "sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2"},
+    {file = "docutils-0.21.2.tar.gz", hash = "sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f"},
 ]
 
 [[package]]
@@ -2353,17 +2364,18 @@ files = [
 
 [[package]]
 name = "telegramify-markdown"
-version = "0.1.13"
+version = "0.2.0"
 requires_python = ">=3.8"
-summary = "Convert Markdown to a format usable by Telegram."
+summary = "Makes it easy to send Markdown in Telegram MarkdownV2 style"
 groups = ["default"]
 dependencies = [
+    "docutils>=0.20.1",
     "mistletoe==1.4.0",
     "pytelegrambotapi>=4.22.0",
 ]
 files = [
-    {file = "telegramify_markdown-0.1.13-py3-none-any.whl", hash = "sha256:398a083101145e60eb926c351ee4e4be249ed0311999f8e732f21993bfd064ee"},
-    {file = "telegramify_markdown-0.1.13.tar.gz", hash = "sha256:60ce24260ae91b7b99db26ea2fd4f2b297b15c33614757538fcf98bb2d5701b4"},
+    {file = "telegramify_markdown-0.2.0-py3-none-any.whl", hash = "sha256:e8389c7a45424b29963744ea0ce530c99bf43bf8ab06a0dd7958aa2dd080d469"},
+    {file = "telegramify_markdown-0.2.0.tar.gz", hash = "sha256:686ca4b649d0f075e694eae0f616e089885b0ad1e1594affaf80cce318ddd2ad"},
 ]
 
 [[package]]

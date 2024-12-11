@@ -11,7 +11,7 @@ from telebot import formatting, util
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify
 
 from app.sender.util_func import (
     parse_command,
@@ -279,7 +279,7 @@ class TelegramBotRunner(Runner):
                 env_map = await _manager.read_env()
                 return await bot.reply_to(
                     message,
-                    text=convert(dict2markdown(env_map)),
+                    text=markdownify(dict2markdown(env_map)),
                     parse_mode="MarkdownV2",
                 )
             try:
@@ -292,7 +292,7 @@ class TelegramBotRunner(Runner):
                     formatting.mbold("🧊 Failed"), separator="\n"
                 )
             else:
-                text = convert(dict2markdown(env_map))
+                text = markdownify(dict2markdown(env_map))
             await bot.reply_to(message, text=text, parse_mode="MarkdownV2")
 
         @bot.message_handler(
@@ -319,7 +319,7 @@ class TelegramBotRunner(Runner):
             _message = await bot.reply_to(
                 message,
                 text=formatting.format_text(
-                    telegramify_markdown.convert(help_message()),
+                    telegramify_markdown.markdownify(help_message()),
                     separator="\n",
                 ),
                 parse_mode="MarkdownV2",
@@ -338,7 +338,7 @@ class TelegramBotRunner(Runner):
             if len(reply_message_text) > 4096:
                 reply_message_text = reply_message_text[:4096]
             return await bot.reply_to(
-                message, text=convert(reply_message_text), parse_mode="MarkdownV2"
+                message, text=markdownify(reply_message_text), parse_mode="MarkdownV2"
             )
 
         @bot.message_handler(
@@ -364,7 +364,7 @@ class TelegramBotRunner(Runner):
                     auth_result = "🪄 Snapshot released"
                 else:
                     auth_result = "You dont have this snapshot"
-            return await bot.reply_to(message, text=convert(auth_result))
+            return await bot.reply_to(message, text=markdownify(auth_result))
 
         @bot.message_handler(
             content_types=["text", "photo", "document"], chat_types=["private"]

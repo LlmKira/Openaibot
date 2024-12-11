@@ -15,7 +15,7 @@ from slack_bolt.context.ack.async_ack import AsyncAck
 from slack_bolt.context.respond.async_respond import AsyncRespond
 from slack_sdk.web.async_client import AsyncWebClient
 from telebot import formatting
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify
 
 from app.sender.util_func import (
     is_command,
@@ -266,7 +266,7 @@ class SlackBotRunner(Runner):
             _manager = EnvManager(user_id=uid_make(__sender__, command.user_id))
             if not command.text:
                 env_map = await _manager.read_env()
-                text = convert(dict2markdown(env_map))
+                text = markdownify(dict2markdown(env_map))
                 return await respond(text=text)
             _arg = command.text
             try:
@@ -277,7 +277,7 @@ class SlackBotRunner(Runner):
                 logger.exception(f"[213562]env update failed {e}")
                 text = formatting.mbold("🧊 Failed")
             else:
-                text = convert(dict2markdown(env_map))
+                text = markdownify(dict2markdown(env_map))
             await respond(text=text)
 
         @bot.command(command="/clear")
@@ -310,7 +310,7 @@ class SlackBotRunner(Runner):
                 f"# {tool_item.name}\n{tool_item.get_function_string}\n```{tool_item.usage}```"
                 for tool_item in _tool
             ]
-            reply_message_text = convert("\n".join(_paper))
+            reply_message_text = markdownify("\n".join(_paper))
             return await respond(text=reply_message_text)
 
         async def auth_chain(uuid, user_id):
