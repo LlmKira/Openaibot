@@ -146,7 +146,9 @@ class TelegramSender(BaseSender):
             if not event.text:
                 continue
             try:
-                cell_stack = telegramify_markdown.telegramify(event.text)
+                cell_stack = telegramify_markdown.telegramify(
+                    content=event.text, max_word_count=4050
+                )
                 for cell in cell_stack:
                     if cell.content_type == telegramify_markdown.ContentTypes.TEXT:
                         await self.bot.send_message(
