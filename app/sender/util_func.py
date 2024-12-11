@@ -167,7 +167,7 @@ async def login(uid: str, arg_string) -> str:
     :param arg_string: input string
     :return: str message
     """
-    error = telegramify_markdown.convert(
+    error = telegramify_markdown.markdownify(
         "🔑 **Incorrect format.**\n"
         "You can set it via `/login https://<something api.openai.com>/v1$<api key>"
         "$<model such as gpt-4-turbo>$<tool_model such as gpt-4o-mini>` format, "
@@ -183,16 +183,16 @@ async def login(uid: str, arg_string) -> str:
                 token=settings[0], provider_url=settings[1]
             )
         except ProviderError as e:
-            return telegramify_markdown.convert(f"Login failed, website return {e}")
+            return telegramify_markdown.markdownify(f"Login failed, website return {e}")
         except Exception as e:
             logger.error(f"Login failed {e}")
-            return telegramify_markdown.convert(f"Login failed, because {type(e)}")
+            return telegramify_markdown.markdownify(f"Login failed, because {type(e)}")
         else:
             await save_credential(
                 uid=uid,
                 credential=credential,
             )
-            return telegramify_markdown.convert(
+            return telegramify_markdown.markdownify(
                 "Login success as provider! Welcome master!"
             )
     elif len(settings) == 3 or len(settings) == 4:
@@ -213,7 +213,7 @@ async def login(uid: str, arg_string) -> str:
             uid=uid,
             credential=credential,
         )
-        return telegramify_markdown.convert(
+        return telegramify_markdown.markdownify(
             f"Login success as {settings[2]}! Welcome master!"
         )
     else:
@@ -229,7 +229,7 @@ async def logout(uid: str) -> str:
     user = await USER_MANAGER.read(user_id=uid)
     user.credential = None
     await USER_MANAGER.save(user_model=user)
-    return telegramify_markdown.convert("Logout success! Welcome back master!")
+    return telegramify_markdown.markdownify("Logout success! Welcome back master!")
 
 
 class TimerObjectContainer:

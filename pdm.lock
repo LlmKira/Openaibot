@@ -616,6 +616,17 @@ files = [
 ]
 
 [[package]]
+name = "docutils"
+version = "0.21.2"
+requires_python = ">=3.9"
+summary = "Docutils -- Python Documentation Utilities"
+groups = ["default"]
+files = [
+    {file = "docutils-0.21.2-py3-none-any.whl", hash = "sha256:dafca5b9e384f0e419294eb4d2ff9fa826435bf15f15b7bd45723e8ad76811b2"},
+    {file = "docutils-0.21.2.tar.gz", hash = "sha256:3a6b18732edf182daa3cd12775bbb338cf5691468f91eeeb109deff6ebfa986f"},
+]
+
+[[package]]
 name = "duckduckgo-search"
 version = "6.2.13"
 requires_python = ">=3.8"
@@ -2353,17 +2364,18 @@ files = [
 
 [[package]]
 name = "telegramify-markdown"
-version = "0.1.15"
+version = "0.2.0"
 requires_python = ">=3.8"
-summary = "Convert Markdown to a format usable by Telegram."
+summary = "Makes it easy to send Markdown in Telegram MarkdownV2 style"
 groups = ["default"]
 dependencies = [
+    "docutils>=0.20.1",
     "mistletoe==1.4.0",
     "pytelegrambotapi>=4.22.0",
 ]
 files = [
-    {file = "telegramify_markdown-0.1.15-py3-none-any.whl", hash = "sha256:93372eaba64a9c9c5a6aa0640c6c41f3dda89b48b30ebd9cb7c1c1382e9bda62"},
-    {file = "telegramify_markdown-0.1.15.tar.gz", hash = "sha256:2a17c02a4a112e37244e856bee8b58a6e040140082e97ce061fcf377e024cda6"},
+    {file = "telegramify_markdown-0.2.0-py3-none-any.whl", hash = "sha256:e8389c7a45424b29963744ea0ce530c99bf43bf8ab06a0dd7958aa2dd080d469"},
+    {file = "telegramify_markdown-0.2.0.tar.gz", hash = "sha256:686ca4b649d0f075e694eae0f616e089885b0ad1e1594affaf80cce318ddd2ad"},
 ]
 
 [[package]]

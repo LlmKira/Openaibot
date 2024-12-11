@@ -14,7 +14,7 @@ from hikari import Intents
 from hikari.impl import ProxySettings
 from loguru import logger
 from telebot import formatting
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify
 
 from app.setting.discord import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -274,7 +274,7 @@ class DiscordBotRunner(Runner):
             reply = await learn_instruction(
                 uid=uid_make(__sender__, ctx.user.id), instruction=instruction
             )
-            return await ctx.respond(content=convert(reply), ephemeral=True)
+            return await ctx.respond(content=markdownify(reply), ephemeral=True)
 
         @client.include
         @crescent.command(
@@ -398,7 +398,7 @@ class DiscordBotRunner(Runner):
                 f"# {tool_item.name}\n{tool_item.get_function_string}\n```{tool_item.usage}```"
                 for tool_item in _tool
             ]
-            reply_message_text = convert("\n".join(_paper))
+            reply_message_text = markdownify("\n".join(_paper))
             await ctx.respond(
                 ephemeral=True,
                 content=reply_message_text,
@@ -418,7 +418,7 @@ class DiscordBotRunner(Runner):
                     "**🧊 Env parse failed...O_o**\n", separator="\n"
                 )
             else:
-                text = convert(dict2markdown(env_map))
+                text = markdownify(dict2markdown(env_map))
             await ctx.respond(
                 ephemeral=True,
                 content=text,

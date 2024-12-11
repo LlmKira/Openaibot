@@ -3,9 +3,11 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import asyncio
 from typing import List
 
 import telebot
+import telegramify_markdown
 from loguru import logger
 from telebot.async_telebot import AsyncTeleBot
 from telegramify_markdown import markdownify, customize
@@ -144,15 +146,38 @@ class TelegramSender(BaseSender):
             if not event.text:
                 continue
             try:
-                await self.bot.send_message(
-                    chat_id=receiver.chat_id,
-                    text=markdownify(event.text),
-                    reply_to_message_id=receiver.message_id
-                    if reply_to_message
-                    else None,
-                    parse_mode="MarkdownV2",
-                    disable_web_page_preview=True,
-                )
+                cell_stack = telegramify_markdown.telegramify(event.text)
+                for cell in cell_stack:
+                    if cell.content_type == telegramify_markdown.ContentTypes.TEXT:
+                        await self.bot.send_message(
+                            chat_id=receiver.chat_id,
+                            text=cell.content,
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                            parse_mode="MarkdownV2",
+                            disable_web_page_preview=True,
+                        )
+                    elif cell.content_type == telegramify_markdown.ContentTypes.PHOTO:
+                        await self.bot.send_photo(
+                            chat_id=receiver.chat_id,
+                            photo=(cell.file_name, cell.file_data),
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                            caption=cell.caption,
+                        )
+                    elif cell.content_type == telegramify_markdown.ContentTypes.FILE:
+                        await self.bot.send_document(
+                            chat_id=receiver.chat_id,
+                            document=(cell.file_name, cell.file_data),
+                            reply_to_message_id=receiver.message_id
+                            if reply_to_message
+                            else None,
+                        )
+                    else:
+                        raise ValueError(f"Unknown content type {cell.content_type}")
+                    await asyncio.sleep(3)
             except telebot.apihelper.ApiTelegramException as e:
                 if "message to reply not found" in str(e):
                     await self.bot.send_message(

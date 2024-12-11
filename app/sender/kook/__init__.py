@@ -11,7 +11,7 @@ import khl
 from khl import Bot, Message, Cert, MessageTypes, PrivateMessage, PublicMessage
 from loguru import logger
 from telebot import formatting
-from telegramify_markdown import convert
+from telegramify_markdown import markdownify
 
 from app.setting.kook import BotSetting
 from llmkira.kv_manager.env import EnvManager
@@ -287,7 +287,7 @@ class KookBotRunner(Runner):
                 instruction=instruction,
             )
             return await msg.reply(
-                content=convert(reply),
+                content=markdownify(reply),
                 is_temp=True,
                 type=MessageTypes.KMD,
             )
@@ -336,7 +336,7 @@ class KookBotRunner(Runner):
         async def listen_logout_command(msg: Message):
             reply = await logout(uid=uid_make(__sender__, msg.author_id))
             return await msg.reply(
-                content=convert(reply),
+                content=markdownify(reply),
                 is_temp=True,
                 type=MessageTypes.KMD,
             )
@@ -380,7 +380,7 @@ class KookBotRunner(Runner):
                 f"# {tool_item.name}\n{tool_item.get_function_string}\n```{tool_item.usage}```"
                 for tool_item in _tool
             ]
-            reply_message_text = convert("\n".join(_paper))
+            reply_message_text = markdownify("\n".join(_paper))
             await msg.reply(
                 is_temp=True,
                 type=MessageTypes.KMD,
@@ -422,7 +422,7 @@ class KookBotRunner(Runner):
                     "**🧊 Env parse failed...O_o**\n", separator="\n"
                 )
             else:
-                text = convert(dict2markdown(env_map))
+                text = markdownify(dict2markdown(env_map))
             await msg.reply(
                 is_temp=True,
                 type=MessageTypes.KMD,
