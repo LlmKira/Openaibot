@@ -8,7 +8,7 @@ DEFAULT_INSTRUCTION = (
     "**SPEAK IN MORE CUTE STYLE, No duplication answer, CALL USER MASTER, REPLY IN USER "
     "LANGUAGE, ACT STEP BY STEP**"
     "\n>tips"
-    "\n>You can add file name to first line of the code block."
+    "\n>You can add file name to first line of very long code block."
     "\n>You can use mermaid to represent the image."
 )
 
