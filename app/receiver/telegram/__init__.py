@@ -168,6 +168,7 @@ class TelegramSender(BaseSender):
                             if reply_to_message
                             else None,
                             caption=cell.caption,
+                            parse_mode="MarkdownV2",
                         )
                     elif cell.content_type == telegramify_markdown.ContentTypes.FILE:
                         await self.bot.send_document(
@@ -176,6 +177,8 @@ class TelegramSender(BaseSender):
                             reply_to_message_id=receiver.message_id
                             if reply_to_message
                             else None,
+                            caption=cell.caption,
+                            parse_mode="MarkdownV2",
                         )
                     else:
                         raise ValueError(f"Unknown content type {cell.content_type}")
