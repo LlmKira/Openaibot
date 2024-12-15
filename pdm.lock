@@ -118,6 +118,23 @@ files = [
 ]
 
 [[package]]
+name = "aiohttp-client-cache"
+version = "0.12.4"
+requires_python = "<4.0,>=3.8"
+summary = "Persistent cache for aiohttp requests"
+groups = ["default"]
+dependencies = [
+    "aiohttp<4.0,>=3.8",
+    "attrs>=21.2",
+    "itsdangerous>=2.0",
+    "url-normalize<2.0,>=1.4",
+]
+files = [
+    {file = "aiohttp_client_cache-0.12.4-py3-none-any.whl", hash = "sha256:5aa7834eaf550a1a3a99e23a9fc9320b0e360788c6d2689941d611a5ec807b0e"},
+    {file = "aiohttp_client_cache-0.12.4.tar.gz", hash = "sha256:e60fe816136b5b1d66f3bb6b272ab81d97854ea1e4d9b57085a360426967d265"},
+]
+
+[[package]]
 name = "aiormq"
 version = "6.8.1"
 requires_python = "<4.0,>=3.8"
@@ -2436,19 +2453,22 @@ files = [
 
 [[package]]
 name = "telegramify-markdown"
-version = "0.2.3"
+version = "0.3.0"
 requires_python = ">=3.8"
 summary = "Makes it easy to send Markdown in Telegram MarkdownV2 style"
 groups = ["default"]
 dependencies = [
     "Pillow>=10.4.0",
+    "aiohttp-client-cache>=0.12.4",
+    "aiohttp>=3.10.11",
     "docutils>=0.20.1",
     "mistletoe==1.4.0",
+    "pydantic>=2.10.3",
     "pytelegrambotapi>=4.22.0",
 ]
 files = [
-    {file = "telegramify_markdown-0.2.3-py3-none-any.whl", hash = "sha256:74529f5227e546cd396362a414ceb309516de58bbfad14cd7b358f5f3d009e94"},
-    {file = "telegramify_markdown-0.2.3.tar.gz", hash = "sha256:03234ff5e4e134e30486ed0b12bd5e0009f9fa0b34516e79cca46ed3604e70b6"},
+    {file = "telegramify_markdown-0.3.0-py3-none-any.whl", hash = "sha256:0e9b606ed9d7712d99b116a147227f4dae16d2da4b12d0ebe5cc37ca8925a586"},
+    {file = "telegramify_markdown-0.3.0.tar.gz", hash = "sha256:59112d63680adc1155f194cae55db286f998b6936d8d8f299d792993b87f8dcd"},
 ]
 
 [[package]]
@@ -2512,6 +2532,20 @@ dependencies = [
 files = [
     {file = "tzlocal-5.2-py3-none-any.whl", hash = "sha256:49816ef2fe65ea8ac19d19aa7a1ae0551c834303d5014c6d5a62e4cbda8047b8"},
     {file = "tzlocal-5.2.tar.gz", hash = "sha256:8d399205578f1a9342816409cc1e46a93ebd5755e39ea2d85334bea911bf0e6e"},
+]
+
+[[package]]
+name = "url-normalize"
+version = "1.4.3"
+requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+summary = "URL normalization for Python"
+groups = ["default"]
+dependencies = [
+    "six",
+]
+files = [
+    {file = "url-normalize-1.4.3.tar.gz", hash = "sha256:d23d3a070ac52a67b83a1c59a0e68f8608d1cd538783b401bc9de2c0fac999b2"},
+    {file = "url_normalize-1.4.3-py2.py3-none-any.whl", hash = "sha256:ec3c301f04e5bb676d333a7fa162fa977ad2ca04b7e652bfc9fac4e405728eed"},
 ]
 
 [[package]]
