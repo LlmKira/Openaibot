@@ -166,7 +166,7 @@ class TelegramBotRunner(Runner):
                         uid=uid_make(__sender__, message.from_user.id),
                     )
                 )
-            if message.photo:
+            if message.photo and isinstance(message.photo, list):
                 uploaded_file.append(
                     await self.upload(
                         file=message.photo[-1],
@@ -182,7 +182,9 @@ class TelegramBotRunner(Runner):
                         )
                     )
             if message.reply_to_message:
-                if message.reply_to_message.photo:
+                if message.reply_to_message.photo and isinstance(
+                    message.reply_to_message.photo, list
+                ):
                     if message.reply_to_message.photo[-1].file_id not in __used_file_id:
                         uploaded_file.append(
                             await self.upload(

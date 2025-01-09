@@ -25,7 +25,7 @@ __receiver__ = "telegram"
 
 from llmkira.task.schema import Location, EventMessage
 
-customize.latex_escape = True
+customize.latex_escape = False
 
 
 class TelegramSender(BaseSender):
