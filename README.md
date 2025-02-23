@@ -37,6 +37,9 @@
 
 > Python>=3.9
 
+> This project is not abandoned, just no new features are planned.
+> If you encounter a problem, please raise an Issue
+
 This project uses the ToolCall feature.
 
 It integrates a message queuing and snapshot system, offering plugin mechanisms and authentication prior to plugin
